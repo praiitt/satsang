@@ -25,24 +25,32 @@ echo "Extracting SSL certificates..."
 cd "$SSL_DIR"
 sudo unzip -o "$SSL_ZIP"
 
-# Find certificate files (they might have different names)
-if [ -f "fullchain.pem" ]; then
-  CERT_FILE="fullchain.pem"
+# Combine certificate and CA bundle into fullchain.pem (nginx preferred format)
+if [ -f "certificate.crt" ] && [ -f "ca_bundle.crt" ]; then
+  echo "Combining certificate.crt and ca_bundle.crt into fullchain.pem..."
+  sudo cat certificate.crt ca_bundle.crt > fullchain.pem
+  echo "Created fullchain.pem"
+elif [ -f "fullchain.pem" ]; then
+  echo "fullchain.pem already exists"
 elif [ -f "cert.pem" ]; then
-  CERT_FILE="cert.pem"
+  echo "Using cert.pem as fullchain.pem"
+  sudo cp cert.pem fullchain.pem
 else
-  echo "Warning: Could not find fullchain.pem or cert.pem"
+  echo "Warning: Could not find certificate files"
   echo "Files in SSL directory:"
   ls -la "$SSL_DIR"
-  echo "Please check the certificate file names and update nginx config accordingly"
 fi
 
-if [ -f "privkey.pem" ]; then
+# Rename private key if needed
+if [ -f "private.key" ]; then
+  KEY_FILE="private.key"
+  echo "Found private.key"
+elif [ -f "privkey.pem" ]; then
   KEY_FILE="privkey.pem"
 elif [ -f "key.pem" ]; then
   KEY_FILE="key.pem"
 else
-  echo "Warning: Could not find privkey.pem or key.pem"
+  echo "Warning: Could not find private key file"
 fi
 
 # Set proper permissions
