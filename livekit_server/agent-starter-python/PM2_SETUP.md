@@ -53,12 +53,31 @@ This will install:
 
 ## Usage
 
+### First Time Setup
+
+Before running the agent for the first time, you need to download the required model files:
+
+```bash
+cd /home/underlitigationcom/satsang/livekit_server/agent-starter-python
+uv run python src/agent.py download-files
+```
+
+This will download:
+- Silero VAD (Voice Activity Detection) model
+- LiveKit Turn Detector model (multilingual)
+
+**Note**: The start script will automatically download models if they're missing, but you can also download them manually first.
+
 ### Start the Agent
 
 ```bash
 chmod +x start-pm2.sh
 ./start-pm2.sh
 ```
+
+The script will automatically:
+- Check and download model files if needed
+- Start the agent with PM2
 
 ### Stop the Agent
 

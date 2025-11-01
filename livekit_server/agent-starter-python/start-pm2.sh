@@ -47,6 +47,21 @@ if ! command -v pm2 &> /dev/null; then
   exit 1
 fi
 
+# Download required model files if not already downloaded
+# Check if models directory exists or if download is needed
+echo "Checking for required model files..."
+cd "$AGENT_DIR"
+
+# Try to run download-files to ensure models are present
+# This will download Silero VAD and turn-detector models
+if ! uv run python src/agent.py download-files 2>&1 | grep -q "already downloaded\|downloaded\|Downloaded"; then
+  echo "Downloading required model files (this may take a few minutes)..."
+  uv run python src/agent.py download-files
+  echo "Model files downloaded successfully!"
+else
+  echo "Model files check completed."
+fi
+
 # Start the agent with PM2
 echo "Starting Satsang LiveKit Agent with PM2..."
 cd "$AGENT_DIR"
