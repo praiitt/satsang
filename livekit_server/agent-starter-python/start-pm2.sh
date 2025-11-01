@@ -8,11 +8,12 @@ set -e
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AGENT_DIR="$SCRIPT_DIR"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
-# Update ecosystem config with actual path
-sed -i.bak "s|/path/to/satsangapp|$PROJECT_ROOT|g" "$AGENT_DIR/ecosystem.config.cjs"
-rm -f "$AGENT_DIR/ecosystem.config.cjs.bak"
+# Update ecosystem config with actual path if it contains placeholder
+if grep -q "/path/to/satsangapp" "$AGENT_DIR/ecosystem.config.cjs" 2>/dev/null; then
+  sed -i.bak "s|/path/to/satsangapp/livekit_server/agent-starter-python|$AGENT_DIR|g" "$AGENT_DIR/ecosystem.config.cjs"
+  rm -f "$AGENT_DIR/ecosystem.config.cjs.bak"
+fi
 
 # Create logs directory if it doesn't exist
 mkdir -p "$AGENT_DIR/logs"
