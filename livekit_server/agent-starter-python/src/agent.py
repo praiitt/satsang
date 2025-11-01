@@ -86,33 +86,37 @@ async def entrypoint(ctx: JobContext):
     }
 
     # Set up a voice AI pipeline using OpenAI, Cartesia, AssemblyAI, and the LiveKit turn detector
+    
+    # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
+    # STT Model Options for Better Hindi Accuracy (Romanized output):
+    # 
+    # 1. "deepgram/nova-2" - Best accuracy for Hindi, supports streaming
+    #    - Set DEEPGRAM_API_KEY in .env.local (if required by LiveKit)
+    #    - Better recognition of Hindi words in Roman script
+    # 
+    # 2. "google/cloud" - Excellent Hindi accuracy, requires GOOGLE_APPLICATION_CREDENTIALS
+    #    - May need additional setup
+    # 
+    # 3. "assemblyai/universal-streaming" - Baseline, guaranteed streaming
+    #    - Works out of the box but may have lower accuracy for Hindi
+    #
+    # Configuration: Set STT_MODEL env variable in .env.local to override
+    # Example: STT_MODEL=deepgram/nova-2
+    #
+    # See all available models at https://docs.livekit.io/agents/models/stt/
+    stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
+    logger.info(f"Using STT model: {stt_model} for Hindi language recognition")
+    
+    # Configure STT with Hindi language
+    # For better accuracy, try: "deepgram/nova-2" (set STT_MODEL=deepgram/nova-2 in .env.local)
+    stt = inference.STT(
+        model=stt_model,
+        language="hi",  # Hindi language code
+    )
+    
     session = AgentSession(
-        # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
-        # STT Model Options for Better Hindi Accuracy (Romanized output):
-        # 
-        # 1. "deepgram/nova-2" - Best accuracy for Hindi, supports streaming
-        #    - Set DEEPGRAM_API_KEY in .env.local (if required by LiveKit)
-        #    - Better recognition of Hindi words in Roman script
-        # 
-        # 2. "google/cloud" - Excellent Hindi accuracy, requires GOOGLE_APPLICATION_CREDENTIALS
-        #    - May need additional setup
-        # 
-        # 3. "assemblyai/universal-streaming" - Baseline, guaranteed streaming
-        #    - Works out of the box but may have lower accuracy for Hindi
-        #
-        # Configuration: Set STT_MODEL env variable in .env.local to override
-        # Example: STT_MODEL=deepgram/nova-2
-        #
-        # See all available models at https://docs.livekit.io/agents/models/stt/
-        stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
-        logger.info(f"Using STT model: {stt_model} for Hindi language recognition")
-        
-        # Configure STT with Hindi language
-        # For better accuracy, try: "deepgram/nova-2" (set STT_MODEL=deepgram/nova-2 in .env.local)
-        stt = inference.STT(
-            model=stt_model,
-            language="hi",  # Hindi language code
-        )
+        # Speech-to-text configured above
+        stt=stt,
         # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
         # See all available models at https://docs.livekit.io/agents/models/llm/
         llm=inference.LLM(model="openai/gpt-4.1-mini"),
