@@ -56,8 +56,9 @@ fi
 # Set proper permissions
 echo "Setting file permissions..."
 sudo chmod 644 "$SSL_DIR"/*.pem 2>/dev/null || true
-sudo chmod 600 "$SSL_DIR"/privkey.pem 2>/dev/null || sudo chmod 600 "$SSL_DIR"/key.pem 2>/dev/null || true
-sudo chown root:root "$SSL_DIR"/*.pem 2>/dev/null || true
+sudo chmod 644 "$SSL_DIR"/*.crt 2>/dev/null || true
+sudo chmod 600 "$SSL_DIR"/private.key 2>/dev/null || sudo chmod 600 "$SSL_DIR"/privkey.pem 2>/dev/null || sudo chmod 600 "$SSL_DIR"/key.pem 2>/dev/null || true
+sudo chown root:root "$SSL_DIR"/* 2>/dev/null || true
 
 echo ""
 echo "SSL certificates extracted to: $SSL_DIR"
