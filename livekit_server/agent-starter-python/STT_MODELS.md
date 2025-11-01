@@ -4,6 +4,32 @@
 
 You want Hindi speech input to appear in **Devanagari script** (नमस्ते) in the chat transcript, not Romanized (namaste).
 
+## The Challenge
+
+There's currently a trade-off:
+- **Streaming STT models** (AssemblyAI) → Show transcripts in chat but output Romanized
+- **Non-streaming STT models** (Whisper) → Output Devanagari but don't show in chat
+
+## Solution Options
+
+### Option A: Use AssemblyAI (Current - Best for UX)
+**Status**: Currently configured
+- Your speech appears in chat immediately (Romanized)
+- Agent understands perfectly
+- Agent responds in proper Devanagari Hindi
+
+### Option B: Add Frontend Transliteration (Recommended)
+Convert Romanized → Devanagari in the frontend for display:
+- Install: `npm install indic-transliteration`
+- Convert "namaste" → "नमस्ते" in the chat UI
+- Agent still processes Romanized correctly
+- Users see Devanagari in chat
+
+### Option C: Wait for Better STT Model
+Future LiveKit updates may add:
+- Streaming STT with native Devanagari support
+- Better Hindi language models
+
 ## Available STT Models in LiveKit
 
 ### Option 1: Deepgram Nova-2 (Recommended to Try)

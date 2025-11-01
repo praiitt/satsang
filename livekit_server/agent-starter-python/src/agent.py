@@ -70,15 +70,16 @@ async def entrypoint(ctx: JobContext):
     # Set up a voice AI pipeline using OpenAI, Cartesia, AssemblyAI, and the LiveKit turn detector
     session = AgentSession(
         # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
-        # Try different STT models for Hindi Devanagari output:
-        # Option 1: Try Deepgram (if available) - may support Hindi Devanagari with streaming
-        # Option 2: AssemblyAI universal-streaming (fallback) - streaming works but outputs Romanized
-        # Option 3: OpenAI Whisper - outputs Devanagari but doesn't stream (transcripts won't show)
-        # Try Deepgram first, fallback to AssemblyAI if not available
+        # STT Model Options for Hindi:
+        # 1. "assemblyai/universal-streaming" - Streaming ✓, Romanized output, shows in chat
+        # 2. "openai/whisper-large-v3" - Devanagari output ✓, No streaming ✗, won't show in chat
+        # 3. "deepgram/nova-2" - May support Devanagari, streaming depends on LiveKit support
+        # 
+        # Currently using AssemblyAI for guaranteed streaming and chat visibility.
+        # If Deepgram or another model supports Hindi Devanagari + streaming, update here.
         # See all available models at https://docs.livekit.io/agents/models/stt/
-        # Note: To use Deepgram, you may need DEEPGRAM_API_KEY in environment
         stt=inference.STT(
-            model="deepgram/nova-2",  # Try Deepgram for Hindi Devanagari support
+            model="assemblyai/universal-streaming",  # Streaming works, shows transcripts in chat
             language="hi",
         ),
         # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
