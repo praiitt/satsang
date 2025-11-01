@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Script to start Satsang LiveKit Agent with PM2
+# Usage: ./start-pm2.sh
+
+set -e
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+AGENT_DIR="$SCRIPT_DIR"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+# Update ecosystem config with actual path
+sed -i.bak "s|/path/to/satsangapp|$PROJECT_ROOT|g" "$AGENT_DIR/ecosystem.config.cjs"
+rm -f "$AGENT_DIR/ecosystem.config.cjs.bak"
+
+# Create logs directory if it doesn't exist
+mkdir -p "$AGENT_DIR/logs"
+
+# Check if .env.local exists
+if [ ! -f "$AGENT_DIR/.env.local" ]; then
+  echo "Warning: .env.local not found in $AGENT_DIR"
+  echo "Please ensure your LiveKit credentials are configured."
+fi
+
+# Check if uv is installed
+if ! command -v uv &> /dev/null; then
+  echo "Error: uv is not installed or not in PATH"
+  echo "Please install uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
+  exit 1
+fi
+
+# Check if PM2 is installed
+if ! command -v pm2 &> /dev/null; then
+  echo "Error: PM2 is not installed"
+  echo "Please install PM2: npm install -g pm2"
+  exit 1
+fi
+
+# Start the agent with PM2
+echo "Starting Satsang LiveKit Agent with PM2..."
+cd "$AGENT_DIR"
+pm2 start ecosystem.config.cjs
+
+# Save PM2 process list
+pm2 save
+
+echo "Agent started successfully!"
+echo "To view logs: pm2 logs satsang-livekit-agent"
+echo "To stop: pm2 stop satsang-livekit-agent"
+echo "To restart: pm2 restart satsang-livekit-agent"
+echo "To view status: pm2 status"
+
