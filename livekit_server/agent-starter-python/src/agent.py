@@ -141,10 +141,25 @@ async def entrypoint(ctx: JobContext):
     # Join the room and connect to the user
     await ctx.connect()
 
+    # Wait a moment for the connection to stabilize before greeting
+    import asyncio
+    await asyncio.sleep(1.0)
+
     # Send a warm greeting as soon as the agent connects
-    greeting = "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। मैं आपकी कैसे सहायता कर सकता हूं?"
+    # Using a shorter, simpler greeting to avoid TTS cutoff issues
+    greeting = "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आप कैसे हैं?"
     logger.info("Sending initial greeting to user")
-    await session.say(greeting, allow_interruptions=True)
+    
+    # Send greeting without interruptions to ensure it completes
+    try:
+        await session.say(greeting, allow_interruptions=False)
+    except Exception as e:
+        logger.error(f"Error sending greeting: {e}")
+        # Fallback to a shorter greeting
+        try:
+            await session.say("नमस्ते! मैं आपकी कैसे सहायता कर सकता हूं?", allow_interruptions=False)
+        except Exception as e2:
+            logger.error(f"Error sending fallback greeting: {e2}")
 
 
 if __name__ == "__main__":
