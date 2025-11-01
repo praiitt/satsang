@@ -27,7 +27,16 @@ fi
 # Check if uv is installed
 if ! command -v uv &> /dev/null; then
   echo "Error: uv is not installed or not in PATH"
-  echo "Please install uv: curl -LsSf https://astral.sh/uv/install.sh | sh"
+  echo ""
+  echo "To install uv, run one of the following:"
+  echo "  1. Run the setup script: ./install-dependencies.sh"
+  echo "  2. Install manually: curl -LsSf https://astral.sh/uv/install.sh | sh"
+  echo "  3. Then add to PATH: export PATH=\"\$HOME/.cargo/bin:\$PATH\""
+  echo "  4. Or add to ~/.bashrc: echo 'export PATH=\"\$HOME/.cargo/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+  echo ""
+  echo "After installing, you may need to:"
+  echo "  - Restart your terminal session, or"
+  echo "  - Run: source ~/.bashrc"
   exit 1
 fi
 

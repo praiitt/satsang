@@ -4,14 +4,40 @@ This guide explains how to run the Satsang LiveKit Agent using PM2 on Ubuntu.
 
 ## Prerequisites
 
+### Quick Setup (Recommended)
+
+Run the automated installation script:
+
+```bash
+chmod +x install-dependencies.sh
+./install-dependencies.sh
+```
+
+This will install:
+- Node.js and npm (if not installed)
+- PM2 (Node.js process manager)
+- uv (Python package manager)
+- Python 3 (if not installed)
+
+### Manual Setup
+
 1. **Install uv** (Python package manager):
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
-   source $HOME/.cargo/env  # or add to ~/.bashrc
+   # Add to PATH
+   echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> ~/.bashrc
+   source ~/.bashrc
    ```
 
 2. **Install PM2** (Node.js process manager):
    ```bash
+   npm install -g pm2
+   ```
+   
+   If Node.js is not installed:
+   ```bash
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt-get install -y nodejs
    npm install -g pm2
    ```
 
