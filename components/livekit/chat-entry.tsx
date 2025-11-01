@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { cn } from '@/lib/utils';
 import { transliterateToDevanagari } from '@/lib/hindi-transliteration';
+import { cn } from '@/lib/utils';
 
 export interface ChatEntryProps extends React.HTMLAttributes<HTMLLIElement> {
   /** The locale to use for the timestamp. */
@@ -29,12 +29,10 @@ export const ChatEntry = ({
 }: ChatEntryProps) => {
   const time = new Date(timestamp);
   const title = time.toLocaleTimeString(locale, { timeStyle: 'full' });
-  
+
   // Convert user's Romanized Hindi to Devanagari for display
   // Agent messages are already in Devanagari, so only convert user messages
-  const displayMessage = messageOrigin === 'local' 
-    ? transliterateToDevanagari(message)
-    : message;
+  const displayMessage = messageOrigin === 'local' ? transliterateToDevanagari(message) : message;
 
   return (
     <li
