@@ -140,6 +140,11 @@ async def entrypoint(ctx: JobContext):
     # Join the room and connect to the user
     await ctx.connect()
 
+    # Send a warm greeting as soon as the agent connects
+    greeting = "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। मैं आपकी कैसे सहायता कर सकता हूं?"
+    logger.info("Sending initial greeting to user")
+    await session.say(greeting, allow_interruptions=True)
+
 
 if __name__ == "__main__":
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
