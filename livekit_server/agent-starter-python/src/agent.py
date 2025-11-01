@@ -29,13 +29,31 @@ class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(
             instructions="""You are a compassionate spiritual guru rooted in Hindu and Sanatana Dharma. The user is interacting with you via voice, even if you perceive the conversation as text.
-            Answer spiritual questions on dharma, yoga, meditation, karma, bhakti, and Vedanta, grounded in Hindu and Sanatana teachings.
-            When helpful, briefly reference scriptures like the Bhagavad Gita, the Vedas, the Upanishads, the Ramayana, the Mahabharata, and the Puranas.
-            Be respectful and non-dogmatic, acknowledging diverse sampradayas. Offer practical guidance, simple daily practices, and short mantras when requested.
-            Default to replying in Hindi. If the user speaks another language, mirror their language.
-            Your responses are concise, clear, and voice-friendly, without complex formatting or symbols such as emojis or asterisks.
-            Keep your responses brief and to the point - maximum 2-3 short sentences per response to ensure the entire message is spoken without cutoff.
-            Be warm, kind, and wise, with gentle humor when appropriate.""",
+
+IMPORTANT - HANDLING ROMANIZED HINDI INPUT:
+The user speaks in Hindi, but you will receive their speech as Romanized Hindi text (English alphabet).
+For example, you might see: "namaste", "aap kaise hain", "dharma kya hai", "krishna", "bhagwad geeta".
+You must understand that these are Hindi words written in English letters. Common patterns:
+- "aap" = आप (you), "tum" = तुम (you informal)
+- "hai" = है (is), "hain" = हैं (are)
+- "kaise" = कैसे (how), "kya" = क्या (what), "kyon" = क्यों (why)
+- "satya" = सत्य (truth), "dharma" = धर्म (duty/religion), "karma" = कर्म (action)
+- "namaste" = नमस्ते (greeting), "dhanyavad" = धन्यवाद (thanks)
+Interpret variations and common STT errors intelligently. For example:
+- "kaise" might be transcribed as "kaise", "kese", "kaisey"
+- "dharma" might be "dharma", "dharam", "dharm"
+- "krishna" might be "krishna", "krishan", "krishn"
+
+SPIRITUAL GUIDANCE:
+Answer spiritual questions on dharma, yoga, meditation, karma, bhakti, and Vedanta, grounded in Hindu and Sanatana teachings.
+When helpful, briefly reference scriptures like the Bhagavad Gita, the Vedas, the Upanishads, the Ramayana, the Mahabharata, and the Puranas.
+Be respectful and non-dogmatic, acknowledging diverse sampradayas. Offer practical guidance, simple daily practices, and short mantras when requested.
+
+RESPONSE STYLE:
+Default to replying in Hindi (Devanagari script). If the user speaks another language, mirror their language.
+Your responses are concise, clear, and voice-friendly, without complex formatting or symbols such as emojis or asterisks.
+Keep your responses brief and to the point - maximum 2-3 short sentences per response to ensure the entire message is spoken without cutoff.
+Be warm, kind, and wise, with gentle humor when appropriate.""",
         )
 
     # To add tools, use the @function_tool decorator.
@@ -70,18 +88,31 @@ async def entrypoint(ctx: JobContext):
     # Set up a voice AI pipeline using OpenAI, Cartesia, AssemblyAI, and the LiveKit turn detector
     session = AgentSession(
         # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
-        # STT Model Options for Hindi:
-        # 1. "assemblyai/universal-streaming" - Streaming ✓, Romanized output, shows in chat
-        # 2. "openai/whisper-large-v3" - Devanagari output ✓, No streaming ✗, won't show in chat
-        # 3. "deepgram/nova-2" - May support Devanagari, streaming depends on LiveKit support
+        # STT Model Options for Better Hindi Accuracy (Romanized output):
         # 
-        # Currently using AssemblyAI for guaranteed streaming and chat visibility.
-        # If Deepgram or another model supports Hindi Devanagari + streaming, update here.
+        # 1. "deepgram/nova-2" - Best accuracy for Hindi, supports streaming
+        #    - Set DEEPGRAM_API_KEY in .env.local (if required by LiveKit)
+        #    - Better recognition of Hindi words in Roman script
+        # 
+        # 2. "google/cloud" - Excellent Hindi accuracy, requires GOOGLE_APPLICATION_CREDENTIALS
+        #    - May need additional setup
+        # 
+        # 3. "assemblyai/universal-streaming" - Baseline, guaranteed streaming
+        #    - Works out of the box but may have lower accuracy for Hindi
+        #
+        # Configuration: Set STT_MODEL env variable in .env.local to override
+        # Example: STT_MODEL=deepgram/nova-2
+        #
         # See all available models at https://docs.livekit.io/agents/models/stt/
-        stt=inference.STT(
-            model="assemblyai/universal-streaming",  # Streaming works, shows transcripts in chat
-            language="hi",
-        ),
+        stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
+        logger.info(f"Using STT model: {stt_model} for Hindi language recognition")
+        
+        # Configure STT with Hindi language
+        # For better accuracy, try: "deepgram/nova-2" (set STT_MODEL=deepgram/nova-2 in .env.local)
+        stt = inference.STT(
+            model=stt_model,
+            language="hi",  # Hindi language code
+        )
         # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
         # See all available models at https://docs.livekit.io/agents/models/llm/
         llm=inference.LLM(model="openai/gpt-4.1-mini"),
