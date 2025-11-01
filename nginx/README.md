@@ -4,28 +4,41 @@ This directory contains nginx configuration files for hosting satsang.rraasi.com
 
 ## SSL Certificate Setup
 
-1. **Extract SSL certificates** from the zip file:
+Certificates are located at: `/home/underlitigationcom/satsang/ssl_2nov/`
+
+1. **Extract SSL certificates** (if not already extracted):
    ```bash
-   cd /etc/nginx/ssl/
-   sudo mkdir -p satsang.rraasi.com
-   cd satsang.rraasi.com
-   sudo unzip /path/to/satsang/satsangapp/ssl_2nov/satsang.rraasi.com.zip
+   cd /home/underlitigationcom/satsang/ssl_2nov
+   unzip satsang.rraasi.com.zip
    ```
 
-2. **Verify certificate files**:
+2. **Combine certificate and CA bundle** into fullchain.pem:
    ```bash
-   ls -la /etc/nginx/ssl/satsang.rraasi.com/
+   cd /home/underlitigationcom/satsang/ssl_2nov
+   cat certificate.crt ca_bundle.crt > fullchain.pem
+   ```
+
+3. **Verify certificate files**:
+   ```bash
+   ls -la /home/underlitigationcom/satsang/ssl_2nov/
    # You should see:
-   # - fullchain.pem (or cert.pem)
-   # - privkey.pem (or key.pem)
-   # - chain.pem (optional)
+   # - fullchain.pem (combined certificate + CA bundle)
+   # - certificate.crt
+   # - ca_bundle.crt
+   # - private.key
    ```
 
-3. **Set proper permissions**:
+4. **Set proper permissions**:
    ```bash
-   sudo chmod 644 /etc/nginx/ssl/satsang.rraasi.com/*.pem
-   sudo chmod 600 /etc/nginx/ssl/satsang.rraasi.com/privkey.pem
-   sudo chown root:root /etc/nginx/ssl/satsang.rraasi.com/*
+   chmod 644 /home/underlitigationcom/satsang/ssl_2nov/fullchain.pem
+   chmod 600 /home/underlitigationcom/satsang/ssl_2nov/private.key
+   # Ensure nginx user can read the files (nginx typically runs as www-data or nginx)
+   ```
+   
+   Or use the automated setup script:
+   ```bash
+   cd /home/underlitigationcom/satsang
+   ./nginx/setup-ssl.sh
    ```
 
 ## Installation
