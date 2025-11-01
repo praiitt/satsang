@@ -70,10 +70,17 @@ async def entrypoint(ctx: JobContext):
     # Set up a voice AI pipeline using OpenAI, Cartesia, AssemblyAI, and the LiveKit turn detector
     session = AgentSession(
         # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
-        # Using AssemblyAI universal-streaming for real-time transcript streaming (shows in chat)
-        # Note: This outputs Romanized Hindi, but LLM understands it well and chat shows your speech
+        # Try different STT models for Hindi Devanagari output:
+        # Option 1: Try Deepgram (if available) - may support Hindi Devanagari with streaming
+        # Option 2: AssemblyAI universal-streaming (fallback) - streaming works but outputs Romanized
+        # Option 3: OpenAI Whisper - outputs Devanagari but doesn't stream (transcripts won't show)
+        # Try Deepgram first, fallback to AssemblyAI if not available
         # See all available models at https://docs.livekit.io/agents/models/stt/
-        stt=inference.STT(model="assemblyai/universal-streaming", language="hi"),
+        # Note: To use Deepgram, you may need DEEPGRAM_API_KEY in environment
+        stt=inference.STT(
+            model="deepgram/nova-2",  # Try Deepgram for Hindi Devanagari support
+            language="hi",
+        ),
         # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
         # See all available models at https://docs.livekit.io/agents/models/llm/
         llm=inference.LLM(model="openai/gpt-4.1-mini"),
@@ -106,6 +113,7 @@ async def entrypoint(ctx: JobContext):
     # session = AgentSession(
     #     llm=openai.realtime.RealtimeModel(voice="marin")
     # )
+
 
     # Metrics collection, to measure pipeline performance
     # For more information, see https://docs.livekit.io/agents/build/metrics/
