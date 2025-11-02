@@ -47,6 +47,16 @@ if ! command -v pm2 &> /dev/null; then
   exit 1
 fi
 
+# Fix PyTorch installation (CPU-only if CUDA not available)
+echo "Checking PyTorch installation..."
+cd "$AGENT_DIR"
+if [ -f "fix-pytorch.sh" ]; then
+  chmod +x fix-pytorch.sh
+  ./fix-pytorch.sh
+else
+  echo "Warning: fix-pytorch.sh not found, skipping PyTorch fix"
+fi
+
 # Verify all dependencies and test model loading
 echo "Verifying dependencies and model loading..."
 cd "$AGENT_DIR"
