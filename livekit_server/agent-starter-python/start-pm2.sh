@@ -51,8 +51,29 @@ fi
 echo "Checking PyTorch installation..."
 cd "$AGENT_DIR"
 if [ -f "fix-pytorch.sh" ]; then
-  chmod +x fix-pytorch.sh
-  ./fix-pytorch.sh
+  # Try to make executable, but don't fail if permissions are an issue
+  chmod +x fix-pytorch.sh 2>/dev/null || {
+    echo "Warning: Could not set execute permission on fix-pytorch.sh"
+    echo "You may need to run: chmod +x fix-pytorch.sh (as your user, not sudo)"
+  }
+  # Try to fix ownership if it's root-owned
+  if [ -O "fix-pytorch.sh" ] || [ -w "fix-pytorch.sh" ]; then
+    ./fix-pytorch.sh
+  else
+    echo "Warning: fix-pytorch.sh is not writable. Attempting to fix permissions..."
+    # Try to fix ownership (only works if script is run by owner or with proper perms)
+    if command -v sudo &> /dev/null; then
+      sudo chown "$(whoami):$(whoami)" fix-pytorch.sh 2>/dev/null && chmod +x fix-pytorch.sh && ./fix-pytorch.sh || {
+        echo "Error: Cannot fix permissions. Please run manually:"
+        echo "  sudo chown $(whoami):$(whoami) fix-pytorch.sh"
+        echo "  chmod +x fix-pytorch.sh"
+        echo "  ./fix-pytorch.sh"
+        echo "Skipping PyTorch fix for now..."
+      }
+    else
+      echo "Error: Cannot fix permissions. Please fix manually and run ./fix-pytorch.sh"
+    fi
+  fi
 else
   echo "Warning: fix-pytorch.sh not found, skipping PyTorch fix"
 fi
