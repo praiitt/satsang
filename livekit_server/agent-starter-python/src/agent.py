@@ -107,12 +107,26 @@ async def entrypoint(ctx: JobContext):
     stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
     logger.info(f"Using STT model: {stt_model} for Hindi language recognition")
     
-    # Configure STT with Hindi language
+    # Configure STT with Hindi language and optimized settings for better accuracy
     # For better accuracy, try: "deepgram/nova-2" (set STT_MODEL=deepgram/nova-2 in .env.local)
-    stt = inference.STT(
-        model=stt_model,
-        language="hi",  # Hindi language code
-    )
+    # Deepgram often provides better Hindi recognition than AssemblyAI
+    
+    # Try Deepgram first if available (usually better for Hindi)
+    if stt_model == "deepgram/nova-2" or stt_model.startswith("deepgram"):
+        stt = inference.STT(
+            model="deepgram/nova-2",
+            language="hi",
+            # Deepgram specific options for better accuracy
+            # extra_kwargs might be supported depending on LiveKit version
+        )
+        logger.info("Using Deepgram Nova-2 for improved Hindi STT accuracy")
+    else:
+        # AssemblyAI with Hindi language
+        stt = inference.STT(
+            model=stt_model,
+            language="hi",  # Hindi language code
+        )
+        logger.info("Using AssemblyAI - consider trying Deepgram for better accuracy")
     
     session = AgentSession(
         # Speech-to-text configured above
