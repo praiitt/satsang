@@ -24,19 +24,50 @@ if [ ! -f "$AGENT_DIR/.env.local" ]; then
   echo "Please ensure your LiveKit credentials are configured."
 fi
 
-# Check if uv is installed
-if ! command -v uv &> /dev/null; then
+# Check if running with sudo (not recommended)
+if [ "$EUID" -eq 0 ]; then
+  echo "Warning: This script is being run with sudo/root privileges."
+  echo "This is not recommended as uv is installed in your user directory."
+  echo ""
+  echo "Please run this script WITHOUT sudo:"
+  echo "  ./start-pm2.sh"
+  echo ""
+  echo "If you continue, the script will try to find uv, but it may fail."
+  read -p "Continue anyway? (y/N) " -n 1 -r
+  echo
+  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    exit 1
+  fi
+fi
+
+# Check if uv is installed - check multiple locations
+UV_FOUND=false
+REAL_HOME=$(eval echo ~${SUDO_USER:-$USER})
+
+if command -v uv &> /dev/null; then
+  UV_FOUND=true
+elif [ -f "$REAL_HOME/.local/bin/uv" ]; then
+  export PATH="$REAL_HOME/.local/bin:$PATH"
+  UV_FOUND=true
+elif [ -f "$REAL_HOME/.cargo/bin/uv" ]; then
+  export PATH="$REAL_HOME/.cargo/bin:$PATH"
+  UV_FOUND=true
+fi
+
+if [ "$UV_FOUND" = false ]; then
   echo "Error: uv is not installed or not in PATH"
+  echo ""
+  echo "Searched locations:"
+  echo "  - PATH"
+  echo "  - $REAL_HOME/.local/bin/uv"
+  echo "  - $REAL_HOME/.cargo/bin/uv"
   echo ""
   echo "To install uv, run one of the following:"
   echo "  1. Run the setup script: ./install-dependencies.sh"
   echo "  2. Install manually: curl -LsSf https://astral.sh/uv/install.sh | sh"
-  echo "  3. Then add to PATH: export PATH=\"\$HOME/.cargo/bin:\$PATH\""
-  echo "  4. Or add to ~/.bashrc: echo 'export PATH=\"\$HOME/.cargo/bin:\$PATH\"' >> ~/.bashrc && source ~/.bashrc"
+  echo "  3. Then add to PATH: export PATH=\"\$HOME/.local/bin:\$PATH\""
   echo ""
-  echo "After installing, you may need to:"
-  echo "  - Restart your terminal session, or"
-  echo "  - Run: source ~/.bashrc"
+  echo "NOTE: Do NOT run this script with sudo!"
   exit 1
 fi
 

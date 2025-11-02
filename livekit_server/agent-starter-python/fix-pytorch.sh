@@ -8,17 +8,30 @@ set -e
 echo "Checking PyTorch installation..."
 
 # Find uv - check common locations and PATH
+# Get the actual home directory (works even with sudo)
+REAL_HOME=$(eval echo ~${SUDO_USER:-$USER})
 UV_CMD=""
+
 if command -v uv &> /dev/null; then
     UV_CMD="uv"
-elif [ -f "$HOME/.cargo/bin/uv" ]; then
-    UV_CMD="$HOME/.cargo/bin/uv"
-elif [ -f "$HOME/.local/bin/uv" ]; then
-    UV_CMD="$HOME/.local/bin/uv"
+elif [ -f "$REAL_HOME/.local/bin/uv" ]; then
+    UV_CMD="$REAL_HOME/.local/bin/uv"
+elif [ -f "$REAL_HOME/.cargo/bin/uv" ]; then
+    UV_CMD="$REAL_HOME/.cargo/bin/uv"
+elif [ -f "/home/$USER/.local/bin/uv" ]; then
+    UV_CMD="/home/$USER/.local/bin/uv"
+elif [ -f "/home/$USER/.cargo/bin/uv" ]; then
+    UV_CMD="/home/$USER/.cargo/bin/uv"
 else
-    echo "Error: uv is not installed or not in PATH"
-    echo "Please install uv or ensure it's in your PATH"
-    echo "You can run this script without sudo, or source ~/.bashrc first"
+    echo "Error: uv is not installed or not found in common locations"
+    echo "Searched:"
+    echo "  - PATH"
+    echo "  - $REAL_HOME/.local/bin/uv"
+    echo "  - $REAL_HOME/.cargo/bin/uv"
+    echo ""
+    echo "Please:"
+    echo "  1. Run this script WITHOUT sudo: ./fix-pytorch.sh"
+    echo "  2. Or ensure uv is in your PATH: export PATH=\"\$HOME/.local/bin:\$PATH\""
     exit 1
 fi
 
