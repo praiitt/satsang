@@ -12,11 +12,7 @@ dependencies = [
     "livekit-agents[silero,turn-detector]~=1.2",
     "livekit-plugins-noise-cancellation~=0.2",
     "python-dotenv",
-    # Use CPU-only PyTorch since CUDA is not available on the server
-    # This prevents hanging during import in the inference executor process
-    "torch>=2.0.0; sys_platform != 'linux'",
-    # For Linux, we'll install CPU-only via pip index (handled in install script)
-    # But we keep torch in dependencies for non-Linux platforms
+    "torch>=2.0.0",
 ]
 
 [dependency-groups]
