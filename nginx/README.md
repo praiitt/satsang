@@ -7,18 +7,21 @@ This directory contains nginx configuration files for hosting satsang.rraasi.com
 Certificates are located at: `/home/underlitigationcom/satsang/ssl_2nov/`
 
 1. **Extract SSL certificates** (if not already extracted):
+
    ```bash
    cd /home/underlitigationcom/satsang/ssl_2nov
    unzip satsang.rraasi.com.zip
    ```
 
 2. **Combine certificate and CA bundle** into fullchain.pem:
+
    ```bash
    cd /home/underlitigationcom/satsang/ssl_2nov
    cat certificate.crt ca_bundle.crt > fullchain.pem
    ```
 
 3. **Verify certificate files**:
+
    ```bash
    ls -la /home/underlitigationcom/satsang/ssl_2nov/
    # You should see:
@@ -29,13 +32,15 @@ Certificates are located at: `/home/underlitigationcom/satsang/ssl_2nov/`
    ```
 
 4. **Set proper permissions**:
+
    ```bash
    chmod 644 /home/underlitigationcom/satsang/ssl_2nov/fullchain.pem
    chmod 600 /home/underlitigationcom/satsang/ssl_2nov/private.key
    # Ensure nginx user can read the files (nginx typically runs as www-data or nginx)
    ```
-   
+
    Or use the automated setup script:
+
    ```bash
    cd /home/underlitigationcom/satsang
    ./nginx/setup-ssl.sh
@@ -44,16 +49,19 @@ Certificates are located at: `/home/underlitigationcom/satsang/ssl_2nov/`
 ## Installation
 
 1. **Copy configuration file** to nginx sites-available:
+
    ```bash
    sudo cp nginx/satsang.rraasi.com.conf /etc/nginx/sites-available/satsang.rraasi.com.conf
    ```
 
 2. **Create symbolic link** to enable the site:
+
    ```bash
    sudo ln -s /etc/nginx/sites-available/satsang.rraasi.com.conf /etc/nginx/sites-enabled/satsang.rraasi.com.conf
    ```
 
 3. **Test nginx configuration**:
+
    ```bash
    sudo nginx -t
    ```
@@ -75,26 +83,31 @@ Certificates are located at: `/home/underlitigationcom/satsang/ssl_2nov/`
 ## Troubleshooting
 
 ### Check nginx status
+
 ```bash
 sudo systemctl status nginx
 ```
 
 ### View nginx error logs
+
 ```bash
 sudo tail -f /var/log/nginx/satsang.rraasi.com.error.log
 ```
 
 ### View nginx access logs
+
 ```bash
 sudo tail -f /var/log/nginx/satsang.rraasi.com.access.log
 ```
 
 ### Test SSL certificate
+
 ```bash
 openssl s_client -connect satsang.rraasi.com:443 -servername satsang.rraasi.com
 ```
 
 ### Verify frontend is running
+
 ```bash
 curl http://localhost:3000
 ```
@@ -113,4 +126,3 @@ If you need to renew SSL certificates:
 - The configuration includes extended timeouts for WebSocket connections (LiveKit)
 - All HTTP traffic is automatically redirected to HTTPS
 - Security headers are included for better protection
-

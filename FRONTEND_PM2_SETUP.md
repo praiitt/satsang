@@ -23,17 +23,20 @@ npm install -g pnpm
 ### Manual Setup
 
 1. **Install Node.js and npm** (if not installed):
+
    ```bash
    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
    sudo apt-get install -y nodejs
    ```
 
 2. **Install PM2**:
+
    ```bash
    npm install -g pm2
    ```
 
 3. **Install pnpm**:
+
    ```bash
    npm install -g pnpm
    ```
@@ -51,6 +54,7 @@ npm install -g pnpm
 ### First Time Setup
 
 1. **Install dependencies**:
+
    ```bash
    pnpm install
    ```
@@ -68,6 +72,7 @@ chmod +x start-frontend-pm2.sh
 ```
 
 The script will automatically:
+
 - Check and install dependencies if needed
 - Build the application if not already built
 - Start the frontend with PM2
@@ -147,35 +152,37 @@ The `ecosystem.config.cjs` file contains PM2 configuration. Key settings:
 
 ## Troubleshooting
 
-1. **Frontend not starting**: 
+1. **Frontend not starting**:
    - Check if `.env.local` exists and has correct credentials
    - Verify the application was built: `ls -la .next`
    - Check PM2 logs: `pm2 logs satsang-frontend`
 
-2. **pnpm not found**: 
+2. **pnpm not found**:
    - Install pnpm: `npm install -g pnpm`
    - Ensure it's in PATH: `which pnpm`
 
-3. **Build errors**: 
+3. **Build errors**:
    - Ensure all dependencies are installed: `pnpm install`
    - Check Node.js version: `node --version` (should be 18+)
    - Try cleaning and rebuilding: `rm -rf .next node_modules && pnpm install && pnpm build`
 
-4. **Port already in use**: 
+4. **Port already in use**:
    - Change PORT in `ecosystem.config.cjs` or stop the conflicting service
    - Check what's using the port: `sudo lsof -i :3000`
 
-5. **Permission denied**: 
+5. **Permission denied**:
    - Make sure scripts are executable: `chmod +x *.sh`
 
 ## Logs
 
 Logs are stored in:
+
 - `./logs/pm2-frontend-error.log` - Error logs
 - `./logs/pm2-frontend-out.log` - Standard output
 - `./logs/pm2-frontend-combined.log` - Combined logs
 
 You can also view real-time logs with:
+
 ```bash
 pm2 logs satsang-frontend
 ```
@@ -199,4 +206,3 @@ pm2 status
 # View logs from both
 pm2 logs
 ```
-

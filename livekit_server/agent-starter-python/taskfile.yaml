@@ -1,15 +1,15 @@
-version: "3"
+version: '3'
 output: interleaved
-dotenv: [".env.local"]
+dotenv: ['.env.local']
 vars:
   INDENT: 4
-  REL_PATH: "{{ relPath .USER_WORKING_DIR .ROOT_DIR }}"
-  VENV_DIR: ".venv"
+  REL_PATH: '{{ relPath .USER_WORKING_DIR .ROOT_DIR }}'
+  VENV_DIR: '.venv'
   PYTHON_MAIN: '{{ joinPath "./src" "agent.py" }}'
 
 tasks:
   post_create:
-    desc: "Runs after this template is instantiated as a Sandbox or Bootstrap"
+    desc: 'Runs after this template is instantiated as a Sandbox or Bootstrap'
     cmds:
       - echo 'To try the new agent directly in your terminal:'
       - echo ''
@@ -49,10 +49,10 @@ tasks:
       - echo ''
 
   install:
-    desc: "Bootstrap application for local development"
+    desc: 'Bootstrap application for local development'
     cmds:
-      - "uv sync"
+      - 'uv sync'
   dev:
     interactive: true
     cmds:
-      - "uv run src/agent.py dev"
+      - 'uv run src/agent.py dev'

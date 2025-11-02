@@ -46,5 +46,3 @@ export function useWakeLock(enabled: boolean) {
     };
   }, [enabled]);
 }
-
-

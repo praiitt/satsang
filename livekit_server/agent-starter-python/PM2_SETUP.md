@@ -14,6 +14,7 @@ chmod +x install-dependencies.sh
 ```
 
 This will install:
+
 - Node.js and npm (if not installed)
 - PM2 (Node.js process manager)
 - uv (Python package manager)
@@ -22,6 +23,7 @@ This will install:
 ### Manual Setup
 
 1. **Install uv** (Python package manager):
+
    ```bash
    curl -LsSf https://astral.sh/uv/install.sh | sh
    # Add to PATH
@@ -30,11 +32,13 @@ This will install:
    ```
 
 2. **Install PM2** (Node.js process manager):
+
    ```bash
    npm install -g pm2
    ```
-   
+
    If Node.js is not installed:
+
    ```bash
    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
    sudo apt-get install -y nodejs
@@ -63,6 +67,7 @@ uv run python src/agent.py download-files
 ```
 
 This will download:
+
 - Silero VAD (Voice Activity Detection) model
 - LiveKit Turn Detector model (multilingual)
 
@@ -76,6 +81,7 @@ chmod +x start-pm2.sh
 ```
 
 The script will automatically:
+
 - Check and download model files if needed
 - Start the agent with PM2
 
@@ -143,12 +149,13 @@ The `ecosystem.config.cjs` file contains PM2 configuration. Key settings:
 ## Logs
 
 Logs are stored in:
+
 - `./logs/pm2-error.log` - Error logs
 - `./logs/pm2-out.log` - Standard output
 - `./logs/pm2-combined.log` - Combined logs
 
 You can also view real-time logs with:
+
 ```bash
 pm2 logs satsang-livekit-agent
 ```
-
