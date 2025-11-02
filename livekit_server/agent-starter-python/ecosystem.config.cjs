@@ -12,6 +12,10 @@ module.exports = {
       max_memory_restart: '1G',
       env: {
         NODE_ENV: 'production',
+        // Enable debug logging for LiveKit agents
+        LIVEKIT_LOG_LEVEL: 'debug',
+        // Python debug logging
+        PYTHONUNBUFFERED: '1',
       },
       error_file: './logs/pm2-error.log',
       out_file: './logs/pm2-out.log',

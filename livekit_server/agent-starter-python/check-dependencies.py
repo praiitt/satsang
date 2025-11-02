@@ -65,16 +65,16 @@ def main():
         print("  This is likely the cause of the inference executor timeout!")
         sys.exit(1)
     
-    # Test turn detector
+    # Test turn detector (this requires job context, so we just check import)
     print("\n" + "=" * 60)
-    print("Testing Turn Detector model loading...")
+    print("Testing Turn Detector import...")
     try:
         from livekit.plugins.turn_detector.multilingual import MultilingualModel
-        model = MultilingualModel()
-        print("✓ Turn Detector model initialized successfully")
+        print("✓ Turn Detector can be imported")
+        print("  Note: Full initialization requires job context (happens in entrypoint)")
     except Exception as e:
-        print(f"✗ Failed to initialize Turn Detector model: {e}")
-        print("  This could also cause the inference executor timeout!")
+        print(f"✗ Failed to import Turn Detector: {e}")
+        print("  This could cause the inference executor timeout!")
         sys.exit(1)
     
     print("\n" + "=" * 60)

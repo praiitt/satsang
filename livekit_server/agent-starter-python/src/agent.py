@@ -159,31 +159,48 @@ async def entrypoint(ctx: JobContext):
         )
         logger.warning(f"Using {stt_model} - For BETTER Hindi accuracy, try: STT_MODEL=sarvam or STT_MODEL=deepgram/nova-2")
     
-    session = AgentSession(
-        # Speech-to-text configured above
-        stt=stt,
-        # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
-        # See all available models at https://docs.livekit.io/agents/models/llm/
-        llm=inference.LLM(model="openai/gpt-4.1-mini"),
-        # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
-        # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
-        tts=inference.TTS(
-            model="cartesia/sonic-3",
-            voice=os.getenv("TTS_VOICE_ID", "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"),
-            language="hi",
-            extra_kwargs={
-                # Cartesia supports speed: "slow" | "normal" | "fast"
-                "speed": (os.getenv("TTS_SPEED") or "slow") if (os.getenv("TTS_SPEED") or "slow") in {"slow", "normal", "fast"} else "normal",
-            },
-        ),
-        # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
-        # See more at https://docs.livekit.io/agents/build/turns
-        turn_detection=MultilingualModel(),
-        vad=ctx.proc.userdata["vad"],
-        # allow the LLM to generate a response while waiting for the end of turn
-        # See more at https://docs.livekit.io/agents/build/audio/#preemptive-generation
-        preemptive_generation=True,
-    )
+    # Initialize turn detector with error handling
+    logger.info("Initializing turn detector model...")
+    try:
+        turn_detector = MultilingualModel()
+        logger.info("Turn detector model initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize turn detector: {e}")
+        logger.error("This may cause issues. Continuing anyway...")
+        turn_detector = None
+    
+    logger.info("Creating AgentSession with configured models...")
+    try:
+        session = AgentSession(
+            # Speech-to-text configured above
+            stt=stt,
+            # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
+            # See all available models at https://docs.livekit.io/agents/models/llm/
+            llm=inference.LLM(model="openai/gpt-4.1-mini"),
+            # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
+            # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
+            tts=inference.TTS(
+                model="cartesia/sonic-3",
+                voice=os.getenv("TTS_VOICE_ID", "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"),
+                language="hi",
+                extra_kwargs={
+                    # Cartesia supports speed: "slow" | "normal" | "fast"
+                    "speed": (os.getenv("TTS_SPEED") or "slow") if (os.getenv("TTS_SPEED") or "slow") in {"slow", "normal", "fast"} else "normal",
+                },
+            ),
+            # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
+            # See more at https://docs.livekit.io/agents/build/turns
+            turn_detection=turn_detector if turn_detector is not None else MultilingualModel(),
+            vad=ctx.proc.userdata["vad"],
+            # allow the LLM to generate a response while waiting for the end of turn
+            # See more at https://docs.livekit.io/agents/build/audio/#preemptive-generation
+            preemptive_generation=True,
+        )
+        logger.info("AgentSession created successfully")
+    except Exception as e:
+        logger.error(f"Failed to create AgentSession: {e}")
+        logger.exception("Full traceback:")
+        raise
 
     # To use a realtime model instead of a voice pipeline, use the following session setup instead.
     # (Note: This is for the OpenAI Realtime API. For other providers, see https://docs.livekit.io/agents/models/realtime/))
