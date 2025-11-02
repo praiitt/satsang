@@ -90,43 +90,60 @@ async def entrypoint(ctx: JobContext):
     # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
     # STT Model Options for Better Hindi Accuracy (Romanized output):
     # 
-    # 1. "deepgram/nova-2" - Best accuracy for Hindi, supports streaming
-    #    - Set DEEPGRAM_API_KEY in .env.local (if required by LiveKit)
-    #    - Better recognition of Hindi words in Roman script
+    # 1. "sarvam" - BEST for Hindi/Indian languages, designed specifically for Indian accents
+    #    - Requires: pip install "livekit-agents[sarvam]~=1.2" and SARVAM_API_KEY
+    #    - Excellent Hindi recognition, supports streaming
+    #    - RECOMMENDED for Hindi speakers
     # 
-    # 2. "google/cloud" - Excellent Hindi accuracy, requires GOOGLE_APPLICATION_CREDENTIALS
+    # 2. "deepgram/nova-2" - Good accuracy for Hindi, supports streaming
+    #    - Set DEEPGRAM_API_KEY in .env.local (if required by LiveKit)
+    #    - Better recognition than AssemblyAI
+    # 
+    # 3. "google/cloud" - Excellent Hindi accuracy, requires GOOGLE_APPLICATION_CREDENTIALS
     #    - May need additional setup
     # 
-    # 3. "assemblyai/universal-streaming" - Baseline, guaranteed streaming
+    # 4. "assemblyai/universal-streaming" - Baseline, guaranteed streaming
     #    - Works out of the box but may have lower accuracy for Hindi
     #
     # Configuration: Set STT_MODEL env variable in .env.local to override
-    # Example: STT_MODEL=deepgram/nova-2
+    # Example: STT_MODEL=sarvam (RECOMMENDED for Hindi)
     #
     # See all available models at https://docs.livekit.io/agents/models/stt/
     stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
     logger.info(f"Using STT model: {stt_model} for Hindi language recognition")
     
     # Configure STT with Hindi language and optimized settings for better accuracy
-    # For better accuracy, try: "deepgram/nova-2" (set STT_MODEL=deepgram/nova-2 in .env.local)
-    # Deepgram often provides better Hindi recognition than AssemblyAI
+    # Priority: Sarvam (best for Hindi) > Deepgram > AssemblyAI
     
-    # Try Deepgram first if available (usually better for Hindi)
-    if stt_model == "deepgram/nova-2" or stt_model.startswith("deepgram"):
+    if stt_model == "sarvam" or stt_model.startswith("sarvam"):
+        # Sarvam is specifically designed for Indian languages - BEST choice for Hindi
+        try:
+            # Try using Sarvam STT plugin if installed
+            from livekit.plugins import sarvam as sarvam_plugin
+            stt = sarvam_plugin.STT(
+                language="hi",
+            )
+            logger.info("Using Sarvam STT - BEST for Hindi/Indian languages!")
+        except ImportError:
+            logger.warning("Sarvam plugin not installed. Install with: pip install 'livekit-agents[sarvam]~=1.2'")
+            logger.warning("Falling back to AssemblyAI. For better Hindi accuracy, install Sarvam!")
+            stt = inference.STT(
+                model="assemblyai/universal-streaming",
+                language="hi",
+            )
+    elif stt_model == "deepgram/nova-2" or stt_model.startswith("deepgram"):
         stt = inference.STT(
             model="deepgram/nova-2",
             language="hi",
-            # Deepgram specific options for better accuracy
-            # extra_kwargs might be supported depending on LiveKit version
         )
         logger.info("Using Deepgram Nova-2 for improved Hindi STT accuracy")
     else:
-        # AssemblyAI with Hindi language
+        # AssemblyAI with Hindi language (default/fallback)
         stt = inference.STT(
             model=stt_model,
             language="hi",  # Hindi language code
         )
-        logger.info("Using AssemblyAI - consider trying Deepgram for better accuracy")
+        logger.warning(f"Using {stt_model} - For BETTER Hindi accuracy, try: STT_MODEL=sarvam or STT_MODEL=deepgram/nova-2")
     
     session = AgentSession(
         # Speech-to-text configured above
