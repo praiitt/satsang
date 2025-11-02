@@ -73,9 +73,9 @@ TTS_SPEED=slow
 STT_MODEL=deepgram/nova-2
 ```
 
-### Step 4: Fix PyTorch (Critical!)
+### Step 4: Diagnose and Fix Issues
 
-**IMPORTANT:** The server must use CPU-only PyTorch to avoid timeout errors.
+**CRITICAL:** Before starting the agent, run diagnostics to find any issues.
 
 ```bash
 cd /home/your-username/satsang/livekit_server/agent-starter-python
@@ -83,8 +83,22 @@ cd /home/your-username/satsang/livekit_server/agent-starter-python
 # Make sure uv is in PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# Run the PyTorch fix script
-chmod +x fix-pytorch.sh
+# Run comprehensive diagnostics
+chmod +x diagnose-ubuntu.sh
+./diagnose-ubuntu.sh
+```
+
+This will check:
+- PyTorch version (must be CPU-only, not CUDA)
+- PyTorch import speed (CUDA hangs, CPU is fast)
+- Transformers library (required for multilingual turn detector)
+- Model cache status
+- Silero VAD loading
+
+**If diagnostics show PyTorch issues, fix it:**
+
+```bash
+# Fix PyTorch (replace CUDA with CPU-only)
 ./fix-pytorch.sh
 
 # Verify it worked
@@ -92,6 +106,8 @@ chmod +x fix-pytorch.sh
 ```
 
 You should see: `✓ CPU-only PyTorch detected (correct)`
+
+**Common Issue:** If you see timeout errors, PyTorch is likely still CUDA-enabled. The fix script MUST be run.
 
 ### Step 5: Download Models
 
