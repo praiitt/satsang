@@ -47,20 +47,37 @@ if ! command -v pm2 &> /dev/null; then
   exit 1
 fi
 
-# Verify PyTorch is installed
-echo "Verifying PyTorch installation..."
+# Verify all dependencies and test model loading
+echo "Verifying dependencies and model loading..."
 cd "$AGENT_DIR"
-if ! uv run python -c "import torch; print(f'PyTorch {torch.__version__} is installed')" 2>/dev/null; then
-  echo "ERROR: PyTorch is not installed!"
-  echo "Installing dependencies (this will install PyTorch)..."
-  uv sync --locked
-  echo "Dependencies installed. Verifying PyTorch again..."
-  if ! uv run python -c "import torch; print(f'PyTorch {torch.__version__} is installed')" 2>/dev/null; then
-    echo "ERROR: PyTorch installation failed. Please check the error messages above."
-    exit 1
+
+# Run diagnostic script to check everything
+if [ -f "check-dependencies.py" ]; then
+  if ! uv run python check-dependencies.py; then
+    echo "ERROR: Dependency check failed!"
+    echo "Attempting to fix by syncing dependencies..."
+    uv sync --locked
+    echo "Re-running dependency check..."
+    if ! uv run python check-dependencies.py; then
+      echo "ERROR: Dependencies still missing after sync. Please check the errors above."
+      exit 1
+    fi
   fi
 else
-  echo "PyTorch is installed ✓"
+  # Fallback to simple PyTorch check if diagnostic script doesn't exist
+  echo "Running basic PyTorch check..."
+  if ! uv run python -c "import torch; print(f'PyTorch {torch.__version__} is installed')" 2>/dev/null; then
+    echo "ERROR: PyTorch is not installed!"
+    echo "Installing dependencies (this will install PyTorch)..."
+    uv sync --locked
+    echo "Dependencies installed. Verifying PyTorch again..."
+    if ! uv run python -c "import torch; print(f'PyTorch {torch.__version__} is installed')" 2>/dev/null; then
+      echo "ERROR: PyTorch installation failed. Please check the error messages above."
+      exit 1
+    fi
+  else
+    echo "PyTorch is installed ✓"
+  fi
 fi
 
 # Download required model files if not already downloaded

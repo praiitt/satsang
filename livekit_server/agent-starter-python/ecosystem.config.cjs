@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'satsang-livekit-agent',
       script: 'uv',
-      args: 'run python src/agent.py dev',
+      args: 'run python src/agent.py start',
       cwd: '/home/underlitigationcom/satsang/livekit_server/agent-starter-python',
       interpreter: 'none',
       instances: 1,

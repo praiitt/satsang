@@ -254,4 +254,10 @@ async def entrypoint(ctx: JobContext):
 
 
 if __name__ == "__main__":
+    # Configure logging level for debugging
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+    
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
