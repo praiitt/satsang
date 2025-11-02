@@ -75,7 +75,21 @@ Be warm, kind, and wise, with gentle humor when appropriate.""",
 
 
 def prewarm(proc: JobProcess):
-    proc.userdata["vad"] = silero.VAD.load()
+    try:
+        # Check if PyTorch is available before loading models
+        try:
+            import torch
+            logger.info(f"PyTorch version: {torch.__version__}")
+        except ImportError:
+            logger.error("PyTorch is not installed! Install it with: uv sync --locked")
+            raise
+        
+        proc.userdata["vad"] = silero.VAD.load()
+        logger.info("Silero VAD model loaded successfully")
+    except Exception as e:
+        logger.error(f"Failed to load VAD model: {e}")
+        logger.error("This may be due to missing PyTorch. Run: uv sync --locked")
+        raise
 
 
 async def entrypoint(ctx: JobContext):

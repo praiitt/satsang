@@ -47,6 +47,22 @@ if ! command -v pm2 &> /dev/null; then
   exit 1
 fi
 
+# Verify PyTorch is installed
+echo "Verifying PyTorch installation..."
+cd "$AGENT_DIR"
+if ! uv run python -c "import torch; print(f'PyTorch {torch.__version__} is installed')" 2>/dev/null; then
+  echo "ERROR: PyTorch is not installed!"
+  echo "Installing dependencies (this will install PyTorch)..."
+  uv sync --locked
+  echo "Dependencies installed. Verifying PyTorch again..."
+  if ! uv run python -c "import torch; print(f'PyTorch {torch.__version__} is installed')" 2>/dev/null; then
+    echo "ERROR: PyTorch installation failed. Please check the error messages above."
+    exit 1
+  fi
+else
+  echo "PyTorch is installed ✓"
+fi
+
 # Download required model files if not already downloaded
 # Check if models directory exists or if download is needed
 echo "Checking for required model files..."
