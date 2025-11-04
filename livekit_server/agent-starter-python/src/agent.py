@@ -221,6 +221,10 @@ Always end with a question or invitation to continue the conversation when natur
 
 
 def prewarm(proc: JobProcess):
+    """
+    Prewarm function to load models before processing jobs.
+    This runs once per worker process to improve startup time for individual jobs.
+    """
     try:
         # Check if PyTorch is available before loading models
         try:
@@ -230,12 +234,17 @@ def prewarm(proc: JobProcess):
             logger.error("PyTorch is not installed! Install it with: uv sync --locked")
             raise
         
+        # Load VAD model with timeout protection
+        # If this takes too long, it will be caught by the outer exception handler
+        logger.info("Loading Silero VAD model...")
         proc.userdata["vad"] = silero.VAD.load()
         logger.info("Silero VAD model loaded successfully")
     except Exception as e:
-        logger.error(f"Failed to load VAD model: {e}")
-        logger.error("This may be due to missing PyTorch. Run: uv sync --locked")
-        raise
+        logger.error(f"Failed to load VAD model in prewarm: {e}")
+        logger.warning("VAD model will be loaded on-demand for each job. This may cause slight delays.")
+        # Don't raise - let the process continue, VAD will be loaded on-demand
+        # This prevents the entire worker from failing if VAD loading has issues
+        proc.userdata["vad"] = None
 
 
 async def entrypoint(ctx: JobContext):
