@@ -224,11 +224,13 @@ Always end with a question or invitation to continue the conversation when natur
         
         logger.info(f"Found bhajan track: {track_info.get('name_en')} - {track_info.get('preview_url') or track_info.get('spotify_id')}")
         
-        # Return simple track info with URL for MP3 player
+        # Get track info
         preview_url = track_info.get("preview_url")
+        spotify_id = track_info.get("spotify_id")
         
-        # Only use preview_url (direct MP3) - external_url won't work with HTML5 audio
-        if not preview_url:
+        # If we have spotify_id, we can use Spotify SDK even without preview URL
+        # Only return error if we have NEITHER preview_url NOR spotify_id
+        if not preview_url and not spotify_id:
             available = await list_available_bhajans_async_func()
             available_list = ", ".join(available[:5])
             external_url = track_info.get("external_url")
@@ -242,11 +244,15 @@ Always end with a question or invitation to continue the conversation when natur
                 "available_bhajans": available,
             })
         
-        # Return simple result with direct MP3 URL
+        # Return result with MP3 URL (if available) and Spotify info for SDK playback
+        # Frontend will use Spotify SDK if spotify_id is present and user is authenticated
+        # Otherwise, it will use preview_url as fallback
         result = {
-            "url": preview_url,  # Direct MP3 URL for HTML5 audio player
+            "url": preview_url,  # Direct MP3 URL for HTML5 audio player (fallback, can be None)
             "name": track_info.get("name_en", bhajan_name),
             "artist": track_info.get("artist", ""),
+            "spotify_id": spotify_id,  # Spotify track ID for Web Playback SDK (can be None)
+            "external_url": track_info.get("external_url"),  # Spotify web player URL
             "message": f"भजन '{track_info.get('name_en', bhajan_name)}' चल रहा है। आनंद लें!"  # "Bhajan '{name}' is playing. Enjoy!"
         }
         

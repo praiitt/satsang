@@ -1,4 +1,5 @@
 import { Button } from '@/components/livekit/button';
+import { SpotifyAuthButton } from '@/components/spotify/spotify-auth-button';
 
 function WelcomeImage() {
   return (
@@ -37,9 +38,15 @@ export const WelcomeView = ({
           अपने आध्यात्मिक गुरु से हिन्दी में सत्संग करें
         </p>
 
-        <Button variant="primary" size="lg" onClick={onStartCall} className="mt-6 w-64 font-mono">
-          {startButtonText}
-        </Button>
+        <div className="mt-6 flex flex-col items-center gap-3">
+          <Button variant="primary" size="lg" onClick={onStartCall} className="w-64 font-mono">
+            {startButtonText}
+          </Button>
+          <SpotifyAuthButton />
+          <p className="text-xs text-foreground/60 max-w-xs">
+            Spotify से कनेक्ट करें पूर्ण भजन सुनने के लिए (वैकल्पिक)
+          </p>
+        </div>
       </section>
     </div>
   );
