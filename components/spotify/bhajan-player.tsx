@@ -51,18 +51,37 @@ export function BhajanPlayer() {
       return;
     }
 
-    // Try to parse as JSON
+    // Try to parse as JSON first
     let trackInfo: BhajanTrackInfo | null = null;
-    try {
-      const parsed = JSON.parse(latestMessage.message);
+    let parsedJson: Record<string, unknown> | null = null;
 
+    try {
+      // Try to parse the entire message as JSON
+      parsedJson = JSON.parse(latestMessage.message) as Record<string, unknown>;
+    } catch {
+      // Not pure JSON, try to extract JSON from the message
+      // The LLM might wrap the JSON in text like "भजन बज रहा है। {...json...}"
+      const jsonMatch = latestMessage.message.match(
+        /\{[^{}]*"url"[^{}]*\}|\{[^{}]*"spotify_id"[^{}]*\}/
+      );
+      if (jsonMatch) {
+        try {
+          parsedJson = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
+        } catch {
+          // Failed to parse extracted JSON
+        }
+      }
+    }
+
+    // If we have parsed JSON, process it
+    if (parsedJson) {
       // Check if it's an error response
-      if (parsed.error) {
+      if (parsedJson.error) {
         // Error message from agent
-        console.warn('Bhajan error from agent:', parsed.error);
+        console.warn('Bhajan error from agent:', parsedJson.error);
         // Log available bhajans if provided
-        if (parsed.available_bhajans) {
-          console.log('Available bhajans:', parsed.available_bhajans);
+        if (parsedJson.available_bhajans) {
+          console.log('Available bhajans:', parsedJson.available_bhajans);
         }
         return;
       }
@@ -74,34 +93,55 @@ export function BhajanPlayer() {
 
       // Check if it's a valid track response
       // Must have at least one of: url, preview_url, or spotify_id
-      const hasUrl = parsed.url || parsed.preview_url;
-      const hasSpotifyId = parsed.spotify_id;
+      const hasUrl = parsedJson.url || parsedJson.preview_url;
+      const hasSpotifyId = parsedJson.spotify_id;
 
       if (hasUrl || hasSpotifyId) {
         trackInfo = {
           // url can be preview_url or null - use whatever is available
-          url: parsed.url || parsed.preview_url || undefined,
-          name: parsed.name || undefined,
-          artist: parsed.artist || undefined,
-          message: parsed.message || undefined,
-          spotify_id: parsed.spotify_id || undefined,
-          external_url: parsed.external_url || undefined,
+          url:
+            (typeof parsedJson.url === 'string' ? parsedJson.url : undefined) ||
+            (typeof parsedJson.preview_url === 'string' ? parsedJson.preview_url : undefined) ||
+            undefined,
+          name: typeof parsedJson.name === 'string' ? parsedJson.name : undefined,
+          artist: typeof parsedJson.artist === 'string' ? parsedJson.artist : undefined,
+          message: typeof parsedJson.message === 'string' ? parsedJson.message : undefined,
+          spotify_id: typeof parsedJson.spotify_id === 'string' ? parsedJson.spotify_id : undefined,
+          external_url:
+            typeof parsedJson.external_url === 'string' ? parsedJson.external_url : undefined,
         };
 
-        console.log('Bhajan track info received:', {
+        console.log('Bhajan track info received (JSON):', {
           name: trackInfo.name,
           artist: trackInfo.artist,
           hasUrl: !!trackInfo.url,
           hasSpotifyId: !!trackInfo.spotify_id,
         });
       } else {
-        console.warn('Invalid bhajan response format:', parsed);
+        console.warn('Invalid bhajan response format:', parsedJson);
       }
-    } catch (err) {
-      // Not JSON, ignore - this is normal for regular chat messages
-      // Only log if it looks like it might be JSON
-      if (latestMessage.message.trim().startsWith('{')) {
-        console.warn('Failed to parse bhajan JSON:', err, latestMessage.message);
+    } else {
+      // No JSON found, try to extract Spotify track ID from URL in plain text
+      // Pattern: https://open.spotify.com/track/TRACK_ID
+      const spotifyUrlMatch = latestMessage.message.match(
+        /https?:\/\/(?:open\.)?spotify\.com\/track\/([a-zA-Z0-9]+)/i
+      );
+
+      if (spotifyUrlMatch && spotifyUrlMatch[1]) {
+        const extractedTrackId = spotifyUrlMatch[1];
+        console.log('Found Spotify track ID in message URL:', extractedTrackId);
+
+        trackInfo = {
+          spotify_id: extractedTrackId,
+          external_url: spotifyUrlMatch[0],
+          // Try to extract name from message
+          name: latestMessage.message.match(/["']([^"']+)["']/)?.[1] || undefined,
+        };
+
+        console.log('Bhajan track info extracted from URL:', {
+          spotify_id: trackInfo.spotify_id,
+          name: trackInfo.name,
+        });
       }
     }
 
