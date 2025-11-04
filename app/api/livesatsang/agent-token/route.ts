@@ -20,7 +20,7 @@ const AGENT_NAME = 'guruji'; // Name of the agent
 // don't cache the results
 export const revalidate = 0;
 
-export async function POST(req: Request) {
+export async function POST() {
   try {
     if (LIVEKIT_URL === undefined) {
       throw new Error('LIVEKIT_URL is not defined');
@@ -36,9 +36,9 @@ export async function POST(req: Request) {
     const agentIdentity = `livesatsang_guruji_${Date.now()}`;
 
     const agentToken = await createAgentToken(
-      { 
-        identity: agentIdentity, 
-        name: 'Guruji (LiveSatsang)' 
+      {
+        identity: agentIdentity,
+        name: 'Guruji (LiveSatsang)',
       },
       LIVE_SATSANG_ROOM_NAME,
       AGENT_NAME
@@ -50,11 +50,11 @@ export async function POST(req: Request) {
       roomName: LIVE_SATSANG_ROOM_NAME,
       agentToken: agentToken,
     };
-    
+
     const headers = new Headers({
       'Cache-Control': 'no-store',
     });
-    
+
     return NextResponse.json(data, { headers });
   } catch (error) {
     if (error instanceof Error) {
@@ -74,7 +74,7 @@ function createAgentToken(
     ...userInfo,
     ttl: '24h', // Long TTL for agent sessions
   });
-  
+
   const grant: VideoGrant = {
     room: roomName,
     roomJoin: true,
@@ -82,9 +82,9 @@ function createAgentToken(
     canPublishData: true,
     canSubscribe: true,
     roomAdmin: false, // Agent shouldn't be admin
-    canUpdateMetadata: true,
+    canUpdateOwnMetadata: true,
   };
-  
+
   at.addGrant(grant);
 
   // Configure agent in room
@@ -94,4 +94,3 @@ function createAgentToken(
 
   return Promise.resolve(at.toJwt());
 }
-

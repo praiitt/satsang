@@ -2,10 +2,10 @@ module.exports = {
   apps: [
     {
       name: 'satsang-livekit-agent',
-      script: 'uv',
-      args: 'run python src/agent.py start',
+      // Run via the project's Python venv
+      script: 'bash',
+      args: '--login -c "source .venv/bin/activate && python src/agent.py start"',
       cwd: '/home/underlitigationcom/satsang/livekit_server/agent-starter-python',
-      interpreter: 'none',
       instances: 1,
       autorestart: true,
       watch: false,

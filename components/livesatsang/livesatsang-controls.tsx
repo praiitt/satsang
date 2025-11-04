@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Room, Track } from 'livekit-client';
-import { 
+import {
   ControlBar,
   DisconnectButton,
   MediaDeviceMenu,
@@ -22,7 +22,6 @@ export function LiveSatsangControls({
   isHost,
   onLeave,
 }: LiveSatsangControlsProps) {
-  const [mutedParticipants, setMutedParticipants] = useState<Set<string>>(new Set());
   const [gurujiJoined, setGurujiJoined] = useState(false);
 
   // Check if Guruji (agent) is in the room
@@ -42,7 +41,7 @@ export function LiveSatsangControls({
   // Listen for participant updates
   useEffect(() => {
     checkGurujiStatus();
-    
+
     room.on('participantConnected', checkGurujiStatus);
     room.on('participantDisconnected', checkGurujiStatus);
 
@@ -50,6 +49,7 @@ export function LiveSatsangControls({
       room.off('participantConnected', checkGurujiStatus);
       room.off('participantDisconnected', checkGurujiStatus);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room]);
 
   const handleInviteGuruji = async () => {
@@ -62,7 +62,7 @@ export function LiveSatsangControls({
         throw new Error('Failed to invite Guruji');
       }
 
-      const { serverUrl, agentToken } = await response.json();
+      await response.json(); // Token is used server-side, not needed here
 
       // Connect agent to room (this would typically be done server-side via LiveKit API)
       // For now, we'll just notify that the invitation was sent
@@ -75,51 +75,26 @@ export function LiveSatsangControls({
   };
 
   const handleMuteAll = async () => {
-    // Mute all remote participants (except self and agent)
-    if (!room.remoteParticipants) return;
-    const participants = Array.from(room.remoteParticipants.values());
-    
-    for (const participant of participants) {
-      // Skip muting the agent (Guruji)
-      if (participant.identity.includes('guruji') || participant.identity.includes('agent')) {
-        continue;
-      }
-
-      const audioTrack = Array.from(participant.audioTracks.values())[0]?.track;
-      if (audioTrack) {
-        await audioTrack.setEnabled(false);
-        setMutedParticipants((prev) => new Set(prev).add(participant.identity));
-      }
-    }
-
-    alert('All participants have been muted');
+    // Note: Remote participants control their own audio
+    // This is a placeholder for future server-side mute functionality
+    alert(
+      'Mute all functionality requires server-side implementation. Please ask participants to mute themselves.'
+    );
   };
 
   const handleUnmuteAll = async () => {
-    if (!room.remoteParticipants) return;
-    const participants = Array.from(room.remoteParticipants.values());
-    
-    for (const participant of participants) {
-      if (participant.identity.includes('guruji') || participant.identity.includes('agent')) {
-        continue;
-      }
-
-      const audioTrack = Array.from(participant.audioTracks.values())[0]?.track;
-      if (audioTrack) {
-        await audioTrack.setEnabled(true);
-      }
-    }
-
-    setMutedParticipants(new Set());
-    alert('All participants have been unmuted');
+    // Note: Remote participants control their own audio
+    // This is a placeholder for future server-side unmute functionality
+    alert(
+      'Unmute all functionality requires server-side implementation. Please ask participants to unmute themselves.'
+    );
   };
 
-  // Safely get participant count - handle cases where room.participants might be undefined
-  const participantCount = (room.participants?.size ?? 0) + 1; // +1 for local participant
-  const remoteParticipants = Array.from(room.remoteParticipants?.values() ?? []);
+  // Safely get participant count using numParticipants
+  const participantCount = room.numParticipants ?? 1; // Includes local participant
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-black/95 via-black/90 to-black/80 backdrop-blur-xl shadow-2xl">
+    <div className="fixed right-0 bottom-0 left-0 z-50 bg-gradient-to-t from-black/95 via-black/90 to-black/80 shadow-2xl backdrop-blur-xl">
       <div className="space-y-4 p-4 sm:p-5 md:p-6">
         {/* Room Info */}
         <div className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2 backdrop-blur-sm">
@@ -140,11 +115,7 @@ export function LiveSatsangControls({
               <p className="truncate text-base font-semibold text-white sm:text-lg">
                 {participantName}
               </p>
-              {isHost && (
-                <p className="text-xs font-medium text-yellow-300 sm:text-sm">
-                  👑 Host
-                </p>
-              )}
+              {isHost && <p className="text-xs font-medium text-yellow-300 sm:text-sm">👑 Host</p>}
             </div>
           </div>
 
@@ -172,24 +143,24 @@ export function LiveSatsangControls({
           <div className="flex items-center justify-center gap-2 sm:gap-3">
             <ControlBar className="flex items-center gap-2 sm:gap-3">
               <div className="flex items-center gap-2 rounded-xl bg-white/10 p-1 backdrop-blur-sm sm:gap-3">
-                <TrackToggle 
+                <TrackToggle
                   source={Track.Source.Microphone}
                   className="h-12 w-12 rounded-lg sm:h-14 sm:w-14"
                 />
-                <TrackToggle 
+                <TrackToggle
                   source={Track.Source.Camera}
                   className="h-12 w-12 rounded-lg sm:h-14 sm:w-14"
                 />
               </div>
-              <MediaDeviceMenu 
+              <MediaDeviceMenu
                 kind="audioinput"
                 className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14"
               />
-              <MediaDeviceMenu 
+              <MediaDeviceMenu
                 kind="videoinput"
                 className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14"
               />
-              <DisconnectButton 
+              <DisconnectButton
                 onClick={onLeave}
                 className="h-12 w-12 rounded-lg bg-red-500/20 hover:bg-red-500/30 sm:h-14 sm:w-14"
               />
@@ -202,7 +173,7 @@ export function LiveSatsangControls({
               <div className="hidden h-px flex-1 bg-white/10 sm:block" />
               <button
                 onClick={handleMuteAll}
-                className="flex items-center justify-center gap-2 rounded-xl bg-red-500/20 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all active:scale-95 hover:bg-red-500/30 sm:px-5 sm:text-base"
+                className="flex items-center justify-center gap-2 rounded-xl bg-red-500/20 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-red-500/30 active:scale-95 sm:px-5 sm:text-base"
                 title="Mute all participants"
               >
                 <span className="text-lg">🔇</span>
@@ -210,7 +181,7 @@ export function LiveSatsangControls({
               </button>
               <button
                 onClick={handleUnmuteAll}
-                className="flex items-center justify-center gap-2 rounded-xl bg-green-500/20 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all active:scale-95 hover:bg-green-500/30 sm:px-5 sm:text-base"
+                className="flex items-center justify-center gap-2 rounded-xl bg-green-500/20 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-green-500/30 active:scale-95 sm:px-5 sm:text-base"
                 title="Unmute all participants"
               >
                 <span className="text-lg">🔊</span>

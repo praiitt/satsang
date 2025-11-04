@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Room, RoomEvent, RemoteParticipant } from 'livekit-client';
+import { Room, RoomEvent } from 'livekit-client';
 import { useLocalParticipant, useRemoteParticipants } from '@livekit/components-react';
 
 interface ParticipantListProps {
@@ -11,13 +11,15 @@ interface ParticipantListProps {
 export function ParticipantList({ room }: ParticipantListProps) {
   const { localParticipant } = useLocalParticipant();
   const remoteParticipants = useRemoteParticipants();
-  const [allParticipants, setAllParticipants] = useState<Array<{
-    identity: string;
-    name: string;
-    isLocal: boolean;
-    hasVideo: boolean;
-    hasAudio: boolean;
-  }>>([]);
+  const [allParticipants, setAllParticipants] = useState<
+    Array<{
+      identity: string;
+      name: string;
+      isLocal: boolean;
+      hasVideo: boolean;
+      hasAudio: boolean;
+    }>
+  >([]);
 
   useEffect(() => {
     const updateParticipants = () => {
@@ -31,31 +33,29 @@ export function ParticipantList({ room }: ParticipantListProps) {
 
       // Add local participant
       if (localParticipant) {
-        const videoTracks = localParticipant.videoTracks ? Array.from(localParticipant.videoTracks.values()) : [];
-        const audioTracks = localParticipant.audioTracks ? Array.from(localParticipant.audioTracks.values()) : [];
-        const videoTrack = videoTracks[0];
-        const audioTrack = audioTracks[0];
+        const trackPublications = Array.from(localParticipant.trackPublications.values());
+        const videoTrack = trackPublications.find((pub) => pub.kind === 'video');
+        const audioTrack = trackPublications.find((pub) => pub.kind === 'audio');
         participants.push({
           identity: localParticipant.identity,
           name: localParticipant.name || 'You',
           isLocal: true,
           hasVideo: !!videoTrack,
-          hasAudio: !!audioTrack && !videoTrack?.publication?.isMuted,
+          hasAudio: !!audioTrack && !audioTrack.isMuted,
         });
       }
 
       // Add remote participants
       remoteParticipants.forEach((participant) => {
-        const videoTracks = participant.videoTracks ? Array.from(participant.videoTracks.values()) : [];
-        const audioTracks = participant.audioTracks ? Array.from(participant.audioTracks.values()) : [];
-        const videoTrack = videoTracks[0];
-        const audioTrack = audioTracks[0];
+        const trackPublications = Array.from(participant.trackPublications.values());
+        const videoTrack = trackPublications.find((pub) => pub.kind === 'video');
+        const audioTrack = trackPublications.find((pub) => pub.kind === 'audio');
         participants.push({
           identity: participant.identity,
           name: participant.name || participant.identity,
           isLocal: false,
           hasVideo: !!videoTrack,
-          hasAudio: !!audioTrack && !videoTrack?.publication?.isMuted,
+          hasAudio: !!audioTrack && !audioTrack.isMuted,
         });
       });
 
@@ -83,12 +83,12 @@ export function ParticipantList({ room }: ParticipantListProps) {
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-xs rounded-xl bg-black/80 backdrop-blur-xl p-4 shadow-2xl">
+    <div className="fixed top-4 right-4 z-50 max-w-xs rounded-xl bg-black/80 p-4 shadow-2xl backdrop-blur-xl">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-bold text-white">Participants ({allParticipants.length})</h3>
         <span className="text-xs text-white/60">Room: {room.name}</span>
       </div>
-      <div className="space-y-2 max-h-60 overflow-y-auto">
+      <div className="max-h-60 space-y-2 overflow-y-auto">
         {allParticipants.map((participant) => (
           <div
             key={participant.identity}
@@ -100,9 +100,7 @@ export function ParticipantList({ room }: ParticipantListProps) {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium text-white">
                 {participant.name}
-                {participant.isLocal && (
-                  <span className="ml-1 text-xs text-white/60">(You)</span>
-                )}
+                {participant.isLocal && <span className="ml-1 text-xs text-white/60">(You)</span>}
               </p>
               <div className="flex items-center gap-2 text-xs text-white/60">
                 {participant.hasVideo && <span>📹</span>}
@@ -118,4 +116,3 @@ export function ParticipantList({ room }: ParticipantListProps) {
     </div>
   );
 }
-

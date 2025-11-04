@@ -1,31 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { existsSync } from 'fs';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { existsSync } from 'fs';
 
 // Don't cache bhajan files
 export const revalidate = 0;
 
 /**
  * API route to serve bhajan MP3 files
- * 
+ *
  * Route: /api/bhajans/{category}/{filename}.mp3
  * Example: /api/bhajans/krishna/hare-krishna-hare-rama.mp3
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> }
 ) {
   try {
     // Get the file path from the route parameters
-    const pathSegments = params.path;
+    const { path: pathSegments } = await params;
     if (!pathSegments || pathSegments.length === 0) {
       return new NextResponse('Bhajan path not provided', { status: 400 });
     }
 
     // Reconstruct the file path
     const filePath = pathSegments.join('/');
-    
+
     // Security: Prevent directory traversal attacks
     if (filePath.includes('..') || filePath.startsWith('/')) {
       return new NextResponse('Invalid file path', { status: 400 });
@@ -34,9 +34,10 @@ export async function GET(
     // Construct the full path to the bhajan file
     // Assuming bhajans are stored in the agent-starter-python directory
     // Adjust this path based on your actual deployment structure
-    const bhajanBasePath = process.env.BHAJAN_BASE_PATH || 
+    const bhajanBasePath =
+      process.env.BHAJAN_BASE_PATH ||
       join(process.cwd(), '..', 'livekit_server', 'agent-starter-python', 'bhajans');
-    
+
     const fullPath = join(bhajanBasePath, filePath);
 
     // Verify file exists
@@ -47,7 +48,7 @@ export async function GET(
 
     // Verify it's an MP3 file (or other allowed audio formats)
     const allowedExtensions = ['.mp3', '.wav', '.ogg', '.m4a'];
-    const hasAllowedExtension = allowedExtensions.some(ext => 
+    const hasAllowedExtension = allowedExtensions.some((ext) =>
       filePath.toLowerCase().endsWith(ext)
     );
 
@@ -69,7 +70,8 @@ export async function GET(
     }
 
     // Return the file with appropriate headers
-    return new NextResponse(fileBuffer, {
+    // Convert Buffer to Uint8Array for NextResponse
+    return new NextResponse(new Uint8Array(fileBuffer), {
       headers: {
         'Content-Type': contentType,
         'Content-Length': fileBuffer.length.toString(),
@@ -79,10 +81,8 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error serving bhajan file:', error);
-    return new NextResponse(
-      error instanceof Error ? error.message : 'Internal server error',
-      { status: 500 }
-    );
+    return new NextResponse(error instanceof Error ? error.message : 'Internal server error', {
+      status: 500,
+    });
   }
 }
-

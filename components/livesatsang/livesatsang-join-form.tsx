@@ -30,7 +30,7 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-md rounded-3xl bg-white/10 backdrop-blur-xl p-6 shadow-2xl sm:p-8 md:p-10">
+      <div className="w-full max-w-md rounded-3xl bg-white/10 p-6 shadow-2xl backdrop-blur-xl sm:p-8 md:p-10">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="mb-4 inline-block rounded-full bg-white/10 p-4">
@@ -50,8 +50,8 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Name Input */}
           <div>
-            <label 
-              htmlFor="name" 
+            <label
+              htmlFor="name"
               className="mb-2 block text-base font-semibold text-white sm:text-lg"
             >
               Your Name
@@ -62,7 +62,7 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
-              className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-5 py-4 text-base text-white placeholder-white/40 backdrop-blur-sm transition-all focus:border-white/40 focus:bg-white/15 focus:outline-none focus:ring-4 focus:ring-white/10 sm:px-6 sm:py-5 sm:text-lg"
+              className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-5 py-4 text-base text-white placeholder-white/40 backdrop-blur-sm transition-all focus:border-white/40 focus:bg-white/15 focus:ring-4 focus:ring-white/10 focus:outline-none sm:px-6 sm:py-5 sm:text-lg"
               disabled={isJoining}
               required
               autoComplete="name"
@@ -71,8 +71,8 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
 
           {/* Role Selection */}
           <div>
-            <label 
-              htmlFor="role" 
+            <label
+              htmlFor="role"
               className="mb-2 block text-base font-semibold text-white sm:text-lg"
             >
               Role
@@ -81,7 +81,7 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
               id="role"
               value={role}
               onChange={(e) => setRole(e.target.value as 'host' | 'participant')}
-              className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-5 py-4 text-base text-white backdrop-blur-sm transition-all focus:border-white/40 focus:bg-white/15 focus:outline-none focus:ring-4 focus:ring-white/10 sm:px-6 sm:py-5 sm:text-lg"
+              className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-5 py-4 text-base text-white backdrop-blur-sm transition-all focus:border-white/40 focus:bg-white/15 focus:ring-4 focus:ring-white/10 focus:outline-none sm:px-6 sm:py-5 sm:text-lg"
               disabled={isJoining}
             >
               <option value="participant" className="bg-gray-900 text-white">
@@ -92,8 +92,8 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
               </option>
             </select>
             <p className="mt-2 text-sm leading-relaxed text-white/70 sm:text-base">
-              {role === 'host' 
-                ? '👑 Hosts can mute others and control the room' 
+              {role === 'host'
+                ? '👑 Hosts can mute others and control the room'
                 : '🙏 Participants can speak and interact with others'}
             </p>
           </div>
@@ -117,9 +117,7 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-white/60 sm:text-base">
-            A sacred space for spiritual growth
-          </p>
+          <p className="text-sm text-white/60 sm:text-base">A sacred space for spiritual growth</p>
         </div>
       </div>
     </div>
