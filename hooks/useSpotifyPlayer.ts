@@ -121,12 +121,21 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     try {
       const response = await fetch('/api/spotify/token');
       if (!response.ok) {
+        // If 401, user needs to authenticate
+        if (response.status === 401) {
+          setError('Spotify authentication required');
+          setIsAuthenticated(false);
+        }
         tokenCacheRef.current = { token: null, timestamp: Date.now() };
         return null;
       }
       const data = await response.json();
       const token = data.access_token || null;
       tokenCacheRef.current = { token, timestamp: Date.now() };
+      // Clear error if we successfully got a token
+      if (token) {
+        setError(null);
+      }
       return token;
     } catch (err) {
       // Only log errors, don't spam console

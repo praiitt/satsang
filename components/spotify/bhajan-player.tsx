@@ -569,11 +569,29 @@ export function BhajanPlayer() {
               <div className="text-muted-foreground mt-0.5 text-xs">Preview</div>
             )}
             {!useSpotify && !currentTrack.url && currentTrack.spotify_id && !isAuthenticated && (
-              <div className="text-muted-foreground mt-0.5 text-xs">
-                {spotifyError ? 'Spotify authentication required' : 'Connecting to Spotify...'}
+              <div className="mt-0.5 flex items-center gap-2">
+                <div className="text-muted-foreground text-xs">
+                  {spotifyError ? 'Spotify authentication required' : 'Connecting to Spotify...'}
+                </div>
+                {spotifyError && (
+                  <button
+                    onClick={() => {
+                      window.location.href = '/api/spotify/auth';
+                    }}
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 rounded px-2 py-0.5 text-xs transition-colors"
+                  >
+                    Connect Spotify
+                  </button>
+                )}
               </div>
             )}
-            {spotifyError && <div className="text-destructive mt-0.5 text-xs">{spotifyError}</div>}
+            {spotifyError &&
+              !(
+                !useSpotify &&
+                !currentTrack.url &&
+                currentTrack.spotify_id &&
+                !isAuthenticated
+              ) && <div className="text-destructive mt-0.5 text-xs">{spotifyError}</div>}
           </div>
 
           {/* Close Button */}
