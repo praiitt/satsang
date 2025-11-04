@@ -57,6 +57,13 @@ export function BhajanPlayer() {
 
     const messageText = latestMessage.message.trim();
 
+    // Debug: Log all agent messages to help diagnose
+    console.log('[BhajanPlayer] Agent message received:', {
+      id: latestMessage.id,
+      message: messageText.substring(0, 100), // First 100 chars
+      fullLength: messageText.length,
+    });
+
     // Skip if message doesn't look like it contains bhajan data
     // Check for: JSON braces, Spotify URLs, or keywords like "bhajan", "playing", "बज रहा"
     const hasBhajanIndicators =
@@ -69,8 +76,11 @@ export function BhajanPlayer() {
 
     if (!hasBhajanIndicators) {
       // Regular conversation message, not a bhajan response
+      console.log('[BhajanPlayer] Skipping - no bhajan indicators found');
       return;
     }
+
+    console.log('[BhajanPlayer] Processing message with bhajan indicators');
 
     try {
       // Try to parse the entire message as JSON
@@ -165,6 +175,13 @@ export function BhajanPlayer() {
     }
 
     if (trackInfo) {
+      console.log('[BhajanPlayer] Track info extracted:', {
+        name: trackInfo.name,
+        hasUrl: !!trackInfo.url,
+        hasSpotifyId: !!trackInfo.spotify_id,
+        spotify_id: trackInfo.spotify_id,
+      });
+
       setCurrentTrack(trackInfo);
       lastProcessedMessageRef.current = latestMessage.id;
 
@@ -180,17 +197,23 @@ export function BhajanPlayer() {
       const shouldUseSpotify = isAuthenticated && hasSpotifyId;
 
       if (shouldUseSpotify && !useSpotify) {
-        console.log('Using Spotify SDK for playback (has spotify_id:', trackInfo.spotify_id, ')');
+        console.log(
+          '[BhajanPlayer] Using Spotify SDK for playback (has spotify_id:',
+          trackInfo.spotify_id,
+          ')'
+        );
         setUseSpotify(true);
       } else if (!hasSpotifyId && hasPreviewUrl) {
         // No spotify_id but has preview URL - use preview
-        console.log('Using preview URL (no spotify_id available)');
+        console.log('[BhajanPlayer] Using preview URL (no spotify_id available)');
         setUseSpotify(false);
       } else if (!hasSpotifyId && !hasPreviewUrl) {
         // No playback options available
-        console.warn('No playback options available - no spotify_id or preview_url');
+        console.warn('[BhajanPlayer] No playback options available - no spotify_id or preview_url');
         setUseSpotify(false);
       }
+    } else {
+      console.log('[BhajanPlayer] No track info extracted from message');
     }
   }, [messages, isAuthenticated, isReady, useSpotify]);
 
@@ -256,32 +279,55 @@ export function BhajanPlayer() {
     const trackSpotifyId = currentTrack.spotify_id;
 
     // Set up audio element
+    console.log('[BhajanPlayer] Setting up audio playback:', {
+      url: currentTrack.url,
+      name: currentTrack.name,
+    });
+
     audio.src = currentTrack.url;
     audio.volume = 0.8;
 
     // Event handlers
     const handleEnded = () => {
+      console.log('[BhajanPlayer] Audio playback ended');
       setCurrentTrack(null);
     };
     const handleError = (e: ErrorEvent) => {
-      console.error('Error playing audio:', e);
+      console.error('[BhajanPlayer] Error playing audio:', e);
       // If preview fails and we have Spotify ID, try Spotify
       if (trackSpotifyId && isAuthenticated) {
+        console.log('[BhajanPlayer] Preview failed, trying Spotify SDK');
         setUseSpotify(true);
       }
+    };
+
+    const handleCanPlay = () => {
+      console.log('[BhajanPlayer] Audio can play, starting playback');
+    };
+
+    const handleLoadedData = () => {
+      console.log('[BhajanPlayer] Audio data loaded');
     };
 
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
+    audio.addEventListener('canplay', handleCanPlay);
+    audio.addEventListener('loadeddata', handleLoadedData);
 
     // Auto-play
-    audio.play().catch((error) => {
-      console.error('Error playing audio:', error);
-      // If preview fails and we have Spotify ID, try Spotify
-      if (trackSpotifyId && isAuthenticated) {
-        setUseSpotify(true);
-      }
-    });
+    audio
+      .play()
+      .then(() => {
+        console.log('[BhajanPlayer] Audio playback started successfully');
+      })
+      .catch((error) => {
+        console.error('[BhajanPlayer] Error playing audio:', error);
+        // If preview fails and we have Spotify ID, try Spotify
+        if (trackSpotifyId && isAuthenticated) {
+          console.log('[BhajanPlayer] Preview play failed, trying Spotify SDK');
+          setUseSpotify(true);
+        }
+      });
 
     return () => {
       // Capture ref at cleanup time
@@ -289,6 +335,8 @@ export function BhajanPlayer() {
       if (currentAudio) {
         currentAudio.removeEventListener('ended', handleEnded);
         currentAudio.removeEventListener('error', handleError);
+        currentAudio.removeEventListener('canplay', handleCanPlay);
+        currentAudio.removeEventListener('loadeddata', handleLoadedData);
       }
     };
   }, [currentTrack?.url, useSpotify, currentTrack?.spotify_id, isAuthenticated]);
