@@ -97,7 +97,7 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
         return None
     
     logger.info(f"Spotify search for bhajan: '{query}'")
-    search_result = await _search_spotify(query, token)
+    search_result = await _search_spotify(query, token, limit=20)  # Try more tracks
     
     if not search_result:
         return None
@@ -107,7 +107,10 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
         logger.info(f"No tracks found on Spotify for '{query}'")
         return None
     
-    # Find first track with a preview URL
+    logger.info(f"Found {len(tracks)} tracks on Spotify for '{query}'")
+    
+    # Try multiple search strategies
+    # Strategy 1: Find first track with a preview URL
     for track in tracks:
         preview_url = track.get("preview_url")
         if preview_url:
@@ -116,7 +119,7 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
             artists = track.get("artists", [])
             artist_names = ", ".join([a.get("name", "") for a in artists])
             
-            logger.info(f"Found Spotify track: '{track_name}' by {artist_names} - {preview_url}")
+            logger.info(f"Found Spotify track with preview: '{track_name}' by {artist_names} - {preview_url}")
             return {
                 "name_en": track_name,
                 "artist": artist_names,
@@ -125,7 +128,52 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
                 "external_url": track.get("external_urls", {}).get("spotify"),
             }
     
-    logger.warning(f"No preview URL available for tracks found for '{query}'")
+    # Strategy 2: If no preview URL, try searching with different terms
+    # Try without "bhajan devotional" suffix
+    if "bhajan" in query.lower() or "devotional" in query.lower():
+        normalized = normalize_query(query)
+        logger.info(f"Retrying search without 'bhajan' keyword: '{normalized}'")
+        search_result2 = await _search_spotify(normalized, token, limit=20)
+        if search_result2:
+            tracks2 = search_result2.get("tracks", {}).get("items", [])
+            for track in tracks2:
+                preview_url = track.get("preview_url")
+                if preview_url:
+                    track_name = track.get("name", query)
+                    artists = track.get("artists", [])
+                    artist_names = ", ".join([a.get("name", "") for a in artists])
+                    logger.info(f"Found Spotify track with preview (retry): '{track_name}' by {artist_names}")
+                    return {
+                        "name_en": track_name,
+                        "artist": artist_names,
+                        "preview_url": preview_url,
+                        "spotify_id": track.get("id"),
+                        "external_url": track.get("external_urls", {}).get("spotify"),
+                    }
+    
+    # Strategy 3: If no preview URL, return the first track with Spotify ID for SDK playback
+    # This allows the frontend to use Spotify Web Playback SDK
+    if tracks:
+        track = tracks[0]  # Use the first/best match
+        track_name = track.get("name", query)
+        artists = track.get("artists", [])
+        artist_names = ", ".join([a.get("name", "") for a in artists])
+        spotify_id = track.get("id")
+        external_url = track.get("external_urls", {}).get("spotify")
+        
+        if spotify_id:
+            logger.info(f"Found Spotify track (no preview, using SDK): '{track_name}' by {artist_names} (ID: {spotify_id})")
+            return {
+                "name_en": track_name,
+                "artist": artist_names,
+                "preview_url": None,  # No preview available
+                "spotify_id": spotify_id,
+                "external_url": external_url,
+            }
+    
+    # Log what we found for debugging
+    found_tracks = [f"{t.get('name', 'N/A')} by {', '.join([a.get('name', '') for a in t.get('artists', [])])}" for t in tracks[:3]]
+    logger.warning(f"No tracks found for '{query}'. Found tracks: {', '.join(found_tracks)}")
     return None
 
 

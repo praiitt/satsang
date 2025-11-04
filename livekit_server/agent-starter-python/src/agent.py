@@ -193,10 +193,11 @@ Always end with a question or invitation to continue the conversation when natur
         # Get base URL from environment or use relative path (not used for Spotify, but kept for compatibility)
         base_url = os.getenv("BHAJAN_API_BASE_URL", None)
         
-        # Search for bhajan and get URL (async)
-        bhajan_url = await get_bhajan_url_async_func(bhajan_name, base_url)
+        # Get full track info (async)
+        from .bhajan_search import find_bhajan_by_name_async
+        track_info = await find_bhajan_by_name_async(bhajan_name)
         
-        if not bhajan_url:
+        if not track_info:
             # List available bhajans for helpful error message
             available = await list_available_bhajans_async_func()
             available_list = ", ".join(available[:5])  # Show first 5
@@ -208,13 +209,16 @@ Always end with a question or invitation to continue the conversation when natur
                 "available_bhajans": available,
             })
         
-        logger.info(f"Found bhajan URL: {bhajan_url}")
+        logger.info(f"Found bhajan track: {track_info.get('name_en')} - {track_info.get('spotify_id')}")
         
-        # Return URL in JSON format that frontend can parse
+        # Return full track info in JSON format that frontend can parse
         result = {
-            "url": bhajan_url,
-            "name": bhajan_name,
-            "message": f"भजन '{bhajan_name}' चल रहा है। आनंद लें!"  # "Bhajan '{name}' is playing. Enjoy!"
+            "name": track_info.get("name_en", bhajan_name),
+            "artist": track_info.get("artist", ""),
+            "preview_url": track_info.get("preview_url"),  # May be None
+            "spotify_id": track_info.get("spotify_id"),  # For SDK playback
+            "external_url": track_info.get("external_url"),  # Spotify link
+            "message": f"भजन '{track_info.get('name_en', bhajan_name)}' चल रहा है। आनंद लें!"  # "Bhajan '{name}' is playing. Enjoy!"
         }
         
         return json.dumps(result)

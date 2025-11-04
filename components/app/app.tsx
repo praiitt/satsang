@@ -5,6 +5,7 @@ import type { AppConfig } from '@/app-config';
 import { SessionProvider } from '@/components/app/session-provider';
 import { ViewController } from '@/components/app/view-controller';
 import { Toaster } from '@/components/livekit/toaster';
+import { BhajanPlayer } from '@/components/spotify/bhajan-player';
 
 interface AppProps {
   appConfig: AppConfig;
@@ -18,6 +19,7 @@ export function App({ appConfig }: AppProps) {
       </main>
       <StartAudio label="Start Audio" />
       <RoomAudioRenderer />
+      <BhajanPlayer />
       <Toaster />
     </SessionProvider>
   );
