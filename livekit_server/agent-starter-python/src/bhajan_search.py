@@ -32,12 +32,56 @@ def normalize_query(query: str) -> str:
     return " ".join(filtered_words) if filtered_words else query_lower
 
 
-def _get_spotify_token() -> Optional[str]:
-    """Get Spotify access token from environment variable."""
+async def _get_spotify_token() -> Optional[str]:
+    """
+    Get Spotify access token.
+    
+    Tries two methods:
+    1. Direct SPOTIFY_ACCESS_TOKEN from environment (if provided)
+    2. Client Credentials flow using SPOTIFY_CLIENT_ID and SPOTIFY_CLIENT_SECRET
+    """
+    # Method 1: Direct access token (if provided)
     token = os.getenv("SPOTIFY_ACCESS_TOKEN")
-    if not token:
-        logger.warning("SPOTIFY_ACCESS_TOKEN not set in environment")
-    return token
+    if token:
+        return token
+    
+    # Method 2: Use Client Credentials flow
+    client_id = os.getenv("SPOTIFY_CLIENT_ID")
+    client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
+    
+    if not client_id or not client_secret:
+        logger.warning("Neither SPOTIFY_ACCESS_TOKEN nor SPOTIFY_CLIENT_ID+SPOTIFY_CLIENT_SECRET set")
+        return None
+    
+    # Get token using Client Credentials flow
+    try:
+        import base64
+        auth_string = f"{client_id}:{client_secret}"
+        auth_bytes = auth_string.encode('ascii')
+        auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
+        
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                "https://accounts.spotify.com/api/token",
+                headers={
+                    "Authorization": f"Basic {auth_b64}",
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+                data={"grant_type": "client_credentials"},
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    token = data.get("access_token")
+                    logger.info("Successfully obtained Spotify access token via Client Credentials")
+                    return token
+                else:
+                    error_text = await response.text()
+                    logger.error(f"Failed to get Spotify token: {response.status} - {error_text}")
+                    return None
+    except Exception as e:
+        logger.error(f"Error getting Spotify token via Client Credentials: {e}")
+        return None
 
 
 async def _search_spotify(query: str, token: str, limit: int = 10) -> Optional[Dict]:
@@ -91,7 +135,7 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
     
     Returns None if no track found or preview URL not available.
     """
-    token = _get_spotify_token()
+    token = await _get_spotify_token()
     if not token:
         logger.warning("Spotify token not available, cannot search")
         return None
