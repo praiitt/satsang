@@ -88,12 +88,42 @@ export function BhajanPlayer() {
     } catch {
       // Not pure JSON, try to extract JSON from the message
       // The LLM might wrap the JSON in text like "भजन बज रहा है। {...json...}"
-      const jsonMatch = messageText.match(/\{[^{}]*"url"[^{}]*\}|\{[^{}]*"spotify_id"[^{}]*\}/);
-      if (jsonMatch) {
-        try {
-          parsedJson = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
-        } catch {
-          // Failed to parse extracted JSON
+      // Try to find complete JSON objects (not just fragments)
+      // Look for {...} that contains bhajan-related fields
+      const jsonPatterns = [
+        /\{[^{}]*"url"[^{}]*"name"[^{}]*\}/, // JSON with url and name
+        /\{[^{}]*"spotify_id"[^{}]*"name"[^{}]*\}/, // JSON with spotify_id and name
+        /\{[^{}]*"url"[^{}]*"spotify_id"[^{}]*\}/, // JSON with both url and spotify_id
+        /\{[^{}]*"url"[^{}]*\}/, // JSON with just url
+        /\{[^{}]*"spotify_id"[^{}]*\}/, // JSON with just spotify_id
+      ];
+
+      for (const pattern of jsonPatterns) {
+        const matches = messageText.match(pattern);
+        if (matches) {
+          // Try to find the complete JSON object by looking for matching braces
+          const startIndex = messageText.indexOf(matches[0]);
+          if (startIndex !== -1) {
+            // Try to find the complete JSON object
+            let braceCount = 0;
+            let jsonEnd = startIndex;
+            for (let i = startIndex; i < messageText.length; i++) {
+              if (messageText[i] === '{') braceCount++;
+              if (messageText[i] === '}') braceCount--;
+              if (braceCount === 0) {
+                jsonEnd = i + 1;
+                break;
+              }
+            }
+            const jsonCandidate = messageText.substring(startIndex, jsonEnd);
+            try {
+              parsedJson = JSON.parse(jsonCandidate) as Record<string, unknown>;
+              console.log('[BhajanPlayer] Extracted JSON from text:', jsonCandidate);
+              break;
+            } catch {
+              // Try next pattern
+            }
+          }
         }
       }
     }
