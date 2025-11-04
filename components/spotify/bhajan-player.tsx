@@ -83,46 +83,61 @@ export function BhajanPlayer() {
 
     console.log('[BhajanPlayer] Processing message with bhajan indicators');
 
-    try {
-      // Try to parse the entire message as JSON
-      parsedJson = JSON.parse(messageText) as Record<string, unknown>;
-    } catch {
-      // Not pure JSON, try to extract JSON from the message
-      // The LLM might wrap the JSON in text like "भजन बज रहा है। {...json...}"
-      // Try to find complete JSON objects (not just fragments)
-      // Look for {...} that contains bhajan-related fields
-      const jsonPatterns = [
-        /\{[^{}]*"url"[^{}]*"name"[^{}]*\}/, // JSON with url and name
-        /\{[^{}]*"spotify_id"[^{}]*"name"[^{}]*\}/, // JSON with spotify_id and name
-        /\{[^{}]*"url"[^{}]*"spotify_id"[^{}]*\}/, // JSON with both url and spotify_id
-        /\{[^{}]*"url"[^{}]*\}/, // JSON with just url
-        /\{[^{}]*"spotify_id"[^{}]*\}/, // JSON with just spotify_id
-      ];
+    // First, try to find JSON at the end of the message (agent might append it)
+    // Look for JSON pattern at the end: {...} or {...} followed by nothing or whitespace
+    const jsonAtEndMatch = messageText.match(/\{[\s\S]*\}(?:\s*)$/);
+    if (jsonAtEndMatch) {
+      try {
+        parsedJson = JSON.parse(jsonAtEndMatch[0]) as Record<string, unknown>;
+        console.log('[BhajanPlayer] Found JSON at end of message:', jsonAtEndMatch[0]);
+      } catch {
+        // JSON at end is invalid, try other methods
+      }
+    }
 
-      for (const pattern of jsonPatterns) {
-        const matches = messageText.match(pattern);
-        if (matches) {
-          // Try to find the complete JSON object by looking for matching braces
-          const startIndex = messageText.indexOf(matches[0]);
-          if (startIndex !== -1) {
-            // Try to find the complete JSON object
-            let braceCount = 0;
-            let jsonEnd = startIndex;
-            for (let i = startIndex; i < messageText.length; i++) {
-              if (messageText[i] === '{') braceCount++;
-              if (messageText[i] === '}') braceCount--;
-              if (braceCount === 0) {
-                jsonEnd = i + 1;
-                break;
+    // If we didn't find JSON at end, try parsing entire message or extracting from middle
+    if (!parsedJson) {
+      try {
+        // Try to parse the entire message as JSON
+        parsedJson = JSON.parse(messageText) as Record<string, unknown>;
+      } catch {
+        // Not pure JSON, try to extract JSON from the message
+        // The LLM might wrap the JSON in text like "भजन बज रहा है। {...json...}"
+        // Try to find complete JSON objects (not just fragments)
+        // Look for {...} that contains bhajan-related fields
+        const jsonPatterns = [
+          /\{[^{}]*"url"[^{}]*"name"[^{}]*\}/, // JSON with url and name
+          /\{[^{}]*"spotify_id"[^{}]*"name"[^{}]*\}/, // JSON with spotify_id and name
+          /\{[^{}]*"url"[^{}]*"spotify_id"[^{}]*\}/, // JSON with both url and spotify_id
+          /\{[^{}]*"url"[^{}]*\}/, // JSON with just url
+          /\{[^{}]*"spotify_id"[^{}]*\}/, // JSON with just spotify_id
+        ];
+
+        for (const pattern of jsonPatterns) {
+          const matches = messageText.match(pattern);
+          if (matches) {
+            // Try to find the complete JSON object by looking for matching braces
+            const startIndex = messageText.indexOf(matches[0]);
+            if (startIndex !== -1) {
+              // Try to find the complete JSON object
+              let braceCount = 0;
+              let jsonEnd = startIndex;
+              for (let i = startIndex; i < messageText.length; i++) {
+                if (messageText[i] === '{') braceCount++;
+                if (messageText[i] === '}') braceCount--;
+                if (braceCount === 0) {
+                  jsonEnd = i + 1;
+                  break;
+                }
               }
-            }
-            const jsonCandidate = messageText.substring(startIndex, jsonEnd);
-            try {
-              parsedJson = JSON.parse(jsonCandidate) as Record<string, unknown>;
-              console.log('[BhajanPlayer] Extracted JSON from text:', jsonCandidate);
-              break;
-            } catch {
-              // Try next pattern
+              const jsonCandidate = messageText.substring(startIndex, jsonEnd);
+              try {
+                parsedJson = JSON.parse(jsonCandidate) as Record<string, unknown>;
+                console.log('[BhajanPlayer] Extracted JSON from text:', jsonCandidate);
+                break;
+              } catch {
+                // Try next pattern
+              }
             }
           }
         }
