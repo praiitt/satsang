@@ -35,6 +35,8 @@ export function BhajanPlayer() {
     error: spotifyError,
     connect,
     playTrack,
+    pause,
+    resume,
   } = useSpotifyPlayer();
 
   // Parse agent messages for bhajan playback info
@@ -250,19 +252,38 @@ export function BhajanPlayer() {
         );
         setUseSpotify(true);
       } else if (hasSpotifyId && !isAuthenticated) {
-        // Has spotify_id but user not authenticated - try to get preview URL or show message
+        // Has spotify_id but user not authenticated - try to initialize Spotify
         console.log(
-          '[BhajanPlayer] Has spotify_id but not authenticated, checking for preview URL'
+          '[BhajanPlayer] Has spotify_id but not authenticated - attempting to initialize Spotify'
         );
         if (hasPreviewUrl) {
+          // Use preview URL as fallback, but still try to connect Spotify for future tracks
           console.log('[BhajanPlayer] Using preview URL (not authenticated with Spotify)');
           setUseSpotify(false);
+          // Try to connect in background (non-blocking)
+          connect().catch(() => {
+            // Ignore errors - just trying to initialize for future use
+          });
         } else {
-          console.warn(
-            '[BhajanPlayer] Only spotify_id available but user not authenticated - no preview URL'
+          // No preview URL - must use Spotify SDK
+          console.log(
+            '[BhajanPlayer] Only spotify_id available - attempting to connect to Spotify'
           );
-          // Still set track so it can be played if user authenticates later
-          setUseSpotify(false);
+          // Try to connect - this will initialize player if token is available
+          connect()
+            .then(() => {
+              // If connection succeeds, use Spotify SDK
+              if (isAuthenticated) {
+                setUseSpotify(true);
+              }
+            })
+            .catch(() => {
+              // Connection failed - will show message in UI
+              console.warn(
+                '[BhajanPlayer] Spotify connection failed - user may need to authenticate'
+              );
+              setUseSpotify(false);
+            });
         }
       } else if (!hasSpotifyId && hasPreviewUrl) {
         // No spotify_id but has preview URL - use preview
@@ -276,18 +297,27 @@ export function BhajanPlayer() {
     } else {
       console.log('[BhajanPlayer] No track info extracted from message');
     }
-  }, [messages, isAuthenticated, isReady, useSpotify]);
+  }, [messages, isAuthenticated, isReady, useSpotify, connect]);
 
   // Auto-connect to Spotify when authenticated
   useEffect(() => {
     if (isAuthenticated && !isReady && !spotifyError) {
+      console.log('[BhajanPlayer] Auto-connecting to Spotify...');
       connect();
     }
   }, [isAuthenticated, isReady, spotifyError, connect]);
 
   // Play track using Spotify SDK
   useEffect(() => {
-    if (!currentTrack || !useSpotify || !currentTrack.spotify_id) {
+    if (!currentTrack || !currentTrack.spotify_id) {
+      return;
+    }
+
+    // If we have a spotify_id but no preview URL, we MUST use Spotify SDK
+    // Try to play immediately when ready, or wait for authentication/ready state
+    const shouldTrySpotify = useSpotify || (!currentTrack.url && currentTrack.spotify_id);
+
+    if (!shouldTrySpotify) {
       return;
     }
 
@@ -297,34 +327,37 @@ export function BhajanPlayer() {
     const attemptPlay = async () => {
       if (isReady && deviceId) {
         try {
+          console.log('[BhajanPlayer] Playing track with Spotify SDK:', currentTrack.spotify_id);
           await playTrack(currentTrack.spotify_id!);
+          setIsPlaying(true);
         } catch (error) {
-          console.error('Error playing track with Spotify:', error);
-          // Fallback to preview URL
-          setUseSpotify(false);
-        }
-      } else if (isAuthenticated && !isReady) {
-        // Wait a bit for player to become ready
-        setTimeout(() => {
-          if (isReady && deviceId) {
-            playTrack(currentTrack.spotify_id!).catch((error) => {
-              console.error('Error playing track with Spotify (retry):', error);
-              setUseSpotify(false);
-            });
-          } else {
-            // Still not ready after wait, fallback to preview
-            console.warn('Spotify player not ready after wait, using preview');
+          console.error('[BhajanPlayer] Error playing track with Spotify:', error);
+          // If preview URL available, fallback to preview
+          if (currentTrack.url) {
             setUseSpotify(false);
           }
-        }, 2000);
+        }
+      } else if (isAuthenticated && !isReady) {
+        // Wait for player to become ready - this will be handled by the effect when isReady changes
+        console.log('[BhajanPlayer] Waiting for Spotify player to become ready...');
+        // Don't set up interval here - the effect will re-run when isReady changes
+        return;
       } else if (!isAuthenticated) {
-        // Not authenticated, use preview
-        setUseSpotify(false);
+        // Not authenticated yet - try to connect
+        console.log('[BhajanPlayer] Not authenticated - attempting to connect...');
+        connect()
+          .then(() => {
+            // Will retry after authentication succeeds
+          })
+          .catch(() => {
+            // Authentication failed - will show message in UI
+            console.warn('[BhajanPlayer] Spotify authentication required');
+          });
       }
     };
 
     attemptPlay();
-  }, [currentTrack, useSpotify, isReady, deviceId, isAuthenticated, playTrack]);
+  }, [currentTrack, useSpotify, isReady, deviceId, isAuthenticated, playTrack, connect]);
 
   // Play audio when track URL changes (fallback mode - preview URLs)
   useEffect(() => {
@@ -332,11 +365,12 @@ export function BhajanPlayer() {
     // 1. We have a preview URL
     // 2. We're NOT using Spotify SDK
     // 3. Audio element exists
-    if (!currentTrack?.url || useSpotify || !audioRef.current) {
+    // Capture audio ref at start of effect for cleanup
+    const audio = audioRef.current;
+    if (!currentTrack?.url || useSpotify || !audio) {
       return;
     }
 
-    const audio = audioRef.current;
     const trackSpotifyId = currentTrack.spotify_id;
 
     // Set up audio element
@@ -403,18 +437,23 @@ export function BhajanPlayer() {
       });
 
     return () => {
-      // Capture ref at cleanup time
-      const currentAudio = audioRef.current;
-      if (currentAudio) {
-        currentAudio.removeEventListener('ended', handleEnded);
-        currentAudio.removeEventListener('error', handleError);
-        currentAudio.removeEventListener('canplay', handleCanPlay);
-        currentAudio.removeEventListener('loadeddata', handleLoadedData);
-        currentAudio.removeEventListener('play', handlePlay);
-        currentAudio.removeEventListener('pause', handlePause);
+      // Use captured audio ref from effect start
+      if (audio) {
+        audio.removeEventListener('ended', handleEnded);
+        audio.removeEventListener('error', handleError);
+        audio.removeEventListener('canplay', handleCanPlay);
+        audio.removeEventListener('loadeddata', handleLoadedData);
+        audio.removeEventListener('play', handlePlay);
+        audio.removeEventListener('pause', handlePause);
       }
     };
-  }, [currentTrack?.url, useSpotify, currentTrack?.spotify_id, isAuthenticated]);
+  }, [
+    currentTrack?.url,
+    useSpotify,
+    currentTrack?.spotify_id,
+    currentTrack?.name,
+    isAuthenticated,
+  ]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -436,7 +475,28 @@ export function BhajanPlayer() {
     );
   }
 
-  const handlePlayPause = () => {
+  const handlePlayPause = async () => {
+    // If using Spotify SDK, use Spotify controls
+    if (useSpotify && currentTrack?.spotify_id) {
+      if (isReady && deviceId) {
+        if (isPlaying) {
+          await pause();
+        } else {
+          await resume();
+        }
+      } else {
+        // Player not ready yet - try to play track
+        try {
+          await playTrack(currentTrack.spotify_id);
+          setIsPlaying(true);
+        } catch (error) {
+          console.error('[BhajanPlayer] Error playing:', error);
+        }
+      }
+      return;
+    }
+
+    // Otherwise use HTML5 audio
     if (!audioRef.current) return;
 
     if (audioRef.current.paused) {
@@ -500,10 +560,20 @@ export function BhajanPlayer() {
             {currentTrack.artist && (
               <div className="text-muted-foreground truncate text-xs">{currentTrack.artist}</div>
             )}
-            {useSpotify && <div className="text-primary mt-0.5 text-xs">Playing via Spotify</div>}
+            {useSpotify && (
+              <div className="text-primary mt-0.5 text-xs">
+                {isReady ? 'Playing via Spotify' : 'Connecting to Spotify...'}
+              </div>
+            )}
             {!useSpotify && currentTrack.url && (
               <div className="text-muted-foreground mt-0.5 text-xs">Preview</div>
             )}
+            {!useSpotify && !currentTrack.url && currentTrack.spotify_id && !isAuthenticated && (
+              <div className="text-muted-foreground mt-0.5 text-xs">
+                {spotifyError ? 'Spotify authentication required' : 'Connecting to Spotify...'}
+              </div>
+            )}
+            {spotifyError && <div className="text-destructive mt-0.5 text-xs">{spotifyError}</div>}
           </div>
 
           {/* Close Button */}
