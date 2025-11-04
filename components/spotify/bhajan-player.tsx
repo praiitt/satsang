@@ -23,6 +23,7 @@ export function BhajanPlayer() {
   const messages = useChatMessages();
   const [currentTrack, setCurrentTrack] = useState<BhajanTrackInfo | null>(null);
   const [useSpotify, setUseSpotify] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastProcessedMessageRef = useRef<string>('');
 
@@ -335,10 +336,12 @@ export function BhajanPlayer() {
     // Event handlers
     const handleEnded = () => {
       console.log('[BhajanPlayer] Audio playback ended');
+      setIsPlaying(false);
       setCurrentTrack(null);
     };
     const handleError = (e: ErrorEvent) => {
       console.error('[BhajanPlayer] Error playing audio:', e);
+      setIsPlaying(false);
       // If preview fails and we have Spotify ID, try Spotify
       if (trackSpotifyId && isAuthenticated) {
         console.log('[BhajanPlayer] Preview failed, trying Spotify SDK');
@@ -354,10 +357,20 @@ export function BhajanPlayer() {
       console.log('[BhajanPlayer] Audio data loaded');
     };
 
+    const handlePlay = () => {
+      setIsPlaying(true);
+    };
+
+    const handlePause = () => {
+      setIsPlaying(false);
+    };
+
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
     audio.addEventListener('canplay', handleCanPlay);
     audio.addEventListener('loadeddata', handleLoadedData);
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
 
     // Auto-play
     audio
@@ -382,6 +395,8 @@ export function BhajanPlayer() {
         currentAudio.removeEventListener('error', handleError);
         currentAudio.removeEventListener('canplay', handleCanPlay);
         currentAudio.removeEventListener('loadeddata', handleLoadedData);
+        currentAudio.removeEventListener('play', handlePlay);
+        currentAudio.removeEventListener('pause', handlePause);
       }
     };
   }, [currentTrack?.url, useSpotify, currentTrack?.spotify_id, isAuthenticated]);
@@ -397,10 +412,115 @@ export function BhajanPlayer() {
     };
   }, []);
 
-  // Don't render anything visible - just handle audio playback
+  // Render visible player UI
+  if (!currentTrack) {
+    return (
+      <>
+        <audio ref={audioRef} preload="auto" />
+      </>
+    );
+  }
+
+  const handlePlayPause = () => {
+    if (!audioRef.current) return;
+
+    if (audioRef.current.paused) {
+      audioRef.current.play().catch((error) => {
+        console.error('[BhajanPlayer] Error playing:', error);
+        setIsPlaying(false);
+      });
+    } else {
+      audioRef.current.pause();
+    }
+  };
+
+  const currentlyPlaying = isPlaying || (audioRef.current && !audioRef.current.paused);
+
   return (
     <>
       <audio ref={audioRef} preload="auto" />
+      {/* Visible Player UI */}
+      <div className="bg-background/95 border-input/50 animate-in slide-in-from-bottom-2 mb-2 rounded-lg border p-3 shadow-lg backdrop-blur-sm duration-300 md:p-4">
+        <div className="flex items-center gap-3">
+          {/* Play/Pause Button */}
+          <button
+            onClick={handlePlayPause}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full transition-colors"
+            aria-label={currentlyPlaying ? 'Pause' : 'Play'}
+          >
+            {currentlyPlaying ? (
+              <svg
+                className="h-5 w-5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ) : (
+              <svg
+                className="ml-0.5 h-5 w-5"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+          </button>
+
+          {/* Track Info */}
+          <div className="min-w-0 flex-1">
+            <div className="text-foreground truncate text-sm font-medium">
+              {currentTrack.name || 'भजन'}
+            </div>
+            {currentTrack.artist && (
+              <div className="text-muted-foreground truncate text-xs">{currentTrack.artist}</div>
+            )}
+            {useSpotify && <div className="text-primary mt-0.5 text-xs">Playing via Spotify</div>}
+            {!useSpotify && currentTrack.url && (
+              <div className="text-muted-foreground mt-0.5 text-xs">Preview</div>
+            )}
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={() => {
+              if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.src = '';
+              }
+              setCurrentTrack(null);
+              setIsPlaying(false);
+            }}
+            className="hover:bg-muted flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full transition-colors"
+            aria-label="Stop playback"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
     </>
   );
 }
