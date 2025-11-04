@@ -23,10 +23,11 @@ function MaintenanceMode() {
 
 export default async function Page() {
   // TODO: TEMPORARY - Remove this return statement to restore normal home page
-  return <MaintenanceMode />;
+  // TEMPORARILY DISABLED FOR LOCAL TESTING - Uncomment below to enable maintenance mode
+  // return <MaintenanceMode />;
 
-  // ORIGINAL CODE - Uncomment this to restore the normal home page:
-  // const hdrs = await headers();
-  // const appConfig = await getAppConfig(hdrs);
-  // return <App appConfig={appConfig} />;
+  // ORIGINAL CODE - Restored for local testing:
+  const hdrs = await headers();
+  const appConfig = await getAppConfig(hdrs);
+  return <App appConfig={appConfig} />;
 }
