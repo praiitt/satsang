@@ -18,6 +18,7 @@ export function LiveSatsangApp() {
   const [participantName, setParticipantName] = useState<string>('');
   const [isConnected, setIsConnected] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [showParticipants, setShowParticipants] = useState(false);
 
   const handleJoin = async (name: string, role: 'host' | 'participant') => {
     try {
@@ -136,11 +137,25 @@ export function LiveSatsangApp() {
       ) : room ? (
         <RoomContext.Provider value={room}>
           <div className="flex h-full flex-col overflow-hidden">
-            {/* Participant List - Debug overlay */}
-            <ParticipantList room={room} />
+            {/* Top header */}
+            <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-3 sm:p-4">
+              <div className="pointer-events-auto rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md shadow-sm">
+                LiveSatsang
+              </div>
+              <button
+                onClick={() => setShowParticipants((v) => !v)}
+                className="pointer-events-auto rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md shadow-sm active:scale-95"
+                aria-label="Toggle participants"
+              >
+                👥 Participants
+              </button>
+            </div>
+
+            {/* Participant List - panel / sheet */}
+            <ParticipantList room={room} isOpen={showParticipants} onClose={() => setShowParticipants(false)} />
 
             {/* Video Conference Grid - Add padding to prevent overlap with fixed controls */}
-            <div className="relative flex-1 overflow-hidden pb-60 sm:pb-56 md:pb-52">
+            <div className="relative flex-1 overflow-hidden pb-60 pt-12 sm:pb-56 sm:pt-12 md:pb-52">
               <VideoConference />
             </div>
 

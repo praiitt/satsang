@@ -6,9 +6,11 @@ import { useLocalParticipant, useRemoteParticipants } from '@livekit/components-
 
 interface ParticipantListProps {
   room: Room;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function ParticipantList({ room }: ParticipantListProps) {
+export function ParticipantList({ room, isOpen = true, onClose }: ParticipantListProps) {
   const { localParticipant } = useLocalParticipant();
   const remoteParticipants = useRemoteParticipants();
   const [allParticipants, setAllParticipants] = useState<
@@ -78,41 +80,74 @@ export function ParticipantList({ room }: ParticipantListProps) {
     };
   }, [room, localParticipant, remoteParticipants]);
 
-  if (allParticipants.length === 0) {
+  if (allParticipants.length === 0 || !isOpen) {
     return null;
   }
 
   return (
-    <div className="fixed top-4 right-4 z-50 max-w-xs rounded-xl bg-black/80 p-4 shadow-2xl backdrop-blur-xl">
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="text-sm font-bold text-white">Participants ({allParticipants.length})</h3>
-        <span className="text-xs text-white/60">Room: {room.name}</span>
-      </div>
-      <div className="max-h-60 space-y-2 overflow-y-auto">
-        {allParticipants.map((participant) => (
-          <div
-            key={participant.identity}
-            className="flex items-center gap-2 rounded-lg bg-white/5 p-2"
+    <>
+      {/* Mobile bottom sheet */}
+      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-[#0b0b14]/95 p-4 shadow-2xl backdrop-blur-xl md:hidden">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white">Participants ({allParticipants.length})</h3>
+          <button
+            aria-label="Close participants"
+            className="rounded-lg bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/15"
+            onClick={onClose}
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-xs font-bold text-white">
-              {participant.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-white">
-                {participant.name}
-                {participant.isLocal && <span className="ml-1 text-xs text-white/60">(You)</span>}
-              </p>
-              <div className="flex items-center gap-2 text-xs text-white/60">
-                {participant.hasVideo && <span>📹</span>}
-                {participant.hasAudio && <span>🎤</span>}
-                {!participant.hasVideo && !participant.hasAudio && (
-                  <span className="text-white/40">No media</span>
-                )}
+            Close
+          </button>
+        </div>
+        <div className="max-h-72 space-y-2 overflow-y-auto">
+          {allParticipants.map((participant) => (
+            <div key={participant.identity} className="flex items-center gap-2 rounded-lg bg-white/5 p-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-xs font-bold text-white">
+                {participant.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-white">
+                  {participant.name}
+                  {participant.isLocal && <span className="ml-1 text-xs text-white/60">(You)</span>}
+                </p>
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  {participant.hasVideo && <span>📹</span>}
+                  {participant.hasAudio && <span>🎤</span>}
+                  {!participant.hasVideo && !participant.hasAudio && <span className="text-white/40">No media</span>}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Desktop floating panel */}
+      <div className="fixed top-4 right-4 z-40 hidden max-w-xs rounded-xl bg-black/80 p-4 shadow-2xl backdrop-blur-xl md:block">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white">Participants ({allParticipants.length})</h3>
+          <span className="text-xs text-white/60">Room: {room.name}</span>
+        </div>
+        <div className="max-h-60 space-y-2 overflow-y-auto">
+          {allParticipants.map((participant) => (
+            <div key={participant.identity} className="flex items-center gap-2 rounded-lg bg-white/5 p-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-xs font-bold text-white">
+                {participant.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-white">
+                  {participant.name}
+                  {participant.isLocal && <span className="ml-1 text-xs text-white/60">(You)</span>}
+                </p>
+                <div className="flex items-center gap-2 text-xs text-white/60">
+                  {participant.hasVideo && <span>📹</span>}
+                  {participant.hasAudio && <span>🎤</span>}
+                  {!participant.hasVideo && !participant.hasAudio && <span className="text-white/40">No media</span>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }
