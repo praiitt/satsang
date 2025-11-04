@@ -29,12 +29,33 @@ Update `app-config.ts` for branding and UI customization.
 
 ## Environment Variables
 
-Configure LiveKit credentials in `.env.local`:
+Configure credentials in `.env.local`:
 
+### LiveKit (Required)
 ```env
 LIVEKIT_API_KEY=your_livekit_api_key
 LIVEKIT_API_SECRET=your_livekit_api_secret
 LIVEKIT_URL=https://your-livekit-server-url
+```
+
+### TTS Settings
+```env
 TTS_VOICE_ID=your_voice_id
 TTS_SPEED=slow
 ```
+
+### Spotify (For Bhajan Playback)
+```env
+# Option 1: Direct access token (for testing)
+SPOTIFY_ACCESS_TOKEN=your_spotify_access_token
+
+# Option 2: OAuth credentials (for production)
+SPOTIFY_CLIENT_ID=65136cefd17d48ffb4c7d6ca07dd533f
+SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
+SPOTIFY_REDIRECT_URI=https://satsang.rraasi.com/api/spotify/callback
+```
+
+**Note**: 
+- Add `SPOTIFY_REDIRECT_URI` to your Spotify app's "Redirect URIs" in the Spotify Developer Dashboard
+- `SPOTIFY_CLIENT_SECRET` should be kept secure and never exposed to the frontend
+- For production, use OAuth flow (Option 2) instead of direct access tokens
