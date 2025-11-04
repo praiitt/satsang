@@ -151,6 +151,7 @@ export function BhajanPlayer() {
       }
     } else {
       // No JSON found, try to extract Spotify track ID from URL in plain text
+      // This happens when LLM wraps the JSON in text and includes the URL
       // Pattern: https://open.spotify.com/track/TRACK_ID
       const spotifyUrlMatch = messageText.match(
         /https?:\/\/(?:open\.)?spotify\.com\/track\/([a-zA-Z0-9]+)/i
@@ -158,19 +159,18 @@ export function BhajanPlayer() {
 
       if (spotifyUrlMatch && spotifyUrlMatch[1]) {
         const extractedTrackId = spotifyUrlMatch[1];
-        console.log('Found Spotify track ID in message URL:', extractedTrackId);
+        console.log('[BhajanPlayer] Found Spotify track ID in message URL:', extractedTrackId);
 
-        trackInfo = {
-          spotify_id: extractedTrackId,
-          external_url: spotifyUrlMatch[0],
-          // Try to extract name from message
-          name: messageText.match(/["']([^"']+)["']/)?.[1] || undefined,
-        };
+        // When we only have spotify_id from URL (no JSON), we can't play it without auth or preview URL
+        // The agent should have returned JSON with preview_url, but LLM wrapped it in text
+        // Log a warning but don't try to play (would need Spotify auth or preview URL)
+        console.warn(
+          '[BhajanPlayer] Track ID found in URL but no JSON data - agent should return JSON format. ' +
+            'Track requires Spotify authentication for playback.'
+        );
 
-        console.log('Bhajan track info extracted from URL:', {
-          spotify_id: trackInfo.spotify_id,
-          name: trackInfo.name,
-        });
+        // Don't set trackInfo - we need preview_url or authentication to play
+        // This prevents silent failures
       }
     }
 
@@ -203,6 +203,21 @@ export function BhajanPlayer() {
           ')'
         );
         setUseSpotify(true);
+      } else if (hasSpotifyId && !isAuthenticated) {
+        // Has spotify_id but user not authenticated - try to get preview URL or show message
+        console.log(
+          '[BhajanPlayer] Has spotify_id but not authenticated, checking for preview URL'
+        );
+        if (hasPreviewUrl) {
+          console.log('[BhajanPlayer] Using preview URL (not authenticated with Spotify)');
+          setUseSpotify(false);
+        } else {
+          console.warn(
+            '[BhajanPlayer] Only spotify_id available but user not authenticated - no preview URL'
+          );
+          // Still set track so it can be played if user authenticates later
+          setUseSpotify(false);
+        }
       } else if (!hasSpotifyId && hasPreviewUrl) {
         // No spotify_id but has preview URL - use preview
         console.log('[BhajanPlayer] Using preview URL (no spotify_id available)');

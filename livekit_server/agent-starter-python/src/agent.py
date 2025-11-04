@@ -156,7 +156,9 @@ Be respectful and non-dogmatic, acknowledging diverse sampradayas. Offer practic
 BHAJAN PLAYBACK:
 When users request to hear a bhajan, devotional song, or spiritual music, use the play_bhajan tool.
 Common requests include: "krishna ka bhajan bajao", "hare krishna sunao", "bhajan chal", "om namah shivaya sunao", etc.
-After using the tool, inform the user that the bhajan is playing and they can enjoy it. The tool will return a URL that allows the bhajan to be played.
+After using the play_bhajan tool, simply inform the user that the bhajan is playing. DO NOT mention URLs, links, or technical details like "you can listen here" or "click this link". 
+The tool returns JSON data that the frontend handles automatically - you should only speak a simple confirmation like "भजन चल रहा है, आनंद लें" (The bhajan is playing, enjoy it).
+NEVER speak URLs, links, or technical IDs - the frontend handles playback automatically.
 
 RESPONSE STYLE:
 Default to replying in Hindi (Devanagari script). If the user speaks another language, mirror their language.
@@ -247,15 +249,18 @@ Always end with a question or invitation to continue the conversation when natur
         # Return result with MP3 URL (if available) and Spotify info for SDK playback
         # Frontend will use Spotify SDK if spotify_id is present and user is authenticated
         # Otherwise, it will use preview_url as fallback
+        # IMPORTANT: Always include preview_url if available, even when spotify_id is present
+        # This ensures playback works for non-authenticated users
         result = {
             "url": preview_url,  # Direct MP3 URL for HTML5 audio player (fallback, can be None)
             "name": track_info.get("name_en", bhajan_name),
             "artist": track_info.get("artist", ""),
             "spotify_id": spotify_id,  # Spotify track ID for Web Playback SDK (can be None)
-            "external_url": track_info.get("external_url"),  # Spotify web player URL
+            "external_url": track_info.get("external_url"),  # Spotify web player URL (for reference only, not spoken)
             "message": f"भजन '{track_info.get('name_en', bhajan_name)}' चल रहा है। आनंद लें!"  # "Bhajan '{name}' is playing. Enjoy!"
         }
         
+        logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}")
         return json.dumps(result)
 
 
