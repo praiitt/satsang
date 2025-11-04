@@ -19,8 +19,13 @@ export function LiveSatsangApp() {
   const [isConnected, setIsConnected] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [showParticipants, setShowParticipants] = useState(false);
+  const [language, setLanguage] = useState<string>('hi');
 
-  const handleJoin = async (name: string, role: 'host' | 'participant') => {
+  const handleJoin = async (
+    name: string,
+    role: 'host' | 'participant',
+    selectedLanguage: string
+  ) => {
     try {
       // Fetch token from our API
       const response = await fetch('/api/livesatsang/token', {
@@ -31,6 +36,7 @@ export function LiveSatsangApp() {
         body: JSON.stringify({
           participantName: name,
           role,
+          language: selectedLanguage,
         }),
       });
 
@@ -115,6 +121,7 @@ export function LiveSatsangApp() {
       setRoom(newRoom);
       setParticipantName(name);
       setIsHost(role === 'host');
+      setLanguage(selectedLanguage || 'hi');
     } catch (error) {
       console.error('Error joining LiveSatsang:', error);
       alert('Failed to join LiveSatsang. Please try again.');
@@ -140,7 +147,7 @@ export function LiveSatsangApp() {
             {/* Top header */}
             <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-3 sm:p-4">
               <div className="pointer-events-auto rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md shadow-sm">
-                LiveSatsang
+                LiveSatsang • <span className="font-normal uppercase">{language}</span>
               </div>
               <button
                 onClick={() => setShowParticipants((v) => !v)}

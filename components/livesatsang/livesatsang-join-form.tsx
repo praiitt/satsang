@@ -3,13 +3,14 @@
 import { useState } from 'react';
 
 interface LiveSatsangJoinFormProps {
-  onJoin: (name: string, role: 'host' | 'participant') => void;
+  onJoin: (name: string, role: 'host' | 'participant', language: string) => void;
 }
 
 export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
   const [name, setName] = useState('');
   const [role, setRole] = useState<'host' | 'participant'>('participant');
   const [isJoining, setIsJoining] = useState(false);
+  const [language, setLanguage] = useState<string>('hi');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +21,7 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
 
     setIsJoining(true);
     try {
-      await onJoin(name.trim(), role);
+      await onJoin(name.trim(), role, language);
     } catch (error) {
       console.error('Error joining:', error);
     } finally {
@@ -95,6 +96,34 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
               {role === 'host'
                 ? '👑 Hosts can mute others and control the room'
                 : '🙏 Participants can speak and interact with others'}
+            </p>
+          </div>
+
+          {/* Language Selection */}
+          <div>
+            <label
+              htmlFor="language"
+              className="mb-2 block text-base font-semibold text-white sm:text-lg"
+            >
+              Language
+            </label>
+            <select
+              id="language"
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-5 py-4 text-base text-white backdrop-blur-sm transition-all focus:border-white/40 focus:bg-white/15 focus:ring-4 focus:ring-white/10 focus:outline-none sm:px-6 sm:py-5 sm:text-lg"
+              disabled={isJoining}
+            >
+              <option value="hi" className="bg-gray-900 text-white">Hindi (हिन्दी)</option>
+              <option value="en" className="bg-gray-900 text-white">English</option>
+              <option value="gu" className="bg-gray-900 text-white">Gujarati (ગુજરાતી)</option>
+              <option value="mr" className="bg-gray-900 text-white">Marathi (मराठी)</option>
+              <option value="bn" className="bg-gray-900 text-white">Bengali (বাংলা)</option>
+              <option value="ta" className="bg-gray-900 text-white">Tamil (தமிழ்)</option>
+              <option value="te" className="bg-gray-900 text-white">Telugu (తెలుగు)</option>
+            </select>
+            <p className="mt-2 text-sm leading-relaxed text-white/70 sm:text-base">
+              Default: Hindi. You can change the language for this session.
             </p>
           </div>
 
