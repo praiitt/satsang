@@ -209,15 +209,31 @@ Always end with a question or invitation to continue the conversation when natur
                 "available_bhajans": available,
             })
         
-        logger.info(f"Found bhajan track: {track_info.get('name_en')} - {track_info.get('spotify_id')}")
+        logger.info(f"Found bhajan track: {track_info.get('name_en')} - {track_info.get('preview_url') or track_info.get('spotify_id')}")
         
-        # Return full track info in JSON format that frontend can parse
+        # Return simple track info with URL for MP3 player
+        preview_url = track_info.get("preview_url")
+        
+        # Only use preview_url (direct MP3) - external_url won't work with HTML5 audio
+        if not preview_url:
+            available = await list_available_bhajans_async_func()
+            available_list = ", ".join(available[:5])
+            external_url = track_info.get("external_url")
+            error_msg = f"क्षमा करें, '{bhajan_name}' भजन का preview URL उपलब्ध नहीं है।"
+            if external_url:
+                error_msg += f" आप Spotify पर सुन सकते हैं: {external_url}"
+            error_msg += f" उपलब्ध भजन: {available_list}"
+            return json.dumps({
+                "error": error_msg,
+                "external_url": external_url,  # Provide Spotify link as fallback
+                "available_bhajans": available,
+            })
+        
+        # Return simple result with direct MP3 URL
         result = {
+            "url": preview_url,  # Direct MP3 URL for HTML5 audio player
             "name": track_info.get("name_en", bhajan_name),
             "artist": track_info.get("artist", ""),
-            "preview_url": track_info.get("preview_url"),  # May be None
-            "spotify_id": track_info.get("spotify_id"),  # For SDK playback
-            "external_url": track_info.get("external_url"),  # Spotify link
             "message": f"भजन '{track_info.get('name_en', bhajan_name)}' चल रहा है। आनंद लें!"  # "Bhajan '{name}' is playing. Enjoy!"
         }
         
