@@ -14,9 +14,18 @@ from livekit.agents import (
     cli,
     inference,
     metrics,
+    function_tool,
+    RunContext,
 )
 from livekit.plugins import noise_cancellation, silero
 from livekit.plugins.turn_detector.multilingual import MultilingualModel
+
+# Import bhajan search - handle both relative and absolute imports
+try:
+    from .bhajan_search import get_bhajan_url, list_available_bhajans
+except ImportError:
+    # Fallback for direct execution
+    from bhajan_search import get_bhajan_url, list_available_bhajans
 
 logger = logging.getLogger("agent")
 
@@ -26,10 +35,25 @@ load_dotenv(str(_ENV_PATH))
 
 
 class Assistant(Agent):
-    def __init__(self) -> None:
-        super().__init__(
-            instructions="""You are a compassionate spiritual guru rooted in Hindu and Sanatana Dharma. The user is interacting with you via voice, even if you perceive the conversation as text.
+    def __init__(self, is_group_conversation: bool = False) -> None:
+        group_instructions = ""
+        if is_group_conversation:
+            group_instructions = """
 
+GROUP CONVERSATION MODE (LiveSatsang):
+You are in a group spiritual gathering (LiveSatsang) with multiple participants.
+- Respond to questions and conversations normally - you can engage in dialogue without being explicitly addressed
+- Wait for natural pauses in conversation before speaking - do not interrupt others mid-sentence
+- Be brief and allow others to speak - this is a shared space for spiritual discussion
+- If multiple people are speaking, wait until the conversation pauses before responding
+- Address the group as "भाइयों और बहनों" (brothers and sisters) or "सभी साधकों" (all seekers) when speaking to everyone
+- Keep responses concise in group settings - 2-3 sentences maximum to ensure everyone gets a chance to speak
+- You can respond to questions, provide spiritual guidance, and engage in conversation naturally
+"""
+        
+        super().__init__(
+            instructions=f"""You are a compassionate, proactive spiritual guru rooted in Hindu and Sanatana Dharma. The user is interacting with you via voice, even if you perceive the conversation as text.
+{group_instructions}
 IMPORTANT - HANDLING ROMANIZED HINDI INPUT:
 The user speaks in Hindi, but you will receive their speech as Romanized Hindi text (English alphabet).
 For example, you might see: "namaste", "aap kaise hain", "dharma kya hai", "krishna", "bhagwad geeta".
@@ -44,34 +68,119 @@ Interpret variations and common STT errors intelligently. For example:
 - "dharma" might be "dharma", "dharam", "dharm"
 - "krishna" might be "krishna", "krishan", "krishn"
 
+PROACTIVE ENGAGEMENT (Be Interactive and Engaging):
+You are not just a passive responder - you are an active guide who helps users understand deeply. Always:
+
+1. ASK CLARIFYING QUESTIONS:
+   - When a question is vague, ask "क्या आपका मतलब है...?" (Do you mean...?) or "आप किस बारे में जानना चाहते हैं?" (What specifically would you like to know?)
+   - Example: User asks "dharma kya hai?" → You might say "धर्म एक व्यापक विषय है। क्या आप व्यक्तिगत धर्म, सामाजिक धर्म, या आध्यात्मिक धर्म के बारे में जानना चाहते हैं?" (Dharma is a broad topic. Would you like to know about personal dharma, social dharma, or spiritual dharma?)
+
+2. CHECK FOR UNDERSTANDING:
+   - After explaining something, ask "क्या यह स्पष्ट है?" (Is this clear?) or "क्या आपको कोई और प्रश्न है?" (Do you have any other questions?)
+   - Example: After explaining karma, ask "क्या आप कर्म के किसी विशेष पहलू के बारे में और जानना चाहेंगे?" (Would you like to know more about any specific aspect of karma?)
+
+3. PROVIDE CONTEXT BEFORE ANSWERS:
+   - Don't just answer - set the stage. Say "यह एक बहुत अच्छा प्रश्न है। मैं आपको समझाता हूं..." (This is a very good question. Let me explain...)
+   - Break complex topics into simple parts: "पहले मैं आपको मूल अवधारणा समझाता हूं, फिर उदाहरण देता हूं" (First let me explain the basic concept, then I'll give examples)
+
+4. USE EXAMPLES AND ANALOGIES:
+   - Always relate spiritual concepts to daily life: "जैसे कि..." (Just like...)
+   - Use stories and parables from scriptures naturally
+   - Example: When explaining detachment, use the analogy of "जैसे कमल का पत्ता पानी में रहकर भी गीला नहीं होता" (Like a lotus leaf stays in water but doesn't get wet)
+
+5. OFFER PRACTICAL GUIDANCE:
+   - After explaining theory, always suggest: "आप इसे अपने दैनिक जीवन में कैसे लागू कर सकते हैं..." (How you can apply this in your daily life...)
+   - Give actionable steps: "आज से आप यह कर सकते हैं..." (From today you can do this...)
+
+6. INITIATE CONVERSATIONS:
+   - If the user seems lost or just says "namaste", be proactive: "आप किस विषय पर चर्चा करना चाहेंगे? क्या आपको कोई आध्यात्मिक प्रश्न है?" (What topic would you like to discuss? Do you have any spiritual questions?)
+   - After a good discussion, suggest next topics: "क्या आप योग, ध्यान, या किसी अन्य विषय के बारे में जानना चाहेंगे?" (Would you like to learn about yoga, meditation, or any other topic?)
+
+7. ENCOURAGE DEEPER EXPLORATION:
+   - When a user asks a basic question, offer to go deeper: "यह तो बुनियादी बात थी। क्या आप इसके गहरे अर्थ को समझना चाहेंगे?" (That was the basic point. Would you like to understand its deeper meaning?)
+   - Connect related topics: "यह धर्म से जुड़ा है। क्या आप धर्म के बारे में भी जानना चाहेंगे?" (This is related to dharma. Would you also like to know about dharma?)
+
 SPIRITUAL GUIDANCE:
 Answer spiritual questions on dharma, yoga, meditation, karma, bhakti, and Vedanta, grounded in Hindu and Sanatana teachings.
 When helpful, briefly reference scriptures like the Bhagavad Gita, the Vedas, the Upanishads, the Ramayana, the Mahabharata, and the Puranas.
 Be respectful and non-dogmatic, acknowledging diverse sampradayas. Offer practical guidance, simple daily practices, and short mantras when requested.
 
+BHAJAN PLAYBACK:
+When users request to hear a bhajan, devotional song, or spiritual music, use the play_bhajan tool.
+Common requests include: "krishna ka bhajan bajao", "hare krishna sunao", "bhajan chal", "om namah shivaya sunao", etc.
+After using the tool, inform the user that the bhajan is playing and they can enjoy it. The tool will return a URL that allows the bhajan to be played.
+
 RESPONSE STYLE:
 Default to replying in Hindi (Devanagari script). If the user speaks another language, mirror their language.
 Your responses are concise, clear, and voice-friendly, without complex formatting or symbols such as emojis or asterisks.
-Keep your responses brief and to the point - maximum 2-3 short sentences per response to ensure the entire message is spoken without cutoff.
-Be warm, kind, and wise, with gentle humor when appropriate.""",
+Keep your responses conversational and engaging - 2-4 sentences is ideal, but can be longer if explaining complex concepts.
+Be warm, kind, and wise, with gentle humor when appropriate.
+Always end with a question or invitation to continue the conversation when natural.""",
         )
 
-    # To add tools, use the @function_tool decorator.
-    # Here's an example that adds a simple weather tool.
-    # You also have to add `from livekit.agents import function_tool, RunContext` to the top of this file
-    # @function_tool
-    # async def lookup_weather(self, context: RunContext, location: str):
-    #     """Use this tool to look up current weather information in the given location.
-    #
-    #     If the location is not supported by the weather service, the tool will indicate this. You must tell the user the location's weather is unavailable.
-    #
-    #     Args:
-    #         location: The location to look up weather information for (e.g. city name)
-    #     """
-    #
-    #     logger.info(f"Looking up weather for {location}")
-    #
-    #     return "sunny with a temperature of 70 degrees."
+    @function_tool
+    async def play_bhajan(
+        self,
+        context: RunContext,
+        bhajan_name: str,
+        artist: str = None,
+    ) -> str:
+        """Play a devotional bhajan (song) when users request it.
+        
+        Use this tool when users ask to:
+        - Play a bhajan (e.g., "krishna ka bhajan bajao", "hare krishna sunao", "bhajan chal")
+        - Hear a devotional song
+        - Listen to spiritual music
+        - Play a specific mantra or chant
+        
+        The bhajan name can be in Hindi (Romanized) or English. Common bhajan names:
+        - "hare krishna" or "hare krishna hare rama"
+        - "om namah shivaya" or "shiva mantra"
+        - "govind bolo" or "hari gopal bolo"
+        - "jai ganesh" or "ganesh bhajan"
+        - "ram ram" or "rama bhajan"
+        
+        Args:
+            bhajan_name: The name of the bhajan requested (e.g., "hare krishna", "om namah shivaya", "krishna bhajan")
+            artist: Optional artist name if specified (currently not used, but included for future use)
+        
+        Returns:
+            A JSON string with the bhajan URL that the frontend can use to play the audio.
+            Format: {"url": "/api/bhajans/...", "name": "Bhajan Name"}
+            If bhajan not found, returns error message.
+        """
+        import json
+        
+        logger.info(f"User requested bhajan: '{bhajan_name}' (artist: {artist})")
+        
+        # Get base URL from environment or use relative path
+        base_url = os.getenv("BHAJAN_API_BASE_URL", None)
+        
+        # Search for bhajan and get URL
+        bhajan_url = get_bhajan_url(bhajan_name, base_url)
+        
+        if not bhajan_url:
+            # List available bhajans for helpful error message
+            available = list_available_bhajans()
+            available_list = ", ".join(available[:5])  # Show first 5
+            error_msg = f"क्षमा करें, '{bhajan_name}' भजन उपलब्ध नहीं है। उपलब्ध भजन: {available_list}"
+            
+            logger.warning(f"Bhajan not found: {bhajan_name}. Available: {available}")
+            return json.dumps({
+                "error": error_msg,
+                "available_bhajans": available,
+            })
+        
+        logger.info(f"Found bhajan URL: {bhajan_url}")
+        
+        # Return URL in JSON format that frontend can parse
+        result = {
+            "url": bhajan_url,
+            "name": bhajan_name,
+            "message": f"भजन '{bhajan_name}' चल रहा है। आनंद लें!"  # "Bhajan '{name}' is playing. Enjoy!"
+        }
+        
+        return json.dumps(result)
 
 
 def prewarm(proc: JobProcess):
@@ -169,6 +278,18 @@ async def entrypoint(ctx: JobContext):
         logger.error("This may cause issues. Continuing anyway...")
         turn_detector = None
     
+    # Check if this is a group conversation (LiveSatsang room)
+    is_live_satsang = ctx.room.name.lower() == "livesatsang"
+    
+    # Adjust turn detection for group conversations
+    # In group settings, agent should only respond when explicitly addressed
+    if is_live_satsang:
+        logger.info("Detected LiveSatsang room - configuring for group conversation")
+        # Longer EOU delay in group settings to avoid interrupting
+        eou_delay = 1.5  # Wait longer before responding
+    else:
+        eou_delay = 0.8  # Normal delay for one-on-one
+
     logger.info("Creating AgentSession with configured models...")
     try:
         session = AgentSession(
@@ -194,7 +315,7 @@ async def entrypoint(ctx: JobContext):
             vad=ctx.proc.userdata["vad"],
             # allow the LLM to generate a response while waiting for the end of turn
             # See more at https://docs.livekit.io/agents/build/audio/#preemptive-generation
-            preemptive_generation=True,
+            preemptive_generation=not is_live_satsang,  # Disable preemptive generation in group settings
         )
         logger.info("AgentSession created successfully")
     except Exception as e:
@@ -238,7 +359,7 @@ async def entrypoint(ctx: JobContext):
 
     # Start the session, which initializes the voice pipeline and warms up the models
     await session.start(
-        agent=Assistant(),
+        agent=Assistant(is_group_conversation=is_live_satsang),
         room=ctx.room,
         room_input_options=RoomInputOptions(
             # For telephony applications, use `BVCTelephony` for best results
@@ -253,10 +374,14 @@ async def entrypoint(ctx: JobContext):
     import asyncio
     await asyncio.sleep(1.0)
 
-    # Send a warm greeting as soon as the agent connects
-    # Using a shorter, simpler greeting to avoid TTS cutoff issues
-    greeting = "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आप कैसे हैं?"
-    logger.info("Sending initial greeting to user")
+    # Send a warm, proactive greeting as soon as the agent connects
+    # The greeting should be engaging and invite conversation
+    if is_live_satsang:
+        greeting = "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आज हम सभी साधकों के साथ सत्संग में हैं। क्या आपको कोई आध्यात्मिक प्रश्न है या कोई विषय जिस पर चर्चा करना चाहेंगे?"
+    else:
+        greeting = "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आप कैसे हैं? आज आप किस विषय पर चर्चा करना चाहेंगे - धर्म, योग, ध्यान, कर्म, या कोई अन्य आध्यात्मिक विषय?"
+    
+    logger.info("Sending proactive initial greeting to user")
     
     # Send greeting without interruptions to ensure it completes
     try:
@@ -265,7 +390,7 @@ async def entrypoint(ctx: JobContext):
         logger.error(f"Error sending greeting: {e}")
         # Fallback to a shorter greeting
         try:
-            await session.say("नमस्ते! मैं आपकी कैसे सहायता कर सकता हूं?", allow_interruptions=False)
+            await session.say("नमस्ते! मैं आपकी कैसे सहायता कर सकता हूं? क्या आपको कोई प्रश्न है?", allow_interruptions=False)
         except Exception as e2:
             logger.error(f"Error sending fallback greeting: {e2}")
 

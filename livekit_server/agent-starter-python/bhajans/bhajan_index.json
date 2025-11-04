@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "description": "Index of available devotional bhajans",
+  "bhajans": [
+    {
+      "name_en": "Hare Krishna Hare Rama",
+      "name_hi": "हरे कृष्ण हरे राम",
+      "file_path": "krishna/hare-krishna-hare-rama.mp3",
+      "category": "krishna",
+      "aliases": ["hare krishna", "hare rama", "hare krishna hare rama", "krishna bhajan", "hare krishna mantra"]
+    },
+    {
+      "name_en": "Om Namah Shivaya",
+      "name_hi": "ॐ नमः शिवाय",
+      "file_path": "shiva/om-namah-shivaya.mp3",
+      "category": "shiva",
+      "aliases": ["om namah shivaya", "shiva mantra", "shivaya", "namah shivaya", "om namah"]
+    },
+    {
+      "name_en": "Govind Bolo Hari Gopal Bolo",
+      "name_hi": "गोविंद बोलो हरि गोपाल बोलो",
+      "file_path": "krishna/govind-bolo-hari-gopal-bolo.mp3",
+      "category": "krishna",
+      "aliases": ["govind bolo", "hari gopal bolo", "govind", "gopal"]
+    },
+    {
+      "name_en": "Jai Ganesh Jai Ganesh",
+      "name_hi": "जय गणेश जय गणेश",
+      "file_path": "ganesh/jai-ganesh-jai-ganesh.mp3",
+      "category": "ganesh",
+      "aliases": ["jai ganesh", "ganesh bhajan", "ganpati", "ganapati"]
+    },
+    {
+      "name_en": "Ram Ram Ram",
+      "name_hi": "राम राम राम",
+      "file_path": "rama/ram-ram-ram.mp3",
+      "category": "rama",
+      "aliases": ["ram ram", "rama bhajan", "ram naam", "jai ram"]
+    }
+  ]
+}
+
