@@ -101,17 +101,40 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     };
   }, []);
 
+  // Cache token to avoid repeated API calls
+  const tokenCacheRef = useRef<{
+    token: string | null;
+    timestamp: number;
+  } | null>(null);
+  const TOKEN_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
   // Get access token from API
   const getAccessToken = useCallback(async (): Promise<string | null> => {
+    // Return cached token if still valid
+    if (
+      tokenCacheRef.current &&
+      Date.now() - tokenCacheRef.current.timestamp < TOKEN_CACHE_DURATION
+    ) {
+      return tokenCacheRef.current.token;
+    }
+
     try {
       const response = await fetch('/api/spotify/token');
       if (!response.ok) {
+        tokenCacheRef.current = { token: null, timestamp: Date.now() };
         return null;
       }
       const data = await response.json();
-      return data.access_token || null;
+      const token = data.access_token || null;
+      tokenCacheRef.current = { token, timestamp: Date.now() };
+      return token;
     } catch (err) {
-      console.error('Error getting Spotify token:', err);
+      // Only log errors, don't spam console
+      if (tokenCacheRef.current?.token === null) {
+        // Only log if we don't have a cached null (to avoid spam)
+        return null;
+      }
+      tokenCacheRef.current = { token: null, timestamp: Date.now() };
       return null;
     }
   }, []);

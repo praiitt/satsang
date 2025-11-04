@@ -7,24 +7,33 @@ export function SpotifyAuthButton() {
   const { isAuthenticated, connect } = useSpotifyPlayer();
   const [isChecking, setIsChecking] = useState(true);
 
-  // Check authentication status on mount
+  // Check authentication status on mount (only once)
   useEffect(() => {
+    let cancelled = false;
+
     const checkAuth = async () => {
       try {
         const response = await fetch('/api/spotify/token');
-        if (response.ok) {
+        if (!cancelled && response.ok) {
           // User is authenticated, try to connect
           await connect();
         }
       } catch {
-        // Not authenticated
+        // Not authenticated - expected if user hasn't connected
       } finally {
-        setIsChecking(false);
+        if (!cancelled) {
+          setIsChecking(false);
+        }
       }
     };
 
     checkAuth();
-  }, [connect]);
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const handleAuth = () => {
     // Redirect to Spotify auth endpoint
