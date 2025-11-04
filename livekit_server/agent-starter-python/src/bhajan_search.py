@@ -9,8 +9,13 @@ import json
 
 logger = logging.getLogger("bhajan_search")
 
-# Base path for bhajans directory
-_BHAJAN_BASE_PATH = Path(__file__).resolve().parent.parent / "bhajans"
+# Base path for bhajans directory - handle both package and direct execution
+try:
+    # When run as a package (relative import)
+    _BHAJAN_BASE_PATH = Path(__file__).resolve().parent.parent / "bhajans"
+except:
+    # Fallback for direct execution
+    _BHAJAN_BASE_PATH = Path(__file__).resolve().parent.parent / "bhajans"
 _BHAJAN_INDEX_FILE = _BHAJAN_BASE_PATH / "bhajan_index.json"
 
 
