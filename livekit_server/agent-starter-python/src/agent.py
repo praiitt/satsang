@@ -25,18 +25,24 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 _bhajan_search_loaded = False
 _get_bhajan_url_async = None
 _list_available_bhajans_async = None
+_find_bhajan_by_name_async = None
 
 def _load_bhajan_search():
     """Lazy load bhajan search module to avoid import errors during initialization."""
-    global _bhajan_search_loaded, _get_bhajan_url_async, _list_available_bhajans_async
+    global _bhajan_search_loaded, _get_bhajan_url_async, _list_available_bhajans_async, _find_bhajan_by_name_async
     if _bhajan_search_loaded:
-        return _get_bhajan_url_async, _list_available_bhajans_async
+        return _get_bhajan_url_async, _list_available_bhajans_async, _find_bhajan_by_name_async
     
     try:
         # Try relative import first (when running as package)
-        from .bhajan_search import get_bhajan_url_async, list_available_bhajans_async
+        from .bhajan_search import (
+            get_bhajan_url_async,
+            list_available_bhajans_async,
+            find_bhajan_by_name_async,
+        )
         _get_bhajan_url_async = get_bhajan_url_async
         _list_available_bhajans_async = list_available_bhajans_async
+        _find_bhajan_by_name_async = find_bhajan_by_name_async
     except ImportError:
         try:
             # Fallback to absolute import
@@ -45,9 +51,14 @@ def _load_bhajan_search():
             src_path = Path(__file__).resolve().parent
             if str(src_path) not in sys.path:
                 sys.path.insert(0, str(src_path))
-            from bhajan_search import get_bhajan_url_async, list_available_bhajans_async
+            from bhajan_search import (
+                get_bhajan_url_async,
+                list_available_bhajans_async,
+                find_bhajan_by_name_async,
+            )
             _get_bhajan_url_async = get_bhajan_url_async
             _list_available_bhajans_async = list_available_bhajans_async
+            _find_bhajan_by_name_async = find_bhajan_by_name_async
         except ImportError as e:
             logger.warning(f"Failed to import bhajan_search: {e}. Bhajan playback will not be available.")
             # Create stub async functions
@@ -55,11 +66,14 @@ def _load_bhajan_search():
                 return None
             async def _stub_list_async(*args, **kwargs):
                 return []
+            async def _stub_find_async(*args, **kwargs):
+                return None
             _get_bhajan_url_async = _stub_get_url_async
             _list_available_bhajans_async = _stub_list_async
+            _find_bhajan_by_name_async = _stub_find_async
     
     _bhajan_search_loaded = True
-    return _get_bhajan_url_async, _list_available_bhajans_async
+    return _get_bhajan_url_async, _list_available_bhajans_async, _find_bhajan_by_name_async
 
 logger = logging.getLogger("agent")
 
@@ -186,16 +200,15 @@ Always end with a question or invitation to continue the conversation when natur
         import json
         
         # Lazy load bhajan search module
-        get_bhajan_url_async_func, list_available_bhajans_async_func = _load_bhajan_search()
+        get_bhajan_url_async_func, list_available_bhajans_async_func, find_bhajan_by_name_async_func = _load_bhajan_search()
         
         logger.info(f"User requested bhajan: '{bhajan_name}' (artist: {artist})")
         
         # Get base URL from environment or use relative path (not used for Spotify, but kept for compatibility)
         base_url = os.getenv("BHAJAN_API_BASE_URL", None)
         
-        # Get full track info (async)
-        from .bhajan_search import find_bhajan_by_name_async
-        track_info = await find_bhajan_by_name_async(bhajan_name)
+        # Get full track info (async) - use lazy-loaded function
+        track_info = await find_bhajan_by_name_async_func(bhajan_name)
         
         if not track_info:
             # List available bhajans for helpful error message
@@ -374,9 +387,17 @@ async def entrypoint(ctx: JobContext):
             llm=inference.LLM(model="openai/gpt-4.1-mini"),
             # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
             # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
+            # IMPORTANT: Set TTS_VOICE_ID in .env.local to a MALE voice ID for Cartesia Sonic
+            # The previous default (9626c31c-bec5-4cca-baa8-f8ba9e84c8bc) was a female voice
+            # To find male voice IDs for Cartesia Sonic, check: https://docs.livekit.io/agents/models/tts/
+            # Look for Cartesia Sonic voices and select a male voice ID that supports Hindi
+            tts_voice_id = os.getenv("TTS_VOICE_ID")
+            if not tts_voice_id:
+                logger.warning("TTS_VOICE_ID not set in .env.local - using temporary placeholder. Please set a male voice ID!")
+                tts_voice_id = "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # This was female - MUST be changed to male voice ID
             tts=inference.TTS(
                 model="cartesia/sonic-3",
-                voice=os.getenv("TTS_VOICE_ID", "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"),
+                voice=tts_voice_id,
                 language="hi",
                 extra_kwargs={
                     # Cartesia supports speed: "slow" | "normal" | "fast"
