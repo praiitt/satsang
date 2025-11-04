@@ -51,19 +51,34 @@ export function BhajanPlayer() {
       return;
     }
 
-    // Try to parse as JSON first
+    // Try to parse as JSON first, but only if message looks like it contains bhajan data
     let trackInfo: BhajanTrackInfo | null = null;
     let parsedJson: Record<string, unknown> | null = null;
 
+    const messageText = latestMessage.message.trim();
+
+    // Skip if message doesn't look like it contains bhajan data
+    // Check for: JSON braces, Spotify URLs, or keywords like "bhajan", "playing", "बज रहा"
+    const hasBhajanIndicators =
+      messageText.includes('{') ||
+      messageText.includes('spotify.com/track/') ||
+      messageText.toLowerCase().includes('bhajan') ||
+      messageText.includes('बज रहा') ||
+      messageText.includes('playing') ||
+      messageText.includes('भजन');
+
+    if (!hasBhajanIndicators) {
+      // Regular conversation message, not a bhajan response
+      return;
+    }
+
     try {
       // Try to parse the entire message as JSON
-      parsedJson = JSON.parse(latestMessage.message) as Record<string, unknown>;
+      parsedJson = JSON.parse(messageText) as Record<string, unknown>;
     } catch {
       // Not pure JSON, try to extract JSON from the message
       // The LLM might wrap the JSON in text like "भजन बज रहा है। {...json...}"
-      const jsonMatch = latestMessage.message.match(
-        /\{[^{}]*"url"[^{}]*\}|\{[^{}]*"spotify_id"[^{}]*\}/
-      );
+      const jsonMatch = messageText.match(/\{[^{}]*"url"[^{}]*\}|\{[^{}]*"spotify_id"[^{}]*\}/);
       if (jsonMatch) {
         try {
           parsedJson = JSON.parse(jsonMatch[0]) as Record<string, unknown>;
@@ -118,12 +133,16 @@ export function BhajanPlayer() {
           hasSpotifyId: !!trackInfo.spotify_id,
         });
       } else {
-        console.warn('Invalid bhajan response format:', parsedJson);
+        // Invalid format - but don't log warning for regular messages
+        // Only log if we actually found JSON structure
+        if (messageText.includes('{')) {
+          console.warn('Invalid bhajan response format:', parsedJson);
+        }
       }
     } else {
       // No JSON found, try to extract Spotify track ID from URL in plain text
       // Pattern: https://open.spotify.com/track/TRACK_ID
-      const spotifyUrlMatch = latestMessage.message.match(
+      const spotifyUrlMatch = messageText.match(
         /https?:\/\/(?:open\.)?spotify\.com\/track\/([a-zA-Z0-9]+)/i
       );
 
@@ -135,7 +154,7 @@ export function BhajanPlayer() {
           spotify_id: extractedTrackId,
           external_url: spotifyUrlMatch[0],
           // Try to extract name from message
-          name: latestMessage.message.match(/["']([^"']+)["']/)?.[1] || undefined,
+          name: messageText.match(/["']([^"']+)["']/)?.[1] || undefined,
         };
 
         console.log('Bhajan track info extracted from URL:', {
