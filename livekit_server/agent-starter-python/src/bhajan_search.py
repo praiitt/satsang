@@ -243,7 +243,7 @@ async def get_bhajan_url_async(bhajan_name: str, base_url: Optional[str] = None)
 
 async def list_available_bhajans_async() -> List[str]:
     """Return a few popular bhajan names for hints (best-effort)."""
-    token = _get_spotify_token()
+    token = await _get_spotify_token()
     if not token:
         return []
     
