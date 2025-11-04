@@ -38,8 +38,9 @@ def _http_get_json(url: str, timeout: float = 10.0) -> Optional[Dict]:
 def _search_internet_archive(query: str, rows: int = 10) -> List[Dict]:
     """Search Internet Archive for audio items matching the query."""
     normalized = normalize_query(query)
-    # Bias towards devotional terms to improve precision
-    q = f"({urllib.parse.quote_plus(normalized)}) AND mediatype:(audio)"
+    # Build advanced query and then percent-encode the whole string
+    qraw = f"({normalized}) AND mediatype:(audio)"
+    q = urllib.parse.quote_plus(qraw)
     base = "https://archive.org/advancedsearch.php"
     url = f"{base}?q={q}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=format&sort[]=downloads+desc&rows={rows}&output=json"
     data = _http_get_json(url)
