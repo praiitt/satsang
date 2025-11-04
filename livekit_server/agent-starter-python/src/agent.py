@@ -379,22 +379,23 @@ async def entrypoint(ctx: JobContext):
 
     logger.info("Creating AgentSession with configured models...")
     try:
+        # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
+        # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
+        # IMPORTANT: Set TTS_VOICE_ID in .env.local to a MALE voice ID for Cartesia Sonic
+        # The previous default (9626c31c-bec5-4cca-baa8-f8ba9e84c8bc) was a female voice
+        # To find male voice IDs for Cartesia Sonic, check: https://docs.livekit.io/agents/models/tts/
+        # Look for Cartesia Sonic voices and select a male voice ID that supports Hindi
+        tts_voice_id = os.getenv("TTS_VOICE_ID")
+        if not tts_voice_id:
+            logger.warning("TTS_VOICE_ID not set in .env.local - using temporary placeholder. Please set a male voice ID!")
+            tts_voice_id = "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # This was female - MUST be changed to male voice ID
+        
         session = AgentSession(
             # Speech-to-text configured above
             stt=stt,
             # A Large Language Model (LLM) is your agent's brain, processing user input and generating a response
             # See all available models at https://docs.livekit.io/agents/models/llm/
             llm=inference.LLM(model="openai/gpt-4.1-mini"),
-            # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
-            # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
-            # IMPORTANT: Set TTS_VOICE_ID in .env.local to a MALE voice ID for Cartesia Sonic
-            # The previous default (9626c31c-bec5-4cca-baa8-f8ba9e84c8bc) was a female voice
-            # To find male voice IDs for Cartesia Sonic, check: https://docs.livekit.io/agents/models/tts/
-            # Look for Cartesia Sonic voices and select a male voice ID that supports Hindi
-            tts_voice_id = os.getenv("TTS_VOICE_ID")
-            if not tts_voice_id:
-                logger.warning("TTS_VOICE_ID not set in .env.local - using temporary placeholder. Please set a male voice ID!")
-                tts_voice_id = "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # This was female - MUST be changed to male voice ID
             tts=inference.TTS(
                 model="cartesia/sonic-3",
                 voice=tts_voice_id,
