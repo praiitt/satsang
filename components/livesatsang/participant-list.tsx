@@ -87,8 +87,11 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
   return (
     <>
       {/* Mobile bottom sheet */}
-      <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-[#0b0b14]/95 p-4 shadow-2xl backdrop-blur-xl md:hidden">
+      <div
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden"
+        onClick={onClose}
+      />
+      <div className="fixed right-0 bottom-0 left-0 z-50 rounded-t-2xl bg-[#0b0b14]/95 p-4 shadow-2xl backdrop-blur-xl md:hidden">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-sm font-bold text-white">प्रतिभागी ({allParticipants.length})</h3>
           <button
@@ -101,7 +104,10 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
         </div>
         <div className="max-h-72 space-y-2 overflow-y-auto">
           {allParticipants.map((participant) => (
-            <div key={participant.identity} className="flex items-center gap-2 rounded-lg bg-white/5 p-2">
+            <div
+              key={participant.identity}
+              className="flex items-center gap-2 rounded-lg bg-white/5 p-2"
+            >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-xs font-bold text-white">
                 {participant.name.charAt(0).toUpperCase()}
               </div>
@@ -113,7 +119,9 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
                 <div className="flex items-center gap-2 text-xs text-white/60">
                   {participant.hasVideo && <span>📹</span>}
                   {participant.hasAudio && <span>🎤</span>}
-                  {!participant.hasVideo && !participant.hasAudio && <span className="text-white/40">मीडिया नहीं</span>}
+                  {!participant.hasVideo && !participant.hasAudio && (
+                    <span className="text-white/40">मीडिया नहीं</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -129,7 +137,10 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
         </div>
         <div className="max-h-60 space-y-2 overflow-y-auto">
           {allParticipants.map((participant) => (
-            <div key={participant.identity} className="flex items-center gap-2 rounded-lg bg-white/5 p-2">
+            <div
+              key={participant.identity}
+              className="flex items-center gap-2 rounded-lg bg-white/5 p-2"
+            >
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-xs font-bold text-white">
                 {participant.name.charAt(0).toUpperCase()}
               </div>
@@ -141,7 +152,9 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
                 <div className="flex items-center gap-2 text-xs text-white/60">
                   {participant.hasVideo && <span>📹</span>}
                   {participant.hasAudio && <span>🎤</span>}
-                  {!participant.hasVideo && !participant.hasAudio && <span className="text-white/40">मीडिया नहीं</span>}
+                  {!participant.hasVideo && !participant.hasAudio && (
+                    <span className="text-white/40">मीडिया नहीं</span>
+                  )}
                 </div>
               </div>
             </div>

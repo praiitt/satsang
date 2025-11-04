@@ -89,6 +89,7 @@ chmod +x diagnose-ubuntu.sh
 ```
 
 This will check:
+
 - PyTorch version (must be CPU-only, not CUDA)
 - PyTorch import speed (CUDA hangs, CPU is fast)
 - Transformers library (required for multilingual turn detector)
@@ -129,6 +130,7 @@ uv run python src/agent.py download-files
 ```
 
 The start script will:
+
 - Verify PyTorch is CPU-only
 - Check dependencies
 - Download models if needed
@@ -258,12 +260,14 @@ sudo certbot --nginx -d your-domain.com
 If you see `TimeoutError` in agent logs:
 
 1. **Check PyTorch version:**
+
    ```bash
    cd /home/your-username/satsang/livekit_server/agent-starter-python
    ./check-pytorch.sh
    ```
 
 2. **If it shows CUDA version, fix it:**
+
    ```bash
    ./fix-pytorch.sh
    ```
@@ -277,12 +281,14 @@ If you see `TimeoutError` in agent logs:
 ### Frontend Connection Issues
 
 1. **Check if frontend is running:**
+
    ```bash
    pm2 status
    pm2 logs satsang-frontend
    ```
 
 2. **Verify environment variables:**
+
    ```bash
    cat .env.local
    ```
@@ -295,11 +301,13 @@ If you see `TimeoutError` in agent logs:
 ### Agent Not Connecting
 
 1. **Check agent logs:**
+
    ```bash
    pm2 logs satsang-livekit-agent --lines 100
    ```
 
 2. **Verify LiveKit credentials:**
+
    ```bash
    cd /home/your-username/satsang/livekit_server/agent-starter-python
    cat .env.local | grep LIVEKIT
@@ -366,7 +374,7 @@ export PATH="$HOME/.local/bin:$PATH"
 ./fix-pytorch.sh          # First time only
 ./start-pm2.sh
 
-# Frontend  
+# Frontend
 cd /home/your-username/satsang/satsangapp
 ./start-frontend-pm2.sh
 ```
@@ -374,16 +382,19 @@ cd /home/your-username/satsang/satsangapp
 ## Monitoring
 
 Check logs regularly:
+
 ```bash
 pm2 logs --lines 50
 ```
 
 Monitor system resources:
+
 ```bash
 pm2 monit
 ```
 
 Check if services are healthy:
+
 ```bash
 pm2 status
 # Both should show "online" status
@@ -408,4 +419,3 @@ pnpm install              # Update dependencies if needed
 pnpm build                # Rebuild
 pm2 restart satsang-frontend
 ```
-

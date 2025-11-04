@@ -5,6 +5,7 @@
 **YES, the chat IS showing LiveKit STT interpretation** - and it's failing badly because AssemblyAI is not well-trained for Hindi speech, especially Indian accents.
 
 Your speech examples like:
+
 - "Mabel kultiku" (garbled)
 - "Imaiski baraman jana chata" (should be something like "India ke bare mein janna chahta")
 
@@ -40,6 +41,7 @@ nano .env.local
 ```
 
 Add:
+
 ```bash
 STT_MODEL=sarvam
 SARVAM_API_KEY=your_api_key_here
@@ -55,6 +57,7 @@ pm2 restart satsang-livekit-agent
 ### Step 5: Test
 
 You should see in logs:
+
 ```
 Using Sarvam STT - BEST for Hindi/Indian languages!
 ```
@@ -88,10 +91,12 @@ Deepgram is better than AssemblyAI but not as good as Sarvam for Hindi.
 ## Expected Results After Fix
 
 **Before (AssemblyAI):**
+
 - You say: "मैं भारत के बारे में जानना चाहता हूं"
 - STT shows: "Imaiski baraman jana chata" ❌
 
 **After (Sarvam):**
+
 - You say: "मैं भारत के बारे में जानना चाहता हूं"
 - STT shows: "main bharat ke bare mein janna chahta hoon" ✅
 
@@ -117,6 +122,7 @@ pm2 restart satsang-livekit-agent
 ## Troubleshooting
 
 ### Sarvam not installing?
+
 ```bash
 # Make sure you're in the right directory
 cd ~/satsang/livekit_server/agent-starter-python
@@ -129,6 +135,7 @@ pip install "livekit-agents[sarvam]~=1.2"
 ```
 
 ### Check if Sarvam is working:
+
 ```bash
 pm2 logs satsang-livekit-agent | grep "Sarvam"
 ```
@@ -136,6 +143,7 @@ pm2 logs satsang-livekit-agent | grep "Sarvam"
 Should see: "Using Sarvam STT - BEST for Hindi/Indian languages!"
 
 ### If Sarvam fails, check:
+
 - API key is correct
 - You have credits/quota in Sarvam account
 - Check logs for specific errors
@@ -143,10 +151,10 @@ Should see: "Using Sarvam STT - BEST for Hindi/Indian languages!"
 ## Next Best Options
 
 If Sarvam doesn't work:
+
 1. **Deepgram**: `STT_MODEL=deepgram/nova-2` - Better than AssemblyAI
 2. **Google Cloud**: `STT_MODEL=google/cloud` - Excellent but requires GCP setup
 
 ## Why This Will Fix Your Issue
 
 Your problem is **NOT** with LiveKit or the agent - it's that **AssemblyAI STT is simply not good at Hindi**. By switching to Sarvam (designed for Indian languages), you'll get proper transcriptions that make sense!
-

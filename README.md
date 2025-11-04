@@ -32,6 +32,7 @@ Update `app-config.ts` for branding and UI customization.
 Configure credentials in `.env.local`:
 
 ### LiveKit (Required)
+
 ```env
 LIVEKIT_API_KEY=your_livekit_api_key
 LIVEKIT_API_SECRET=your_livekit_api_secret
@@ -39,12 +40,14 @@ LIVEKIT_URL=https://your-livekit-server-url
 ```
 
 ### TTS Settings
+
 ```env
 TTS_VOICE_ID=your_voice_id
 TTS_SPEED=slow
 ```
 
 ### Spotify (For Bhajan Playback)
+
 ```env
 # Spotify API access token for searching tracks
 SPOTIFY_ACCESS_TOKEN=your_spotify_access_token
@@ -52,7 +55,8 @@ SPOTIFY_CLIENT_ID=65136cefd17d48ffb4c7d6ca07dd533f
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
 ```
 
-**Note**: 
+**Note**:
+
 - Backend uses Spotify API to search for bhajans and returns preview URLs (MP3)
 - Frontend uses simple HTML5 audio player to play the MP3 URLs
 - No complex OAuth or SDK required - just URL + audio player

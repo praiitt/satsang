@@ -11,11 +11,13 @@ Added LLM function call functionality to enable the Guruji agent to play devotio
 **Location:** `livekit_server/agent-starter-python/src/agent.py`
 
 The agent now has a `@function_tool` decorated method that:
+
 - Detects when users request bhajans (e.g., "krishna ka bhajan bajao", "hare krishna sunao")
 - Searches for matching bhajans in the local library
 - Returns a JSON string with the URL to play the bhajan
 
 **Example Usage:**
+
 ```python
 @function_tool
 async def play_bhajan(
@@ -32,12 +34,14 @@ async def play_bhajan(
 **Location:** `livekit_server/agent-starter-python/src/bhajan_search.py`
 
 Features:
+
 - Searches `bhajan_index.json` for matching bhajans
 - Supports fuzzy matching for Hindi (Romanized) and English names
 - Handles aliases and partial matches
 - Returns URLs formatted for the Next.js API route
 
 **Key Functions:**
+
 - `get_bhajan_url(bhajan_name, base_url)` - Main function to get bhajan URL
 - `find_bhajan_by_name(query)` - Search logic
 - `list_available_bhajans()` - Get all available bhajan names
@@ -47,6 +51,7 @@ Features:
 **Location:** `app/api/bhajans/[...path]/route.ts`
 
 Serves MP3 files from the agent's bhajan directory:
+
 - Route: `/api/bhajans/{category}/{filename}.mp3`
 - Example: `/api/bhajans/krishna/hare-krishna-hare-rama.mp3`
 - Supports: MP3, WAV, OGG, M4A
@@ -58,6 +63,7 @@ Serves MP3 files from the agent's bhajan directory:
 **Location:** `livekit_server/agent-starter-python/bhajans/bhajan_index.json`
 
 JSON file containing metadata for all available bhajans:
+
 ```json
 {
   "bhajans": [
@@ -96,11 +102,13 @@ JSON file containing metadata for all available bhajans:
 ## Adding New Bhajans
 
 1. **Place MP3 file** in appropriate directory:
+
    ```
    livekit_server/agent-starter-python/bhajans/krishna/my-bhajan.mp3
    ```
 
 2. **Update `bhajan_index.json`**:
+
    ```json
    {
      "name_en": "My Bhajan",
@@ -149,6 +157,7 @@ The function returns a URL that the frontend can use. To actually play the audio
 3. **Play Audio:** Use HTML5 Audio API or a library like `react-audio-player`
 
 Example:
+
 ```typescript
 // When agent returns bhajan URL
 const response = JSON.parse(agentResponse);
@@ -185,4 +194,3 @@ app/api/bhajans/
 - Returns helpful error messages if bhajan not found
 - Lists available bhajans in error responses
 - All file access is secure (prevents directory traversal)
-

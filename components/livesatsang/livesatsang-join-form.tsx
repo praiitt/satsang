@@ -42,9 +42,7 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
           <p className="text-base font-medium text-white/90 sm:text-lg">
             आध्यात्मिक संगति में शामिल हों
           </p>
-          <p className="mt-1 text-sm text-white/70 sm:text-base">
-            गुरुजी और अन्य साधकों से जुड़ें
-          </p>
+          <p className="mt-1 text-sm text-white/70 sm:text-base">गुरुजी और अन्य साधकों से जुड़ें</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -117,7 +115,9 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-white/60 sm:text-base">आध्यात्मिक उन्नति के लिए पवित्र स्थान</p>
+          <p className="text-sm text-white/60 sm:text-base">
+            आध्यात्मिक उन्नति के लिए पवित्र स्थान
+          </p>
         </div>
       </div>
     </div>

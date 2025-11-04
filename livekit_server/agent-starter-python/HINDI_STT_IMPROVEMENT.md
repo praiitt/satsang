@@ -11,17 +11,20 @@ Your Hindi speech is not being accurately converted to Romanized English text. T
 ### Quick Setup:
 
 1. **Edit `.env.local` file**:
+
    ```bash
    cd ~/satsang/livekit_server/agent-starter-python
    nano .env.local
    ```
 
 2. **Add this line**:
+
    ```bash
    STT_MODEL=deepgram/nova-2
    ```
 
 3. **Save and restart**:
+
    ```bash
    pm2 restart satsang-livekit-agent
    ```
@@ -49,6 +52,7 @@ If Deepgram doesn't work or you want even better accuracy:
 2. **Enable Speech-to-Text API**
 3. **Download service account credentials JSON**
 4. **Add to `.env.local`**:
+
    ```bash
    STT_MODEL=google/cloud
    GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/credentials.json
@@ -83,6 +87,7 @@ These help regardless of which STT model you use:
 After changing STT model:
 
 1. **Restart the agent**:
+
    ```bash
    pm2 restart satsang-livekit-agent
    ```
@@ -102,6 +107,7 @@ After changing STT model:
 
 1. Check if LiveKit Cloud supports Deepgram (it should)
 2. Check logs for errors:
+
    ```bash
    pm2 logs satsang-livekit-agent
    ```
@@ -122,6 +128,7 @@ After changing STT model:
 ## Expected Results
 
 After switching to Deepgram, you should see:
+
 - ✅ Better recognition of Hindi words
 - ✅ More accurate Romanized text
 - ✅ Fewer transcription errors
@@ -132,4 +139,3 @@ After switching to Deepgram, you should see:
 1. **Try Deepgram first** (easiest, usually best results)
 2. **Test and compare** with previous AssemblyAI results
 3. **If needed**, consider Google Cloud for maximum accuracy
-

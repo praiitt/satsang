@@ -13,11 +13,13 @@ Deepgram Nova-2 typically provides better accuracy for Hindi speech recognition.
 **Steps:**
 
 1. Add to `.env.local`:
+
    ```bash
    STT_MODEL=deepgram/nova-2
    ```
 
 2. If Deepgram requires an API key (check LiveKit docs), add:
+
    ```bash
    DEEPGRAM_API_KEY=your_api_key_here
    ```
@@ -30,6 +32,7 @@ Deepgram Nova-2 typically provides better accuracy for Hindi speech recognition.
 ### Option 2: Keep AssemblyAI but Improve Agent Instructions
 
 The agent's instructions have been updated to better handle Romanized Hindi variations:
+
 - Understands common spelling variations ("kaise", "kese", "kaisey")
 - Recognizes Hindi words in English alphabet
 - Interprets STT errors intelligently
@@ -42,6 +45,7 @@ If you have Google Cloud credentials:
 
 1. Set up Google Cloud credentials
 2. Add to `.env.local`:
+
    ```bash
    STT_MODEL=google/cloud
    GOOGLE_APPLICATION_CREDENTIALS=/path/to/credentials.json
@@ -52,12 +56,14 @@ If you have Google Cloud credentials:
 ### Testing Different Models
 
 1. Test with current model (AssemblyAI):
+
    ```bash
    # Remove or comment STT_MODEL from .env.local
    pm2 restart satsang-livekit-agent
    ```
 
 2. Test with Deepgram:
+
    ```bash
    # Add STT_MODEL=deepgram/nova-2 to .env.local
    pm2 restart satsang-livekit-agent
@@ -71,6 +77,7 @@ If you have Google Cloud credentials:
 ### What Changed in Agent Instructions
 
 The agent now explicitly understands:
+
 - Romanized Hindi input patterns
 - Common variations and STT errors
 - How to interpret Hindi words written in English letters
@@ -88,4 +95,3 @@ This helps the agent understand your speech even if STT makes minor errors.
 1. Try Deepgram first (often best accuracy): `STT_MODEL=deepgram/nova-2`
 2. Monitor accuracy in conversations
 3. If Deepgram doesn't improve accuracy, the updated agent instructions should help compensate
-

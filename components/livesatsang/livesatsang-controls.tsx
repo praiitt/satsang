@@ -166,12 +166,27 @@ export function LiveSatsangControls({
         <div className="flex items-center justify-center gap-2 sm:gap-3">
           <ControlBar className="flex items-center gap-2 sm:gap-3">
             <div className="flex items-center gap-2 rounded-xl bg-white/10 p-1 backdrop-blur-sm sm:gap-3">
-              <TrackToggle source={Track.Source.Microphone} className="h-12 w-12 rounded-lg sm:h-14 sm:w-14" />
-              <TrackToggle source={Track.Source.Camera} className="h-12 w-12 rounded-lg sm:h-14 sm:w-14" />
+              <TrackToggle
+                source={Track.Source.Microphone}
+                className="h-12 w-12 rounded-lg sm:h-14 sm:w-14"
+              />
+              <TrackToggle
+                source={Track.Source.Camera}
+                className="h-12 w-12 rounded-lg sm:h-14 sm:w-14"
+              />
             </div>
-            <MediaDeviceMenu kind="audioinput" className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14" />
-            <MediaDeviceMenu kind="videoinput" className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14" />
-            <DisconnectButton onClick={onLeave} className="h-12 w-12 rounded-lg bg-red-500/20 hover:bg-red-500/30 sm:h-14 sm:w-14" />
+            <MediaDeviceMenu
+              kind="audioinput"
+              className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14"
+            />
+            <MediaDeviceMenu
+              kind="videoinput"
+              className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14"
+            />
+            <DisconnectButton
+              onClick={onLeave}
+              className="h-12 w-12 rounded-lg bg-red-500/20 hover:bg-red-500/30 sm:h-14 sm:w-14"
+            />
           </ControlBar>
         </div>
       </div>

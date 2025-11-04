@@ -12,13 +12,12 @@ interface BhajanTrackInfo {
 
 /**
  * Simple Bhajan Player Component
- * 
+ *
  * Parses agent messages for bhajan URLs and plays them using HTML5 audio.
  */
 export function BhajanPlayer() {
   const messages = useChatMessages();
   const [currentTrack, setCurrentTrack] = useState<BhajanTrackInfo | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastProcessedMessageRef = useRef<string>('');
 
@@ -31,7 +30,7 @@ export function BhajanPlayer() {
     }
 
     const latestMessage = agentMessages[agentMessages.length - 1];
-    
+
     // Skip if we've already processed this message
     if (latestMessage.id === lastProcessedMessageRef.current) {
       return;
@@ -41,7 +40,7 @@ export function BhajanPlayer() {
     let trackInfo: BhajanTrackInfo | null = null;
     try {
       const parsed = JSON.parse(latestMessage.message);
-      
+
       // Check if it's a bhajan response (has url, preview_url, or spotify_id)
       if (parsed.url || parsed.preview_url) {
         trackInfo = {
@@ -57,7 +56,6 @@ export function BhajanPlayer() {
 
     if (trackInfo && trackInfo.url) {
       setCurrentTrack(trackInfo);
-      setIsPlaying(true);
       lastProcessedMessageRef.current = latestMessage.id;
     }
   }, [messages]);
@@ -69,39 +67,33 @@ export function BhajanPlayer() {
     }
 
     const audio = audioRef.current;
-    
+
     // Set up audio element
     audio.src = currentTrack.url;
     audio.volume = 0.8;
 
     // Event handlers
-    const handlePlay = () => setIsPlaying(true);
-    const handlePause = () => setIsPlaying(false);
     const handleEnded = () => {
-      setIsPlaying(false);
       setCurrentTrack(null);
     };
     const handleError = (e: ErrorEvent) => {
       console.error('Error playing audio:', e);
-      setIsPlaying(false);
     };
 
-    audio.addEventListener('play', handlePlay);
-    audio.addEventListener('pause', handlePause);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
 
     // Auto-play
     audio.play().catch((error) => {
       console.error('Error playing audio:', error);
-      setIsPlaying(false);
     });
 
     return () => {
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
-      audio.removeEventListener('ended', handleEnded);
-      audio.removeEventListener('error', handleError);
+      const currentAudio = audioRef.current;
+      if (currentAudio) {
+        currentAudio.removeEventListener('ended', handleEnded);
+        currentAudio.removeEventListener('error', handleError);
+      }
     };
   }, [currentTrack?.url]);
 

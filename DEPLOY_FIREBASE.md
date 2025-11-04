@@ -5,11 +5,13 @@ This project uses Next.js (App Router). Firebase Hosting can deploy it with SSR 
 ## One-time setup
 
 1. Install the Firebase CLI (requires Node.js):
+
    ```bash
    npm i -g firebase-tools
    ```
 
 2. Login and choose your Firebase project:
+
    ```bash
    firebase login
    firebase projects:list
@@ -29,6 +31,7 @@ This will create/update `firebase.json`, `.firebaserc`, and a `.firebase` direct
 ## Build and deploy
 
 - Ensure a production build succeeds first:
+
   ```bash
   pnpm build
   ```
@@ -51,8 +54,7 @@ MAINTENANCE_MODE=true
 - To disable, remove the variable or set `MAINTENANCE_MODE=false` and redeploy.
 
 ## Notes
+
 - SSR deployment uses Cloud Functions behind the scenes. Billing must be enabled on your Firebase project.
 - If you see rate limits or cold starts, consider upgrading your plan or adjusting function region.
 - For CI/CD, generate a token: `firebase login:ci` and set `FIREBASE_TOKEN` in your CI environment.
-
-

@@ -7,7 +7,13 @@
       "name_hi": "हरे कृष्ण हरे राम",
       "file_path": "krishna/hare-krishna-hare-rama.mp3",
       "category": "krishna",
-      "aliases": ["hare krishna", "hare rama", "hare krishna hare rama", "krishna bhajan", "hare krishna mantra"]
+      "aliases": [
+        "hare krishna",
+        "hare rama",
+        "hare krishna hare rama",
+        "krishna bhajan",
+        "hare krishna mantra"
+      ]
     },
     {
       "name_en": "Om Namah Shivaya",
@@ -39,4 +45,3 @@
     }
   ]
 }
-

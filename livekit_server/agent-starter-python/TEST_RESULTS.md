@@ -1,21 +1,25 @@
 # Local Testing Results - STT Model Status
 
 ## Test Date
+
 November 1, 2025
 
 ## Current Status
 
 ### ✅ Frontend
+
 - **Status**: Running successfully on `http://localhost:3000`
 - **Connection**: Connected to LiveKit Cloud (India South region)
 - **UI**: Working properly, can start sessions
 
 ### ✅ Agent
+
 - **Status**: Running successfully
 - **Connection**: Connected to LiveKit Cloud
 - **Process**: Multiple agent processes running
 
 ### ❌ Sarvam STT
+
 - **Status**: **NOT WORKING - Plugin Not Installed**
 - **Issue**: The `livekit-agents[sarvam]` plugin is not installed
 - **Current Behavior**: When `STT_MODEL=sarvam` is set, it will:
@@ -25,6 +29,7 @@ November 1, 2025
   4. Log warning: "Sarvam plugin not installed"
 
 ### ⚠️ Current STT Model
+
 - **Model**: `assemblyai/universal-streaming` (default)
 - **Language**: Hindi (`hi`)
 - **Reason**: Sarvam not installed, so using fallback
@@ -32,6 +37,7 @@ November 1, 2025
 ## How to Fix Sarvam
 
 ### Option 1: Install Sarvam Plugin
+
 ```bash
 cd ~/satsang/livekit_server/agent-starter-python
 uv pip install "livekit-agents[sarvam]~=1.2"
@@ -40,7 +46,9 @@ uv pip install "livekit-agents[sarvam]~=1.2"
 Then restart the agent and it should use Sarvam.
 
 ### Option 2: Try Deepgram Instead
+
 Deepgram doesn't require a plugin installation, just set:
+
 ```bash
 # In .env.local:
 STT_MODEL=deepgram/nova-2
@@ -49,8 +57,9 @@ STT_MODEL=deepgram/nova-2
 ## Environment Variables Check
 
 Currently in `.env.local`:
+
 - ✅ `LIVEKIT_URL` - Set
-- ✅ `LIVEKIT_API_KEY` - Set  
+- ✅ `LIVEKIT_API_KEY` - Set
 - ✅ `LIVEKIT_API_SECRET` - Set
 - ✅ `TTS_VOICE_ID` - Set (optional)
 - ✅ `TTS_SPEED` - Set to `slow`
@@ -59,7 +68,7 @@ Currently in `.env.local`:
 
 ## Recommendations
 
-1. **For immediate testing**: 
+1. **For immediate testing**:
    - Remove `STT_MODEL=sarvam` from `.env.local` OR
    - Install Sarvam plugin: `uv pip install "livekit-agents[sarvam]~=1.2"`
 
@@ -82,7 +91,7 @@ Currently in `.env.local`:
 ## Agent Log Location
 
 Check agent logs for STT model selection:
+
 - Look for: "Using STT model: ..."
 - Look for: "Using Sarvam STT" OR "Sarvam plugin not installed"
 - Look for: "Using Deepgram Nova-2" OR "Using AssemblyAI"
-
