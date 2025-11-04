@@ -23,20 +23,20 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 # Import bhajan search - use absolute import to avoid issues in worker process
 # Defer import to avoid initialization issues
 _bhajan_search_loaded = False
-_get_bhajan_url = None
-_list_available_bhajans = None
+_get_bhajan_url_async = None
+_list_available_bhajans_async = None
 
 def _load_bhajan_search():
     """Lazy load bhajan search module to avoid import errors during initialization."""
-    global _bhajan_search_loaded, _get_bhajan_url, _list_available_bhajans
+    global _bhajan_search_loaded, _get_bhajan_url_async, _list_available_bhajans_async
     if _bhajan_search_loaded:
-        return _get_bhajan_url, _list_available_bhajans
+        return _get_bhajan_url_async, _list_available_bhajans_async
     
     try:
         # Try relative import first (when running as package)
-        from .bhajan_search import get_bhajan_url, list_available_bhajans
-        _get_bhajan_url = get_bhajan_url
-        _list_available_bhajans = list_available_bhajans
+        from .bhajan_search import get_bhajan_url_async, list_available_bhajans_async
+        _get_bhajan_url_async = get_bhajan_url_async
+        _list_available_bhajans_async = list_available_bhajans_async
     except ImportError:
         try:
             # Fallback to absolute import
@@ -45,21 +45,21 @@ def _load_bhajan_search():
             src_path = Path(__file__).resolve().parent
             if str(src_path) not in sys.path:
                 sys.path.insert(0, str(src_path))
-            from bhajan_search import get_bhajan_url, list_available_bhajans
-            _get_bhajan_url = get_bhajan_url
-            _list_available_bhajans = list_available_bhajans
+            from bhajan_search import get_bhajan_url_async, list_available_bhajans_async
+            _get_bhajan_url_async = get_bhajan_url_async
+            _list_available_bhajans_async = list_available_bhajans_async
         except ImportError as e:
             logger.warning(f"Failed to import bhajan_search: {e}. Bhajan playback will not be available.")
-            # Create stub functions
-            def _stub_get_url(*args, **kwargs):
+            # Create stub async functions
+            async def _stub_get_url_async(*args, **kwargs):
                 return None
-            def _stub_list(*args, **kwargs):
+            async def _stub_list_async(*args, **kwargs):
                 return []
-            _get_bhajan_url = _stub_get_url
-            _list_available_bhajans = _stub_list
+            _get_bhajan_url_async = _stub_get_url_async
+            _list_available_bhajans_async = _stub_list_async
     
     _bhajan_search_loaded = True
-    return _get_bhajan_url, _list_available_bhajans
+    return _get_bhajan_url_async, _list_available_bhajans_async
 
 logger = logging.getLogger("agent")
 
@@ -186,19 +186,19 @@ Always end with a question or invitation to continue the conversation when natur
         import json
         
         # Lazy load bhajan search module
-        get_bhajan_url_func, list_available_bhajans_func = _load_bhajan_search()
+        get_bhajan_url_async_func, list_available_bhajans_async_func = _load_bhajan_search()
         
         logger.info(f"User requested bhajan: '{bhajan_name}' (artist: {artist})")
         
-        # Get base URL from environment or use relative path
+        # Get base URL from environment or use relative path (not used for Spotify, but kept for compatibility)
         base_url = os.getenv("BHAJAN_API_BASE_URL", None)
         
-        # Search for bhajan and get URL
-        bhajan_url = get_bhajan_url_func(bhajan_name, base_url)
+        # Search for bhajan and get URL (async)
+        bhajan_url = await get_bhajan_url_async_func(bhajan_name, base_url)
         
         if not bhajan_url:
             # List available bhajans for helpful error message
-            available = list_available_bhajans_func()
+            available = await list_available_bhajans_async_func()
             available_list = ", ".join(available[:5])  # Show first 5
             error_msg = f"क्षमा करें, '{bhajan_name}' भजन उपलब्ध नहीं है। उपलब्ध भजन: {available_list}"
             

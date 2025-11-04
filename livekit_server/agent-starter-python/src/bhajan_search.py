@@ -1,117 +1,206 @@
 """
-Bhajan search module backed by Internet Archive.
+Bhajan search module backed by Spotify Web API.
 
-Replaces local index-based search. Given a query, it searches Internet Archive's
-AdvancedSearch API for devotional audio and returns a direct MP3 URL when possible.
+Replaces local index-based and Internet Archive search. Given a query, it searches
+Spotify's Search API for devotional tracks and returns preview URLs (direct MP3 URLs)
+that can be played in the frontend.
+
+Note: Spotify preview URLs are 30-second previews. For full tracks, you'd need
+Spotify Premium and their Web Playback SDK.
 """
 import logging
+import os
 from typing import Optional, Dict, List
 import json
 import urllib.parse
-import urllib.request
-import socket
+import aiohttp
+import asyncio
 
 logger = logging.getLogger("bhajan_search")
+
+# Spotify API endpoint
+SPOTIFY_API_BASE = "https://api.spotify.com/v1"
 
 
 def normalize_query(query: str) -> str:
     """Normalize search query by removing common words and converting to lowercase."""
     # Remove common Hindi words and connectors
-    remove_words = ["ka", "ki", "ke", "ko", "kya", "bajao", "chal", "play", "sunao"]
+    remove_words = ["ka", "ki", "ke", "ko", "kya", "bajao", "chal", "play", "sunao", "bhajan"]
     query_lower = query.lower().strip()
     words = query_lower.split()
     filtered_words = [w for w in words if w not in remove_words]
     return " ".join(filtered_words) if filtered_words else query_lower
 
 
-def _http_get_json(url: str, timeout: float = 10.0) -> Optional[Dict]:
-    req = urllib.request.Request(url, headers={"User-Agent": "SatsangBhajanSearch/1.0"})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            data = resp.read()
-            return json.loads(data.decode("utf-8"))
-    except Exception as e:
-        logger.warning(f"HTTP error fetching {url}: {e}")
-        return None
+def _get_spotify_token() -> Optional[str]:
+    """Get Spotify access token from environment variable."""
+    token = os.getenv("SPOTIFY_ACCESS_TOKEN")
+    if not token:
+        logger.warning("SPOTIFY_ACCESS_TOKEN not set in environment")
+    return token
 
 
-def _search_internet_archive(query: str, rows: int = 10) -> List[Dict]:
-    """Search Internet Archive for audio items matching the query."""
+async def _search_spotify(query: str, token: str, limit: int = 10) -> Optional[Dict]:
+    """
+    Search Spotify for tracks matching the query.
+    
+    Returns the search API response or None on error.
+    """
     normalized = normalize_query(query)
-    # Build advanced query and then percent-encode the whole string
-    qraw = f"({normalized}) AND mediatype:(audio)"
-    q = urllib.parse.quote_plus(qraw)
-    base = "https://archive.org/advancedsearch.php"
-    url = f"{base}?q={q}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=format&sort[]=downloads+desc&rows={rows}&output=json"
-    data = _http_get_json(url)
-    if not data:
-        return []
-    docs = data.get("response", {}).get("docs", [])
-    return docs
-
-def _first_mp3_file(identifier: str, timeout: float = 10.0) -> Optional[str]:
-    """Return a direct MP3 file URL for an Internet Archive item if available."""
-    meta_url = f"https://archive.org/metadata/{urllib.parse.quote(identifier)}"
-    meta = _http_get_json(meta_url, timeout=timeout)
-    if not meta:
+    # Add devotional/spiritual keywords to improve results
+    search_query = f"{normalized} bhajan devotional"
+    
+    url = f"{SPOTIFY_API_BASE}/search"
+    params = {
+        "q": search_query,
+        "type": "track",
+        "limit": limit,
+        "market": "IN",  # Indian market for better bhajan coverage
+    }
+    
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, params=params, headers=headers, timeout=aiohttp.ClientTimeout(total=10)) as response:
+                if response.status == 401:
+                    logger.error("Spotify API authentication failed - token may be expired")
+                    return None
+                if response.status == 429:
+                    logger.warning("Spotify API rate limit hit")
+                    return None
+                response.raise_for_status()
+                return await response.json()
+    except asyncio.TimeoutError:
+        logger.error(f"Timeout searching Spotify for '{query}'")
         return None
-    files = meta.get("files", [])
-    # Prefer MP3 then OGG (we can still stream OGG in most browsers, but MP3 first)
-    for f in files:
-        name = f.get("name") or ""
-        if name.lower().endswith(".mp3"):
-            return f"https://archive.org/download/{identifier}/{urllib.parse.quote(name)}"
-    for f in files:
-        name = f.get("name") or ""
-        if name.lower().endswith(".ogg"):
-            return f"https://archive.org/download/{identifier}/{urllib.parse.quote(name)}"
+    except aiohttp.ClientError as e:
+        logger.error(f"HTTP error searching Spotify for '{query}': {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error searching Spotify for '{query}': {e}")
+        return None
+
+
+async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
+    """
+    Find best-matching Spotify track and return a dict with preview_url/title/artist.
+    
+    Returns None if no track found or preview URL not available.
+    """
+    token = _get_spotify_token()
+    if not token:
+        logger.warning("Spotify token not available, cannot search")
+        return None
+    
+    logger.info(f"Spotify search for bhajan: '{query}'")
+    search_result = await _search_spotify(query, token)
+    
+    if not search_result:
+        return None
+    
+    tracks = search_result.get("tracks", {}).get("items", [])
+    if not tracks:
+        logger.info(f"No tracks found on Spotify for '{query}'")
+        return None
+    
+    # Find first track with a preview URL
+    for track in tracks:
+        preview_url = track.get("preview_url")
+        if preview_url:
+            # Preview URLs are direct MP3 URLs that can be played
+            track_name = track.get("name", query)
+            artists = track.get("artists", [])
+            artist_names = ", ".join([a.get("name", "") for a in artists])
+            
+            logger.info(f"Found Spotify track: '{track_name}' by {artist_names} - {preview_url}")
+            return {
+                "name_en": track_name,
+                "artist": artist_names,
+                "preview_url": preview_url,
+                "spotify_id": track.get("id"),
+                "external_url": track.get("external_urls", {}).get("spotify"),
+            }
+    
+    logger.warning(f"No preview URL available for tracks found for '{query}'")
     return None
 
-def find_bhajan_by_name(query: str) -> Optional[Dict]:
-    """Find best-matching Internet Archive item and return a dict with url/title."""
-    logger.info(f"IA search for bhajan: '{query}'")
-    docs = _search_internet_archive(query)
-    for d in docs:
-        identifier = d.get("identifier")
-        if not identifier:
-            continue
-        url = _first_mp3_file(identifier)
-        if url:
-            return {
-                "identifier": identifier,
-                "title": d.get("title") or query,
-                "creator": d.get("creator"),
-                "file_url": url,
-            }
-    logger.warning(f"No playable file found for query '{query}' from Internet Archive")
-    return None
+
+async def get_bhajan_url_async(bhajan_name: str, base_url: Optional[str] = None) -> Optional[str]:
+    """
+    Get the URL for a bhajan that can be used by the frontend.
+    
+    This is an async version that returns Spotify preview URLs (direct MP3 URLs).
+    Note: Preview URLs are 30-second previews.
+    
+    Args:
+        bhajan_name: The name of the bhajan to play
+        base_url: Not used for Spotify (kept for compatibility)
+    
+    Returns:
+        Preview URL string (direct MP3) or None if not found
+    """
+    result = await find_bhajan_by_name_async(bhajan_name)
+    if not result:
+        return None
+    return result.get("preview_url")
+
+
+async def list_available_bhajans_async() -> List[str]:
+    """Return a few popular bhajan names for hints (best-effort)."""
+    token = _get_spotify_token()
+    if not token:
+        return []
+    
+    # Search for popular bhajans
+    search_result = await _search_spotify("bhajan krishna", token, limit=5)
+    if not search_result:
+        return []
+    
+    tracks = search_result.get("tracks", {}).get("items", [])
+    names: List[str] = []
+    for track in tracks:
+        name = track.get("name")
+        if name:
+            names.append(name)
+    return names
+
+
+# Synchronous wrappers for backward compatibility
+# These run the async functions in a new event loop
+def _run_async(coro):
+    """Run an async coroutine in a new event loop."""
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            # If loop is already running, we need to create a new one
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                future = executor.submit(asyncio.run, coro)
+                return future.result()
+        else:
+            return loop.run_until_complete(coro)
+    except RuntimeError:
+        # No event loop, create one
+        return asyncio.run(coro)
 
 
 def get_bhajan_url(bhajan_name: str, base_url: Optional[str] = None) -> Optional[str]:
     """
-    Get the URL for a bhajan that can be used by the frontend.
+    Synchronous wrapper for get_bhajan_url_async.
     
-    Args:
-        bhajan_name: The name of the bhajan to play
-        base_url: Base URL for the API (e.g., "https://satsang.rraasi.com")
-                 If None, will use relative path
-    
-    Returns:
-        URL string to the bhajan MP3 file, or None if not found
+    Kept for backward compatibility with existing code.
     """
-    result = find_bhajan_by_name(bhajan_name)
-    if not result:
-        return None
-    return result.get("file_url")
+    return _run_async(get_bhajan_url_async(bhajan_name, base_url))
 
 
 def list_available_bhajans() -> List[str]:
-    """Return a few popular items for hints (best-effort)."""
-    docs = _search_internet_archive("bhajan krishna", rows=5)
-    names: List[str] = []
-    for d in docs:
-        title = d.get("title")
-        if title:
-            names.append(title)
-    return names
-
+    """
+    Synchronous wrapper for list_available_bhajans_async.
+    
+    Kept for backward compatibility with existing code.
+    """
+    return _run_async(list_available_bhajans_async())

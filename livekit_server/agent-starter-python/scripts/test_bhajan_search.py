@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-Temporary test script to validate Internet Archive bhajan search.
+Temporary test script to validate Spotify bhajan search.
 
 It exercises get_bhajan_url() for several queries and performs a
 small ranged GET (first ~1KB) to verify the URL is reachable and audio-like.
 
+Requires SPOTIFY_ACCESS_TOKEN environment variable to be set.
+
 Usage:
-  python scripts/test_bhajan_search.py [query ...]
+  SPOTIFY_ACCESS_TOKEN=your_token python scripts/test_bhajan_search.py [query ...]
 """
 from __future__ import annotations
 
