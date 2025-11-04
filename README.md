@@ -46,16 +46,14 @@ TTS_SPEED=slow
 
 ### Spotify (For Bhajan Playback)
 ```env
-# Option 1: Direct access token (for testing)
+# Spotify API access token for searching tracks
 SPOTIFY_ACCESS_TOKEN=your_spotify_access_token
-
-# Option 2: OAuth credentials (for production)
 SPOTIFY_CLIENT_ID=65136cefd17d48ffb4c7d6ca07dd533f
 SPOTIFY_CLIENT_SECRET=your_spotify_client_secret
-SPOTIFY_REDIRECT_URI=https://satsang.rraasi.com/api/spotify/callback
 ```
 
 **Note**: 
-- Add `SPOTIFY_REDIRECT_URI` to your Spotify app's "Redirect URIs" in the Spotify Developer Dashboard
-- `SPOTIFY_CLIENT_SECRET` should be kept secure and never exposed to the frontend
-- For production, use OAuth flow (Option 2) instead of direct access tokens
+- Backend uses Spotify API to search for bhajans and returns preview URLs (MP3)
+- Frontend uses simple HTML5 audio player to play the MP3 URLs
+- No complex OAuth or SDK required - just URL + audio player
+- Preview URLs are 30-second previews (Spotify limitation)
