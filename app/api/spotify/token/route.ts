@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 // Get Spotify access token from cookies
 export async function GET() {
@@ -7,10 +7,7 @@ export async function GET() {
   const accessToken = cookieStore.get('spotify_access_token')?.value;
 
   if (!accessToken) {
-    return NextResponse.json(
-      { error: 'Not authenticated with Spotify' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'Not authenticated with Spotify' }, { status: 401 });
   }
 
   // Return token to frontend (for Web Playback SDK)
@@ -24,20 +21,14 @@ export async function POST() {
   const refreshToken = cookieStore.get('spotify_refresh_token')?.value;
 
   if (!refreshToken) {
-    return NextResponse.json(
-      { error: 'No refresh token available' },
-      { status: 401 }
-    );
+    return NextResponse.json({ error: 'No refresh token available' }, { status: 401 });
   }
 
   const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
   const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
 
   if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
-    return NextResponse.json(
-      { error: 'Spotify not configured' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Spotify not configured' }, { status: 500 });
   }
 
   try {
@@ -54,10 +45,7 @@ export async function POST() {
     });
 
     if (!tokenResponse.ok) {
-      return NextResponse.json(
-        { error: 'Failed to refresh token' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Failed to refresh token' }, { status: 401 });
     }
 
     const tokenData = await tokenResponse.json();
@@ -75,9 +63,6 @@ export async function POST() {
     return response;
   } catch (error) {
     console.error('Token refresh error:', error);
-    return NextResponse.json(
-      { error: 'Server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

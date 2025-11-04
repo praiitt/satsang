@@ -395,6 +395,9 @@ async def entrypoint(ctx: JobContext):
         if not tts_voice_id:
             logger.warning("TTS_VOICE_ID not set in .env.local - using temporary placeholder. Please set a male voice ID!")
             tts_voice_id = "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # This was female - MUST be changed to male voice ID
+            logger.warning(f"Using FALLBACK voice ID (female): {tts_voice_id}")
+        else:
+            logger.info(f"Using TTS_VOICE_ID from .env.local: {tts_voice_id}")
         
         session = AgentSession(
             # Speech-to-text configured above

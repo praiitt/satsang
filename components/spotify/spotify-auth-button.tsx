@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 
 export function SpotifyAuthButton() {
-  const { isAuthenticated, connect, error } = useSpotifyPlayer();
+  const { isAuthenticated, connect } = useSpotifyPlayer();
   const [isChecking, setIsChecking] = useState(true);
 
   // Check authentication status on mount
@@ -16,7 +16,7 @@ export function SpotifyAuthButton() {
           // User is authenticated, try to connect
           await connect();
         }
-      } catch (err) {
+      } catch {
         // Not authenticated
       } finally {
         setIsChecking(false);
@@ -62,4 +62,3 @@ export function SpotifyAuthButton() {
     </button>
   );
 }
-

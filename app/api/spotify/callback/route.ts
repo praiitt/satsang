@@ -1,9 +1,11 @@
-import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
-const SPOTIFY_REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/spotify/callback`;
+const SPOTIFY_REDIRECT_URI =
+  process.env.SPOTIFY_REDIRECT_URI ||
+  `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/spotify/callback`;
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -27,7 +29,7 @@ export async function GET(request: Request) {
   // Verify state
   const cookieStore = await cookies();
   const storedState = cookieStore.get('spotify_auth_state')?.value;
-  
+
   if (!storedState || storedState !== state) {
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}?spotify_error=state_mismatch`
@@ -100,4 +102,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

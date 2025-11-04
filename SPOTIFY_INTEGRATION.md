@@ -46,6 +46,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000  # For development
 ### 3. Update Spotify App Settings
 
 In your Spotify Developer Dashboard:
+
 1. Go to your app settings
 2. Add **Redirect URIs**:
    - `http://localhost:3000/api/spotify/callback` (development)
@@ -106,21 +107,25 @@ In your Spotify Developer Dashboard:
 ## Troubleshooting
 
 ### "Not authenticated with Spotify"
+
 - Make sure you've clicked "Connect Spotify" and authorized
 - Check browser cookies are enabled
 - Verify environment variables are set correctly
 
 ### "Failed to initialize Spotify player"
+
 - Check browser console for errors
 - Verify Spotify Web Playback SDK script loaded
 - Make sure you're using HTTPS in production (or localhost for development)
 
 ### "Spotify player not ready"
+
 - Wait a few seconds after connecting
 - Refresh the page if it doesn't connect
 - Check that you have Spotify Premium (required for SDK)
 
 ### Preview URLs not working
+
 - Some tracks don't have preview URLs
 - The system will try to use Spotify SDK if available
 - Otherwise, it will show an error message
@@ -138,4 +143,3 @@ In your Spotify Developer Dashboard:
 - Playlist support
 - Queue management
 - Better error handling and user feedback
-

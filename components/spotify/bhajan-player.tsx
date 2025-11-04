@@ -34,9 +34,6 @@ export function BhajanPlayer() {
     error: spotifyError,
     connect,
     playTrack,
-    pause: spotifyPause,
-    resume: spotifyResume,
-    isPlaying: spotifyIsPlaying,
   } = useSpotifyPlayer();
 
   // Parse agent messages for bhajan playback info
@@ -79,7 +76,7 @@ export function BhajanPlayer() {
       // Must have at least one of: url, preview_url, or spotify_id
       const hasUrl = parsed.url || parsed.preview_url;
       const hasSpotifyId = parsed.spotify_id;
-      
+
       if (hasUrl || hasSpotifyId) {
         trackInfo = {
           // url can be preview_url or null - use whatever is available
@@ -197,6 +194,7 @@ export function BhajanPlayer() {
     }
 
     const audio = audioRef.current;
+    const trackSpotifyId = currentTrack.spotify_id;
 
     // Set up audio element
     audio.src = currentTrack.url;
@@ -209,7 +207,7 @@ export function BhajanPlayer() {
     const handleError = (e: ErrorEvent) => {
       console.error('Error playing audio:', e);
       // If preview fails and we have Spotify ID, try Spotify
-      if (currentTrack.spotify_id && isAuthenticated) {
+      if (trackSpotifyId && isAuthenticated) {
         setUseSpotify(true);
       }
     };
@@ -221,12 +219,13 @@ export function BhajanPlayer() {
     audio.play().catch((error) => {
       console.error('Error playing audio:', error);
       // If preview fails and we have Spotify ID, try Spotify
-      if (currentTrack.spotify_id && isAuthenticated) {
+      if (trackSpotifyId && isAuthenticated) {
         setUseSpotify(true);
       }
     });
 
     return () => {
+      // Capture ref at cleanup time
       const currentAudio = audioRef.current;
       if (currentAudio) {
         currentAudio.removeEventListener('ended', handleEnded);
@@ -237,10 +236,11 @@ export function BhajanPlayer() {
 
   // Cleanup on unmount
   useEffect(() => {
+    const audioElement = audioRef.current;
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.src = '';
+      if (audioElement) {
+        audioElement.pause();
+        audioElement.src = '';
       }
     };
   }, []);

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Spotify Web Playback SDK types
 interface SpotifyPlayer {
@@ -18,7 +18,11 @@ interface SpotifyPlayer {
   seek: (positionMs: number) => Promise<void>;
   nextTrack: () => Promise<void>;
   previousTrack: () => Promise<void>;
-  play: (options: { uris?: string[]; context_uri?: string; offset?: { position?: number; uri?: string } }) => Promise<void>;
+  play: (options: {
+    uris?: string[];
+    context_uri?: string;
+    offset?: { position?: number; uri?: string };
+  }) => Promise<void>;
 }
 
 declare global {
@@ -77,7 +81,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     const script = document.createElement('script');
     script.src = 'https://sdk.scdn.co/spotify-player.js';
     script.async = true;
-    
+
     script.onload = () => {
       // SDK will call onSpotifyWebPlaybackSDKReady when ready
       if (window.Spotify && !scriptLoadedRef.current) {
@@ -195,7 +199,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     if (!playerRef.current) {
       await initializePlayer();
     }
-    
+
     if (playerRef.current) {
       try {
         const connected = await playerRef.current.connect();
@@ -221,108 +225,114 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
   }, []);
 
   // Play track
-  const playTrack = useCallback(async (trackId: string) => {
-    // Ensure player is initialized and connected
-    if (!playerRef.current) {
-      await initializePlayer();
-    }
+  const playTrack = useCallback(
+    async (trackId: string) => {
+      // Ensure player is initialized and connected
+      if (!playerRef.current) {
+        await initializePlayer();
+      }
 
-    if (!playerRef.current) {
-      setError('Spotify player not initialized');
-      return;
-    }
+      if (!playerRef.current) {
+        setError('Spotify player not initialized');
+        return;
+      }
 
-    // Connect if not already connected
-    let currentDeviceId = deviceId;
-    if (!currentDeviceId) {
-      await connect();
-      // Wait for device to be ready (with retries)
-      // Check playerRef.current.device_id or wait for state update
-      let retries = 5;
-      while (!currentDeviceId && retries > 0) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        // Re-check deviceId from state (this will be updated by the ready event)
-        // We'll use a different approach - check if player is ready
-        if (playerRef.current) {
-          try {
-            const state = await playerRef.current.getCurrentState();
-            if (state?.device_id) {
-              currentDeviceId = state.device_id;
-              setDeviceId(state.device_id);
+      // Connect if not already connected
+      let currentDeviceId = deviceId;
+      if (!currentDeviceId) {
+        await connect();
+        // Wait for device to be ready (with retries)
+        // Check playerRef.current.device_id or wait for state update
+        let retries = 5;
+        while (!currentDeviceId && retries > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          // Re-check deviceId from state (this will be updated by the ready event)
+          // We'll use a different approach - check if player is ready
+          if (playerRef.current) {
+            try {
+              const state = await playerRef.current.getCurrentState();
+              if (state?.device_id) {
+                currentDeviceId = state.device_id;
+                setDeviceId(state.device_id);
+              }
+            } catch {
+              // Not ready yet
             }
-          } catch {
-            // Not ready yet
           }
+          retries--;
         }
-        retries--;
-      }
-    }
-
-    if (!currentDeviceId) {
-      setError('Spotify device not ready. Please wait a moment and try again.');
-      return;
-    }
-
-    const token = await getAccessToken();
-    if (!token) {
-      setError('Not authenticated with Spotify');
-      return;
-    }
-
-    try {
-      // First, ensure device is active
-      const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          device_ids: [currentDeviceId],
-          play: true,
-        }),
-      });
-
-      // If transfer fails, try direct play
-      if (!transferResponse.ok && transferResponse.status !== 204) {
-        console.warn('Device transfer failed, trying direct play');
       }
 
-      // Play the track
-      const playResponse = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${currentDeviceId}`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          uris: [`spotify:track:${trackId}`],
-        }),
-      });
+      if (!currentDeviceId) {
+        setError('Spotify device not ready. Please wait a moment and try again.');
+        return;
+      }
 
-      if (!playResponse.ok) {
-        const errorData = await playResponse.json().catch(() => ({}));
-        const errorMessage = errorData?.error?.message || 'Failed to play track';
-        
-        if (playResponse.status === 403) {
-          setError('Spotify Premium required for full track playback');
-        } else if (playResponse.status === 404) {
-          setError('No active Spotify device found. Please open Spotify on another device.');
-        } else {
-          setError(errorMessage);
+      const token = await getAccessToken();
+      if (!token) {
+        setError('Not authenticated with Spotify');
+        return;
+      }
+
+      try {
+        // First, ensure device is active
+        const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            device_ids: [currentDeviceId],
+            play: true,
+          }),
+        });
+
+        // If transfer fails, try direct play
+        if (!transferResponse.ok && transferResponse.status !== 204) {
+          console.warn('Device transfer failed, trying direct play');
         }
-        throw new Error(errorMessage);
-      }
 
-      console.log('Track playing successfully:', trackId);
-      setError(null);
-    } catch (err: any) {
-      console.error('Error playing track:', err);
-      if (!err.message || err.message === 'Failed to fetch') {
-        setError('Network error. Please check your connection.');
+        // Play the track
+        const playResponse = await fetch(
+          `https://api.spotify.com/v1/me/player/play?device_id=${currentDeviceId}`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              uris: [`spotify:track:${trackId}`],
+            }),
+          }
+        );
+
+        if (!playResponse.ok) {
+          const errorData = await playResponse.json().catch(() => ({}));
+          const errorMessage = errorData?.error?.message || 'Failed to play track';
+
+          if (playResponse.status === 403) {
+            setError('Spotify Premium required for full track playback');
+          } else if (playResponse.status === 404) {
+            setError('No active Spotify device found. Please open Spotify on another device.');
+          } else {
+            setError(errorMessage);
+          }
+          throw new Error(errorMessage);
+        }
+
+        console.log('Track playing successfully:', trackId);
+        setError(null);
+      } catch (err: any) {
+        console.error('Error playing track:', err);
+        if (!err.message || err.message === 'Failed to fetch') {
+          setError('Network error. Please check your connection.');
+        }
       }
-    }
-  }, [deviceId, connect, initializePlayer, getAccessToken]);
+    },
+    [deviceId, connect, initializePlayer, getAccessToken]
+  );
 
   // Pause
   const pause = useCallback(async () => {
@@ -367,4 +377,3 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     isPlaying,
   };
 }
-

@@ -2,7 +2,9 @@ import { NextResponse } from 'next/server';
 
 // Spotify OAuth configuration
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-const SPOTIFY_REDIRECT_URI = process.env.SPOTIFY_REDIRECT_URI || `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/spotify/callback`;
+const SPOTIFY_REDIRECT_URI =
+  process.env.SPOTIFY_REDIRECT_URI ||
+  `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/spotify/callback`;
 const SPOTIFY_SCOPES = [
   'user-read-playback-state',
   'user-modify-playback-state',
@@ -14,15 +16,13 @@ const SPOTIFY_SCOPES = [
 
 export async function GET() {
   if (!SPOTIFY_CLIENT_ID) {
-    return NextResponse.json(
-      { error: 'Spotify Client ID not configured' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Spotify Client ID not configured' }, { status: 500 });
   }
 
   // Generate state for CSRF protection
-  const state = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-  
+  const state =
+    Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
   // Store state in cookie (expires in 10 minutes)
   const authUrl = `https://accounts.spotify.com/authorize?${new URLSearchParams({
     response_type: 'code',
@@ -33,7 +33,7 @@ export async function GET() {
   }).toString()}`;
 
   const response = NextResponse.redirect(authUrl);
-  
+
   // Store state in httpOnly cookie for security
   response.cookies.set('spotify_auth_state', state, {
     httpOnly: true,
@@ -44,4 +44,3 @@ export async function GET() {
 
   return response;
 }
-

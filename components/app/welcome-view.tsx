@@ -43,7 +43,7 @@ export const WelcomeView = ({
             {startButtonText}
           </Button>
           <SpotifyAuthButton />
-          <p className="text-xs text-foreground/60 max-w-xs">
+          <p className="text-foreground/60 max-w-xs text-xs">
             Spotify से कनेक्ट करें पूर्ण भजन सुनने के लिए (वैकल्पिक)
           </p>
         </div>
