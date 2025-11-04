@@ -292,11 +292,19 @@ async def entrypoint(ctx: JobContext):
                 language="hi",
             )
     elif stt_model == "deepgram/nova-2" or stt_model.startswith("deepgram"):
-        stt = inference.STT(
-            model="deepgram/nova-2",
-            language="hi",
-        )
-        logger.info("Using Deepgram Nova-2 for improved Hindi STT accuracy")
+        try:
+            stt = inference.STT(
+                model="deepgram/nova-2",
+                language="hi",
+            )
+            logger.info("Using Deepgram Nova-2 for improved Hindi STT accuracy")
+        except Exception as e:
+            logger.warning(f"Failed to initialize Deepgram STT: {e}. Falling back to AssemblyAI.")
+            stt = inference.STT(
+                model="assemblyai/universal-streaming",
+                language="hi",
+            )
+            logger.info("Using AssemblyAI as fallback STT")
     else:
         # AssemblyAI with Hindi language (default/fallback)
         stt = inference.STT(
