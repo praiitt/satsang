@@ -48,6 +48,11 @@ export async function GET() {
     accessToken = tokenData.access_token;
     const expiresIn = tokenData.expires_in || 3600; // Default to 1 hour if not provided
 
+    // Ensure accessToken is defined before setting cookie
+    if (!accessToken) {
+      return NextResponse.json({ error: 'No access token in refresh response' }, { status: 500 });
+    }
+
     // Update access token cookie
     const response = NextResponse.json({ access_token: accessToken });
     response.cookies.set('spotify_access_token', accessToken, {
