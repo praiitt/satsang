@@ -447,25 +447,48 @@ async def entrypoint(ctx: JobContext):
     
     for attempt in range(max_retries):
         try:
+            # Check if session is closing or closed before attempting to send
+            if hasattr(session, '_closing') and session._closing:
+                logger.warning("Session is closing, skipping greeting")
+                break
+            if hasattr(session, '_closed') and session._closed:
+                logger.warning("Session is already closed, skipping greeting")
+                break
+            
             await session.say(greeting, allow_interruptions=False)
             logger.info("Greeting sent successfully")
             break
         except Exception as e:
-            if "isn't running" in str(e) or "not running" in str(e).lower():
+            error_str = str(e).lower()
+            if "isn't running" in error_str or "not running" in error_str:
                 logger.warning(f"Session not ready yet (attempt {attempt + 1}/{max_retries}), waiting...")
                 if attempt < max_retries - 1:
                     await asyncio.sleep(retry_delay * (attempt + 1))
                     continue
-            logger.error(f"Error sending greeting: {e}")
-            # Fallback to a shorter greeting on final attempt
-            if attempt == max_retries - 1:
-                try:
-                    await asyncio.sleep(1.0)
-                    await session.say("नमस्ते! मैं आपकी कैसे सहायता कर सकता हूं? क्या आपको कोई प्रश्न है?", allow_interruptions=False)
-                    logger.info("Fallback greeting sent successfully")
-                except Exception as e2:
-                    logger.error(f"Error sending fallback greeting: {e2}")
-                    # Don't raise - just log and continue, the agent will still work
+            elif "closing" in error_str or "closed" in error_str:
+                logger.warning(f"Session is closing/closed, cannot send greeting: {e}")
+                break  # Don't retry if session is closing
+            elif "429" in error_str or "rate limit" in error_str:
+                logger.warning(f"Rate limit hit while sending greeting: {e}")
+                # Don't retry immediately on rate limit - wait longer
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(retry_delay * 2 * (attempt + 1))
+                    continue
+            else:
+                logger.error(f"Error sending greeting: {e}")
+                # Fallback to a shorter greeting on final attempt
+                if attempt == max_retries - 1:
+                    try:
+                        # Check session state one more time
+                        if hasattr(session, '_closing') and session._closing:
+                            logger.warning("Session is closing, skipping fallback greeting")
+                            break
+                        await asyncio.sleep(1.0)
+                        await session.say("नमस्ते! मैं आपकी कैसे सहायता कर सकता हूं? क्या आपको कोई प्रश्न है?", allow_interruptions=False)
+                        logger.info("Fallback greeting sent successfully")
+                    except Exception as e2:
+                        logger.error(f"Error sending fallback greeting: {e2}")
+                        # Don't raise - just log and continue, the agent will still work
 
 
 if __name__ == "__main__":
