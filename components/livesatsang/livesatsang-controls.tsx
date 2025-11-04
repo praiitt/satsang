@@ -94,8 +94,11 @@ export function LiveSatsangControls({
   const participantCount = room.numParticipants ?? 1; // Includes local participant
 
   return (
-    <div className="fixed right-0 bottom-0 left-0 z-50 bg-gradient-to-t from-black/95 via-black/90 to-black/80 shadow-2xl backdrop-blur-xl">
-      <div className="space-y-4 p-4 sm:p-5 md:p-6">
+    <div
+      className="fixed right-0 bottom-0 left-0 z-50 bg-gradient-to-t from-black/95 via-black/90 to-black/80 shadow-2xl backdrop-blur-xl"
+      style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}
+    >
+      <div className="space-y-3 p-3 sm:space-y-4 sm:p-5 md:p-6">
         {/* Room Info */}
         <div className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2 backdrop-blur-sm">
           <span className="text-sm font-medium text-white/80">Room:</span>
@@ -137,58 +140,39 @@ export function LiveSatsangControls({
           )}
         </div>
 
-        {/* Controls Row */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* Standard LiveKit Controls - Mobile optimized */}
+        {/* Host Controls - compact pills (above toggles) */}
+        {isHost && (
           <div className="flex items-center justify-center gap-2 sm:gap-3">
-            <ControlBar className="flex items-center gap-2 sm:gap-3">
-              <div className="flex items-center gap-2 rounded-xl bg-white/10 p-1 backdrop-blur-sm sm:gap-3">
-                <TrackToggle
-                  source={Track.Source.Microphone}
-                  className="h-12 w-12 rounded-lg sm:h-14 sm:w-14"
-                />
-                <TrackToggle
-                  source={Track.Source.Camera}
-                  className="h-12 w-12 rounded-lg sm:h-14 sm:w-14"
-                />
-              </div>
-              <MediaDeviceMenu
-                kind="audioinput"
-                className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14"
-              />
-              <MediaDeviceMenu
-                kind="videoinput"
-                className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14"
-              />
-              <DisconnectButton
-                onClick={onLeave}
-                className="h-12 w-12 rounded-lg bg-red-500/20 hover:bg-red-500/30 sm:h-14 sm:w-14"
-              />
-            </ControlBar>
+            <button
+              onClick={handleMuteAll}
+              className="flex items-center justify-center gap-2 rounded-full bg-red-500/20 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-red-500/30 active:scale-95 sm:text-sm"
+              title="Mute all participants"
+            >
+              <span className="text-base">🔇</span>
+              <span>Mute All</span>
+            </button>
+            <button
+              onClick={handleUnmuteAll}
+              className="flex items-center justify-center gap-2 rounded-full bg-green-500/20 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-green-500/30 active:scale-95 sm:text-sm"
+              title="Unmute all participants"
+            >
+              <span className="text-base">🔊</span>
+              <span>Unmute All</span>
+            </button>
           </div>
+        )}
 
-          {/* Host Controls - Stack on mobile, horizontal on desktop */}
-          {isHost && (
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-              <div className="hidden h-px flex-1 bg-white/10 sm:block" />
-              <button
-                onClick={handleMuteAll}
-                className="flex items-center justify-center gap-2 rounded-xl bg-red-500/20 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-red-500/30 active:scale-95 sm:px-5 sm:text-base"
-                title="Mute all participants"
-              >
-                <span className="text-lg">🔇</span>
-                <span>Mute All</span>
-              </button>
-              <button
-                onClick={handleUnmuteAll}
-                className="flex items-center justify-center gap-2 rounded-xl bg-green-500/20 px-4 py-3 text-sm font-semibold text-white backdrop-blur-sm transition-all hover:bg-green-500/30 active:scale-95 sm:px-5 sm:text-base"
-                title="Unmute all participants"
-              >
-                <span className="text-lg">🔊</span>
-                <span>Unmute All</span>
-              </button>
+        {/* Controls Row - always last, closest to the bottom edge */}
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
+          <ControlBar className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-1 backdrop-blur-sm sm:gap-3">
+              <TrackToggle source={Track.Source.Microphone} className="h-12 w-12 rounded-lg sm:h-14 sm:w-14" />
+              <TrackToggle source={Track.Source.Camera} className="h-12 w-12 rounded-lg sm:h-14 sm:w-14" />
             </div>
-          )}
+            <MediaDeviceMenu kind="audioinput" className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14" />
+            <MediaDeviceMenu kind="videoinput" className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14" />
+            <DisconnectButton onClick={onLeave} className="h-12 w-12 rounded-lg bg-red-500/20 hover:bg-red-500/30 sm:h-14 sm:w-14" />
+          </ControlBar>
         </div>
       </div>
     </div>
