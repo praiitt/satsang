@@ -101,10 +101,10 @@ export function LiveSatsangControls({
       <div className="space-y-3 p-3 sm:space-y-4 sm:p-5 md:p-6">
         {/* Room Info */}
         <div className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2 backdrop-blur-sm">
-          <span className="text-sm font-medium text-white/80">Room:</span>
+          <span className="text-sm font-medium text-white/80">कक्ष:</span>
           <span className="text-sm font-bold text-white">{room.name || 'LiveSatsang'}</span>
           <span className="mx-2 text-white/40">•</span>
-          <span className="text-sm font-medium text-white/80">Participants:</span>
+          <span className="text-sm font-medium text-white/80">प्रतिभागी:</span>
           <span className="text-sm font-bold text-green-400">{participantCount}</span>
         </div>
 
@@ -127,15 +127,15 @@ export function LiveSatsangControls({
             <button
               onClick={handleInviteGuruji}
               className="flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-95 sm:px-5 sm:py-3 sm:text-base"
-              title="Invite Guruji to join LiveSatsang"
+              title="गुरुजी को आमंत्रित करें"
             >
               <span className="text-lg">🙏</span>
-              <span className="hidden sm:inline">Invite</span>
+              <span className="hidden sm:inline">आमंत्रित करें</span>
             </button>
           ) : (
             <div className="flex shrink-0 items-center gap-2 rounded-xl bg-green-500/20 px-4 py-2.5 text-sm font-semibold text-green-300 backdrop-blur-sm sm:px-5 sm:py-3 sm:text-base">
               <span className="text-lg">✅</span>
-              <span className="hidden sm:inline">Guruji</span>
+              <span className="hidden sm:inline">गुरुजी</span>
             </div>
           )}
         </div>
@@ -146,18 +146,18 @@ export function LiveSatsangControls({
             <button
               onClick={handleMuteAll}
               className="flex items-center justify-center gap-2 rounded-full bg-red-500/20 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-red-500/30 active:scale-95 sm:text-sm"
-              title="Mute all participants"
+              title="सभी को म्यूट करें"
             >
               <span className="text-base">🔇</span>
-              <span>Mute All</span>
+              <span>सभी को म्यूट</span>
             </button>
             <button
               onClick={handleUnmuteAll}
               className="flex items-center justify-center gap-2 rounded-full bg-green-500/20 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-green-500/30 active:scale-95 sm:text-sm"
-              title="Unmute all participants"
+              title="सभी को अनम्यूट करें"
             >
               <span className="text-base">🔊</span>
-              <span>Unmute All</span>
+              <span>सभी को अनम्यूट</span>
             </button>
           </div>
         )}

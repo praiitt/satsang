@@ -90,13 +90,13 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
       <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden" onClick={onClose} />
       <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-[#0b0b14]/95 p-4 shadow-2xl backdrop-blur-xl md:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white">Participants ({allParticipants.length})</h3>
+          <h3 className="text-sm font-bold text-white">प्रतिभागी ({allParticipants.length})</h3>
           <button
-            aria-label="Close participants"
+            aria-label="प्रतिभागी सूची बंद करें"
             className="rounded-lg bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/15"
             onClick={onClose}
           >
-            Close
+            बंद करें
           </button>
         </div>
         <div className="max-h-72 space-y-2 overflow-y-auto">
@@ -108,12 +108,12 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-white">
                   {participant.name}
-                  {participant.isLocal && <span className="ml-1 text-xs text-white/60">(You)</span>}
+                  {participant.isLocal && <span className="ml-1 text-xs text-white/60">(आप)</span>}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-white/60">
                   {participant.hasVideo && <span>📹</span>}
                   {participant.hasAudio && <span>🎤</span>}
-                  {!participant.hasVideo && !participant.hasAudio && <span className="text-white/40">No media</span>}
+                  {!participant.hasVideo && !participant.hasAudio && <span className="text-white/40">मीडिया नहीं</span>}
                 </div>
               </div>
             </div>
@@ -124,8 +124,8 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
       {/* Desktop floating panel */}
       <div className="fixed top-4 right-4 z-40 hidden max-w-xs rounded-xl bg-black/80 p-4 shadow-2xl backdrop-blur-xl md:block">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white">Participants ({allParticipants.length})</h3>
-          <span className="text-xs text-white/60">Room: {room.name}</span>
+          <h3 className="text-sm font-bold text-white">प्रतिभागी ({allParticipants.length})</h3>
+          <span className="text-xs text-white/60">कक्ष: {room.name}</span>
         </div>
         <div className="max-h-60 space-y-2 overflow-y-auto">
           {allParticipants.map((participant) => (
@@ -136,12 +136,12 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-white">
                   {participant.name}
-                  {participant.isLocal && <span className="ml-1 text-xs text-white/60">(You)</span>}
+                  {participant.isLocal && <span className="ml-1 text-xs text-white/60">(आप)</span>}
                 </p>
                 <div className="flex items-center gap-2 text-xs text-white/60">
                   {participant.hasVideo && <span>📹</span>}
                   {participant.hasAudio && <span>🎤</span>}
-                  {!participant.hasVideo && !participant.hasAudio && <span className="text-white/40">No media</span>}
+                  {!participant.hasVideo && !participant.hasAudio && <span className="text-white/40">मीडिया नहीं</span>}
                 </div>
               </div>
             </div>

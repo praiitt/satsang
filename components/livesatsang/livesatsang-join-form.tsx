@@ -3,14 +3,13 @@
 import { useState } from 'react';
 
 interface LiveSatsangJoinFormProps {
-  onJoin: (name: string, role: 'host' | 'participant', language: string) => void;
+  onJoin: (name: string, role: 'host' | 'participant') => void;
 }
 
 export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
   const [name, setName] = useState('');
   const [role, setRole] = useState<'host' | 'participant'>('participant');
   const [isJoining, setIsJoining] = useState(false);
-  const [language, setLanguage] = useState<string>('hi');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +20,7 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
 
     setIsJoining(true);
     try {
-      await onJoin(name.trim(), role, language);
+      await onJoin(name.trim(), role);
     } catch (error) {
       console.error('Error joining:', error);
     } finally {
@@ -38,13 +37,13 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
             <span className="text-4xl">🕉️</span>
           </div>
           <h1 className="mb-3 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-            LiveSatsang
+            लाइव सत्संग
           </h1>
           <p className="text-base font-medium text-white/90 sm:text-lg">
-            Join the spiritual gathering
+            आध्यात्मिक संगति में शामिल हों
           </p>
           <p className="mt-1 text-sm text-white/70 sm:text-base">
-            Connect with Guruji and fellow seekers
+            गुरुजी और अन्य साधकों से जुड़ें
           </p>
         </div>
 
@@ -55,14 +54,14 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
               htmlFor="name"
               className="mb-2 block text-base font-semibold text-white sm:text-lg"
             >
-              Your Name
+              आपका नाम
             </label>
             <input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
+              placeholder="अपना नाम लिखें"
               className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-5 py-4 text-base text-white placeholder-white/40 backdrop-blur-sm transition-all focus:border-white/40 focus:bg-white/15 focus:ring-4 focus:ring-white/10 focus:outline-none sm:px-6 sm:py-5 sm:text-lg"
               disabled={isJoining}
               required
@@ -76,7 +75,7 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
               htmlFor="role"
               className="mb-2 block text-base font-semibold text-white sm:text-lg"
             >
-              Role
+              भूमिका
             </label>
             <select
               id="role"
@@ -86,44 +85,16 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
               disabled={isJoining}
             >
               <option value="participant" className="bg-gray-900 text-white">
-                Participant
+                प्रतिभागी
               </option>
               <option value="host" className="bg-gray-900 text-white">
-                Host (Moderator)
+                होस्ट (प्रबंधक)
               </option>
             </select>
             <p className="mt-2 text-sm leading-relaxed text-white/70 sm:text-base">
               {role === 'host'
-                ? '👑 Hosts can mute others and control the room'
-                : '🙏 Participants can speak and interact with others'}
-            </p>
-          </div>
-
-          {/* Language Selection */}
-          <div>
-            <label
-              htmlFor="language"
-              className="mb-2 block text-base font-semibold text-white sm:text-lg"
-            >
-              Language
-            </label>
-            <select
-              id="language"
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full rounded-xl border-2 border-white/20 bg-white/10 px-5 py-4 text-base text-white backdrop-blur-sm transition-all focus:border-white/40 focus:bg-white/15 focus:ring-4 focus:ring-white/10 focus:outline-none sm:px-6 sm:py-5 sm:text-lg"
-              disabled={isJoining}
-            >
-              <option value="hi" className="bg-gray-900 text-white">Hindi (हिन्दी)</option>
-              <option value="en" className="bg-gray-900 text-white">English</option>
-              <option value="gu" className="bg-gray-900 text-white">Gujarati (ગુજરાતી)</option>
-              <option value="mr" className="bg-gray-900 text-white">Marathi (मराठी)</option>
-              <option value="bn" className="bg-gray-900 text-white">Bengali (বাংলা)</option>
-              <option value="ta" className="bg-gray-900 text-white">Tamil (தமிழ்)</option>
-              <option value="te" className="bg-gray-900 text-white">Telugu (తెలుగు)</option>
-            </select>
-            <p className="mt-2 text-sm leading-relaxed text-white/70 sm:text-base">
-              Default: Hindi. You can change the language for this session.
+                ? '👑 होस्ट सभी को म्यूट कर सकते हैं और कक्ष नियंत्रित कर सकते हैं'
+                : '🙏 प्रतिभागी बोल सकते हैं और संवाद कर सकते हैं'}
             </p>
           </div>
 
@@ -136,17 +107,17 @@ export function LiveSatsangJoinForm({ onJoin }: LiveSatsangJoinFormProps) {
             {isJoining ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white"></span>
-                Joining...
+                जुड़ रहा है...
               </span>
             ) : (
-              'Join LiveSatsang 🌿'
+              'लाइव सत्संग में शामिल हों 🌿'
             )}
           </button>
         </form>
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-white/60 sm:text-base">A sacred space for spiritual growth</p>
+          <p className="text-sm text-white/60 sm:text-base">आध्यात्मिक उन्नति के लिए पवित्र स्थान</p>
         </div>
       </div>
     </div>
