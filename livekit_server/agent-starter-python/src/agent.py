@@ -407,10 +407,13 @@ async def entrypoint(ctx: JobContext):
     # Join the room and connect to the user
     await ctx.connect()
 
-    # Wait a moment for the connection to stabilize before greeting
+    # Wait for session to be fully ready before sending greeting
+    # The session needs time to initialize all components (STT, TTS, etc.)
     import asyncio
-    await asyncio.sleep(1.0)
-
+    
+    # Wait longer for session to be fully initialized
+    await asyncio.sleep(2.0)
+    
     # Send a warm, proactive greeting as soon as the agent connects
     # The greeting should be engaging and invite conversation
     if is_live_satsang:
@@ -421,15 +424,31 @@ async def entrypoint(ctx: JobContext):
     logger.info("Sending proactive initial greeting to user")
     
     # Send greeting without interruptions to ensure it completes
-    try:
-        await session.say(greeting, allow_interruptions=False)
-    except Exception as e:
-        logger.error(f"Error sending greeting: {e}")
-        # Fallback to a shorter greeting
+    # Use retry logic with exponential backoff
+    max_retries = 3
+    retry_delay = 1.0
+    
+    for attempt in range(max_retries):
         try:
-            await session.say("नमस्ते! मैं आपकी कैसे सहायता कर सकता हूं? क्या आपको कोई प्रश्न है?", allow_interruptions=False)
-        except Exception as e2:
-            logger.error(f"Error sending fallback greeting: {e2}")
+            await session.say(greeting, allow_interruptions=False)
+            logger.info("Greeting sent successfully")
+            break
+        except Exception as e:
+            if "isn't running" in str(e) or "not running" in str(e).lower():
+                logger.warning(f"Session not ready yet (attempt {attempt + 1}/{max_retries}), waiting...")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(retry_delay * (attempt + 1))
+                    continue
+            logger.error(f"Error sending greeting: {e}")
+            # Fallback to a shorter greeting on final attempt
+            if attempt == max_retries - 1:
+                try:
+                    await asyncio.sleep(1.0)
+                    await session.say("नमस्ते! मैं आपकी कैसे सहायता कर सकता हूं? क्या आपको कोई प्रश्न है?", allow_interruptions=False)
+                    logger.info("Fallback greeting sent successfully")
+                except Exception as e2:
+                    logger.error(f"Error sending fallback greeting: {e2}")
+                    # Don't raise - just log and continue, the agent will still work
 
 
 if __name__ == "__main__":
