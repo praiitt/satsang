@@ -302,12 +302,16 @@ Always end with a question or invitation to continue the conversation when natur
         logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}")
         # Emit structured data over LiveKit data channel using injected publisher
         try:
-            if callable(getattr(self, "_publish_data_fn", None)):
-                self._publish_data_fn(json.dumps(result).encode("utf-8"))
+            publish_fn = getattr(self, "_publish_data_fn", None)
+            if callable(publish_fn):
+                data_bytes = json.dumps(result).encode("utf-8")
+                logger.info(f"Publishing bhajan data to frontend: {len(data_bytes)} bytes, track: {result['name']}")
+                publish_fn(data_bytes)
+                logger.info("✅ Successfully published bhajan data to frontend")
             else:
                 logger.warning("No publish_data_fn configured; frontend will not receive bhajan.track event")
         except Exception as e:
-            logger.warning(f"Failed to publish bhajan data message: {e}")
+            logger.error(f"Failed to publish bhajan data message: {e}", exc_info=True)
         # Speak only a friendly confirmation, without any URLs/JSON
         return f"मैं '{result['name']}' भजन चला रहा हूं। आनंद लें!"
 
@@ -572,11 +576,19 @@ async def entrypoint(ctx: JobContext):
     # Start the session, which initializes the voice pipeline and warms up the models
     # Prepare a data-channel publisher we can inject into the Assistant
     def _publish_bhajan_bytes(data_bytes: bytes):
-        lp = ctx.room.local_participant
         try:
-            lp.publish_data(data_bytes, reliable=True, topic="bhajan.track")
-        except TypeError:
-            lp.publish_data(data_bytes, reliable=True)
+            lp = ctx.room.local_participant
+            logger.info(f"Publishing {len(data_bytes)} bytes to data channel with topic 'bhajan.track'")
+            try:
+                lp.publish_data(data_bytes, reliable=True, topic="bhajan.track")
+                logger.info("✅ Published data with topic 'bhajan.track'")
+            except TypeError as e:
+                logger.warning(f"Topic not supported, publishing without topic: {e}")
+                lp.publish_data(data_bytes, reliable=True)
+                logger.info("✅ Published data without topic")
+        except Exception as e:
+            logger.error(f"Error in _publish_bhajan_bytes: {e}", exc_info=True)
+            raise
 
     await session.start(
         agent=Assistant(is_group_conversation=is_live_satsang, publish_data_fn=_publish_bhajan_bytes),

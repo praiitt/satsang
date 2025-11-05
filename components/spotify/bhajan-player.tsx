@@ -46,34 +46,81 @@ export function BhajanPlayer() {
 
   // Prefer structured events over text parsing: listen for bhajan.track data messages
   useEffect(() => {
-    const onData = (payload: Uint8Array, _participant: unknown, _kind: unknown, topic?: string) => {
+    if (!room) {
+      console.warn('[BhajanPlayer] Room not available for data channel listener');
+      return;
+    }
+
+    console.log('[BhajanPlayer] Setting up data channel listener for bhajan.track events');
+
+    const onData = (
+      payload: Uint8Array,
+      participant: unknown,
+      kind: unknown,
+      topic?: string
+    ) => {
+      console.log('[BhajanPlayer] DataReceived event fired', {
+        payloadLength: payload.length,
+        topic,
+        hasParticipant: !!participant,
+        kind,
+      });
+
       try {
         const text = new TextDecoder().decode(payload);
-        // Only handle our topic when provided, but also accept older clients without topic
-        if (topic && topic !== 'bhajan.track') return;
+        console.log('[BhajanPlayer] Decoded data:', text.substring(0, 200));
 
-        const parsed = JSON.parse(text) as { url?: string; name?: string; artist?: string; spotify_id?: string; external_url?: string };
+        // Only handle our topic when provided, but also accept older clients without topic
+        if (topic && topic !== 'bhajan.track') {
+          console.log('[BhajanPlayer] Ignoring data with topic:', topic);
+          return;
+        }
+
+        const parsed = JSON.parse(text) as {
+          url?: string;
+          name?: string;
+          artist?: string;
+          spotify_id?: string;
+          external_url?: string;
+        };
+        console.log('[BhajanPlayer] Parsed JSON:', parsed);
+
         // Guard: ensure it looks like a bhajan payload
-        if (!parsed || (!parsed.url && !parsed.spotify_id) || !parsed.name) return;
+        if (!parsed || (!parsed.url && !parsed.spotify_id) || !parsed.name) {
+          console.log('[BhajanPlayer] Rejected - not a bhajan payload', {
+            hasParsed: !!parsed,
+            hasUrl: !!parsed?.url,
+            hasSpotifyId: !!parsed?.spotify_id,
+            hasName: !!parsed?.name,
+          });
+          return;
+        }
 
         const track: BhajanTrackInfo = {
           url: typeof parsed.url === 'string' ? parsed.url : undefined,
           name: typeof parsed.name === 'string' ? parsed.name : undefined,
           artist: typeof parsed.artist === 'string' ? parsed.artist : undefined,
-          spotify_id: typeof parsed.spotify_id === 'string' ? parsed.spotify_id : undefined,
-          external_url: typeof parsed.external_url === 'string' ? parsed.external_url : undefined,
+          spotify_id:
+            typeof parsed.spotify_id === 'string' ? parsed.spotify_id : undefined,
+          external_url:
+            typeof parsed.external_url === 'string' ? parsed.external_url : undefined,
         };
 
-        console.log('[BhajanPlayer] Data event received', { topic, track });
+        console.log('[BhajanPlayer] ✅ Data event received - setting track', { topic, track });
         setCurrentTrack(track);
         setUseSpotify(!!track.spotify_id && isAuthenticated);
-      } catch {
-        // Ignore non-JSON or unrelated messages
+      } catch (error) {
+        // Log errors for debugging
+        console.error('[BhajanPlayer] Error processing data event:', error);
+        console.error('[BhajanPlayer] Payload preview:', new TextDecoder().decode(payload).substring(0, 200));
       }
     };
 
     room.on(RoomEvent.DataReceived, onData);
+    console.log('[BhajanPlayer] Data channel listener registered');
+
     return () => {
+      console.log('[BhajanPlayer] Cleaning up data channel listener');
       room.off(RoomEvent.DataReceived, onData);
     };
   }, [room, isAuthenticated]);
