@@ -17,7 +17,7 @@ interface BhajanTrackInfo {
 
 /**
  * Enhanced Bhajan Player Component
- *
+ * 
  * Uses Spotify Web Playback SDK for full tracks when authenticated,
  * falls back to preview URLs for non-premium users or when Spotify isn't available.
  */
@@ -51,8 +51,7 @@ export function BhajanPlayer() {
       return;
     }
 
-    console.log('[BhajanPlayer] Setting up data channel listener for bhajan.track events');
-
+    // Define the data handler function
     const onData = (
       payload: Uint8Array,
       participant: unknown,
@@ -116,8 +115,33 @@ export function BhajanPlayer() {
       }
     };
 
-    room.on(RoomEvent.DataReceived, onData);
-    console.log('[BhajanPlayer] Data channel listener registered');
+    // Set up listener function
+    const setupListener = () => {
+      console.log('[BhajanPlayer] Setting up data channel listener for bhajan.track events');
+      room.on(RoomEvent.DataReceived, onData);
+      console.log('[BhajanPlayer] Data channel listener registered');
+    };
+
+    // Only set up listener when room is connected
+    if (room.state !== 'connected') {
+      console.log('[BhajanPlayer] Room not connected yet, waiting...', { state: room.state });
+      
+      // Set up listener when room connects
+      const handleConnected = () => {
+        console.log('[BhajanPlayer] Room connected, setting up data channel listener');
+        setupListener();
+      };
+      
+      room.on(RoomEvent.Connected, handleConnected);
+      
+      return () => {
+        room.off(RoomEvent.Connected, handleConnected);
+        room.off(RoomEvent.DataReceived, onData);
+      };
+    }
+
+    // Room is already connected, set up listener immediately
+    setupListener();
 
     return () => {
       console.log('[BhajanPlayer] Cleaning up data channel listener');
@@ -138,7 +162,7 @@ export function BhajanPlayer() {
     }
 
     const latestMessage = agentMessages[agentMessages.length - 1];
-
+    
     // Skip if we've already processed this message
     if (latestMessage.id === lastProcessedMessageRef.current) {
       return;
@@ -188,7 +212,7 @@ export function BhajanPlayer() {
 
     function processMessage(message: typeof latestMessage) {
       // Try to parse as JSON first, but only if message looks like it contains bhajan data
-      let trackInfo: BhajanTrackInfo | null = null;
+    let trackInfo: BhajanTrackInfo | null = null;
       let parsedJson: Record<string, unknown> | null = null;
 
       const messageText = message.message.trim();
@@ -546,7 +570,7 @@ export function BhajanPlayer() {
     }
 
     const trackSpotifyId = currentTrack.spotify_id;
-
+    
     // Set up audio element
     console.log('[BhajanPlayer] Setting up audio playback:', {
       url: currentTrack.url,
@@ -608,7 +632,7 @@ export function BhajanPlayer() {
           console.log('[BhajanPlayer] Preview play failed, trying Spotify SDK');
           setUseSpotify(true);
         }
-      });
+    });
 
     return () => {
       // Use captured audio ref from effect start
@@ -617,8 +641,8 @@ export function BhajanPlayer() {
         audio.removeEventListener('error', handleError);
         audio.removeEventListener('canplay', handleCanPlay);
         audio.removeEventListener('loadeddata', handleLoadedData);
-        audio.removeEventListener('play', handlePlay);
-        audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
       }
     };
   }, [
