@@ -2,16 +2,12 @@
 
 import { useState } from 'react';
 import { Room, RoomEvent } from 'livekit-client';
-import {
-  RoomAudioRenderer,
-  RoomContext,
-  StartAudio,
-  VideoConference,
-} from '@livekit/components-react';
+import { RoomAudioRenderer, RoomContext, StartAudio } from '@livekit/components-react';
 import { Toaster } from '@/components/livekit/toaster';
 import { LiveSatsangControls } from './livesatsang-controls';
 import { LiveSatsangJoinForm } from './livesatsang-join-form';
 import { ParticipantList } from './participant-list';
+import { ParticipantVideoGrid } from './participant-video-grid';
 
 export function LiveSatsangApp() {
   const [room, setRoom] = useState<Room | null>(null);
@@ -160,7 +156,7 @@ export function LiveSatsangApp() {
 
             {/* Video Conference Grid - Add padding to prevent overlap with fixed controls */}
             <div className="relative flex-1 overflow-hidden pt-12 pb-60 sm:pt-12 sm:pb-56 md:pb-52">
-              <VideoConference />
+              <ParticipantVideoGrid />
             </div>
 
             {/* Controls Bar - Fixed at bottom */}
