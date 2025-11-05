@@ -2,10 +2,9 @@ module.exports = {
   apps: [
     {
       name: 'satsang-livekit-agent',
-      // Run via uv (recommended for uv-managed projects)
-      // Use bash to ensure PATH is set correctly for uv
-      script: 'bash',
-      args: '-c "cd /home/underlitigationcom/satsang/livekit_server/agent-starter-python && uv run src/agent.py start"',
+      // Use Python directly from venv - simple and reliable
+      script: '/home/underlitigationcom/satsang/livekit_server/agent-starter-python/.venv/bin/python',
+      args: ['src/agent.py', 'start'],
       cwd: '/home/underlitigationcom/satsang/livekit_server/agent-starter-python',
       instances: 1,
       autorestart: true,
