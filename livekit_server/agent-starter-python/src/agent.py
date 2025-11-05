@@ -573,4 +573,8 @@ if __name__ == "__main__":
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
+    # Get agent name from environment or use default 'guruji' for LiveSatsang
+    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "guruji")
+    logger.info(f"Starting agent worker with agent_name='{agent_name}'")
+    
+    cli.run_app(WorkerOptions(agent_name=agent_name, entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
