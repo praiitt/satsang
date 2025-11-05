@@ -129,7 +129,7 @@ else:
 
 
 class Assistant(Agent):
-    def __init__(self, is_group_conversation: bool = False) -> None:
+    def __init__(self, is_group_conversation: bool = False, publish_data_fn=None) -> None:
         group_instructions = ""
         if is_group_conversation:
             group_instructions = """
@@ -216,6 +216,8 @@ Keep your responses conversational and engaging - 2-4 sentences is ideal, but ca
 Be warm, kind, and wise, with gentle humor when appropriate.
 Always end with a question or invitation to continue the conversation when natural.""",
         )
+        # function to publish data bytes to room data channel (set from entrypoint)
+        self._publish_data_fn = publish_data_fn
 
     @function_tool
     async def play_bhajan(
@@ -298,50 +300,12 @@ Always end with a question or invitation to continue the conversation when natur
         }
         
         logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}")
-        # Emit structured data over LiveKit data channel for reliable frontend handling
-        def _try_publish(lp, data_bytes: bytes) -> bool:
-            try:
-                try:
-                    lp.publish_data(data_bytes, reliable=True, topic="bhajan.track")
-                except TypeError:
-                    lp.publish_data(data_bytes, reliable=True)
-                return True
-            except Exception as e:
-                logger.warning(f"Data publish error on candidate: {e}")
-                return False
-
+        # Emit structured data over LiveKit data channel using injected publisher
         try:
-            data_bytes = json.dumps(result).encode("utf-8")
-            published = False
-            # Candidate paths where the room/local_participant may live depending on SDK version
-            candidates = []
-            try:
-                candidates.append(getattr(context, "room", None))
-            except Exception:
-                pass
-            try:
-                candidates.append(getattr(getattr(context, "session", None), "room", None))
-            except Exception:
-                pass
-            try:
-                candidates.append(getattr(getattr(context, "proc", None), "room", None))
-            except Exception:
-                pass
-            try:
-                candidates.append(getattr(getattr(context, "job", None), "room", None))
-            except Exception:
-                pass
-
-            for cand in candidates:
-                if not cand:
-                    continue
-                lp = getattr(cand, "local_participant", None)
-                if lp and _try_publish(lp, data_bytes):
-                    published = True
-                    break
-
-            if not published:
-                logger.warning("Unable to locate room.local_participant to publish bhajan.track; frontend will not receive event")
+            if callable(getattr(self, "_publish_data_fn", None)):
+                self._publish_data_fn(json.dumps(result).encode("utf-8"))
+            else:
+                logger.warning("No publish_data_fn configured; frontend will not receive bhajan.track event")
         except Exception as e:
             logger.warning(f"Failed to publish bhajan data message: {e}")
         # Speak only a friendly confirmation, without any URLs/JSON
@@ -606,8 +570,16 @@ async def entrypoint(ctx: JobContext):
     # await avatar.start(session, room=ctx.room)
 
     # Start the session, which initializes the voice pipeline and warms up the models
+    # Prepare a data-channel publisher we can inject into the Assistant
+    def _publish_bhajan_bytes(data_bytes: bytes):
+        lp = ctx.room.local_participant
+        try:
+            lp.publish_data(data_bytes, reliable=True, topic="bhajan.track")
+        except TypeError:
+            lp.publish_data(data_bytes, reliable=True)
+
     await session.start(
-        agent=Assistant(is_group_conversation=is_live_satsang),
+        agent=Assistant(is_group_conversation=is_live_satsang, publish_data_fn=_publish_bhajan_bytes),
         room=ctx.room,
         room_input_options=RoomInputOptions(
             # For telephony applications, use `BVCTelephony` for best results
