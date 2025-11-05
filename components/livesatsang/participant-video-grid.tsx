@@ -71,8 +71,11 @@ export function ParticipantVideoGrid() {
   if (allTracks.length === 0) {
     return (
       <div className="flex h-full w-full items-center justify-center">
-        <div className="text-center text-white/60">
-          <p className="text-lg font-medium">कैमरा चालू करें</p>
+        <div className="text-center text-muted-foreground">
+          <div className="mb-4 inline-block rounded-full bg-primary/10 p-4">
+            <span className="text-3xl">📹</span>
+          </div>
+          <p className="text-lg font-medium text-foreground">कैमरा चालू करें</p>
           <p className="mt-2 text-sm">वीडियो दिखाने के लिए अपना कैमरा चालू करें</p>
         </div>
       </div>
@@ -84,18 +87,20 @@ export function ParticipantVideoGrid() {
       {allTracks.map((trackRef) => {
         const isLocal = trackRef.participant.identity === localParticipant?.identity;
         const participantName = trackRef.participant.name || trackRef.participant.identity;
+        const isAgent = trackRef.participant.identity.includes('agent') || trackRef.participant.identity.includes('guruji');
 
         return (
           <div
             key={`${trackRef.participant.identity}-${trackRef.source}`}
-            className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-slate-800/40 shadow-lg"
+            className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-muted border border-border shadow-lg"
           >
             <VideoTrack trackRef={trackRef} className="h-full w-full object-cover" />
             {/* Participant name overlay */}
-            <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-slate-900/90 to-transparent p-2">
-              <p className="text-xs font-medium text-white sm:text-sm">
-                {participantName}
-                {isLocal && <span className="ml-1 text-white/70">(आप)</span>}
+            <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-background/95 to-transparent p-2">
+              <p className="text-xs font-medium text-foreground sm:text-sm flex items-center gap-1">
+                {isAgent && <span>🙏</span>}
+                <span>{participantName}</span>
+                {isLocal && <span className="text-muted-foreground">(आप)</span>}
               </p>
             </div>
           </div>

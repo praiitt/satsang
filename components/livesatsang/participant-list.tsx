@@ -88,77 +88,85 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
     <>
       {/* Mobile bottom sheet */}
       <div
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm md:hidden"
+        className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm md:hidden"
         onClick={onClose}
       />
-      <div className="fixed right-0 bottom-0 left-0 z-50 rounded-t-2xl bg-[#0b0b14]/95 p-4 shadow-2xl backdrop-blur-xl md:hidden">
+      <div className="fixed right-0 bottom-0 left-0 z-50 rounded-t-2xl bg-card border-t border-border p-4 shadow-2xl md:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white">प्रतिभागी ({allParticipants.length})</h3>
+          <h3 className="text-sm font-bold text-foreground">प्रतिभागी ({allParticipants.length})</h3>
           <button
             aria-label="प्रतिभागी सूची बंद करें"
-            className="rounded-lg bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/15"
+            className="rounded-lg bg-muted px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted/80 transition-colors"
             onClick={onClose}
           >
             बंद करें
           </button>
         </div>
         <div className="max-h-72 space-y-2 overflow-y-auto">
-          {allParticipants.map((participant) => (
-            <div
-              key={participant.identity}
-              className="flex items-center gap-2 rounded-lg bg-white/5 p-2"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-xs font-bold text-white">
-                {participant.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">
-                  {participant.name}
-                  {participant.isLocal && <span className="ml-1 text-xs text-white/60">(आप)</span>}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  {participant.hasVideo && <span>📹</span>}
-                  {participant.hasAudio && <span>🎤</span>}
-                  {!participant.hasVideo && !participant.hasAudio && (
-                    <span className="text-white/40">मीडिया नहीं</span>
-                  )}
+          {allParticipants.map((participant) => {
+            const isAgent = participant.identity.includes('agent') || participant.identity.includes('guruji');
+            return (
+              <div
+                key={participant.identity}
+                className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border p-2"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  {participant.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground flex items-center gap-1">
+                    {isAgent && <span>🙏</span>}
+                    <span>{participant.name}</span>
+                    {participant.isLocal && <span className="ml-1 text-xs text-muted-foreground">(आप)</span>}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {participant.hasVideo && <span>📹</span>}
+                    {participant.hasAudio && <span>🎤</span>}
+                    {!participant.hasVideo && !participant.hasAudio && (
+                      <span className="text-muted-foreground/60">मीडिया नहीं</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
       {/* Desktop floating panel */}
-      <div className="fixed top-4 right-4 z-40 hidden max-w-xs rounded-xl bg-black/80 p-4 shadow-2xl backdrop-blur-xl md:block">
+      <div className="fixed top-4 right-4 z-40 hidden max-w-xs rounded-xl bg-card border border-border p-4 shadow-2xl md:block">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-white">प्रतिभागी ({allParticipants.length})</h3>
-          <span className="text-xs text-white/60">कक्ष: {room.name}</span>
+          <h3 className="text-sm font-bold text-foreground">प्रतिभागी ({allParticipants.length})</h3>
+          <span className="text-xs text-muted-foreground">कक्ष: {room.name}</span>
         </div>
         <div className="max-h-60 space-y-2 overflow-y-auto">
-          {allParticipants.map((participant) => (
-            <div
-              key={participant.identity}
-              className="flex items-center gap-2 rounded-lg bg-white/5 p-2"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-xs font-bold text-white">
-                {participant.name.charAt(0).toUpperCase()}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-white">
-                  {participant.name}
-                  {participant.isLocal && <span className="ml-1 text-xs text-white/60">(आप)</span>}
-                </p>
-                <div className="flex items-center gap-2 text-xs text-white/60">
-                  {participant.hasVideo && <span>📹</span>}
-                  {participant.hasAudio && <span>🎤</span>}
-                  {!participant.hasVideo && !participant.hasAudio && (
-                    <span className="text-white/40">मीडिया नहीं</span>
-                  )}
+          {allParticipants.map((participant) => {
+            const isAgent = participant.identity.includes('agent') || participant.identity.includes('guruji');
+            return (
+              <div
+                key={participant.identity}
+                className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border p-2"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                  {participant.name.charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground flex items-center gap-1">
+                    {isAgent && <span>🙏</span>}
+                    <span>{participant.name}</span>
+                    {participant.isLocal && <span className="ml-1 text-xs text-muted-foreground">(आप)</span>}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {participant.hasVideo && <span>📹</span>}
+                    {participant.hasAudio && <span>🎤</span>}
+                    {!participant.hasVideo && !participant.hasAudio && (
+                      <span className="text-muted-foreground/60">मीडिया नहीं</span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </>

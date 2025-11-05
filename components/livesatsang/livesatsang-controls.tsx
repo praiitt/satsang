@@ -104,30 +104,32 @@ export function LiveSatsangControls({
 
   return (
     <div
-      className="fixed right-0 bottom-0 left-0 z-50 border-t border-white/10 bg-slate-900 shadow-2xl"
+      className="fixed right-0 bottom-0 left-0 z-50 border-t border-border bg-card shadow-2xl"
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}
     >
       <div className="space-y-3 p-4 sm:space-y-4 sm:p-5 md:p-6">
         {/* Room Info */}
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-slate-800/80 px-4 py-2.5 backdrop-blur-sm">
-          <span className="text-sm font-medium text-white">कक्ष:</span>
-          <span className="text-sm font-bold text-white">{room.name || 'LiveSatsang'}</span>
-          <span className="mx-2 text-white/60">•</span>
-          <span className="text-sm font-medium text-white">प्रतिभागी:</span>
-          <span className="text-sm font-bold text-green-400">{participantCount}</span>
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-border bg-muted/50 px-4 py-2.5">
+          <span className="text-sm font-medium text-foreground">कक्ष:</span>
+          <span className="text-sm font-bold text-foreground">{room.name || 'LiveSatsang'}</span>
+          <span className="mx-2 text-muted-foreground">•</span>
+          <span className="text-sm font-medium text-foreground">प्रतिभागी:</span>
+          <span className="text-sm font-bold text-primary">{participantCount}</span>
         </div>
 
         {/* Top Row: User Info & Guruji Status */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 text-base font-bold text-white sm:h-12 sm:w-12 sm:text-lg">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary text-base font-bold text-primary-foreground sm:h-12 sm:w-12 sm:text-lg">
               {participantName.charAt(0).toUpperCase()}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-base font-semibold text-white sm:text-lg">
+              <p className="truncate text-base font-semibold text-foreground sm:text-lg">
                 {participantName}
               </p>
-              {isHost && <p className="text-xs font-medium text-yellow-300 sm:text-sm">👑 Host</p>}
+              {isHost && (
+                <p className="text-xs font-medium text-primary sm:text-sm">👑 Host</p>
+              )}
             </div>
           </div>
 
@@ -135,14 +137,14 @@ export function LiveSatsangControls({
           {!gurujiJoined ? (
             <button
               onClick={handleInviteGuruji}
-              className="flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-2.5 text-sm font-semibold text-white shadow-lg transition-all active:scale-95 sm:px-5 sm:py-3 sm:text-base"
+              className="flex shrink-0 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 active:scale-95 sm:px-5 sm:py-3 sm:text-base"
               title="गुरुजी को आमंत्रित करें"
             >
               <span className="text-lg">🙏</span>
               <span className="hidden sm:inline">आमंत्रित करें</span>
             </button>
           ) : (
-            <div className="flex shrink-0 items-center gap-2 rounded-xl bg-green-500/20 px-4 py-2.5 text-sm font-semibold text-green-300 backdrop-blur-sm sm:px-5 sm:py-3 sm:text-base">
+            <div className="flex shrink-0 items-center gap-2 rounded-xl bg-primary/20 border border-primary/30 px-4 py-2.5 text-sm font-semibold text-primary sm:px-5 sm:py-3 sm:text-base">
               <span className="text-lg">✅</span>
               <span className="hidden sm:inline">गुरुजी</span>
             </div>
@@ -154,7 +156,7 @@ export function LiveSatsangControls({
           <div className="flex items-center justify-center gap-2 sm:gap-3">
             <button
               onClick={handleMuteAll}
-              className="flex items-center justify-center gap-2 rounded-full bg-red-500/20 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-red-500/30 active:scale-95 sm:text-sm"
+              className="flex items-center justify-center gap-2 rounded-full border border-destructive/30 bg-destructive/20 px-4 py-2 text-xs font-semibold text-destructive hover:bg-destructive/30 active:scale-95 sm:text-sm transition-colors"
               title="सभी को म्यूट करें"
             >
               <span className="text-base">🔇</span>
@@ -162,7 +164,7 @@ export function LiveSatsangControls({
             </button>
             <button
               onClick={handleUnmuteAll}
-              className="flex items-center justify-center gap-2 rounded-full bg-green-500/20 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-green-500/30 active:scale-95 sm:text-sm"
+              className="flex items-center justify-center gap-2 rounded-full border border-primary/30 bg-primary/20 px-4 py-2 text-xs font-semibold text-primary hover:bg-primary/30 active:scale-95 sm:text-sm transition-colors"
               title="सभी को अनम्यूट करें"
             >
               <span className="text-base">🔊</span>
@@ -174,7 +176,7 @@ export function LiveSatsangControls({
         {/* Controls Row - always last, closest to the bottom edge */}
         <div className="flex items-center justify-center gap-3 sm:gap-4">
           <ControlBar className="flex items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-2 rounded-xl border border-white/30 bg-slate-800/80 p-1.5 backdrop-blur-sm sm:gap-3">
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-muted/50 p-1.5 sm:gap-3">
               <TrackToggle
                 source={Track.Source.Microphone}
                 className="h-11 w-11 rounded-lg sm:h-12 sm:w-12"
@@ -186,15 +188,15 @@ export function LiveSatsangControls({
             </div>
             <MediaDeviceMenu
               kind="audioinput"
-              className="h-11 w-11 rounded-lg border border-white/30 bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700/80 sm:h-12 sm:w-12"
+              className="h-11 w-11 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors sm:h-12 sm:w-12"
             />
             <MediaDeviceMenu
               kind="videoinput"
-              className="h-11 w-11 rounded-lg border border-white/30 bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700/80 sm:h-12 sm:w-12"
+              className="h-11 w-11 rounded-lg border border-border bg-muted/50 hover:bg-muted transition-colors sm:h-12 sm:w-12"
             />
             <DisconnectButton
               onClick={onLeave}
-              className="h-11 w-11 rounded-lg border border-red-500/60 bg-red-500/40 backdrop-blur-sm hover:bg-red-500/50 sm:h-12 sm:w-12"
+              className="h-11 w-11 rounded-lg border border-destructive/50 bg-destructive/30 hover:bg-destructive/40 transition-colors sm:h-12 sm:w-12"
             />
           </ControlBar>
         </div>
