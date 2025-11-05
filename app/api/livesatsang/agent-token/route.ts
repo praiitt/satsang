@@ -1,18 +1,5 @@
 import { NextResponse } from 'next/server';
-import {
-  AccessToken,
-  type AccessTokenOptions,
-  RoomService,
-  type VideoGrant,
-} from 'livekit-server-sdk';
-import { RoomConfiguration } from '@livekit/protocol';
-
-type AgentTokenResponse = {
-  success: boolean;
-  message: string;
-  serverUrl?: string;
-  roomName?: string;
-};
+import { RoomServiceClient } from 'livekit-server-sdk';
 
 // NOTE: you are expected to define the following environment variables in `.env.local`:
 const API_KEY = process.env.LIVEKIT_API_KEY;
@@ -38,39 +25,23 @@ export async function POST() {
       throw new Error('LIVEKIT_API_SECRET is not defined');
     }
 
-    // Initialize RoomService to manage room configuration
-    const roomService = new RoomService(LIVEKIT_URL, API_KEY, API_SECRET);
+    // Initialize RoomServiceClient to manage room configuration
+    const roomService = new RoomServiceClient(LIVEKIT_URL, API_KEY, API_SECRET);
 
-    // Check if room exists, if not create it with agent config
-    // If it exists, create/update it to ensure agent config is set
-    try {
-      // Try to get the room first
-      await roomService.getRoom(LIVE_SATSANG_ROOM_NAME);
+    // Create or update the room configuration
+    // LiveKit will handle existing rooms gracefully
+    // Note: The agent will automatically join when:
+    // 1. An agent worker is running with agent_name='guruji'
+    // 2. A participant joins with a token that includes RoomConfiguration with agents: [{ agentName: 'guruji' }]
+    await roomService.createRoom({
+      name: LIVE_SATSANG_ROOM_NAME,
+      emptyTimeout: 300, // 5 minutes
+      maxParticipants: 50,
+    });
 
-      // Room exists, create a new room with same name and agent config
-      // This will update the room configuration
-      await roomService.createRoom({
-        name: LIVE_SATSANG_ROOM_NAME,
-        emptyTimeout: 300, // 5 minutes
-        maxParticipants: 50,
-      });
-
-      // Update room configuration to include agent
-      // Note: LiveKit will automatically start the agent when room config includes it
-      // The agent worker must be running and watching for 'guruji' agent name
-      console.log(
-        `[LiveSatsang Agent] Room ${LIVE_SATSANG_ROOM_NAME} configured. Agent ${AGENT_NAME} will join if worker is running.`
-      );
-    } catch (roomError: any) {
-      // Room doesn't exist, create it with agent configuration
-      // The agent will automatically join when participants join
-      console.log(`[LiveSatsang Agent] Creating room ${LIVE_SATSANG_ROOM_NAME} with agent config`);
-      await roomService.createRoom({
-        name: LIVE_SATSANG_ROOM_NAME,
-        emptyTimeout: 300,
-        maxParticipants: 50,
-      });
-    }
+    console.log(
+      `[LiveSatsang Agent] Room ${LIVE_SATSANG_ROOM_NAME} configured. Agent ${AGENT_NAME} will join if worker is running.`
+    );
 
     // Note: The agent will automatically join when:
     // 1. An agent worker is running with agent_name='guruji'
