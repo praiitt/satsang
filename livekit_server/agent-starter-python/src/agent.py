@@ -482,8 +482,6 @@ async def entrypoint(ctx: JobContext):
         room_input_options=RoomInputOptions(
             # For telephony applications, use `BVCTelephony` for best results
             noise_cancellation=noise_cancellation.BVC(),
-            # Enable text chat input so users can send text messages
-            text_enabled=True,
         ),
     )
 
