@@ -44,6 +44,15 @@ export function BhajanPlayer() {
     resume,
   } = useSpotifyPlayer();
 
+  // Log component mount and room state
+  useEffect(() => {
+    console.log('[BhajanPlayer] Component mounted/updated', {
+      hasRoom: !!room,
+      roomState: room?.state,
+      roomName: room?.name,
+    });
+  }, [room]);
+
   // Prefer structured events over text parsing: listen for bhajan.track data messages
   useEffect(() => {
     if (!room) {
@@ -51,27 +60,34 @@ export function BhajanPlayer() {
       return;
     }
 
-    // Define the data handler function
+    console.log('[BhajanPlayer] Setting up data channel listener', {
+      roomState: room.state,
+      roomName: room.name,
+    });
+
+    // Define the data handler function - this will log ALL data received
     const onData = (
       payload: Uint8Array,
       participant: unknown,
       kind: unknown,
       topic?: string
     ) => {
-      console.log('[BhajanPlayer] DataReceived event fired', {
+      console.log('[BhajanPlayer] 🔵 DataReceived event fired', {
         payloadLength: payload.length,
-        topic,
+        topic: topic || '(no topic)',
         hasParticipant: !!participant,
         kind,
+        roomState: room.state,
       });
 
       try {
         const text = new TextDecoder().decode(payload);
-        console.log('[BhajanPlayer] Decoded data:', text.substring(0, 200));
+        console.log('[BhajanPlayer] 🔵 Decoded data (first 300 chars):', text.substring(0, 300));
 
         // Only handle our topic when provided, but also accept older clients without topic
-        if (topic && topic !== 'bhajan.track') {
-          console.log('[BhajanPlayer] Ignoring data with topic:', topic);
+        // If topic is undefined, we accept it (might be from older SDK)
+        if (topic !== undefined && topic !== 'bhajan.track') {
+          console.log('[BhajanPlayer] ⚠️ Ignoring data with topic:', topic);
           return;
         }
 
@@ -82,11 +98,11 @@ export function BhajanPlayer() {
           spotify_id?: string;
           external_url?: string;
         };
-        console.log('[BhajanPlayer] Parsed JSON:', parsed);
+        console.log('[BhajanPlayer] 🔵 Parsed JSON:', parsed);
 
         // Guard: ensure it looks like a bhajan payload
         if (!parsed || (!parsed.url && !parsed.spotify_id) || !parsed.name) {
-          console.log('[BhajanPlayer] Rejected - not a bhajan payload', {
+          console.log('[BhajanPlayer] ⚠️ Rejected - not a bhajan payload', {
             hasParsed: !!parsed,
             hasUrl: !!parsed?.url,
             hasSpotifyId: !!parsed?.spotify_id,
@@ -105,47 +121,35 @@ export function BhajanPlayer() {
             typeof parsed.external_url === 'string' ? parsed.external_url : undefined,
         };
 
-        console.log('[BhajanPlayer] ✅ Data event received - setting track', { topic, track });
+        console.log('[BhajanPlayer] ✅✅✅ Data event received - setting track', { topic, track });
         setCurrentTrack(track);
         setUseSpotify(!!track.spotify_id && isAuthenticated);
       } catch (error) {
         // Log errors for debugging
-        console.error('[BhajanPlayer] Error processing data event:', error);
-        console.error('[BhajanPlayer] Payload preview:', new TextDecoder().decode(payload).substring(0, 200));
+        console.error('[BhajanPlayer] ❌ Error processing data event:', error);
+        const textPreview = new TextDecoder().decode(payload).substring(0, 200);
+        console.error('[BhajanPlayer] Payload preview:', textPreview);
       }
     };
 
-    // Set up listener function
-    const setupListener = () => {
-      console.log('[BhajanPlayer] Setting up data channel listener for bhajan.track events');
-      room.on(RoomEvent.DataReceived, onData);
-      console.log('[BhajanPlayer] Data channel listener registered');
+    // Always register the listener - it will work even if room isn't connected yet
+    // The SDK will buffer events until connection is established
+    console.log('[BhajanPlayer] Registering DataReceived listener');
+    room.on(RoomEvent.DataReceived, onData);
+    console.log('[BhajanPlayer] ✅ DataReceived listener registered');
+
+    // Also listen for room state changes to log when connection happens
+    const onStateChange = () => {
+      console.log('[BhajanPlayer] Room state changed:', room.state);
     };
-
-    // Only set up listener when room is connected
-    if (room.state !== 'connected') {
-      console.log('[BhajanPlayer] Room not connected yet, waiting...', { state: room.state });
-      
-      // Set up listener when room connects
-      const handleConnected = () => {
-        console.log('[BhajanPlayer] Room connected, setting up data channel listener');
-        setupListener();
-      };
-      
-      room.on(RoomEvent.Connected, handleConnected);
-      
-      return () => {
-        room.off(RoomEvent.Connected, handleConnected);
-        room.off(RoomEvent.DataReceived, onData);
-      };
-    }
-
-    // Room is already connected, set up listener immediately
-    setupListener();
+    room.on(RoomEvent.Connected, onStateChange);
+    room.on(RoomEvent.Disconnected, onStateChange);
 
     return () => {
       console.log('[BhajanPlayer] Cleaning up data channel listener');
       room.off(RoomEvent.DataReceived, onData);
+      room.off(RoomEvent.Connected, onStateChange);
+      room.off(RoomEvent.Disconnected, onStateChange);
     };
   }, [room, isAuthenticated]);
 
