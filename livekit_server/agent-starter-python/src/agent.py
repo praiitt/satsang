@@ -299,17 +299,49 @@ Always end with a question or invitation to continue the conversation when natur
         
         logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}")
         # Emit structured data over LiveKit data channel for reliable frontend handling
+        def _try_publish(lp, data_bytes: bytes) -> bool:
+            try:
+                try:
+                    lp.publish_data(data_bytes, reliable=True, topic="bhajan.track")
+                except TypeError:
+                    lp.publish_data(data_bytes, reliable=True)
+                return True
+            except Exception as e:
+                logger.warning(f"Data publish error on candidate: {e}")
+                return False
+
         try:
             data_bytes = json.dumps(result).encode("utf-8")
-            # Use session.room from RunContext; older SDKs may not support 'topic'
-            local_participant = context.session.room.local_participant  # type: ignore[attr-defined]
+            published = False
+            # Candidate paths where the room/local_participant may live depending on SDK version
+            candidates = []
             try:
-                local_participant.publish_data(data_bytes, reliable=True, topic="bhajan.track")
-            except TypeError:
-                # Fallback without topic for older client versions
-                local_participant.publish_data(data_bytes, reliable=True)
-            except Exception as e:
-                logger.warning(f"Data publish error (with topic): {e}")
+                candidates.append(getattr(context, "room", None))
+            except Exception:
+                pass
+            try:
+                candidates.append(getattr(getattr(context, "session", None), "room", None))
+            except Exception:
+                pass
+            try:
+                candidates.append(getattr(getattr(context, "proc", None), "room", None))
+            except Exception:
+                pass
+            try:
+                candidates.append(getattr(getattr(context, "job", None), "room", None))
+            except Exception:
+                pass
+
+            for cand in candidates:
+                if not cand:
+                    continue
+                lp = getattr(cand, "local_participant", None)
+                if lp and _try_publish(lp, data_bytes):
+                    published = True
+                    break
+
+            if not published:
+                logger.warning("Unable to locate room.local_participant to publish bhajan.track; frontend will not receive event")
         except Exception as e:
             logger.warning(f"Failed to publish bhajan data message: {e}")
         # Speak only a friendly confirmation, without any URLs/JSON
