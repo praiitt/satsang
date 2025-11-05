@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { AccessToken, type AccessTokenOptions, type VideoGrant } from 'livekit-server-sdk';
+import { RoomConfiguration } from '@livekit/protocol';
 
 type LiveSatsangTokenRequest = {
   participantName: string;
@@ -21,6 +22,7 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 // Room name for LiveSatsang - shared room for all users
 // IMPORTANT: This MUST be exactly the same for all participants
 const LIVE_SATSANG_ROOM_NAME = 'LiveSatsang';
+const AGENT_NAME = 'guruji'; // Name of the agent (optional - agent will join if worker is running)
 
 // don't cache the results
 export const revalidate = 0;
@@ -110,9 +112,15 @@ function createParticipantToken(
 
   at.addGrant(grant);
 
+  // Include agent configuration in token
+  // This tells LiveKit to start the agent when a participant joins (if agent worker is running)
+  at.roomConfig = new RoomConfiguration({
+    agents: [{ agentName: AGENT_NAME }],
+  });
+
   const token = at.toJwt();
   console.log(
-    `[Token Creation] Token created for room: "${roomName}", Identity: ${userInfo.identity}`
+    `[Token Creation] Token created for room: "${roomName}", Identity: ${userInfo.identity}, Agent: ${AGENT_NAME}`
   );
 
   return Promise.resolve(token);

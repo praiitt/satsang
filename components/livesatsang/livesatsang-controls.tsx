@@ -59,18 +59,27 @@ export function LiveSatsangControls({
       });
 
       if (!response.ok) {
-        throw new Error('Failed to invite Guruji');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Failed to invite Guruji');
       }
 
-      await response.json(); // Token is used server-side, not needed here
+      const data = await response.json();
 
-      // Connect agent to room (this would typically be done server-side via LiveKit API)
-      // For now, we'll just notify that the invitation was sent
-      alert('Guruji has been invited to join LiveSatsang!');
-      setGurujiJoined(true);
+      if (data.success) {
+        // Show success message
+        alert(data.message || 'Guruji has been invited to join LiveSatsang!');
+        setGurujiJoined(true);
+
+        // Note: The agent will appear in the room automatically when:
+        // 1. The agent worker is running with agent_name='guruji'
+        // 2. The agent worker is watching for rooms with this agent config
+        // The agent's video/audio will appear in the participant grid automatically
+      } else {
+        throw new Error(data.message || 'Failed to invite Guruji');
+      }
     } catch (error) {
       console.error('Error inviting Guruji:', error);
-      alert('Failed to invite Guruji. Please try again.');
+      alert(error instanceof Error ? error.message : 'Failed to invite Guruji. Please try again.');
     }
   };
 
