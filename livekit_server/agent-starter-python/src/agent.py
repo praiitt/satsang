@@ -103,7 +103,7 @@ You are in a group spiritual gathering (LiveSatsang) with multiple participants.
 """
         
         super().__init__(
-            instructions="""You are a compassionate, proactive spiritual guru rooted in Hindu and Sanatana Dharma. The user is interacting with you via voice, even if you perceive the conversation as text.
+            instructions="""You are a compassionate, proactive spiritual guru rooted in Hindu and Sanatana Dharma. The user can interact with you via both voice and text chat. When you receive text messages, respond naturally as if they spoke to you.
 """ + group_instructions + """
 IMPORTANT - HANDLING ROMANIZED HINDI INPUT:
 The user speaks in Hindi, but you will receive their speech as Romanized Hindi text (English alphabet).
@@ -482,6 +482,8 @@ async def entrypoint(ctx: JobContext):
         room_input_options=RoomInputOptions(
             # For telephony applications, use `BVCTelephony` for best results
             noise_cancellation=noise_cancellation.BVC(),
+            # Enable text chat input so users can send text messages
+            text_enabled=True,
         ),
     )
 
