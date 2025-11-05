@@ -75,7 +75,24 @@ def _load_bhajan_search():
     _bhajan_search_loaded = True
     return _get_bhajan_url_async, _list_available_bhajans_async, _find_bhajan_by_name_async
 
+# Configure logging early - before loading environment variables
+# This ensures logs are visible even if env loading fails
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
 logger = logging.getLogger("agent")
+
+# Log that module is being imported (this helps diagnose child process issues)
+import sys
+logger.info("="*60)
+logger.info(f"MODULE IMPORT: agent.py is being imported (PID: {os.getpid()})")
+logger.info(f"Python executable: {sys.executable}")
+logger.info(f"Working directory: {os.getcwd()}")
+logger.info(f"Script location: {Path(__file__).resolve()}")
+logger.info("="*60)
 
 # Load .env.local from the project root regardless of current working directory
 # Try multiple paths to ensure we find it even when run from different contexts
@@ -85,16 +102,30 @@ _ENV_PATHS = [
     Path("/home/underlitigationcom/satsang/livekit_server/agent-starter-python/.env.local"),  # Absolute path for production
 ]
 _ENV_LOADED = False
+logger.info("Attempting to load .env.local file...")
 for _env_path in _ENV_PATHS:
+    logger.info(f"Checking path: {_env_path} (exists: {_env_path.exists()})")
     if _env_path.exists():
-        load_dotenv(str(_env_path), override=True)
-        logger.info(f"Loaded .env.local from: {_env_path}")
-        _ENV_LOADED = True
-        break
+        try:
+            load_dotenv(str(_env_path), override=True)
+            logger.info(f"✅ Loaded .env.local from: {_env_path}")
+            _ENV_LOADED = True
+            # Verify critical variables are loaded
+            openai_key = os.getenv("OPENAI_API_KEY")
+            cartesia_key = os.getenv("CARTESIA_API_KEY")
+            logger.info(f"Environment check after loading:")
+            logger.info(f"  OPENAI_API_KEY: {'SET' if openai_key else 'MISSING'}")
+            logger.info(f"  CARTESIA_API_KEY: {'SET' if cartesia_key else 'MISSING'}")
+            break
+        except Exception as e:
+            logger.error(f"Failed to load .env.local from {_env_path}: {e}")
 
 if not _ENV_LOADED:
-    logger.warning("⚠️  .env.local not found in any expected location. Environment variables may not be loaded correctly.")
-    logger.warning(f"Searched in: {[str(p) for p in _ENV_PATHS]}")
+    logger.error("⚠️  .env.local not found in any expected location. Environment variables may not be loaded correctly.")
+    logger.error(f"Searched in: {[str(p) for p in _ENV_PATHS]}")
+    logger.error("This will cause the agent to fail during initialization!")
+else:
+    logger.info("Environment file loaded successfully")
 
 
 class Assistant(Agent):
