@@ -127,20 +127,20 @@ export function LiveSatsangApp() {
   };
 
   return (
-    <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900">
+    <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-slate-900">
       {!isConnected ? (
         <LiveSatsangJoinForm onJoin={handleJoin} />
       ) : room ? (
         <RoomContext.Provider value={room}>
-          <div className="flex h-full flex-col overflow-hidden">
+          <div className="flex h-full flex-col overflow-hidden bg-slate-900">
             {/* Top header */}
             <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-3 sm:p-4">
-              <div className="pointer-events-auto rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white shadow-sm backdrop-blur-md">
+              <div className="pointer-events-auto rounded-full border border-white/20 bg-slate-800/90 px-4 py-2 text-sm font-semibold text-white shadow-lg backdrop-blur-md">
                 लाइव सत्संग
               </div>
               <button
                 onClick={() => setShowParticipants((v) => !v)}
-                className="pointer-events-auto rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white shadow-sm backdrop-blur-md active:scale-95"
+                className="pointer-events-auto rounded-full border border-white/20 bg-slate-800/90 px-4 py-2 text-sm font-semibold text-white shadow-lg backdrop-blur-md hover:bg-slate-700/90 active:scale-95"
                 aria-label="Toggle participants"
               >
                 👥 प्रतिभागी
@@ -155,7 +155,7 @@ export function LiveSatsangApp() {
             />
 
             {/* Video Conference Grid - Add padding to prevent overlap with fixed controls */}
-            <div className="relative flex-1 overflow-hidden pt-12 pb-60 sm:pt-12 sm:pb-56 md:pb-52">
+            <div className="relative flex-1 overflow-hidden pt-14 pb-72 sm:pt-16 sm:pb-64 md:pb-60">
               <ParticipantVideoGrid />
             </div>
 

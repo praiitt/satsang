@@ -104,16 +104,16 @@ export function LiveSatsangControls({
 
   return (
     <div
-      className="fixed right-0 bottom-0 left-0 z-50 bg-gradient-to-t from-black/95 via-black/90 to-black/80 shadow-2xl backdrop-blur-xl"
+      className="fixed right-0 bottom-0 left-0 z-50 border-t border-white/10 bg-slate-900 shadow-2xl"
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}
     >
-      <div className="space-y-3 p-3 sm:space-y-4 sm:p-5 md:p-6">
+      <div className="space-y-3 p-4 sm:space-y-4 sm:p-5 md:p-6">
         {/* Room Info */}
-        <div className="flex items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2 backdrop-blur-sm">
-          <span className="text-sm font-medium text-white/80">कक्ष:</span>
+        <div className="flex items-center justify-center gap-2 rounded-xl border border-white/30 bg-slate-800/80 px-4 py-2.5 backdrop-blur-sm">
+          <span className="text-sm font-medium text-white">कक्ष:</span>
           <span className="text-sm font-bold text-white">{room.name || 'LiveSatsang'}</span>
-          <span className="mx-2 text-white/40">•</span>
-          <span className="text-sm font-medium text-white/80">प्रतिभागी:</span>
+          <span className="mx-2 text-white/60">•</span>
+          <span className="text-sm font-medium text-white">प्रतिभागी:</span>
           <span className="text-sm font-bold text-green-400">{participantCount}</span>
         </div>
 
@@ -172,29 +172,29 @@ export function LiveSatsangControls({
         )}
 
         {/* Controls Row - always last, closest to the bottom edge */}
-        <div className="flex items-center justify-center gap-2 sm:gap-3">
-          <ControlBar className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-2 rounded-xl bg-white/10 p-1 backdrop-blur-sm sm:gap-3">
+        <div className="flex items-center justify-center gap-3 sm:gap-4">
+          <ControlBar className="flex items-center gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 rounded-xl border border-white/30 bg-slate-800/80 p-1.5 backdrop-blur-sm sm:gap-3">
               <TrackToggle
                 source={Track.Source.Microphone}
-                className="h-12 w-12 rounded-lg sm:h-14 sm:w-14"
+                className="h-11 w-11 rounded-lg sm:h-12 sm:w-12"
               />
               <TrackToggle
                 source={Track.Source.Camera}
-                className="h-12 w-12 rounded-lg sm:h-14 sm:w-14"
+                className="h-11 w-11 rounded-lg sm:h-12 sm:w-12"
               />
             </div>
             <MediaDeviceMenu
               kind="audioinput"
-              className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14"
+              className="h-11 w-11 rounded-lg border border-white/30 bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700/80 sm:h-12 sm:w-12"
             />
             <MediaDeviceMenu
               kind="videoinput"
-              className="h-12 w-12 rounded-lg bg-white/10 sm:h-14 sm:w-14"
+              className="h-11 w-11 rounded-lg border border-white/30 bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700/80 sm:h-12 sm:w-12"
             />
             <DisconnectButton
               onClick={onLeave}
-              className="h-12 w-12 rounded-lg bg-red-500/20 hover:bg-red-500/30 sm:h-14 sm:w-14"
+              className="h-11 w-11 rounded-lg border border-red-500/60 bg-red-500/40 backdrop-blur-sm hover:bg-red-500/50 sm:h-12 sm:w-12"
             />
           </ControlBar>
         </div>

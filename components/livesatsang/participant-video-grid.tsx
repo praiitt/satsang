@@ -88,11 +88,11 @@ export function ParticipantVideoGrid() {
         return (
           <div
             key={`${trackRef.participant.identity}-${trackRef.source}`}
-            className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-black/40 shadow-lg"
+            className="relative flex aspect-video items-center justify-center overflow-hidden rounded-lg bg-slate-800/40 shadow-lg"
           >
             <VideoTrack trackRef={trackRef} className="h-full w-full object-cover" />
             {/* Participant name overlay */}
-            <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+            <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-slate-900/90 to-transparent p-2">
               <p className="text-xs font-medium text-white sm:text-sm">
                 {participantName}
                 {isLocal && <span className="ml-1 text-white/70">(आप)</span>}
