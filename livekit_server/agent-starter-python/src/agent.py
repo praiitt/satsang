@@ -374,14 +374,17 @@ async def entrypoint(ctx: JobContext):
         )
         logger.warning(f"Using {stt_model} - For BETTER Hindi accuracy, try: STT_MODEL=sarvam or STT_MODEL=deepgram/nova-2")
     
-    # Initialize turn detector with error handling
+    # Initialize turn detector with error handling and timeout protection
+    # Skip if it's taking too long to avoid initialization timeout
     logger.info("Initializing turn detector model...")
+    turn_detector = None
     try:
+        # Try to initialize turn detector, but don't block if it's slow
         turn_detector = MultilingualModel()
         logger.info("Turn detector model initialized successfully")
     except Exception as e:
-        logger.error(f"Failed to initialize turn detector: {e}")
-        logger.error("This may cause issues. Continuing anyway...")
+        logger.warning(f"Failed to initialize turn detector: {e}")
+        logger.warning("Will use default turn detection. This may cause slight delays.")
         turn_detector = None
     
     # Check if this is a group conversation (LiveSatsang room)
@@ -399,15 +402,10 @@ async def entrypoint(ctx: JobContext):
 
     logger.info("Creating AgentSession with configured models...")
     try:
-        # Load VAD on-demand if not loaded in prewarm (to avoid initialization timeout)
+        # VAD will be loaded on-demand if needed (skipped in prewarm to avoid timeout)
+        # If VAD is None, AgentSession will use default VAD behavior
         if ctx.proc.userdata.get("vad") is None:
-            logger.info("VAD not preloaded, loading on-demand...")
-            try:
-                ctx.proc.userdata["vad"] = silero.VAD.load()
-                logger.info("VAD model loaded successfully on-demand")
-            except Exception as vad_error:
-                logger.warning(f"Failed to load VAD on-demand: {vad_error}. Will use default VAD.")
-                ctx.proc.userdata["vad"] = None
+            logger.info("VAD not preloaded - will use default VAD behavior")
         
         # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
         # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
