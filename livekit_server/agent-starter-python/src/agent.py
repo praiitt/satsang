@@ -274,6 +274,7 @@ def prewarm(proc: JobProcess):
     """
     Prewarm function to load models before processing jobs.
     This runs once per worker process to improve startup time for individual jobs.
+    Note: If VAD loading takes too long, we skip it to avoid timeout during initialization.
     """
     try:
         # Check if PyTorch is available before loading models
@@ -282,15 +283,16 @@ def prewarm(proc: JobProcess):
             logger.info(f"PyTorch version: {torch.__version__}")
         except ImportError:
             logger.error("PyTorch is not installed! Install it with: uv sync --locked")
-            raise
+            # Don't raise - let it load on-demand
+            proc.userdata["vad"] = None
+            return
         
-        # Load VAD model with timeout protection
-        # If this takes too long, it will be caught by the outer exception handler
-        logger.info("Loading Silero VAD model...")
-        proc.userdata["vad"] = silero.VAD.load()
-        logger.info("Silero VAD model loaded successfully")
+        # Skip VAD preloading to avoid timeout during initialization
+        # VAD will be loaded on-demand when needed, which is safer
+        logger.info("Skipping VAD preload to avoid initialization timeout - will load on-demand")
+        proc.userdata["vad"] = None
     except Exception as e:
-        logger.error(f"Failed to load VAD model in prewarm: {e}")
+        logger.error(f"Error in prewarm: {e}")
         logger.warning("VAD model will be loaded on-demand for each job. This may cause slight delays.")
         # Don't raise - let the process continue, VAD will be loaded on-demand
         # This prevents the entire worker from failing if VAD loading has issues
@@ -397,6 +399,16 @@ async def entrypoint(ctx: JobContext):
 
     logger.info("Creating AgentSession with configured models...")
     try:
+        # Load VAD on-demand if not loaded in prewarm (to avoid initialization timeout)
+        if ctx.proc.userdata.get("vad") is None:
+            logger.info("VAD not preloaded, loading on-demand...")
+            try:
+                ctx.proc.userdata["vad"] = silero.VAD.load()
+                logger.info("VAD model loaded successfully on-demand")
+            except Exception as vad_error:
+                logger.warning(f"Failed to load VAD on-demand: {vad_error}. Will use default VAD.")
+                ctx.proc.userdata["vad"] = None
+        
         # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
         # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
         # IMPORTANT: Set TTS_VOICE_ID in .env.local to a MALE voice ID for Cartesia Sonic
