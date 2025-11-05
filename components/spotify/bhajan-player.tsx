@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useChatMessages } from '@/hooks/useChatMessages';
-import { useRoomContext } from '@livekit/components-react';
 import { RoomEvent } from 'livekit-client';
+import { useRoomContext } from '@livekit/components-react';
+import { useChatMessages } from '@/hooks/useChatMessages';
 import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 
 interface BhajanTrackInfo {
@@ -17,7 +17,7 @@ interface BhajanTrackInfo {
 
 /**
  * Enhanced Bhajan Player Component
- * 
+ *
  * Uses Spotify Web Playback SDK for full tracks when authenticated,
  * falls back to preview URLs for non-premium users or when Spotify isn't available.
  */
@@ -66,24 +66,19 @@ export function BhajanPlayer() {
     });
 
     // Define the data handler function - this will log ALL data received
-    const onData = (
-      payload: Uint8Array,
-      participant: unknown,
-      kind: unknown,
-      topic?: string
-    ) => {
+    const onData = (payload: Uint8Array, participant: unknown, kind: unknown, topic?: string) => {
       // Extract participant info if available
       const participantInfo: Record<string, unknown> = {
         hasParticipant: !!participant,
       };
-      
+
       if (participant && typeof participant === 'object') {
         const p = participant as { identity?: string; isAgent?: boolean; name?: string };
         participantInfo.identity = p.identity;
         participantInfo.isAgent = p.isAgent;
         participantInfo.name = p.name;
       }
-      
+
       console.log('[BhajanPlayer] 🔵 DataReceived event fired', {
         payloadLength: payload.length,
         topic: topic || '(no topic)',
@@ -127,10 +122,8 @@ export function BhajanPlayer() {
           url: typeof parsed.url === 'string' ? parsed.url : undefined,
           name: typeof parsed.name === 'string' ? parsed.name : undefined,
           artist: typeof parsed.artist === 'string' ? parsed.artist : undefined,
-          spotify_id:
-            typeof parsed.spotify_id === 'string' ? parsed.spotify_id : undefined,
-          external_url:
-            typeof parsed.external_url === 'string' ? parsed.external_url : undefined,
+          spotify_id: typeof parsed.spotify_id === 'string' ? parsed.spotify_id : undefined,
+          external_url: typeof parsed.external_url === 'string' ? parsed.external_url : undefined,
         };
 
         console.log('[BhajanPlayer] ✅✅✅ Data event received - setting track', { topic, track });
@@ -147,37 +140,40 @@ export function BhajanPlayer() {
     // Always register the listener - it will work even if room isn't connected yet
     // The SDK will buffer events until connection is established
     console.log('[BhajanPlayer] Registering DataReceived listener');
-    
+
     // Test: Log all room events to verify event system is working
     const testAllEvents = (event: unknown) => {
       console.log('[BhajanPlayer] 🧪 Room event fired:', event);
     };
     room.on(RoomEvent.DataReceived, testAllEvents);
-    
+
     // Register our specific handler
     room.on(RoomEvent.DataReceived, onData);
     console.log('[BhajanPlayer] ✅ DataReceived listener registered');
-    
+
     // Log current remote participants to see if agent is present
     const logParticipants = () => {
       const participants = Array.from(room.remoteParticipants.values());
-      console.log('[BhajanPlayer] Remote participants:', participants.map(p => ({
-        identity: p.identity,
-        name: p.name,
-        isAgent: p.isAgent,
-      })));
-      
+      console.log(
+        '[BhajanPlayer] Remote participants:',
+        participants.map((p) => ({
+          identity: p.identity,
+          name: p.name,
+          isAgent: p.isAgent,
+        }))
+      );
+
       // Check if agent is present
-      const agent = participants.find(p => p.isAgent);
+      const agent = participants.find((p) => p.isAgent);
       if (agent) {
         console.log('[BhajanPlayer] ✅ Agent found:', agent.identity);
       } else {
         console.log('[BhajanPlayer] ⚠️ No agent participant found yet');
       }
     };
-    
+
     logParticipants();
-    
+
     // Listen for when participants join (especially the agent)
     const onParticipantConnected = (participant: unknown) => {
       const p = participant as { identity?: string; name?: string; isAgent?: boolean };
@@ -191,7 +187,7 @@ export function BhajanPlayer() {
       }
       logParticipants();
     };
-    
+
     room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
 
     // Also listen for room state changes to log when connection happens
@@ -224,7 +220,7 @@ export function BhajanPlayer() {
     }
 
     const latestMessage = agentMessages[agentMessages.length - 1];
-    
+
     // Skip if we've already processed this message
     if (latestMessage.id === lastProcessedMessageRef.current) {
       return;
@@ -239,7 +235,7 @@ export function BhajanPlayer() {
     const closeBraces = (messageText.match(/}/g) || []).length;
     const hasIncompleteJson = messageText.includes('{') && openBraces > closeBraces;
     const hasStreamingIndicator = messageText.endsWith('...') || messageText.endsWith('…');
-    
+
     // If message appears incomplete, wait a bit for it to complete
     if (hasIncompleteJson || hasStreamingIndicator) {
       // Clear any existing timeout for this message
@@ -274,7 +270,7 @@ export function BhajanPlayer() {
 
     function processMessage(message: typeof latestMessage) {
       // Try to parse as JSON first, but only if message looks like it contains bhajan data
-    let trackInfo: BhajanTrackInfo | null = null;
+      let trackInfo: BhajanTrackInfo | null = null;
       let parsedJson: Record<string, unknown> | null = null;
 
       const messageText = message.message.trim();
@@ -286,270 +282,273 @@ export function BhajanPlayer() {
         fullLength: messageText.length,
       });
 
-    // Skip if message doesn't look like it contains bhajan data
-    // Check for: JSON braces, Spotify URLs, or keywords like "bhajan", "playing", "बज रहा"
-    const hasBhajanIndicators =
-      messageText.includes('{') ||
-      messageText.includes('spotify.com/track/') ||
-      messageText.toLowerCase().includes('bhajan') ||
-      messageText.includes('बज रहा') ||
-      messageText.includes('playing') ||
-      messageText.includes('भजन');
+      // Skip if message doesn't look like it contains bhajan data
+      // Check for: JSON braces, Spotify URLs, or keywords like "bhajan", "playing", "बज रहा"
+      const hasBhajanIndicators =
+        messageText.includes('{') ||
+        messageText.includes('spotify.com/track/') ||
+        messageText.toLowerCase().includes('bhajan') ||
+        messageText.includes('बज रहा') ||
+        messageText.includes('playing') ||
+        messageText.includes('भजन');
 
-    if (!hasBhajanIndicators) {
-      // Regular conversation message, not a bhajan response
-      console.log('[BhajanPlayer] Skipping - no bhajan indicators found');
-      return;
-    }
-
-    console.log('[BhajanPlayer] Processing message with bhajan indicators');
-
-    // First, try to find JSON at the end of the message (agent might append it)
-    // Look for JSON pattern at the end: {...} or {...} followed by nothing or whitespace
-    const jsonAtEndMatch = messageText.match(/\{[\s\S]*\}(?:\s*)$/);
-    if (jsonAtEndMatch) {
-      try {
-        parsedJson = JSON.parse(jsonAtEndMatch[0]) as Record<string, unknown>;
-        console.log('[BhajanPlayer] Found JSON at end of message:', jsonAtEndMatch[0]);
-      } catch {
-        // JSON at end is invalid, try other methods
-      }
-    }
-
-    // If we didn't find JSON at end, try to find JSON anywhere in the message
-    // The JSON might be in the middle if the agent continues speaking after it
-    if (!parsedJson) {
-      // Find all potential JSON start positions (opening braces)
-      const jsonStartIndices: number[] = [];
-      for (let i = 0; i < messageText.length; i++) {
-        if (messageText[i] === '{') {
-          jsonStartIndices.push(i);
-        }
-      }
-
-      // Try to parse each potential JSON object
-      for (const startIndex of jsonStartIndices) {
-        let braceCount = 0;
-        let inString = false;
-        let escapeNext = false;
-        let jsonEnd = -1;
-
-        // Find the matching closing brace, handling escaped quotes and nested braces
-        for (let i = startIndex; i < messageText.length; i++) {
-          const char = messageText[i];
-          
-          if (escapeNext) {
-            escapeNext = false;
-            continue;
-          }
-          
-          if (char === '\\') {
-            escapeNext = true;
-            continue;
-          }
-          
-          if (char === '"' && !escapeNext) {
-            inString = !inString;
-            continue;
-          }
-          
-          if (!inString) {
-            if (char === '{') braceCount++;
-            if (char === '}') {
-              braceCount--;
-              if (braceCount === 0) {
-                jsonEnd = i + 1;
-                break;
-              }
-            }
-          }
-        }
-
-        if (jsonEnd > startIndex) {
-          const jsonCandidate = messageText.substring(startIndex, jsonEnd);
-          try {
-            const candidate = JSON.parse(jsonCandidate) as Record<string, unknown>;
-            // Verify it looks like a bhajan response (has name, spotify_id, or url)
-            if (
-              candidate.name ||
-              candidate.spotify_id ||
-              candidate.url ||
-              candidate.preview_url
-            ) {
-              parsedJson = candidate;
-              console.log('[BhajanPlayer] Extracted JSON from message:', jsonCandidate);
-              break;
-            }
-          } catch {
-            // Invalid JSON, try next candidate
-          }
-        }
-      }
-    }
-
-    // If still no JSON found, try parsing entire message as JSON
-    if (!parsedJson) {
-      try {
-        parsedJson = JSON.parse(messageText) as Record<string, unknown>;
-      } catch {
-        // Not pure JSON, that's okay
-      }
-    }
-
-    // If we have parsed JSON, process it
-    if (parsedJson) {
-      // Check if it's an error response
-      if (parsedJson.error) {
-        // Error message from agent
-        console.warn('Bhajan error from agent:', parsedJson.error);
-        // Log available bhajans if provided
-        if (parsedJson.available_bhajans) {
-          console.log('Available bhajans:', parsedJson.available_bhajans);
-        }
+      if (!hasBhajanIndicators) {
+        // Regular conversation message, not a bhajan response
+        console.log('[BhajanPlayer] Skipping - no bhajan indicators found');
         return;
       }
 
-      // Agent returns one of these formats:
-      // 1. Success with preview: { url, name, artist, spotify_id, external_url, message }
-      // 2. Success without preview: { url: null, name, artist, spotify_id, external_url, message }
-      // 3. Error: { error, available_bhajans?, external_url? }
+      console.log('[BhajanPlayer] Processing message with bhajan indicators');
 
-      // Check if it's a valid track response
-      // Must have at least one of: url, preview_url, or spotify_id
-      const hasUrl = parsedJson.url || parsedJson.preview_url;
-      const hasSpotifyId = parsedJson.spotify_id;
-
-      if (hasUrl || hasSpotifyId) {
-        trackInfo = {
-          // url can be preview_url or null - use whatever is available
-          url:
-            (typeof parsedJson.url === 'string' ? parsedJson.url : undefined) ||
-            (typeof parsedJson.preview_url === 'string' ? parsedJson.preview_url : undefined) ||
-            undefined,
-          name: typeof parsedJson.name === 'string' ? parsedJson.name : undefined,
-          artist: typeof parsedJson.artist === 'string' ? parsedJson.artist : undefined,
-          message: typeof parsedJson.message === 'string' ? parsedJson.message : undefined,
-          spotify_id: typeof parsedJson.spotify_id === 'string' ? parsedJson.spotify_id : undefined,
-          external_url:
-            typeof parsedJson.external_url === 'string' ? parsedJson.external_url : undefined,
-        };
-
-        console.log('Bhajan track info received (JSON):', {
-          name: trackInfo.name,
-          artist: trackInfo.artist,
-          hasUrl: !!trackInfo.url,
-          hasSpotifyId: !!trackInfo.spotify_id,
-        });
-      } else {
-        // Invalid format - but don't log warning for regular messages
-        // Only log if we actually found JSON structure
-        if (messageText.includes('{')) {
-          console.warn('Invalid bhajan response format:', parsedJson);
+      // First, try to find JSON at the end of the message (agent might append it)
+      // Look for JSON pattern at the end: {...} or {...} followed by nothing or whitespace
+      const jsonAtEndMatch = messageText.match(/\{[\s\S]*\}(?:\s*)$/);
+      if (jsonAtEndMatch) {
+        try {
+          parsedJson = JSON.parse(jsonAtEndMatch[0]) as Record<string, unknown>;
+          console.log('[BhajanPlayer] Found JSON at end of message:', jsonAtEndMatch[0]);
+        } catch {
+          // JSON at end is invalid, try other methods
         }
       }
-    } else {
-      // No JSON found, try to extract Spotify track ID from URL in plain text
-      // This happens when LLM wraps the JSON in text and includes the URL
-      // Pattern: https://open.spotify.com/track/TRACK_ID
-      const spotifyUrlMatch = messageText.match(
-        /https?:\/\/(?:open\.)?spotify\.com\/track\/([a-zA-Z0-9]+)/i
-      );
 
-      if (spotifyUrlMatch && spotifyUrlMatch[1]) {
-        const extractedTrackId = spotifyUrlMatch[1];
-        console.log('[BhajanPlayer] Found Spotify track ID in message URL:', extractedTrackId);
+      // If we didn't find JSON at end, try to find JSON anywhere in the message
+      // The JSON might be in the middle if the agent continues speaking after it
+      if (!parsedJson) {
+        // Find all potential JSON start positions (opening braces)
+        const jsonStartIndices: number[] = [];
+        for (let i = 0; i < messageText.length; i++) {
+          if (messageText[i] === '{') {
+            jsonStartIndices.push(i);
+          }
+        }
 
-        // When we only have spotify_id from URL (no JSON), we can't play it without auth or preview URL
-        // The agent should have returned JSON with preview_url, but LLM wrapped it in text
-        // Log a warning but don't try to play (would need Spotify auth or preview URL)
-        console.warn(
-          '[BhajanPlayer] Track ID found in URL but no JSON data - agent should return JSON format. ' +
-            'Track requires Spotify authentication for playback.'
-        );
+        // Try to parse each potential JSON object
+        for (const startIndex of jsonStartIndices) {
+          let braceCount = 0;
+          let inString = false;
+          let escapeNext = false;
+          let jsonEnd = -1;
 
-        // Don't set trackInfo - we need preview_url or authentication to play
-        // This prevents silent failures
+          // Find the matching closing brace, handling escaped quotes and nested braces
+          for (let i = startIndex; i < messageText.length; i++) {
+            const char = messageText[i];
+
+            if (escapeNext) {
+              escapeNext = false;
+              continue;
+            }
+
+            if (char === '\\') {
+              escapeNext = true;
+              continue;
+            }
+
+            if (char === '"' && !escapeNext) {
+              inString = !inString;
+              continue;
+            }
+
+            if (!inString) {
+              if (char === '{') braceCount++;
+              if (char === '}') {
+                braceCount--;
+                if (braceCount === 0) {
+                  jsonEnd = i + 1;
+                  break;
+                }
+              }
+            }
+          }
+
+          if (jsonEnd > startIndex) {
+            const jsonCandidate = messageText.substring(startIndex, jsonEnd);
+            try {
+              const candidate = JSON.parse(jsonCandidate) as Record<string, unknown>;
+              // Verify it looks like a bhajan response (has name, spotify_id, or url)
+              if (
+                candidate.name ||
+                candidate.spotify_id ||
+                candidate.url ||
+                candidate.preview_url
+              ) {
+                parsedJson = candidate;
+                console.log('[BhajanPlayer] Extracted JSON from message:', jsonCandidate);
+                break;
+              }
+            } catch {
+              // Invalid JSON, try next candidate
+            }
+          }
+        }
       }
-    }
 
-    if (trackInfo) {
-      console.log('[BhajanPlayer] Track info extracted:', {
-        name: trackInfo.name,
-        hasUrl: !!trackInfo.url,
-        hasSpotifyId: !!trackInfo.spotify_id,
-        spotify_id: trackInfo.spotify_id,
-      });
+      // If still no JSON found, try parsing entire message as JSON
+      if (!parsedJson) {
+        try {
+          parsedJson = JSON.parse(messageText) as Record<string, unknown>;
+        } catch {
+          // Not pure JSON, that's okay
+        }
+      }
 
-      setCurrentTrack(trackInfo);
-      lastProcessedMessageRef.current = message.id;
+      // If we have parsed JSON, process it
+      if (parsedJson) {
+        // Check if it's an error response
+        if (parsedJson.error) {
+          // Error message from agent
+          console.warn('Bhajan error from agent:', parsedJson.error);
+          // Log available bhajans if provided
+          if (parsedJson.available_bhajans) {
+            console.log('Available bhajans:', parsedJson.available_bhajans);
+          }
+          return;
+        }
 
-      // Determine if we should use Spotify SDK
-      // Priority: Spotify SDK (if authenticated and spotify_id available) > Preview URL
-      const hasSpotifyId = !!trackInfo.spotify_id;
-      const hasPreviewUrl = !!trackInfo.url;
+        // Agent returns one of these formats:
+        // 1. Success with preview: { url, name, artist, spotify_id, external_url, message }
+        // 2. Success without preview: { url: null, name, artist, spotify_id, external_url, message }
+        // 3. Error: { error, available_bhajans?, external_url? }
 
-      // Use Spotify SDK if:
-      // 1. User is authenticated with Spotify
-      // 2. Track has a spotify_id
-      // Will fall back to preview URL if Spotify fails
-      const shouldUseSpotify = isAuthenticated && hasSpotifyId;
+        // Check if it's a valid track response
+        // Must have at least one of: url, preview_url, or spotify_id
+        const hasUrl = parsedJson.url || parsedJson.preview_url;
+        const hasSpotifyId = parsedJson.spotify_id;
 
-      if (shouldUseSpotify && !useSpotify) {
-        console.log(
-          '[BhajanPlayer] Using Spotify SDK for playback (has spotify_id:',
-          trackInfo.spotify_id,
-          ')'
-        );
-        setUseSpotify(true);
-      } else if (hasSpotifyId && !isAuthenticated) {
-        // Has spotify_id but user not authenticated - try to initialize Spotify
-        console.log(
-          '[BhajanPlayer] Has spotify_id but not authenticated - attempting to initialize Spotify'
-        );
-        if (hasPreviewUrl) {
-          // Use preview URL as fallback, but still try to connect Spotify for future tracks
-          console.log('[BhajanPlayer] Using preview URL (not authenticated with Spotify)');
-          setUseSpotify(false);
-          // Try to connect in background (non-blocking)
-          connect().catch(() => {
-            // Ignore errors - just trying to initialize for future use
+        if (hasUrl || hasSpotifyId) {
+          trackInfo = {
+            // url can be preview_url or null - use whatever is available
+            url:
+              (typeof parsedJson.url === 'string' ? parsedJson.url : undefined) ||
+              (typeof parsedJson.preview_url === 'string' ? parsedJson.preview_url : undefined) ||
+              undefined,
+            name: typeof parsedJson.name === 'string' ? parsedJson.name : undefined,
+            artist: typeof parsedJson.artist === 'string' ? parsedJson.artist : undefined,
+            message: typeof parsedJson.message === 'string' ? parsedJson.message : undefined,
+            spotify_id:
+              typeof parsedJson.spotify_id === 'string' ? parsedJson.spotify_id : undefined,
+            external_url:
+              typeof parsedJson.external_url === 'string' ? parsedJson.external_url : undefined,
+          };
+
+          console.log('Bhajan track info received (JSON):', {
+            name: trackInfo.name,
+            artist: trackInfo.artist,
+            hasUrl: !!trackInfo.url,
+            hasSpotifyId: !!trackInfo.spotify_id,
           });
         } else {
-          // No preview URL - must use Spotify SDK
-          console.log(
-            '[BhajanPlayer] Only spotify_id available - attempting to connect to Spotify'
-          );
-          // Try to connect - this will initialize player if token is available
-          connect()
-            .then(() => {
-              // If connection succeeds, use Spotify SDK
-              if (isAuthenticated) {
-                setUseSpotify(true);
-              }
-            })
-            .catch(() => {
-              // Connection failed - will show message in UI
-              console.warn(
-                '[BhajanPlayer] Spotify connection failed - user may need to authenticate'
-              );
-              setUseSpotify(false);
-            });
+          // Invalid format - but don't log warning for regular messages
+          // Only log if we actually found JSON structure
+          if (messageText.includes('{')) {
+            console.warn('Invalid bhajan response format:', parsedJson);
+          }
         }
-      } else if (!hasSpotifyId && hasPreviewUrl) {
-        // No spotify_id but has preview URL - use preview
-        console.log('[BhajanPlayer] Using preview URL (no spotify_id available)');
-        setUseSpotify(false);
-      } else if (!hasSpotifyId && !hasPreviewUrl) {
-        // No playback options available
-        console.warn('[BhajanPlayer] No playback options available - no spotify_id or preview_url');
-        setUseSpotify(false);
-      }
-    } else {
-      console.log('[BhajanPlayer] No track info extracted from message');
-    }
+      } else {
+        // No JSON found, try to extract Spotify track ID from URL in plain text
+        // This happens when LLM wraps the JSON in text and includes the URL
+        // Pattern: https://open.spotify.com/track/TRACK_ID
+        const spotifyUrlMatch = messageText.match(
+          /https?:\/\/(?:open\.)?spotify\.com\/track\/([a-zA-Z0-9]+)/i
+        );
 
-    // Mark message as processed
-    lastProcessedMessageRef.current = message.id;
+        if (spotifyUrlMatch && spotifyUrlMatch[1]) {
+          const extractedTrackId = spotifyUrlMatch[1];
+          console.log('[BhajanPlayer] Found Spotify track ID in message URL:', extractedTrackId);
+
+          // When we only have spotify_id from URL (no JSON), we can't play it without auth or preview URL
+          // The agent should have returned JSON with preview_url, but LLM wrapped it in text
+          // Log a warning but don't try to play (would need Spotify auth or preview URL)
+          console.warn(
+            '[BhajanPlayer] Track ID found in URL but no JSON data - agent should return JSON format. ' +
+              'Track requires Spotify authentication for playback.'
+          );
+
+          // Don't set trackInfo - we need preview_url or authentication to play
+          // This prevents silent failures
+        }
+      }
+
+      if (trackInfo) {
+        console.log('[BhajanPlayer] Track info extracted:', {
+          name: trackInfo.name,
+          hasUrl: !!trackInfo.url,
+          hasSpotifyId: !!trackInfo.spotify_id,
+          spotify_id: trackInfo.spotify_id,
+        });
+
+        setCurrentTrack(trackInfo);
+        lastProcessedMessageRef.current = message.id;
+
+        // Determine if we should use Spotify SDK
+        // Priority: Spotify SDK (if authenticated and spotify_id available) > Preview URL
+        const hasSpotifyId = !!trackInfo.spotify_id;
+        const hasPreviewUrl = !!trackInfo.url;
+
+        // Use Spotify SDK if:
+        // 1. User is authenticated with Spotify
+        // 2. Track has a spotify_id
+        // Will fall back to preview URL if Spotify fails
+        const shouldUseSpotify = isAuthenticated && hasSpotifyId;
+
+        if (shouldUseSpotify && !useSpotify) {
+          console.log(
+            '[BhajanPlayer] Using Spotify SDK for playback (has spotify_id:',
+            trackInfo.spotify_id,
+            ')'
+          );
+          setUseSpotify(true);
+        } else if (hasSpotifyId && !isAuthenticated) {
+          // Has spotify_id but user not authenticated - try to initialize Spotify
+          console.log(
+            '[BhajanPlayer] Has spotify_id but not authenticated - attempting to initialize Spotify'
+          );
+          if (hasPreviewUrl) {
+            // Use preview URL as fallback, but still try to connect Spotify for future tracks
+            console.log('[BhajanPlayer] Using preview URL (not authenticated with Spotify)');
+            setUseSpotify(false);
+            // Try to connect in background (non-blocking)
+            connect().catch(() => {
+              // Ignore errors - just trying to initialize for future use
+            });
+          } else {
+            // No preview URL - must use Spotify SDK
+            console.log(
+              '[BhajanPlayer] Only spotify_id available - attempting to connect to Spotify'
+            );
+            // Try to connect - this will initialize player if token is available
+            connect()
+              .then(() => {
+                // If connection succeeds, use Spotify SDK
+                if (isAuthenticated) {
+                  setUseSpotify(true);
+                }
+              })
+              .catch(() => {
+                // Connection failed - will show message in UI
+                console.warn(
+                  '[BhajanPlayer] Spotify connection failed - user may need to authenticate'
+                );
+                setUseSpotify(false);
+              });
+          }
+        } else if (!hasSpotifyId && hasPreviewUrl) {
+          // No spotify_id but has preview URL - use preview
+          console.log('[BhajanPlayer] Using preview URL (no spotify_id available)');
+          setUseSpotify(false);
+        } else if (!hasSpotifyId && !hasPreviewUrl) {
+          // No playback options available
+          console.warn(
+            '[BhajanPlayer] No playback options available - no spotify_id or preview_url'
+          );
+          setUseSpotify(false);
+        }
+      } else {
+        console.log('[BhajanPlayer] No track info extracted from message');
+      }
+
+      // Mark message as processed
+      lastProcessedMessageRef.current = message.id;
     }
 
     // Cleanup timeouts on unmount
@@ -632,7 +631,7 @@ export function BhajanPlayer() {
     }
 
     const trackSpotifyId = currentTrack.spotify_id;
-    
+
     // Set up audio element
     console.log('[BhajanPlayer] Setting up audio playback:', {
       url: currentTrack.url,
@@ -694,7 +693,7 @@ export function BhajanPlayer() {
           console.log('[BhajanPlayer] Preview play failed, trying Spotify SDK');
           setUseSpotify(true);
         }
-    });
+      });
 
     return () => {
       // Use captured audio ref from effect start
@@ -703,8 +702,8 @@ export function BhajanPlayer() {
         audio.removeEventListener('error', handleError);
         audio.removeEventListener('canplay', handleCanPlay);
         audio.removeEventListener('loadeddata', handleLoadedData);
-      audio.removeEventListener('play', handlePlay);
-      audio.removeEventListener('pause', handlePause);
+        audio.removeEventListener('play', handlePlay);
+        audio.removeEventListener('pause', handlePause);
       }
     };
   }, [
