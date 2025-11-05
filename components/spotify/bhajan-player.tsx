@@ -159,11 +159,40 @@ export function BhajanPlayer() {
     console.log('[BhajanPlayer] ✅ DataReceived listener registered');
     
     // Log current remote participants to see if agent is present
-    console.log('[BhajanPlayer] Remote participants:', Array.from(room.remoteParticipants.values()).map(p => ({
-      identity: p.identity,
-      name: p.name,
-      isAgent: p.isAgent,
-    })));
+    const logParticipants = () => {
+      const participants = Array.from(room.remoteParticipants.values());
+      console.log('[BhajanPlayer] Remote participants:', participants.map(p => ({
+        identity: p.identity,
+        name: p.name,
+        isAgent: p.isAgent,
+      })));
+      
+      // Check if agent is present
+      const agent = participants.find(p => p.isAgent);
+      if (agent) {
+        console.log('[BhajanPlayer] ✅ Agent found:', agent.identity);
+      } else {
+        console.log('[BhajanPlayer] ⚠️ No agent participant found yet');
+      }
+    };
+    
+    logParticipants();
+    
+    // Listen for when participants join (especially the agent)
+    const onParticipantConnected = (participant: unknown) => {
+      const p = participant as { identity?: string; name?: string; isAgent?: boolean };
+      console.log('[BhajanPlayer] Participant connected:', {
+        identity: p.identity,
+        name: p.name,
+        isAgent: p.isAgent,
+      });
+      if (p.isAgent) {
+        console.log('[BhajanPlayer] ✅✅✅ AGENT PARTICIPANT CONNECTED!');
+      }
+      logParticipants();
+    };
+    
+    room.on(RoomEvent.ParticipantConnected, onParticipantConnected);
 
     // Also listen for room state changes to log when connection happens
     const onStateChange = () => {
@@ -178,6 +207,7 @@ export function BhajanPlayer() {
       room.off(RoomEvent.DataReceived, testAllEvents);
       room.off(RoomEvent.Connected, onStateChange);
       room.off(RoomEvent.Disconnected, onStateChange);
+      room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
     };
   }, [room, isAuthenticated]);
 
