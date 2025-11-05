@@ -573,8 +573,18 @@ if __name__ == "__main__":
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
     
-    # Get agent name from environment or use default 'guruji' for LiveSatsang
-    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "guruji")
-    logger.info(f"Starting agent worker with agent_name='{agent_name}'")
+    # Get agent name from environment variable (optional)
+    # If set, the agent will only join rooms configured for that specific agent name
+    # If not set (None), the agent will join any room (default behavior for normal sessions)
+    agent_name = os.getenv("LIVEKIT_AGENT_NAME")  # Returns None if not set
+    if agent_name:
+        logger.info(f"Starting agent worker with agent_name='{agent_name}' (restricted to this agent name)")
+    else:
+        logger.info("Starting agent worker without agent_name restriction (will join any room)")
     
-    cli.run_app(WorkerOptions(agent_name=agent_name, entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
+    # Only set agent_name in WorkerOptions if explicitly provided
+    worker_options = {"entrypoint_fnc": entrypoint, "prewarm_fnc": prewarm}
+    if agent_name:
+        worker_options["agent_name"] = agent_name
+    
+    cli.run_app(WorkerOptions(**worker_options))
