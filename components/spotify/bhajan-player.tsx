@@ -30,6 +30,7 @@ export function BhajanPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastProcessedMessageRef = useRef<string>('');
   const messageTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const PREFER_EVENTS = true; // Do not parse chat text for URLs/JSON when events are available
 
   // Spotify player hook
   const {
@@ -70,8 +71,12 @@ export function BhajanPlayer() {
     };
   }, [room, isAuthenticated]);
 
-  // Parse agent messages for bhajan playback info
+  // Parse agent messages for bhajan playback info (fallback only)
   useEffect(() => {
+    if (PREFER_EVENTS) {
+      // Skip text parsing entirely; rely on data channel events
+      return;
+    }
     // Get the latest agent message (assistant/agent)
     const agentMessages = messages.filter((m) => m.from?.isAgent);
     if (agentMessages.length === 0) {

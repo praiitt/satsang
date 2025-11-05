@@ -205,12 +205,9 @@ Be respectful and non-dogmatic, acknowledging diverse sampradayas. Offer practic
 BHAJAN PLAYBACK:
 When users request to hear a bhajan, devotional song, or spiritual music, use the play_bhajan tool.
 Common requests include: "krishna ka bhajan bajao", "hare krishna sunao", "bhajan chal", "om namah shivaya sunao", etc.
-CRITICAL: After using the play_bhajan tool, you MUST include the ENTIRE JSON response from the tool at the END of your spoken message.
-Format: First speak your confirmation message in Hindi like "भजन चल रहा है, आनंद लें" (The bhajan is playing, enjoy it), then IMMEDIATELY append the complete JSON from the tool result.
-Example: 'भजन चल रहा है, आनंद लें। {"url":"...","name":"...","spotify_id":"..."}'
-DO NOT mention URLs or links in your spoken text - just include the JSON silently at the end.
-The frontend will extract the JSON from your message to play the bhajan.
-NEVER speak URLs, links, or technical IDs in your spoken words - only include the JSON.
+IMPORTANT: Do NOT include URLs, JSON, or technical IDs in your spoken message.
+After calling the tool, simply speak a friendly confirmation like "भजन चल रहा है, आनंद लें".
+The tool will send structured data over the data channel for the app to handle playback.
 
 RESPONSE STYLE:
 Default to replying in Hindi (Devanagari script). If the user speaks another language, mirror their language.
@@ -228,7 +225,7 @@ Always end with a question or invitation to continue the conversation when natur
         artist: str = None,
     ) -> str:
         """Play a devotional bhajan (song) when users request it.
-        
+
         Use this tool when users ask to:
         - Play a bhajan (e.g., "krishna ka bhajan bajao", "hare krishna sunao", "bhajan chal")
         - Hear a devotional song
@@ -247,9 +244,7 @@ Always end with a question or invitation to continue the conversation when natur
             artist: Optional artist name if specified (currently not used, but included for future use)
         
         Returns:
-            A JSON string with the bhajan URL that the frontend can use to play the audio.
-            Format: {"url": "/api/bhajans/...", "name": "Bhajan Name"}
-            If bhajan not found, returns error message.
+            A short Hindi confirmation/error sentence for speaking. Do NOT include URLs.
         """
         import json
         
@@ -265,16 +260,11 @@ Always end with a question or invitation to continue the conversation when natur
         track_info = await find_bhajan_by_name_async_func(bhajan_name)
         
         if not track_info:
-            # List available bhajans for helpful error message
+            # List available bhajans for helpful error message (spoken only)
             available = await list_available_bhajans_async_func()
             available_list = ", ".join(available[:5])  # Show first 5
-            error_msg = f"क्षमा करें, '{bhajan_name}' भजन उपलब्ध नहीं है। उपलब्ध भजन: {available_list}"
-            
             logger.warning(f"Bhajan not found: {bhajan_name}. Available: {available}")
-            return json.dumps({
-                "error": error_msg,
-                "available_bhajans": available,
-            })
+            return f"क्षमा करें, '{bhajan_name}' भजन अभी उपलब्ध नहीं है। आप इनमें से कोई सुनना चाहेंगे: {available_list}?"
         
         logger.info(f"Found bhajan track: {track_info.get('name_en')} - {track_info.get('preview_url') or track_info.get('spotify_id')}")
         
@@ -287,18 +277,13 @@ Always end with a question or invitation to continue the conversation when natur
         if not preview_url and not spotify_id:
             available = await list_available_bhajans_async_func()
             available_list = ", ".join(available[:5])
-            external_url = track_info.get("external_url")
-            error_msg = f"क्षमा करें, '{bhajan_name}' भजन का preview URL उपलब्ध नहीं है।"
-            if external_url:
-                error_msg += f" आप Spotify पर सुन सकते हैं: {external_url}"
-            error_msg += f" उपलब्ध भजन: {available_list}"
-            return json.dumps({
-                "error": error_msg,
-                "external_url": external_url,  # Provide Spotify link as fallback
-                "available_bhajans": available,
-            })
+            # Do not speak URLs; just inform politely
+            return (
+                f"क्षमा करें, '{bhajan_name}' का ऑडियो यहाँ उपलब्ध नहीं है। "
+                f"क्या आप इनमें से कोई सुनना चाहेंगे: {available_list}?"
+            )
         
-        # Return result with MP3 URL (if available) and Spotify info for SDK playback
+        # Build structured result for data channel (MP3 preview when available and Spotify info)
         # Frontend will use Spotify SDK if spotify_id is present and user is authenticated
         # Otherwise, it will use preview_url as fallback
         # IMPORTANT: Always include preview_url if available, even when spotify_id is present
@@ -309,18 +294,19 @@ Always end with a question or invitation to continue the conversation when natur
             "artist": track_info.get("artist", ""),
             "spotify_id": spotify_id,  # Spotify track ID for Web Playback SDK (can be None)
             "external_url": track_info.get("external_url"),  # Spotify web player URL (for reference only, not spoken)
-            "message": f"भजन '{track_info.get('name_en', bhajan_name)}' चल रहा है। आनंद लें!"  # "Bhajan '{name}' is playing. Enjoy!"
+            "message": f"भजन '{track_info.get('name_en', bhajan_name)}' चल रहा है। आनंद लें!",
         }
         
         logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}")
-        # Also emit structured data over LiveKit data channel for reliable frontend handling
+        # Emit structured data over LiveKit data channel for reliable frontend handling
         try:
             data_bytes = json.dumps(result).encode("utf-8")
             # topic 'bhajan.track' so frontend can subscribe specifically
             context.room.local_participant.publish_data(data_bytes, reliable=True, topic="bhajan.track")
         except Exception as e:
             logger.warning(f"Failed to publish bhajan data message: {e}")
-        return json.dumps(result)
+        # Speak only a friendly confirmation, without any URLs/JSON
+        return f"मैं '{result['name']}' भजन चला रहा हूं। आनंद लें!"
 
 
 def prewarm(proc: JobProcess):
