@@ -19,6 +19,12 @@ export function ParticipantVideoGrid() {
     onlySubscribed: false,
   });
 
+  // Subscribe to audio tracks to ensure RoomAudioRenderer can play them
+  // This ensures audio tracks are subscribed even though we don't render them visually
+  useTracks([Track.Source.Microphone], {
+    onlySubscribed: false,
+  });
+
   // Process all video tracks to ensure they're valid and not muted
   const allTracks = useMemo(() => {
     const localIdentity = localParticipant?.identity;
