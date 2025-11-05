@@ -90,13 +90,16 @@ class Assistant(Agent):
 
 GROUP CONVERSATION MODE (LiveSatsang):
 You are in a group spiritual gathering (LiveSatsang) with multiple participants.
-- Respond to questions and conversations normally - you can engage in dialogue without being explicitly addressed
+- You can hear and respond to ALL participants in the room
+- Respond to questions and conversations from ANY participant - you don't need to be explicitly addressed
+- Listen to all participants' speech and respond naturally when appropriate
 - Wait for natural pauses in conversation before speaking - do not interrupt others mid-sentence
 - Be brief and allow others to speak - this is a shared space for spiritual discussion
 - If multiple people are speaking, wait until the conversation pauses before responding
 - Address the group as "भाइयों और बहनों" (brothers and sisters) or "सभी साधकों" (all seekers) when speaking to everyone
 - Keep responses concise in group settings - 2-3 sentences maximum to ensure everyone gets a chance to speak
 - You can respond to questions, provide spiritual guidance, and engage in conversation naturally
+- IMPORTANT: You are actively listening to all participants - respond when you hear questions or when it's appropriate to contribute
 """
         
         super().__init__(
@@ -383,11 +386,12 @@ async def entrypoint(ctx: JobContext):
     is_live_satsang = ctx.room.name.lower() == "livesatsang"
     
     # Adjust turn detection for group conversations
-    # In group settings, agent should only respond when explicitly addressed
+    # In group settings, agent should respond naturally but wait for pauses
     if is_live_satsang:
         logger.info("Detected LiveSatsang room - configuring for group conversation")
-        # Longer EOU delay in group settings to avoid interrupting
-        eou_delay = 1.5  # Wait longer before responding
+        # Slightly longer EOU delay in group settings to avoid interrupting
+        # But not too long, so agent can still respond naturally
+        eou_delay = 1.0  # Wait for natural pause before responding
     else:
         eou_delay = 0.8  # Normal delay for one-on-one
 
@@ -428,7 +432,8 @@ async def entrypoint(ctx: JobContext):
             vad=ctx.proc.userdata["vad"],
             # allow the LLM to generate a response while waiting for the end of turn
             # See more at https://docs.livekit.io/agents/build/audio/#preemptive-generation
-            preemptive_generation=not is_live_satsang,  # Disable preemptive generation in group settings
+            # Enable preemptive generation even in group settings for faster responses
+            preemptive_generation=True,
         )
         logger.info("AgentSession created successfully")
     except Exception as e:
@@ -482,6 +487,17 @@ async def entrypoint(ctx: JobContext):
 
     # Join the room and connect to the user
     await ctx.connect()
+
+    # For group conversations, log participant info and ensure agent is ready
+    if is_live_satsang:
+        logger.info("LiveSatsang mode: Agent ready for group conversation")
+        logger.info(f"Current participants in room: {len(ctx.room.remote_participants)} remote + 1 local (agent)")
+        for participant in ctx.room.remote_participants.values():
+            logger.info(f"  - {participant.identity} ({participant.name or 'unnamed'})")
+        
+        # AgentSession should automatically handle audio subscription
+        # The agent will listen to all participants and respond to questions
+        # Note: Agent will respond when it detects speech from any participant
 
     # Wait for session to be fully ready before sending greeting
     # The session needs time to initialize all components (STT, TTS, etc.)
