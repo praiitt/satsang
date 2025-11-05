@@ -301,8 +301,15 @@ Always end with a question or invitation to continue the conversation when natur
         # Emit structured data over LiveKit data channel for reliable frontend handling
         try:
             data_bytes = json.dumps(result).encode("utf-8")
-            # topic 'bhajan.track' so frontend can subscribe specifically
-            context.room.local_participant.publish_data(data_bytes, reliable=True, topic="bhajan.track")
+            # Use session.room from RunContext; older SDKs may not support 'topic'
+            local_participant = context.session.room.local_participant  # type: ignore[attr-defined]
+            try:
+                local_participant.publish_data(data_bytes, reliable=True, topic="bhajan.track")
+            except TypeError:
+                # Fallback without topic for older client versions
+                local_participant.publish_data(data_bytes, reliable=True)
+            except Exception as e:
+                logger.warning(f"Data publish error (with topic): {e}")
         except Exception as e:
             logger.warning(f"Failed to publish bhajan data message: {e}")
         # Speak only a friendly confirmation, without any URLs/JSON

@@ -47,10 +47,15 @@ export function BhajanPlayer() {
   // Prefer structured events over text parsing: listen for bhajan.track data messages
   useEffect(() => {
     const onData = (payload: Uint8Array, _participant: unknown, _kind: unknown, topic?: string) => {
-      if (topic !== 'bhajan.track') return;
       try {
         const text = new TextDecoder().decode(payload);
+        // Only handle our topic when provided, but also accept older clients without topic
+        if (topic && topic !== 'bhajan.track') return;
+
         const parsed = JSON.parse(text) as { url?: string; name?: string; artist?: string; spotify_id?: string; external_url?: string };
+        // Guard: ensure it looks like a bhajan payload
+        if (!parsed || (!parsed.url && !parsed.spotify_id) || !parsed.name) return;
+
         const track: BhajanTrackInfo = {
           url: typeof parsed.url === 'string' ? parsed.url : undefined,
           name: typeof parsed.name === 'string' ? parsed.name : undefined,
@@ -58,10 +63,12 @@ export function BhajanPlayer() {
           spotify_id: typeof parsed.spotify_id === 'string' ? parsed.spotify_id : undefined,
           external_url: typeof parsed.external_url === 'string' ? parsed.external_url : undefined,
         };
+
+        console.log('[BhajanPlayer] Data event received', { topic, track });
         setCurrentTrack(track);
         setUseSpotify(!!track.spotify_id && isAuthenticated);
       } catch {
-        // Ignore malformed data messages
+        // Ignore non-JSON or unrelated messages
       }
     };
 
