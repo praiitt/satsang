@@ -72,12 +72,24 @@ export function BhajanPlayer() {
       kind: unknown,
       topic?: string
     ) => {
+      // Extract participant info if available
+      const participantInfo: Record<string, unknown> = {
+        hasParticipant: !!participant,
+      };
+      
+      if (participant && typeof participant === 'object') {
+        const p = participant as { identity?: string; isAgent?: boolean; name?: string };
+        participantInfo.identity = p.identity;
+        participantInfo.isAgent = p.isAgent;
+        participantInfo.name = p.name;
+      }
+      
       console.log('[BhajanPlayer] 🔵 DataReceived event fired', {
         payloadLength: payload.length,
         topic: topic || '(no topic)',
-        hasParticipant: !!participant,
         kind,
         roomState: room.state,
+        ...participantInfo,
       });
 
       try {
@@ -135,8 +147,23 @@ export function BhajanPlayer() {
     // Always register the listener - it will work even if room isn't connected yet
     // The SDK will buffer events until connection is established
     console.log('[BhajanPlayer] Registering DataReceived listener');
+    
+    // Test: Log all room events to verify event system is working
+    const testAllEvents = (event: unknown) => {
+      console.log('[BhajanPlayer] 🧪 Room event fired:', event);
+    };
+    room.on(RoomEvent.DataReceived, testAllEvents);
+    
+    // Register our specific handler
     room.on(RoomEvent.DataReceived, onData);
     console.log('[BhajanPlayer] ✅ DataReceived listener registered');
+    
+    // Log current remote participants to see if agent is present
+    console.log('[BhajanPlayer] Remote participants:', Array.from(room.remoteParticipants.values()).map(p => ({
+      identity: p.identity,
+      name: p.name,
+      isAgent: p.isAgent,
+    })));
 
     // Also listen for room state changes to log when connection happens
     const onStateChange = () => {
@@ -148,6 +175,7 @@ export function BhajanPlayer() {
     return () => {
       console.log('[BhajanPlayer] Cleaning up data channel listener');
       room.off(RoomEvent.DataReceived, onData);
+      room.off(RoomEvent.DataReceived, testAllEvents);
       room.off(RoomEvent.Connected, onStateChange);
       room.off(RoomEvent.Disconnected, onStateChange);
     };
