@@ -1,14 +1,15 @@
-import { headers } from 'next/headers';
-import { App } from '@/components/app/app';
-import { getAppConfig } from '@/lib/utils';
+// import { headers } from 'next/headers';
+// import { App } from '@/components/app/app';
+import { MaintenanceMode } from '@/components/app/maintenance-mode';
+
+// import { getAppConfig } from '@/lib/utils';
 
 export default async function Page() {
-  // TODO: TEMPORARY - Remove this return statement to restore normal home page
-  // TEMPORARILY DISABLED FOR LOCAL TESTING - Uncomment below to enable maintenance mode
-  // return <MaintenanceMode />;
+  // Maintenance mode is currently active - comment out the line below to restore normal home page
+  return <MaintenanceMode />;
 
-  // ORIGINAL CODE - Restored for local testing:
-  const hdrs = await headers();
-  const appConfig = await getAppConfig(hdrs);
-  return <App appConfig={appConfig} />;
+  // ORIGINAL CODE - Uncomment below to restore normal home page:
+  // const hdrs = await headers();
+  // const appConfig = await getAppConfig(hdrs);
+  // return <App appConfig={appConfig} />;
 }
