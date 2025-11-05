@@ -84,22 +84,32 @@ async def _get_spotify_token() -> Optional[str]:
         return None
 
 
-async def _search_spotify(query: str, token: str, limit: int = 10) -> Optional[Dict]:
+async def _search_spotify(query: str, token: str, limit: int = 10, market: str = "IN", add_keywords: bool = True) -> Optional[Dict]:
     """
     Search Spotify for tracks matching the query.
+    
+    Args:
+        query: Search query string
+        token: Spotify API access token
+        limit: Maximum number of results (default: 10)
+        market: Market code for regional results (default: "IN")
+        add_keywords: Whether to add "bhajan devotional" keywords (default: True)
     
     Returns the search API response or None on error.
     """
     normalized = normalize_query(query)
-    # Add devotional/spiritual keywords to improve results
-    search_query = f"{normalized} bhajan devotional"
+    # Add devotional/spiritual keywords to improve results (unless disabled)
+    if add_keywords:
+        search_query = f"{normalized} bhajan devotional"
+    else:
+        search_query = normalized
     
     url = f"{SPOTIFY_API_BASE}/search"
     params = {
         "q": search_query,
         "type": "track",
         "limit": limit,
-        "market": "IN",  # Indian market for better bhajan coverage
+        "market": market,  # Market parameter for better results
     }
     
     headers = {
@@ -133,7 +143,8 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
     """
     Find best-matching Spotify track and return a dict with preview_url/title/artist.
     
-    Returns None if no track found or preview URL not available.
+    Prioritizes tracks with preview URLs to enable playback without Spotify authentication.
+    Returns None if no track found.
     """
     token = await _get_spotify_token()
     if not token:
@@ -141,7 +152,9 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
         return None
     
     logger.info(f"Spotify search for bhajan: '{query}'")
-    search_result = await _search_spotify(query, token, limit=20)  # Try more tracks
+    
+    # Strategy 1: Search with "bhajan devotional" keywords (more results)
+    search_result = await _search_spotify(query, token, limit=50, market="IN")  # Try many tracks
     
     if not search_result:
         return None
@@ -153,12 +166,11 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
     
     logger.info(f"Found {len(tracks)} tracks on Spotify for '{query}'")
     
-    # Try multiple search strategies
-    # Strategy 1: Find first track with a preview URL
+    # PRIORITY: Find first track with a preview URL (enables playback without auth)
     for track in tracks:
         preview_url = track.get("preview_url")
         if preview_url:
-            # Preview URLs are direct MP3 URLs that can be played
+            # Preview URLs are direct MP3 URLs that can be played without authentication
             track_name = track.get("name", query)
             artists = track.get("artists", [])
             artist_names = ", ".join([a.get("name", "") for a in artists])
@@ -172,12 +184,12 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
                 "external_url": track.get("external_urls", {}).get("spotify"),
             }
     
-    # Strategy 2: If no preview URL, try searching with different terms
-    # Try without "bhajan devotional" suffix
+    # Strategy 2: Try searching without "bhajan devotional" suffix (broader search)
+    normalized = normalize_query(query)
     if "bhajan" in query.lower() or "devotional" in query.lower():
-        normalized = normalize_query(query)
         logger.info(f"Retrying search without 'bhajan' keyword: '{normalized}'")
-        search_result2 = await _search_spotify(normalized, token, limit=20)
+        # Search without adding "bhajan devotional" keywords
+        search_result2 = await _search_spotify(normalized, token, limit=50, market="IN", add_keywords=False)
         if search_result2:
             tracks2 = search_result2.get("tracks", {}).get("items", [])
             for track in tracks2:
@@ -195,8 +207,29 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
                         "external_url": track.get("external_urls", {}).get("spotify"),
                     }
     
-    # Strategy 3: If no preview URL, return the first track with Spotify ID for SDK playback
-    # This allows the frontend to use Spotify Web Playback SDK
+    # Strategy 3: Try different markets (US, GB) as some tracks have previews in other markets
+    for market in ["US", "GB"]:
+        logger.info(f"Trying search in market '{market}' for '{query}'")
+        search_result_market = await _search_spotify(query, token, limit=20, market=market)
+        if search_result_market:
+            tracks_market = search_result_market.get("tracks", {}).get("items", [])
+            for track in tracks_market:
+                preview_url = track.get("preview_url")
+                if preview_url:
+                    track_name = track.get("name", query)
+                    artists = track.get("artists", [])
+                    artist_names = ", ".join([a.get("name", "") for a in artists])
+                    logger.info(f"Found Spotify track with preview (market {market}): '{track_name}' by {artist_names}")
+                    return {
+                        "name_en": track_name,
+                        "artist": artist_names,
+                        "preview_url": preview_url,
+                        "spotify_id": track.get("id"),
+                        "external_url": track.get("external_urls", {}).get("spotify"),
+                    }
+    
+    # Strategy 4: If no preview URL found after all searches, return best match with spotify_id
+    # This requires Spotify authentication for playback (last resort)
     if tracks:
         track = tracks[0]  # Use the first/best match
         track_name = track.get("name", query)
@@ -206,18 +239,21 @@ async def find_bhajan_by_name_async(query: str) -> Optional[Dict]:
         external_url = track.get("external_urls", {}).get("spotify")
         
         if spotify_id:
-            logger.info(f"Found Spotify track (no preview, using SDK): '{track_name}' by {artist_names} (ID: {spotify_id})")
+            logger.warning(
+                f"Found Spotify track but NO PREVIEW URL available: '{track_name}' by {artist_names} (ID: {spotify_id}). "
+                "Playback will require Spotify authentication."
+            )
             return {
                 "name_en": track_name,
                 "artist": artist_names,
-                "preview_url": None,  # No preview available
+                "preview_url": None,  # No preview available - requires Spotify auth
                 "spotify_id": spotify_id,
                 "external_url": external_url,
             }
     
     # Log what we found for debugging
     found_tracks = [f"{t.get('name', 'N/A')} by {', '.join([a.get('name', '') for a in t.get('artists', [])])}" for t in tracks[:3]]
-    logger.warning(f"No tracks found for '{query}'. Found tracks: {', '.join(found_tracks)}")
+    logger.warning(f"No suitable tracks found for '{query}'. Found tracks: {', '.join(found_tracks)}")
     return None
 
 

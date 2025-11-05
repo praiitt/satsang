@@ -313,6 +313,13 @@ Always end with a question or invitation to continue the conversation when natur
         }
         
         logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}")
+        # Also emit structured data over LiveKit data channel for reliable frontend handling
+        try:
+            data_bytes = json.dumps(result).encode("utf-8")
+            # topic 'bhajan.track' so frontend can subscribe specifically
+            context.room.local_participant.publish_data(data_bytes, reliable=True, topic="bhajan.track")
+        except Exception as e:
+            logger.warning(f"Failed to publish bhajan data message: {e}")
         return json.dumps(result)
 
 

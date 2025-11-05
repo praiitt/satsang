@@ -16,7 +16,13 @@ const SPOTIFY_SCOPES = [
 
 export async function GET() {
   if (!SPOTIFY_CLIENT_ID) {
-    return NextResponse.json({ error: 'Spotify Client ID not configured' }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Spotify Client ID not configured',
+        message: 'Please set SPOTIFY_CLIENT_ID in your .env.local file',
+      },
+      { status: 500 }
+    );
   }
 
   // Generate state for CSRF protection

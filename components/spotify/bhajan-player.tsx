@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useChatMessages } from '@/hooks/useChatMessages';
+import { useRoomContext } from '@livekit/components-react';
+import { RoomEvent } from 'livekit-client';
 import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 
 interface BhajanTrackInfo {
@@ -21,11 +23,13 @@ interface BhajanTrackInfo {
  */
 export function BhajanPlayer() {
   const messages = useChatMessages();
+  const room = useRoomContext();
   const [currentTrack, setCurrentTrack] = useState<BhajanTrackInfo | null>(null);
   const [useSpotify, setUseSpotify] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastProcessedMessageRef = useRef<string>('');
+  const messageTimeoutsRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
   // Spotify player hook
   const {
@@ -38,6 +42,33 @@ export function BhajanPlayer() {
     pause,
     resume,
   } = useSpotifyPlayer();
+
+  // Prefer structured events over text parsing: listen for bhajan.track data messages
+  useEffect(() => {
+    const onData = (payload: Uint8Array, _participant: unknown, _kind: unknown, topic?: string) => {
+      if (topic !== 'bhajan.track') return;
+      try {
+        const text = new TextDecoder().decode(payload);
+        const parsed = JSON.parse(text) as { url?: string; name?: string; artist?: string; spotify_id?: string; external_url?: string };
+        const track: BhajanTrackInfo = {
+          url: typeof parsed.url === 'string' ? parsed.url : undefined,
+          name: typeof parsed.name === 'string' ? parsed.name : undefined,
+          artist: typeof parsed.artist === 'string' ? parsed.artist : undefined,
+          spotify_id: typeof parsed.spotify_id === 'string' ? parsed.spotify_id : undefined,
+          external_url: typeof parsed.external_url === 'string' ? parsed.external_url : undefined,
+        };
+        setCurrentTrack(track);
+        setUseSpotify(!!track.spotify_id && isAuthenticated);
+      } catch {
+        // Ignore malformed data messages
+      }
+    };
+
+    room.on(RoomEvent.DataReceived, onData);
+    return () => {
+      room.off(RoomEvent.DataReceived, onData);
+    };
+  }, [room, isAuthenticated]);
 
   // Parse agent messages for bhajan playback info
   useEffect(() => {
@@ -54,18 +85,61 @@ export function BhajanPlayer() {
       return;
     }
 
-    // Try to parse as JSON first, but only if message looks like it contains bhajan data
-    let trackInfo: BhajanTrackInfo | null = null;
-    let parsedJson: Record<string, unknown> | null = null;
-
     const messageText = latestMessage.message.trim();
 
-    // Debug: Log all agent messages to help diagnose
-    console.log('[BhajanPlayer] Agent message received:', {
-      id: latestMessage.id,
-      message: messageText.substring(0, 100), // First 100 chars
-      fullLength: messageText.length,
-    });
+    // Check if message is still streaming
+    // 1. Check if JSON braces are balanced (complete JSON)
+    // 2. Check for streaming indicators
+    const openBraces = (messageText.match(/{/g) || []).length;
+    const closeBraces = (messageText.match(/}/g) || []).length;
+    const hasIncompleteJson = messageText.includes('{') && openBraces > closeBraces;
+    const hasStreamingIndicator = messageText.endsWith('...') || messageText.endsWith('…');
+    
+    // If message appears incomplete, wait a bit for it to complete
+    if (hasIncompleteJson || hasStreamingIndicator) {
+      // Clear any existing timeout for this message
+      const existingTimeout = messageTimeoutsRef.current.get(latestMessage.id);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      // Set a timeout to check again after message completes (wait 2 seconds of no updates)
+      const timeout = setTimeout(() => {
+        // Re-check if message has completed
+        const updatedMessages = messages.filter((m) => m.from?.isAgent);
+        const updatedMessage = updatedMessages[updatedMessages.length - 1];
+        if (updatedMessage && updatedMessage.id === latestMessage.id) {
+          // Message hasn't changed, process it now
+          processMessage(updatedMessage);
+        }
+        messageTimeoutsRef.current.delete(latestMessage.id);
+      }, 2000); // Wait 2 seconds for message to complete
+
+      messageTimeoutsRef.current.set(latestMessage.id, timeout);
+      console.log('[BhajanPlayer] Message appears incomplete, waiting for completion...', {
+        id: latestMessage.id,
+        hasIncompleteJson,
+        hasStreamingIndicator,
+      });
+      return;
+    }
+
+    // Message appears complete, process it immediately
+    processMessage(latestMessage);
+
+    function processMessage(message: typeof latestMessage) {
+      // Try to parse as JSON first, but only if message looks like it contains bhajan data
+      let trackInfo: BhajanTrackInfo | null = null;
+      let parsedJson: Record<string, unknown> | null = null;
+
+      const messageText = message.message.trim();
+
+      // Debug: Log all agent messages to help diagnose
+      console.log('[BhajanPlayer] Agent message received:', {
+        id: message.id,
+        message: messageText.substring(0, 100), // First 100 chars
+        fullLength: messageText.length,
+      });
 
     // Skip if message doesn't look like it contains bhajan data
     // Check for: JSON braces, Spotify URLs, or keywords like "bhajan", "playing", "बज रहा"
@@ -97,52 +171,83 @@ export function BhajanPlayer() {
       }
     }
 
-    // If we didn't find JSON at end, try parsing entire message or extracting from middle
+    // If we didn't find JSON at end, try to find JSON anywhere in the message
+    // The JSON might be in the middle if the agent continues speaking after it
     if (!parsedJson) {
-      try {
-        // Try to parse the entire message as JSON
-        parsedJson = JSON.parse(messageText) as Record<string, unknown>;
-      } catch {
-        // Not pure JSON, try to extract JSON from the message
-        // The LLM might wrap the JSON in text like "भजन बज रहा है। {...json...}"
-        // Try to find complete JSON objects (not just fragments)
-        // Look for {...} that contains bhajan-related fields
-        const jsonPatterns = [
-          /\{[^{}]*"url"[^{}]*"name"[^{}]*\}/, // JSON with url and name
-          /\{[^{}]*"spotify_id"[^{}]*"name"[^{}]*\}/, // JSON with spotify_id and name
-          /\{[^{}]*"url"[^{}]*"spotify_id"[^{}]*\}/, // JSON with both url and spotify_id
-          /\{[^{}]*"url"[^{}]*\}/, // JSON with just url
-          /\{[^{}]*"spotify_id"[^{}]*\}/, // JSON with just spotify_id
-        ];
+      // Find all potential JSON start positions (opening braces)
+      const jsonStartIndices: number[] = [];
+      for (let i = 0; i < messageText.length; i++) {
+        if (messageText[i] === '{') {
+          jsonStartIndices.push(i);
+        }
+      }
 
-        for (const pattern of jsonPatterns) {
-          const matches = messageText.match(pattern);
-          if (matches) {
-            // Try to find the complete JSON object by looking for matching braces
-            const startIndex = messageText.indexOf(matches[0]);
-            if (startIndex !== -1) {
-              // Try to find the complete JSON object
-              let braceCount = 0;
-              let jsonEnd = startIndex;
-              for (let i = startIndex; i < messageText.length; i++) {
-                if (messageText[i] === '{') braceCount++;
-                if (messageText[i] === '}') braceCount--;
-                if (braceCount === 0) {
-                  jsonEnd = i + 1;
-                  break;
-                }
-              }
-              const jsonCandidate = messageText.substring(startIndex, jsonEnd);
-              try {
-                parsedJson = JSON.parse(jsonCandidate) as Record<string, unknown>;
-                console.log('[BhajanPlayer] Extracted JSON from text:', jsonCandidate);
+      // Try to parse each potential JSON object
+      for (const startIndex of jsonStartIndices) {
+        let braceCount = 0;
+        let inString = false;
+        let escapeNext = false;
+        let jsonEnd = -1;
+
+        // Find the matching closing brace, handling escaped quotes and nested braces
+        for (let i = startIndex; i < messageText.length; i++) {
+          const char = messageText[i];
+          
+          if (escapeNext) {
+            escapeNext = false;
+            continue;
+          }
+          
+          if (char === '\\') {
+            escapeNext = true;
+            continue;
+          }
+          
+          if (char === '"' && !escapeNext) {
+            inString = !inString;
+            continue;
+          }
+          
+          if (!inString) {
+            if (char === '{') braceCount++;
+            if (char === '}') {
+              braceCount--;
+              if (braceCount === 0) {
+                jsonEnd = i + 1;
                 break;
-              } catch {
-                // Try next pattern
               }
             }
           }
         }
+
+        if (jsonEnd > startIndex) {
+          const jsonCandidate = messageText.substring(startIndex, jsonEnd);
+          try {
+            const candidate = JSON.parse(jsonCandidate) as Record<string, unknown>;
+            // Verify it looks like a bhajan response (has name, spotify_id, or url)
+            if (
+              candidate.name ||
+              candidate.spotify_id ||
+              candidate.url ||
+              candidate.preview_url
+            ) {
+              parsedJson = candidate;
+              console.log('[BhajanPlayer] Extracted JSON from message:', jsonCandidate);
+              break;
+            }
+          } catch {
+            // Invalid JSON, try next candidate
+          }
+        }
+      }
+    }
+
+    // If still no JSON found, try parsing entire message as JSON
+    if (!parsedJson) {
+      try {
+        parsedJson = JSON.parse(messageText) as Record<string, unknown>;
+      } catch {
+        // Not pure JSON, that's okay
       }
     }
 
@@ -231,7 +336,7 @@ export function BhajanPlayer() {
       });
 
       setCurrentTrack(trackInfo);
-      lastProcessedMessageRef.current = latestMessage.id;
+      lastProcessedMessageRef.current = message.id;
 
       // Determine if we should use Spotify SDK
       // Priority: Spotify SDK (if authenticated and spotify_id available) > Preview URL
@@ -297,6 +402,16 @@ export function BhajanPlayer() {
     } else {
       console.log('[BhajanPlayer] No track info extracted from message');
     }
+
+    // Mark message as processed
+    lastProcessedMessageRef.current = message.id;
+    }
+
+    // Cleanup timeouts on unmount
+    return () => {
+      messageTimeoutsRef.current.forEach((timeout) => clearTimeout(timeout));
+      messageTimeoutsRef.current.clear();
+    };
   }, [messages, isAuthenticated, isReady, useSpotify, connect]);
 
   // Auto-connect to Spotify when authenticated
