@@ -78,8 +78,23 @@ def _load_bhajan_search():
 logger = logging.getLogger("agent")
 
 # Load .env.local from the project root regardless of current working directory
-_ENV_PATH = (Path(__file__).resolve().parent.parent / ".env.local")
-load_dotenv(str(_ENV_PATH))
+# Try multiple paths to ensure we find it even when run from different contexts
+_ENV_PATHS = [
+    Path(__file__).resolve().parent.parent / ".env.local",  # Standard location
+    Path.cwd() / ".env.local",  # Current working directory
+    Path("/home/underlitigationcom/satsang/livekit_server/agent-starter-python/.env.local"),  # Absolute path for production
+]
+_ENV_LOADED = False
+for _env_path in _ENV_PATHS:
+    if _env_path.exists():
+        load_dotenv(str(_env_path), override=True)
+        logger.info(f"Loaded .env.local from: {_env_path}")
+        _ENV_LOADED = True
+        break
+
+if not _ENV_LOADED:
+    logger.warning("⚠️  .env.local not found in any expected location. Environment variables may not be loaded correctly.")
+    logger.warning(f"Searched in: {[str(p) for p in _ENV_PATHS]}")
 
 
 class Assistant(Agent):
@@ -306,6 +321,33 @@ async def entrypoint(ctx: JobContext):
         "room": ctx.room.name,
     }
 
+    # Verify environment variables are loaded
+    logger.info("="*60)
+    logger.info("ENTRYPOINT: Starting agent initialization")
+    logger.info("="*60)
+    
+    # Check critical environment variables
+    openai_key = os.getenv("OPENAI_API_KEY")
+    cartesia_key = os.getenv("CARTESIA_API_KEY")
+    stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
+    sarvam_key = os.getenv("SARVAM_API_KEY") if stt_model == "sarvam" else None
+    
+    logger.info(f"Environment check:")
+    logger.info(f"  OPENAI_API_KEY: {'SET' if openai_key else 'MISSING'}")
+    logger.info(f"  CARTESIA_API_KEY: {'SET' if cartesia_key else 'MISSING'}")
+    logger.info(f"  STT_MODEL: {stt_model}")
+    if stt_model == "sarvam":
+        logger.info(f"  SARVAM_API_KEY: {'SET' if sarvam_key else 'MISSING'}")
+    
+    if not openai_key:
+        logger.error("❌ OPENAI_API_KEY is missing! Agent will fail to initialize.")
+        raise RuntimeError("OPENAI_API_KEY environment variable is required")
+    if not cartesia_key:
+        logger.error("❌ CARTESIA_API_KEY is missing! Agent will fail to initialize.")
+        raise RuntimeError("CARTESIA_API_KEY environment variable is required")
+    if stt_model == "sarvam" and not sarvam_key:
+        logger.warning("⚠️  SARVAM_API_KEY is missing but STT_MODEL=sarvam. Will fall back to AssemblyAI.")
+    
     # Set up a voice AI pipeline using OpenAI, Cartesia, AssemblyAI, and the LiveKit turn detector
     
     # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
@@ -330,24 +372,39 @@ async def entrypoint(ctx: JobContext):
     # Example: STT_MODEL=sarvam (RECOMMENDED for Hindi)
     #
     # See all available models at https://docs.livekit.io/agents/models/stt/
-    stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
-    logger.info(f"Using STT model: {stt_model} for Hindi language recognition")
+    logger.info(f"Initializing STT with model: {stt_model} for Hindi language recognition")
     
     # Configure STT with Hindi language and optimized settings for better accuracy
     # Priority: Sarvam (best for Hindi) > Deepgram > AssemblyAI
     
     if stt_model == "sarvam" or stt_model.startswith("sarvam"):
         # Sarvam is specifically designed for Indian languages - BEST choice for Hindi
+        logger.info("Attempting to initialize Sarvam STT...")
         try:
             # Try using Sarvam STT plugin if installed
             from livekit.plugins import sarvam as sarvam_plugin
+            logger.info("Sarvam plugin imported successfully")
+            
+            if not sarvam_key:
+                logger.warning("SARVAM_API_KEY not set - Sarvam STT may fail. Falling back to AssemblyAI.")
+                raise ValueError("SARVAM_API_KEY not set")
+            
+            logger.info("Creating Sarvam STT instance...")
             stt = sarvam_plugin.STT(
                 language="hi",
             )
-            logger.info("Using Sarvam STT - BEST for Hindi/Indian languages!")
-        except ImportError:
-            logger.warning("Sarvam plugin not installed. Install with: pip install 'livekit-agents[sarvam]~=1.2'")
+            logger.info("✅ Using Sarvam STT - BEST for Hindi/Indian languages!")
+        except ImportError as e:
+            logger.error(f"❌ Sarvam plugin not installed: {e}")
+            logger.warning("Install with: pip install 'livekit-agents[sarvam]~=1.2'")
             logger.warning("Falling back to AssemblyAI. For better Hindi accuracy, install Sarvam!")
+            stt = inference.STT(
+                model="assemblyai/universal-streaming",
+                language="hi",
+            )
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
+            logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
             stt = inference.STT(
                 model="assemblyai/universal-streaming",
                 language="hi",
