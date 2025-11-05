@@ -88,15 +88,17 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
     <>
       {/* Mobile bottom sheet */}
       <div
-        className="fixed inset-0 z-50 bg-background/60 backdrop-blur-sm md:hidden"
+        className="bg-background/60 fixed inset-0 z-50 backdrop-blur-sm md:hidden"
         onClick={onClose}
       />
-      <div className="fixed right-0 bottom-0 left-0 z-50 rounded-t-2xl bg-card border-t border-border p-4 shadow-2xl md:hidden">
+      <div className="bg-card border-border fixed right-0 bottom-0 left-0 z-50 rounded-t-2xl border-t p-4 shadow-2xl md:hidden">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-foreground">प्रतिभागी ({allParticipants.length})</h3>
+          <h3 className="text-foreground text-sm font-bold">
+            प्रतिभागी ({allParticipants.length})
+          </h3>
           <button
             aria-label="प्रतिभागी सूची बंद करें"
-            className="rounded-lg bg-muted px-3 py-1 text-xs font-semibold text-foreground hover:bg-muted/80 transition-colors"
+            className="bg-muted text-foreground hover:bg-muted/80 rounded-lg px-3 py-1 text-xs font-semibold transition-colors"
             onClick={onClose}
           >
             बंद करें
@@ -104,22 +106,25 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
         </div>
         <div className="max-h-72 space-y-2 overflow-y-auto">
           {allParticipants.map((participant) => {
-            const isAgent = participant.identity.includes('agent') || participant.identity.includes('guruji');
+            const isAgent =
+              participant.identity.includes('agent') || participant.identity.includes('guruji');
             return (
               <div
                 key={participant.identity}
-                className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border p-2"
+                className="bg-muted/50 border-border flex items-center gap-2 rounded-lg border p-2"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                   {participant.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground flex items-center gap-1">
+                  <p className="text-foreground flex items-center gap-1 truncate text-sm font-medium">
                     {isAgent && <span>🙏</span>}
                     <span>{participant.name}</span>
-                    {participant.isLocal && <span className="ml-1 text-xs text-muted-foreground">(आप)</span>}
+                    {participant.isLocal && (
+                      <span className="text-muted-foreground ml-1 text-xs">(आप)</span>
+                    )}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-xs">
                     {participant.hasVideo && <span>📹</span>}
                     {participant.hasAudio && <span>🎤</span>}
                     {!participant.hasVideo && !participant.hasAudio && (
@@ -134,29 +139,34 @@ export function ParticipantList({ room, isOpen = true, onClose }: ParticipantLis
       </div>
 
       {/* Desktop floating panel */}
-      <div className="fixed top-4 right-4 z-40 hidden max-w-xs rounded-xl bg-card border border-border p-4 shadow-2xl md:block">
+      <div className="bg-card border-border fixed top-4 right-4 z-40 hidden max-w-xs rounded-xl border p-4 shadow-2xl md:block">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-foreground">प्रतिभागी ({allParticipants.length})</h3>
-          <span className="text-xs text-muted-foreground">कक्ष: {room.name}</span>
+          <h3 className="text-foreground text-sm font-bold">
+            प्रतिभागी ({allParticipants.length})
+          </h3>
+          <span className="text-muted-foreground text-xs">कक्ष: {room.name}</span>
         </div>
         <div className="max-h-60 space-y-2 overflow-y-auto">
           {allParticipants.map((participant) => {
-            const isAgent = participant.identity.includes('agent') || participant.identity.includes('guruji');
+            const isAgent =
+              participant.identity.includes('agent') || participant.identity.includes('guruji');
             return (
               <div
                 key={participant.identity}
-                className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border p-2"
+                className="bg-muted/50 border-border flex items-center gap-2 rounded-lg border p-2"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold">
                   {participant.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground flex items-center gap-1">
+                  <p className="text-foreground flex items-center gap-1 truncate text-sm font-medium">
                     {isAgent && <span>🙏</span>}
                     <span>{participant.name}</span>
-                    {participant.isLocal && <span className="ml-1 text-xs text-muted-foreground">(आप)</span>}
+                    {participant.isLocal && (
+                      <span className="text-muted-foreground ml-1 text-xs">(आप)</span>
+                    )}
                   </p>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="text-muted-foreground flex items-center gap-2 text-xs">
                     {participant.hasVideo && <span>📹</span>}
                     {participant.hasAudio && <span>🎤</span>}
                     {!participant.hasVideo && !participant.hasAudio && (

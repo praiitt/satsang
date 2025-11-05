@@ -127,20 +127,20 @@ export function LiveSatsangApp() {
   };
 
   return (
-    <div className="fixed inset-0 h-screen w-screen overflow-hidden bg-background">
+    <div className="bg-background fixed inset-0 h-screen w-screen overflow-hidden">
       {!isConnected ? (
         <LiveSatsangJoinForm onJoin={handleJoin} />
       ) : room ? (
         <RoomContext.Provider value={room}>
-          <div className="flex h-full flex-col overflow-hidden bg-background">
+          <div className="bg-background flex h-full flex-col overflow-hidden">
             {/* Top header */}
             <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-3 sm:p-4">
-              <div className="pointer-events-auto rounded-full border border-border bg-card/90 px-4 py-2 text-sm font-semibold text-card-foreground shadow-lg backdrop-blur-md">
+              <div className="border-border bg-card/90 text-card-foreground pointer-events-auto rounded-full border px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur-md">
                 लाइव सत्संग
               </div>
               <button
                 onClick={() => setShowParticipants((v) => !v)}
-                className="pointer-events-auto rounded-full border border-border bg-card/90 px-4 py-2 text-sm font-semibold text-card-foreground shadow-lg backdrop-blur-md hover:bg-card active:scale-95 transition-colors"
+                className="border-border bg-card/90 text-card-foreground hover:bg-card pointer-events-auto rounded-full border px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur-md transition-colors active:scale-95"
                 aria-label="Toggle participants"
               >
                 👥 प्रतिभागी
