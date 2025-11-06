@@ -173,29 +173,25 @@ export function LiveSatsangControls({
 
         {/* Controls Row - always last, closest to the bottom edge */}
         <div className="flex items-center justify-center gap-3 sm:gap-4">
-          <ControlBar className="flex items-center gap-3 sm:gap-4">
-            <div className="border-border bg-muted/50 flex items-center gap-2 rounded-xl border p-1.5 sm:gap-3">
+          <ControlBar className="w-full">
+            <div className="grid w-full grid-cols-4 items-center justify-items-center gap-3 sm:gap-4">
               <TrackToggle
                 source={Track.Source.Microphone}
-                className="h-11 w-11 rounded-lg sm:h-12 sm:w-12"
+                className="border-border bg-muted/50 hover:bg-muted h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
               />
               <TrackToggle
                 source={Track.Source.Camera}
-                className="h-11 w-11 rounded-lg sm:h-12 sm:w-12"
+                className="border-border bg-muted/50 hover:bg-muted h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
+              />
+              <TrackToggle
+                source={Track.Source.ScreenShare}
+                className="border-border bg-muted/50 hover:bg-muted h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
+              />
+              <DisconnectButton
+                onClick={onLeave}
+                className="border-destructive/50 bg-destructive/30 hover:bg-destructive/40 h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
               />
             </div>
-            <MediaDeviceMenu
-              kind="audioinput"
-              className="border-border bg-muted/50 hover:bg-muted h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
-            />
-            <MediaDeviceMenu
-              kind="videoinput"
-              className="border-border bg-muted/50 hover:bg-muted h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
-            />
-            <DisconnectButton
-              onClick={onLeave}
-              className="border-destructive/50 bg-destructive/30 hover:bg-destructive/40 h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
-            />
           </ControlBar>
         </div>
       </div>
