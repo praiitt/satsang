@@ -44,3 +44,9 @@ next-env.d.ts
 # PM2 logs
 logs/
 ecosystem.config.cjs.bak
+
+# Python virtual environments
+venv/
+.venv/
+env/
+.env/
