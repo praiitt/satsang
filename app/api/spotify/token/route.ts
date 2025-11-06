@@ -1,9 +1,12 @@
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 // Get Spotify access token from cookies, auto-refresh if needed
 export async function GET() {
   const cookieStore = await cookies();
+  const reqHeaders = await headers();
+  const userAgent = reqHeaders.get('user-agent') || '';
+  const secFetchSite = reqHeaders.get('sec-fetch-site') || '';
   let accessToken = cookieStore.get('spotify_access_token')?.value;
 
   // If access token exists, return it
@@ -13,19 +16,12 @@ export async function GET() {
 
   // If no access token, try to refresh using refresh token
   let refreshToken = cookieStore.get('spotify_refresh_token')?.value;
-  // Fallback: allow app-level refresh token from env (service-style)
-  if (!refreshToken) {
+  // IMPORTANT: For browser (same-origin) requests, do NOT fall back to env
+  // Using an env refresh token can create a different-user device, causing 404
+  const isBrowser = userAgent.includes('Mozilla') || secFetchSite === 'same-origin';
+  if (!refreshToken && !isBrowser) {
+    // Allow env-based fallback only for server-side/non-browser usages
     refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
-    if (refreshToken) {
-      // Optionally set it as a cookie to simplify subsequent requests
-      // Do not set very long expiry here; leave it session-scoped
-      const tmp = NextResponse.next();
-      tmp.cookies.set('spotify_refresh_token', refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-      });
-    }
   }
   if (!refreshToken) {
     return NextResponse.json({ error: 'Not authenticated with Spotify' }, { status: 401 });
@@ -86,9 +82,13 @@ export async function GET() {
 // Refresh token endpoint
 export async function POST() {
   const cookieStore = await cookies();
+  const reqHeaders = await headers();
+  const userAgent = reqHeaders.get('user-agent') || '';
+  const secFetchSite = reqHeaders.get('sec-fetch-site') || '';
+  const isBrowser = userAgent.includes('Mozilla') || secFetchSite === 'same-origin';
   let refreshToken = cookieStore.get('spotify_refresh_token')?.value;
-  if (!refreshToken) {
-    // Fallback to app-level refresh token if present
+  if (!refreshToken && !isBrowser) {
+    // Allow env fallback only for server-side requests
     refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
   }
 
