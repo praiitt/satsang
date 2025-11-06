@@ -128,7 +128,26 @@ export function BhajanPlayer() {
 
         console.log('[BhajanPlayer] ✅✅✅ Data event received - setting track', { topic, track });
         setCurrentTrack(track);
-        setUseSpotify(!!track.spotify_id && isAuthenticated);
+
+        // If we have spotify_id but no preview URL, we MUST use Spotify SDK
+        // Set useSpotify to true if we have spotify_id (even if not authenticated yet)
+        // We'll try to authenticate and then play
+        if (track.spotify_id && !track.url) {
+          // Only spotify_id available - must use Spotify SDK
+          setUseSpotify(true);
+          console.log(
+            '[BhajanPlayer] Track has spotify_id but no preview URL - will use Spotify SDK'
+          );
+        } else if (track.spotify_id && track.url) {
+          // Has both - use Spotify if authenticated, otherwise use preview
+          setUseSpotify(!!track.spotify_id && isAuthenticated);
+        } else if (track.url) {
+          // Only preview URL - use HTML5 audio
+          setUseSpotify(false);
+        } else {
+          // No playback options
+          setUseSpotify(false);
+        }
       } catch (error) {
         // Log errors for debugging
         console.error('[BhajanPlayer] ❌ Error processing data event:', error);
@@ -757,6 +776,22 @@ export function BhajanPlayer() {
 
     // Otherwise use HTML5 audio
     if (!audioRef.current) return;
+
+    // Check if we have a URL to play
+    if (!currentTrack?.url) {
+      console.warn('[BhajanPlayer] Cannot play: no URL available and Spotify not available');
+      // If we have spotify_id, try to authenticate and use Spotify
+      if (currentTrack?.spotify_id) {
+        console.log('[BhajanPlayer] Attempting to authenticate with Spotify...');
+        try {
+          await connect();
+          // After authentication, useSpotify will be set and we can retry
+        } catch (error) {
+          console.error('[BhajanPlayer] Failed to authenticate with Spotify:', error);
+        }
+      }
+      return;
+    }
 
     if (audioRef.current.paused) {
       audioRef.current.play().catch((error) => {

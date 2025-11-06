@@ -12,7 +12,21 @@ export async function GET() {
   }
 
   // If no access token, try to refresh using refresh token
-  const refreshToken = cookieStore.get('spotify_refresh_token')?.value;
+  let refreshToken = cookieStore.get('spotify_refresh_token')?.value;
+  // Fallback: allow app-level refresh token from env (service-style)
+  if (!refreshToken) {
+    refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
+    if (refreshToken) {
+      // Optionally set it as a cookie to simplify subsequent requests
+      // Do not set very long expiry here; leave it session-scoped
+      const tmp = NextResponse.next();
+      tmp.cookies.set('spotify_refresh_token', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+      });
+    }
+  }
   if (!refreshToken) {
     return NextResponse.json({ error: 'Not authenticated with Spotify' }, { status: 401 });
   }
@@ -72,7 +86,11 @@ export async function GET() {
 // Refresh token endpoint
 export async function POST() {
   const cookieStore = await cookies();
-  const refreshToken = cookieStore.get('spotify_refresh_token')?.value;
+  let refreshToken = cookieStore.get('spotify_refresh_token')?.value;
+  if (!refreshToken) {
+    // Fallback to app-level refresh token if present
+    refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
+  }
 
   if (!refreshToken) {
     return NextResponse.json({ error: 'No refresh token available' }, { status: 401 });
