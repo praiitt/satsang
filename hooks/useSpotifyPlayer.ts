@@ -256,6 +256,34 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     }
   }, []);
 
+  // Check Premium status
+  const checkPremiumStatus = useCallback(
+    async (token: string): Promise<boolean | null> => {
+      try {
+        const response = await fetch('https://api.spotify.com/v1/me', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          return null;
+        }
+
+        const userData = await response.json();
+        // Spotify API doesn't directly expose Premium status, but we can infer from product field
+        // product can be 'premium', 'free', 'open', 'unlimited'
+        const product = userData.product?.toLowerCase();
+        console.log('Spotify user product:', product);
+        return product === 'premium';
+      } catch (err) {
+        console.error('Error checking Premium status:', err);
+        return null;
+      }
+    },
+    []
+  );
+
   // Play track
   const playTrack = useCallback(
     async (trackId: string) => {
@@ -274,12 +302,9 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
       if (!currentDeviceId) {
         await connect();
         // Wait for device to be ready (with retries)
-        // Check playerRef.current.device_id or wait for state update
-        let retries = 5;
+        let retries = 10; // Increased retries
         while (!currentDeviceId && retries > 0) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
-          // Re-check deviceId from state (this will be updated by the ready event)
-          // We'll use a different approach - check if player is ready
           if (playerRef.current) {
             try {
               const state = await playerRef.current.getCurrentState();
@@ -306,11 +331,33 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
         return;
       }
 
-      try {
-        // Wait a bit for device to be fully ready
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      // Check Premium status
+      const isPremium = await checkPremiumStatus(token);
+      if (isPremium === false) {
+        setError('Spotify Premium is required for full track playback via Web Playback SDK.');
+        return;
+      }
 
-        // First, try to transfer to our device (optional - only if there's an active player)
+      try {
+        // Wait longer for device to be fully ready
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+
+        // Try using SDK's play method first (more reliable)
+        try {
+          console.log('Attempting to play via SDK play method...');
+          await playerRef.current!.play({
+            uris: [`spotify:track:${trackId}`],
+          });
+          console.log('Track playing successfully via SDK:', trackId);
+          setError(null);
+          return; // Success!
+        } catch (sdkError: any) {
+          console.warn('SDK play method failed, trying REST API:', sdkError);
+          // Fall through to REST API method
+        }
+
+        // Fallback: Use REST API
+        // First, try to transfer to our device (optional)
         try {
           const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
             method: 'PUT',
@@ -320,11 +367,10 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
             },
             body: JSON.stringify({
               device_ids: [currentDeviceId],
-              play: false, // Don't play yet, just transfer
+              play: false,
             }),
           });
 
-          // 404 is OK here - means no active player to transfer from
           if (transferResponse.status === 404) {
             console.log('No active player to transfer from, continuing with direct play');
           } else if (!transferResponse.ok && transferResponse.status !== 204) {
@@ -332,11 +378,10 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
             console.warn('Device transfer warning:', errorData);
           }
         } catch (transferErr) {
-          // Transfer is optional, continue with direct play
           console.warn('Device transfer failed (non-critical):', transferErr);
         }
 
-        // Play the track directly on our device
+        // Play the track directly on our device via REST API
         const playResponse = await fetch(
           `https://api.spotify.com/v1/me/player/play?device_id=${currentDeviceId}`,
           {
@@ -360,10 +405,9 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
               'Spotify Premium required. Web Playback SDK requires a Spotify Premium subscription.'
             );
           } else if (playResponse.status === 404) {
-            // Device might not be ready yet, try waiting a bit more
-            console.warn('Device not found, might need more time to initialize');
+            console.warn('Device not found via REST API, device might need more time');
             setError(
-              'Device not ready. Please ensure you have Spotify Premium and try again in a moment.'
+              'Device not ready. The Web Playback SDK device may need more time to initialize. Please try again in a moment.'
             );
           } else if (playResponse.status === 401) {
             setError('Authentication expired. Please reconnect to Spotify.');
@@ -373,19 +417,18 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
           throw new Error(errorMessage);
         }
 
-        console.log('Track playing successfully:', trackId);
+        console.log('Track playing successfully via REST API:', trackId);
         setError(null);
       } catch (err: any) {
         console.error('Error playing track:', err);
         if (!err.message || err.message === 'Failed to fetch') {
           setError('Network error. Please check your connection.');
         } else if (err.message && !err.message.includes('Spotify Premium')) {
-          // Don't override premium error message
           setError(err.message);
         }
       }
     },
-    [deviceId, connect, initializePlayer, getAccessToken]
+    [deviceId, connect, initializePlayer, getAccessToken, checkPremiumStatus]
   );
 
   // Pause
