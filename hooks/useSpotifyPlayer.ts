@@ -299,11 +299,22 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
 
       // Connect if not already connected
       let currentDeviceId = deviceId;
-      if (!currentDeviceId) {
-        await connect();
+      if (!currentDeviceId || !isReady) {
+        // Ensure player is connected
+        if (!playerRef.current) {
+          await initializePlayer();
+        }
+        if (playerRef.current) {
+          const connected = await playerRef.current.connect();
+          if (!connected) {
+            setError('Failed to connect to Spotify player');
+            return;
+          }
+        }
+
         // Wait for device to be ready (with retries)
-        let retries = 10; // Increased retries
-        while (!currentDeviceId && retries > 0) {
+        let retries = 15; // Increased retries (15 seconds)
+        while ((!currentDeviceId || !isReady) && retries > 0) {
           await new Promise((resolve) => setTimeout(resolve, 1000));
           if (playerRef.current) {
             try {
@@ -311,6 +322,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
               if (state?.device_id) {
                 currentDeviceId = state.device_id;
                 setDeviceId(state.device_id);
+                if (isReady) break;
               }
             } catch {
               // Not ready yet
@@ -323,6 +335,19 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
       if (!currentDeviceId) {
         setError('Spotify device not ready. Please wait a moment and try again.');
         return;
+      }
+
+      // Ensure player is still connected
+      if (playerRef.current) {
+        try {
+          const connected = await playerRef.current.connect();
+          if (!connected) {
+            console.warn('Player not connected, attempting to reconnect...');
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        } catch (connectErr) {
+          console.warn('Error checking connection:', connectErr);
+        }
       }
 
       const token = await getAccessToken();
@@ -339,12 +364,50 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
       }
 
       try {
-        // Wait for device to be fully registered with Spotify backend
-        // The device_id might be available, but Spotify backend needs time to register it
-        console.log('Waiting for device to be fully registered with Spotify...');
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        // First, verify the device is registered with Spotify by checking devices endpoint
+        console.log('Checking if device is registered with Spotify...');
+        let deviceRegistered = false;
+        let deviceCheckRetries = 10; // Check up to 10 times (10 seconds)
 
-        // Retry logic for playing track (device might not be ready immediately)
+        while (!deviceRegistered && deviceCheckRetries > 0) {
+          try {
+            const devicesResponse = await fetch('https://api.spotify.com/v1/me/player/devices', {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            if (devicesResponse.ok) {
+              const devicesData = await devicesResponse.json();
+              const devices = devicesData.devices || [];
+              const ourDevice = devices.find((d: any) => d.id === currentDeviceId);
+
+              if (ourDevice) {
+                console.log('✅ Device is registered with Spotify:', ourDevice.name);
+                deviceRegistered = true;
+                break;
+              } else {
+                console.log(
+                  `Device not found in Spotify devices list (${devices.length} devices found), waiting... (${deviceCheckRetries} checks left)`
+                );
+              }
+            }
+          } catch (checkErr) {
+            console.warn('Error checking devices:', checkErr);
+          }
+
+          deviceCheckRetries--;
+          if (!deviceRegistered && deviceCheckRetries > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          }
+        }
+
+        if (!deviceRegistered) {
+          console.warn('Device not found in Spotify devices list after waiting');
+          // Continue anyway - sometimes it works even if not in the list
+        }
+
+        // Retry logic for playing track
         let retries = 3;
         let lastError: Error | null = null;
 
