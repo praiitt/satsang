@@ -339,92 +339,118 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
       }
 
       try {
-        // Wait longer for device to be fully ready
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Wait for device to be fully registered with Spotify backend
+        // The device_id might be available, but Spotify backend needs time to register it
+        console.log('Waiting for device to be fully registered with Spotify...');
+        await new Promise((resolve) => setTimeout(resolve, 3000));
 
-        // Try using SDK's play method first (more reliable)
-        try {
-          console.log('Attempting to play via SDK play method...');
-          await playerRef.current!.play({
-            uris: [`spotify:track:${trackId}`],
-          });
-          console.log('Track playing successfully via SDK:', trackId);
-          setError(null);
-          return; // Success!
-        } catch (sdkError: any) {
-          console.warn('SDK play method failed, trying REST API:', sdkError);
-          // Fall through to REST API method
-        }
+        // Retry logic for playing track (device might not be ready immediately)
+        let retries = 3;
+        let lastError: Error | null = null;
 
-        // Fallback: Use REST API
-        // First, try to transfer to our device (optional)
-        try {
-          const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
-            method: 'PUT',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              device_ids: [currentDeviceId],
-              play: false,
-            }),
-          });
+        while (retries > 0) {
+          try {
+            // First, try to transfer to our device (optional - only if there's an active player)
+            try {
+              const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
+                method: 'PUT',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  device_ids: [currentDeviceId],
+                  play: false,
+                }),
+              });
 
-          if (transferResponse.status === 404) {
-            console.log('No active player to transfer from, continuing with direct play');
-          } else if (!transferResponse.ok && transferResponse.status !== 204) {
-            const errorData = await transferResponse.json().catch(() => ({}));
-            console.warn('Device transfer warning:', errorData);
-          }
-        } catch (transferErr) {
-          console.warn('Device transfer failed (non-critical):', transferErr);
-        }
+              if (transferResponse.status === 404) {
+                console.log('No active player to transfer from, continuing with direct play');
+              } else if (!transferResponse.ok && transferResponse.status !== 204) {
+                const errorData = await transferResponse.json().catch(() => ({}));
+                console.warn('Device transfer warning:', errorData);
+              }
+            } catch (transferErr) {
+              console.warn('Device transfer failed (non-critical):', transferErr);
+            }
 
-        // Play the track directly on our device via REST API
-        const playResponse = await fetch(
-          `https://api.spotify.com/v1/me/player/play?device_id=${currentDeviceId}`,
-          {
-            method: 'PUT',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              uris: [`spotify:track:${trackId}`],
-            }),
-          }
-        );
-
-        if (!playResponse.ok) {
-          const errorData = await playResponse.json().catch(() => ({}));
-          const errorMessage = errorData?.error?.message || 'Failed to play track';
-
-          if (playResponse.status === 403) {
-            setError(
-              'Spotify Premium required. Web Playback SDK requires a Spotify Premium subscription.'
+            // Play the track directly on our device via REST API
+            const playResponse = await fetch(
+              `https://api.spotify.com/v1/me/player/play?device_id=${currentDeviceId}`,
+              {
+                method: 'PUT',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  uris: [`spotify:track:${trackId}`],
+                }),
+              }
             );
-          } else if (playResponse.status === 404) {
-            console.warn('Device not found via REST API, device might need more time');
-            setError(
-              'Device not ready. The Web Playback SDK device may need more time to initialize. Please try again in a moment.'
-            );
-          } else if (playResponse.status === 401) {
-            setError('Authentication expired. Please reconnect to Spotify.');
-          } else {
-            setError(errorMessage || `Failed to play track (${playResponse.status})`);
+
+            if (playResponse.ok || playResponse.status === 204) {
+              console.log('Track playing successfully via REST API:', trackId);
+              setError(null);
+              return; // Success!
+            }
+
+            const errorData = await playResponse.json().catch(() => ({}));
+            const errorMessage = errorData?.error?.message || 'Failed to play track';
+
+            if (playResponse.status === 403) {
+              setError(
+                'Spotify Premium required. Web Playback SDK requires a Spotify Premium subscription.'
+              );
+              throw new Error(errorMessage);
+            } else if (playResponse.status === 404) {
+              // Device not ready yet, retry
+              console.warn(
+                `Device not found (attempt ${4 - retries}/3), waiting and retrying...`
+              );
+              lastError = new Error(errorMessage);
+              retries--;
+              if (retries > 0) {
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+                continue;
+              }
+            } else if (playResponse.status === 401) {
+              setError('Authentication expired. Please reconnect to Spotify.');
+              throw new Error(errorMessage);
+            } else {
+              setError(errorMessage || `Failed to play track (${playResponse.status})`);
+              throw new Error(errorMessage);
+            }
+          } catch (err: any) {
+            if (err.message && err.message.includes('Network')) {
+              throw err; // Don't retry network errors
+            }
+            lastError = err;
+            retries--;
+            if (retries > 0) {
+              console.warn(`Play attempt failed, retrying... (${retries} attempts left)`);
+              await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
           }
-          throw new Error(errorMessage);
         }
 
-        console.log('Track playing successfully via REST API:', trackId);
-        setError(null);
+        // All retries failed
+        if (lastError) {
+          console.error('All play attempts failed:', lastError);
+          setError(
+            'Device not ready after multiple attempts. The Web Playback SDK device may need more time to initialize. Please wait a moment and try requesting the bhajan again.'
+          );
+          throw lastError;
+        }
       } catch (err: any) {
         console.error('Error playing track:', err);
         if (!err.message || err.message === 'Failed to fetch') {
           setError('Network error. Please check your connection.');
         } else if (err.message && !err.message.includes('Spotify Premium')) {
-          setError(err.message);
+          // Don't override the error message if it's already set
+          if (!err.message.includes('Device not ready after multiple attempts')) {
+            setError(err.message);
+          }
         }
       }
     },
