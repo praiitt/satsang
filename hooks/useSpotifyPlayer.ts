@@ -307,25 +307,36 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
       }
 
       try {
-        // First, ensure device is active
-        const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
-          method: 'PUT',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            device_ids: [currentDeviceId],
-            play: true,
-          }),
-        });
+        // Wait a bit for device to be fully ready
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-        // If transfer fails, try direct play
-        if (!transferResponse.ok && transferResponse.status !== 204) {
-          console.warn('Device transfer failed, trying direct play');
+        // First, try to transfer to our device (optional - only if there's an active player)
+        try {
+          const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              device_ids: [currentDeviceId],
+              play: false, // Don't play yet, just transfer
+            }),
+          });
+
+          // 404 is OK here - means no active player to transfer from
+          if (transferResponse.status === 404) {
+            console.log('No active player to transfer from, continuing with direct play');
+          } else if (!transferResponse.ok && transferResponse.status !== 204) {
+            const errorData = await transferResponse.json().catch(() => ({}));
+            console.warn('Device transfer warning:', errorData);
+          }
+        } catch (transferErr) {
+          // Transfer is optional, continue with direct play
+          console.warn('Device transfer failed (non-critical):', transferErr);
         }
 
-        // Play the track
+        // Play the track directly on our device
         const playResponse = await fetch(
           `https://api.spotify.com/v1/me/player/play?device_id=${currentDeviceId}`,
           {
@@ -345,11 +356,19 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
           const errorMessage = errorData?.error?.message || 'Failed to play track';
 
           if (playResponse.status === 403) {
-            setError('Spotify Premium required for full track playback');
+            setError(
+              'Spotify Premium required. Web Playback SDK requires a Spotify Premium subscription.'
+            );
           } else if (playResponse.status === 404) {
-            setError('No active Spotify device found. Please open Spotify on another device.');
+            // Device might not be ready yet, try waiting a bit more
+            console.warn('Device not found, might need more time to initialize');
+            setError(
+              'Device not ready. Please ensure you have Spotify Premium and try again in a moment.'
+            );
+          } else if (playResponse.status === 401) {
+            setError('Authentication expired. Please reconnect to Spotify.');
           } else {
-            setError(errorMessage);
+            setError(errorMessage || `Failed to play track (${playResponse.status})`);
           }
           throw new Error(errorMessage);
         }
@@ -360,6 +379,9 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
         console.error('Error playing track:', err);
         if (!err.message || err.message === 'Failed to fetch') {
           setError('Network error. Please check your connection.');
+        } else if (err.message && !err.message.includes('Spotify Premium')) {
+          // Don't override premium error message
+          setError(err.message);
         }
       }
     },
