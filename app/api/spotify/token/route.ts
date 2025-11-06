@@ -19,8 +19,12 @@ export async function GET() {
   // IMPORTANT: For browser (same-origin) requests, do NOT fall back to env
   // Using an env refresh token can create a different-user device, causing 404
   const isBrowser = userAgent.includes('Mozilla') || secFetchSite === 'same-origin';
-  if (!refreshToken && !isBrowser) {
-    // Allow env-based fallback only for server-side/non-browser usages
+  const allowBrowserEnvFallback =
+    process.env.SPOTIFY_ALLOW_ENV_BROWSER_FALLBACK === 'true' ||
+    process.env.NODE_ENV !== 'production';
+
+  if (!refreshToken && (!isBrowser || allowBrowserEnvFallback)) {
+    // Allow env-based fallback for server-side, and optionally in dev if enabled
     refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
   }
   if (!refreshToken) {
@@ -86,9 +90,12 @@ export async function POST() {
   const userAgent = reqHeaders.get('user-agent') || '';
   const secFetchSite = reqHeaders.get('sec-fetch-site') || '';
   const isBrowser = userAgent.includes('Mozilla') || secFetchSite === 'same-origin';
+  const allowBrowserEnvFallback =
+    process.env.SPOTIFY_ALLOW_ENV_BROWSER_FALLBACK === 'true' ||
+    process.env.NODE_ENV !== 'production';
   let refreshToken = cookieStore.get('spotify_refresh_token')?.value;
-  if (!refreshToken && !isBrowser) {
-    // Allow env fallback only for server-side requests
+  if (!refreshToken && (!isBrowser || allowBrowserEnvFallback)) {
+    // Allow env fallback for server-side, and optionally in dev if enabled
     refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
   }
 
