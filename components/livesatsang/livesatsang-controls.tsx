@@ -174,7 +174,7 @@ export function LiveSatsangControls({
         {/* Controls Row - always last, closest to the bottom edge */}
         <div className="flex items-center justify-center gap-3 sm:gap-4">
           <ControlBar className="w-full">
-            <div className="grid w-full grid-cols-4 items-center justify-items-center gap-3 sm:gap-4">
+            <div className="grid w-full grid-cols-3 items-center justify-items-center gap-3 sm:gap-4">
               <TrackToggle
                 source={Track.Source.Microphone}
                 className="border-border bg-muted/50 hover:bg-muted h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
@@ -183,14 +183,12 @@ export function LiveSatsangControls({
                 source={Track.Source.Camera}
                 className="border-border bg-muted/50 hover:bg-muted h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
               />
-              <TrackToggle
-                source={Track.Source.ScreenShare}
-                className="border-border bg-muted/50 hover:bg-muted h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
-              />
               <DisconnectButton
                 onClick={onLeave}
-                className="border-destructive/50 bg-destructive/30 hover:bg-destructive/40 h-11 w-11 rounded-lg border transition-colors sm:h-12 sm:w-12"
-              />
+                className="col-span-2 h-11 w-full rounded-xl border border-destructive/60 bg-destructive px-4 font-semibold text-white transition-colors hover:bg-destructive/90 sm:h-12 sm:px-6"
+              >
+                <span className="whitespace-nowrap">गुरुजी से बातचीत बंद करें</span>
+              </DisconnectButton>
             </div>
           </ControlBar>
         </div>
