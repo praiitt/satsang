@@ -19,4 +19,3 @@ export async function GET() {
     message: 'Copy this refresh_token to your .env.local file as SPOTIFY_REFRESH_TOKEN',
   });
 }
-
