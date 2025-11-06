@@ -1,6 +1,8 @@
 import logging
 from pathlib import Path
 import os
+import asyncio
+import signal
 
 from dotenv import load_dotenv
 from livekit.agents import (
@@ -18,7 +20,9 @@ from livekit.agents import (
     RunContext,
 )
 from livekit.plugins import noise_cancellation, silero
-from livekit.plugins.turn_detector.multilingual import MultilingualModel
+# Lazy import MultilingualModel to avoid blocking during module import
+# Model loading can take time and cause initialization timeout
+_MultilingualModel = None
 
 # Import bhajan search - use absolute import to avoid issues in worker process
 # Defer import to avoid initialization issues
@@ -478,15 +482,69 @@ async def entrypoint(ctx: JobContext):
         logger.warning(f"Using {stt_model} - For BETTER Hindi accuracy, try: STT_MODEL=sarvam or STT_MODEL=deepgram/nova-2")
     
     # Initialize turn detector with error handling and timeout protection
-    # Skip if it's taking too long to avoid initialization timeout
+    # Lazy import to avoid blocking during module import
     logger.info("Initializing turn detector model...")
     turn_detector = None
+    
+    # Use a timeout to prevent blocking initialization
+    # If model loading takes > 5 seconds, skip it to avoid inference executor timeout
+    def _init_turn_detector_with_timeout():
+        try:
+            # Lazy import the model class only when needed
+            global _MultilingualModel
+            if _MultilingualModel is None:
+                from livekit.plugins.turn_detector.multilingual import MultilingualModel as _MultilingualModel_Class
+                _MultilingualModel = _MultilingualModel_Class
+            
+            # Try to initialize turn detector
+            return _MultilingualModel()
+        except Exception as e:
+            logger.warning(f"Failed to initialize turn detector: {e}")
+            return None
+    
     try:
-        # Try to initialize turn detector, but don't block if it's slow
-        turn_detector = MultilingualModel()
-        logger.info("Turn detector model initialized successfully")
+        # Use signal-based timeout for synchronous initialization (works on Unix)
+        class TurnDetectorTimeoutError(Exception):
+            pass
+        
+        def timeout_handler(signum, frame):
+            raise TurnDetectorTimeoutError("Turn detector initialization timed out")
+        
+        # Set alarm for 5 seconds
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(5)
+        
+        try:
+            turn_detector = _init_turn_detector_with_timeout()
+            signal.alarm(0)  # Cancel alarm
+            if turn_detector:
+                logger.info("Turn detector model initialized successfully")
+            else:
+                logger.warning("Turn detector initialization returned None - will use default")
+        except TurnDetectorTimeoutError:
+            logger.warning("Turn detector initialization timed out (>5s) - skipping to avoid agent timeout")
+            logger.warning("Will use default turn detection. This may cause slight delays.")
+            turn_detector = None
+        finally:
+            signal.alarm(0)  # Ensure alarm is cancelled
+            signal.signal(signal.SIGALRM, old_handler)  # Restore old handler
+            
+    except (AttributeError, ValueError) as e:
+        # signal.SIGALRM not available on Windows or in some environments
+        # Fall back to regular initialization without timeout
+        logger.debug(f"Signal-based timeout not available ({e}), initializing without timeout")
+        try:
+            turn_detector = _init_turn_detector_with_timeout()
+            if turn_detector:
+                logger.info("Turn detector model initialized successfully")
+            else:
+                logger.warning("Turn detector initialization returned None - will use default")
+        except Exception as e:
+            logger.warning(f"Failed to initialize turn detector: {e}")
+            logger.warning("Will use default turn detection. This may cause slight delays.")
+            turn_detector = None
     except Exception as e:
-        logger.warning(f"Failed to initialize turn detector: {e}")
+        logger.warning(f"Unexpected error initializing turn detector: {e}")
         logger.warning("Will use default turn detection. This may cause slight delays.")
         turn_detector = None
     
@@ -541,7 +599,8 @@ async def entrypoint(ctx: JobContext):
             ),
             # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
             # See more at https://docs.livekit.io/agents/build/turns
-            turn_detection=turn_detector if turn_detector is not None else MultilingualModel(),
+            # If turn_detector failed to load, let AgentSession create a default one (lazy)
+            turn_detection=turn_detector,
             vad=ctx.proc.userdata["vad"],
             # allow the LLM to generate a response while waiting for the end of turn
             # See more at https://docs.livekit.io/agents/build/audio/#preemptive-generation
