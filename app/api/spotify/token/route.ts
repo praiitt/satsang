@@ -1,34 +1,23 @@
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
-// Get Spotify access token from cookies, auto-refresh if needed
+// Get Spotify access token - always uses .env SPOTIFY_REFRESH_TOKEN
 export async function GET() {
   const cookieStore = await cookies();
-  const reqHeaders = await headers();
-  const userAgent = reqHeaders.get('user-agent') || '';
-  const secFetchSite = reqHeaders.get('sec-fetch-site') || '';
   let accessToken = cookieStore.get('spotify_access_token')?.value;
 
-  // If access token exists, return it
+  // If access token exists and is valid, return it
   if (accessToken) {
     return NextResponse.json({ access_token: accessToken });
   }
 
-  // If no access token, try to refresh using refresh token
-  let refreshToken = cookieStore.get('spotify_refresh_token')?.value;
-  // IMPORTANT: For browser (same-origin) requests, do NOT fall back to env
-  // Using an env refresh token can create a different-user device, causing 404
-  const isBrowser = userAgent.includes('Mozilla') || secFetchSite === 'same-origin';
-  const allowBrowserEnvFallback =
-    process.env.SPOTIFY_ALLOW_ENV_BROWSER_FALLBACK === 'true' ||
-    process.env.NODE_ENV !== 'production';
-
-  if (!refreshToken && (!isBrowser || allowBrowserEnvFallback)) {
-    // Allow env-based fallback for server-side, and optionally in dev if enabled
-    refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
-  }
+  // Always use .env refresh token (no cookie fallback)
+  const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
   if (!refreshToken) {
-    return NextResponse.json({ error: 'Not authenticated with Spotify' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'Not authenticated with Spotify - SPOTIFY_REFRESH_TOKEN not configured' },
+      { status: 401 }
+    );
   }
 
   // Refresh the access token
@@ -83,24 +72,15 @@ export async function GET() {
   }
 }
 
-// Refresh token endpoint
+// Refresh token endpoint - always uses .env SPOTIFY_REFRESH_TOKEN
 export async function POST() {
-  const cookieStore = await cookies();
-  const reqHeaders = await headers();
-  const userAgent = reqHeaders.get('user-agent') || '';
-  const secFetchSite = reqHeaders.get('sec-fetch-site') || '';
-  const isBrowser = userAgent.includes('Mozilla') || secFetchSite === 'same-origin';
-  const allowBrowserEnvFallback =
-    process.env.SPOTIFY_ALLOW_ENV_BROWSER_FALLBACK === 'true' ||
-    process.env.NODE_ENV !== 'production';
-  let refreshToken = cookieStore.get('spotify_refresh_token')?.value;
-  if (!refreshToken && (!isBrowser || allowBrowserEnvFallback)) {
-    // Allow env fallback for server-side, and optionally in dev if enabled
-    refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
-  }
-
+  // Always use .env refresh token (no cookie fallback)
+  const refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
   if (!refreshToken) {
-    return NextResponse.json({ error: 'No refresh token available' }, { status: 401 });
+    return NextResponse.json(
+      { error: 'No refresh token available - SPOTIFY_REFRESH_TOKEN not configured' },
+      { status: 401 }
+    );
   }
 
   const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
