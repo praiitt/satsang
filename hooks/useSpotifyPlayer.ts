@@ -23,6 +23,8 @@ interface SpotifyPlayer {
     context_uri?: string;
     offset?: { position?: number; uri?: string };
   }) => Promise<void>;
+  // Not always in types; present in SDK for user-gesture activation
+  activateElement?: () => Promise<void> | void;
 }
 
 declare global {
@@ -50,6 +52,7 @@ interface UseSpotifyPlayerReturn {
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   isPlaying: boolean;
+  activate: () => Promise<void>;
 }
 
 export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
@@ -61,6 +64,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const playerRef = useRef<SpotifyPlayer | null>(null);
   const scriptLoadedRef = useRef(false);
+  const activatedRef = useRef(false);
 
   // Load Spotify Web Playback SDK script
   useEffect(() => {
@@ -234,6 +238,15 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
 
     if (playerRef.current) {
       try {
+        // Try to activate element if required (after a user gesture)
+        if (!activatedRef.current && playerRef.current.activateElement) {
+          try {
+            await playerRef.current.activateElement();
+            activatedRef.current = true;
+          } catch {
+            // Activation may require a user gesture; ignore errors here
+          }
+        }
         const connected = await playerRef.current.connect();
         if (!connected) {
           setError('Failed to connect to Spotify');
@@ -244,6 +257,20 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
       }
     }
   }, [initializePlayer]);
+
+  // Explicit activation call to be triggered by a user gesture
+  const activate = useCallback(async () => {
+    if (!playerRef.current) return;
+    if (activatedRef.current) return;
+    if (playerRef.current.activateElement) {
+      try {
+        await playerRef.current.activateElement();
+        activatedRef.current = true;
+      } catch {
+        // If activation fails, next user gesture can try again
+      }
+    }
+  }, []);
 
   // Disconnect player
   const disconnect = useCallback(() => {
@@ -367,7 +394,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
         // First, verify the device is registered with Spotify by checking devices endpoint
         console.log('Checking if device is registered with Spotify...');
         let deviceRegistered = false;
-        let deviceCheckRetries = 10; // Check up to 10 times (10 seconds)
+        let deviceCheckRetries = 30; // Check up to 30 times (~30 seconds)
 
         while (!deviceRegistered && deviceCheckRetries > 0) {
           try {
@@ -413,7 +440,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
 
         while (retries > 0) {
           try {
-            // First, try to transfer to our device (optional - only if there's an active player)
+            // First, try to transfer to our device and request playback start
             try {
               const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
                 method: 'PUT',
@@ -423,7 +450,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
                 },
                 body: JSON.stringify({
                   device_ids: [currentDeviceId],
-                  play: false,
+                  play: true,
                 }),
               });
 
@@ -520,6 +547,36 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     [deviceId, connect, initializePlayer, getAccessToken, checkPremiumStatus]
   );
 
+  // When player becomes ready, immediately transfer playback to mark device as active
+  useEffect(() => {
+    (async () => {
+      if (!isReady || !deviceId) return;
+      const token = await getAccessToken();
+      if (!token) return;
+      try {
+        const res = await fetch('https://api.spotify.com/v1/me/player', {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ device_ids: [deviceId], play: true }),
+        });
+        if (!res.ok && res.status !== 204) {
+          // Non-fatal
+          try {
+            const data = await res.json();
+            console.warn('Initial transfer warning:', data);
+          } catch {
+            // ignore
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, [isReady, deviceId, getAccessToken]);
+
   // Pause
   const pause = useCallback(async () => {
     if (playerRef.current) {
@@ -561,5 +618,6 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     pause,
     resume,
     isPlaying,
+    activate,
   };
 }

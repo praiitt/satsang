@@ -42,6 +42,7 @@ export function BhajanPlayer() {
     playTrack,
     pause,
     resume,
+    activate,
   } = useSpotifyPlayer();
 
   // Log component mount and room state
@@ -754,6 +755,12 @@ export function BhajanPlayer() {
   }
 
   const handlePlayPause = async () => {
+    // Ensure activation on first user gesture (required by some browsers)
+    try {
+      await activate();
+    } catch {
+      // ignore; activation may not be needed
+    }
     // If using Spotify SDK, use Spotify controls
     if (useSpotify && currentTrack?.spotify_id) {
       if (isReady && deviceId) {
@@ -784,6 +791,7 @@ export function BhajanPlayer() {
       if (currentTrack?.spotify_id) {
         console.log('[BhajanPlayer] Attempting to authenticate with Spotify...');
         try {
+          await activate();
           await connect();
           // After authentication, useSpotify will be set and we can retry
         } catch (error) {
