@@ -89,7 +89,7 @@ export function AgentControlBar({
     <div
       aria-label="Voice assistant controls"
       className={cn(
-        'bg-background border-input/50 dark:border-muted flex flex-col rounded-[31px] border p-3 drop-shadow-md/3',
+        'bg-background border-input/50 dark:border-muted flex flex-col overflow-visible rounded-[31px] border p-3 drop-shadow-md/3',
         className
       )}
       {...props}
@@ -103,74 +103,81 @@ export function AgentControlBar({
         />
       )}
 
-      <div className="flex gap-1">
-        <div className="flex grow gap-1">
-          {/* Toggle Microphone */}
-          {visibleControls.microphone && (
-            <TrackSelector
-              kind="audioinput"
-              aria-label="Toggle microphone"
-              source={Track.Source.Microphone}
-              pressed={microphoneToggle.enabled}
-              disabled={microphoneToggle.pending}
-              audioTrackRef={micTrackRef}
-              onPressedChange={microphoneToggle.toggle}
-              onMediaDeviceError={handleMicrophoneDeviceSelectError}
-              onActiveDeviceChange={handleAudioDeviceChange}
-            />
-          )}
-
-          {/* Toggle Camera */}
-          {visibleControls.camera && (
-            <TrackSelector
-              kind="videoinput"
-              aria-label="Toggle camera"
-              source={Track.Source.Camera}
-              pressed={cameraToggle.enabled}
-              pending={cameraToggle.pending}
-              disabled={cameraToggle.pending}
-              onPressedChange={cameraToggle.toggle}
-              onMediaDeviceError={handleCameraDeviceSelectError}
-              onActiveDeviceChange={handleVideoDeviceChange}
-            />
-          )}
-
-          {/* Toggle Screen Share */}
-          {visibleControls.screenShare && (
-            <TrackToggle
-              size="icon"
-              variant="secondary"
-              aria-label="Toggle screen share"
-              source={Track.Source.ScreenShare}
-              pressed={screenShareToggle.enabled}
-              disabled={screenShareToggle.pending}
-              onPressedChange={screenShareToggle.toggle}
-            />
-          )}
-
-          {/* Toggle Transcript */}
-          <Toggle
-            size="icon"
-            variant="secondary"
-            aria-label="Toggle transcript"
-            pressed={chatOpen}
-            onPressedChange={handleToggleTranscript}
+      <div className="flex flex-col gap-3">
+        {/* Chat Button - Prominent */}
+        {visibleControls.chat && (
+          <Button
+            variant={chatOpen ? 'primary' : 'outline'}
+            size="lg"
+            onClick={() => handleToggleTranscript(!chatOpen)}
+            className="w-full justify-center gap-2 font-semibold shadow-lg"
+            aria-label={chatOpen ? 'Close chat' : 'Open chat'}
           >
-            <ChatTextIcon weight="bold" />
-          </Toggle>
+            <ChatTextIcon weight="bold" className="h-5 w-5" />
+            <span>{chatOpen ? 'चैट बंद करें' : '💬 चैट खोलें'}</span>
+          </Button>
+        )}
+
+        {/* Control Row */}
+        <div className="flex gap-1">
+          <div className="flex grow gap-1">
+            {/* Toggle Microphone */}
+            {visibleControls.microphone && (
+              <TrackSelector
+                kind="audioinput"
+                aria-label="Toggle microphone"
+                source={Track.Source.Microphone}
+                pressed={microphoneToggle.enabled}
+                disabled={microphoneToggle.pending}
+                audioTrackRef={micTrackRef}
+                onPressedChange={microphoneToggle.toggle}
+                onMediaDeviceError={handleMicrophoneDeviceSelectError}
+                onActiveDeviceChange={handleAudioDeviceChange}
+              />
+            )}
+
+            {/* Toggle Camera */}
+            {visibleControls.camera && (
+              <TrackSelector
+                kind="videoinput"
+                aria-label="Toggle camera"
+                source={Track.Source.Camera}
+                pressed={cameraToggle.enabled}
+                pending={cameraToggle.pending}
+                disabled={cameraToggle.pending}
+                onPressedChange={cameraToggle.toggle}
+                onMediaDeviceError={handleCameraDeviceSelectError}
+                onActiveDeviceChange={handleVideoDeviceChange}
+              />
+            )}
+
+            {/* Toggle Screen Share */}
+            {visibleControls.screenShare && (
+              <TrackToggle
+                size="icon"
+                variant="secondary"
+                aria-label="Toggle screen share"
+                source={Track.Source.ScreenShare}
+                pressed={screenShareToggle.enabled}
+                disabled={screenShareToggle.pending}
+                onPressedChange={screenShareToggle.toggle}
+              />
+            )}
+          </div>
         </div>
 
-        {/* Disconnect */}
+        {/* End Call Button - Most Prominent */}
         {visibleControls.leave && (
           <Button
             variant="destructive"
+            size="lg"
             onClick={handleDisconnect}
             disabled={!isSessionActive}
-            className="font-mono"
+            className="relative z-10 min-h-[56px] w-full justify-center gap-2 text-base font-bold shadow-xl transition-all hover:shadow-2xl"
+            aria-label="End call"
           >
-            <PhoneDisconnectIcon weight="bold" />
-            <span className="hidden md:inline">END CALL</span>
-            <span className="inline md:hidden">END</span>
+            <PhoneDisconnectIcon weight="bold" className="h-6 w-6" />
+            <span className="whitespace-nowrap">❌ बातचीत समाप्त करें</span>
           </Button>
         )}
       </div>

@@ -50,3 +50,7 @@ venv/
 .venv/
 env/
 .env/
+
+# Firebase service account (contains sensitive keys)
+*ServiceAccount.json
+*service-account*.json

@@ -13,6 +13,7 @@ python check_setup.py
 ```
 
 This will verify:
+
 - Environment variables are loaded correctly
 - Required Python packages are installed
 - Network connectivity to API providers
@@ -62,6 +63,7 @@ ls -la /home/underlitigationcom/satsang/livekit_server/agent-starter-python/.env
 ```
 
 The file should be at:
+
 ```
 /home/underlitigationcom/satsang/livekit_server/agent-starter-python/.env.local
 ```
@@ -92,6 +94,7 @@ pm2 logs satsang-livekit-agent --lines 50
 ```
 
 Look for:
+
 - "Loaded .env.local from: ..." - confirms environment file is found
 - "ENTRYPOINT: Starting agent initialization" - confirms entrypoint is called
 - "OPENAI_API_KEY: SET" or "MISSING" - confirms environment variables are loaded
@@ -100,7 +103,9 @@ Look for:
 ## 7. Common Issues and Solutions
 
 ### Issue: "Sarvam plugin not installed"
+
 **Solution:**
+
 ```bash
 source .venv/bin/activate
 pip install 'livekit-agents[sarvam]~=1.2'
@@ -108,19 +113,25 @@ pm2 restart satsang-livekit-agent
 ```
 
 ### Issue: "OPENAI_API_KEY: MISSING"
+
 **Solution:**
+
 1. Verify `.env.local` exists and contains `OPENAI_API_KEY=...`
 2. Check file permissions: `chmod 600 .env.local`
 3. Restart PM2: `pm2 restart satsang-livekit-agent`
 
 ### Issue: Network timeouts
+
 **Solution:**
+
 1. Check firewall rules allow outbound HTTPS connections
 2. Verify DNS resolution: `nslookup api.openai.com`
 3. Check proxy settings if behind a corporate firewall
 
 ### Issue: File named `.emv` instead of `.env.local`
+
 **Solution:**
+
 ```bash
 cd /home/underlitigationcom/satsang/livekit_server/agent-starter-python
 mv .emv .env.local  # If the file was misnamed
@@ -140,6 +151,7 @@ pm2 logs satsang-livekit-agent --lines 100
 If the timeout persists after all checks:
 
 1. **Temporarily switch to AssemblyAI STT** (more reliable):
+
    ```bash
    # In .env.local, change:
    STT_MODEL=assemblyai/universal-streaming
@@ -148,6 +160,7 @@ If the timeout persists after all checks:
    ```
 
 2. **Check PM2 process environment**:
+
    ```bash
    pm2 env 1  # Check if PM2 sees the environment variables
    ```
@@ -171,4 +184,3 @@ Final checklist:
 - [ ] Network connectivity to API providers
 - [ ] Python virtual environment activated
 - [ ] PM2 restarted after changes
-

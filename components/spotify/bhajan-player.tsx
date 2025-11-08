@@ -606,6 +606,30 @@ export function BhajanPlayer() {
     const attemptPlay = async () => {
       if (isReady && deviceId) {
         try {
+          // CRITICAL: Activate SDK before playback (required for browser autoplay policies)
+          // This must be called before any playback attempt, even if it was called before
+          console.log('[BhajanPlayer] Activating Spotify SDK before playback...');
+          try {
+            await activate();
+          } catch (activateErr) {
+            // Activation may fail if no user gesture - this is expected for auto-play
+            // We'll still try to play, but it might fail due to browser policies
+            console.warn(
+              '[BhajanPlayer] SDK activation failed (may need user gesture):',
+              activateErr
+            );
+          }
+
+          // Ensure player is connected
+          try {
+            await connect();
+          } catch (connectErr) {
+            console.warn('[BhajanPlayer] Connection check failed:', connectErr);
+          }
+
+          // Wait a moment for device to be fully ready
+          await new Promise((resolve) => setTimeout(resolve, 500));
+
           console.log('[BhajanPlayer] Playing track with Spotify SDK:', currentTrack.spotify_id);
           await playTrack(currentTrack.spotify_id!);
           setIsPlaying(true);
@@ -636,7 +660,7 @@ export function BhajanPlayer() {
     };
 
     attemptPlay();
-  }, [currentTrack, useSpotify, isReady, deviceId, isAuthenticated, playTrack, connect]);
+  }, [currentTrack, useSpotify, isReady, deviceId, isAuthenticated, playTrack, connect, activate]);
 
   // Play audio when track URL changes (fallback mode - preview URLs)
   useEffect(() => {

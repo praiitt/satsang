@@ -77,7 +77,7 @@ export function ChatInput({
           type="text"
           value={message}
           disabled={!chatOpen}
-          placeholder="Type something..."
+          placeholder="अपना संदेश लिखें..."
           onChange={(e) => setMessage(e.target.value)}
           className="h-8 flex-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         />

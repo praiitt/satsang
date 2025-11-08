@@ -1,4 +1,5 @@
 import { headers } from 'next/headers';
+import { BottomNav } from '@/components/app/bottom-nav';
 import { getAppConfig } from '@/lib/utils';
 
 interface LayoutProps {
@@ -16,6 +17,9 @@ export default async function Layout({ children }: LayoutProps) {
       </header>
 
       {children}
+
+      {/* Mobile bottom navigation */}
+      <BottomNav />
     </>
   );
 }

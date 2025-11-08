@@ -18,7 +18,9 @@ interface SpotifyPlayer {
   seek: (positionMs: number) => Promise<void>;
   nextTrack: () => Promise<void>;
   previousTrack: () => Promise<void>;
-  play: (options: {
+  // Note: play() method may not be available in all SDK versions
+  // To play specific tracks, use the REST API instead
+  play?: (options: {
     uris?: string[];
     context_uri?: string;
     offset?: { position?: number; uri?: string };
@@ -165,8 +167,11 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     setIsAuthenticated(true);
 
     try {
+      // Create unique device name to avoid conflicts when multiple tabs are open
+      const deviceName = `सत्संग भजन प्लेयर ${Date.now().toString().slice(-4)}`;
+
       const spotifyPlayer = new window.Spotify.Player({
-        name: 'Satsang Bhajan Player',
+        name: deviceName,
         getOAuthToken: async (cb) => {
           const accessToken = await getAccessToken();
           if (accessToken) {
@@ -204,7 +209,12 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
 
       // Ready state
       spotifyPlayer.addListener('ready', ({ device_id }) => {
-        console.log('Spotify player ready, device ID:', device_id);
+        console.log('✅ [Spotify SDK] Device READY - Device ID:', device_id);
+        console.log('⚠️ [Spotify SDK] Device is ready but NOT YET ACTIVE in Spotify REST API');
+        console.log('⚠️ [Spotify SDK] Device will appear in /v1/me/player/devices only after:');
+        console.log('   1. User gesture activates it (activateElement() with click)');
+        console.log('   2. OR playback starts on it');
+        console.log('   3. OR playback is transferred to it');
         setDeviceId(device_id);
         setIsReady(true);
         setError(null);
@@ -241,13 +251,27 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
         // Try to activate element if required (after a user gesture)
         if (!activatedRef.current && playerRef.current.activateElement) {
           try {
+            console.log(
+              '[Spotify SDK] Attempting to activate device (may fail without user gesture)...'
+            );
             await playerRef.current.activateElement();
             activatedRef.current = true;
-          } catch {
+            console.log('✅ [Spotify SDK] Device activated successfully!');
+          } catch (err: any) {
             // Activation may require a user gesture; ignore errors here
+            console.warn(
+              '⚠️ [Spotify SDK] Device activation failed (expected without user gesture):',
+              err?.message || err
+            );
           }
         }
+        console.log('[Spotify SDK] Connecting to Spotify...');
         const connected = await playerRef.current.connect();
+        if (connected) {
+          console.log(
+            '✅ [Spotify SDK] Connected successfully. Device ID will be available when ready event fires.'
+          );
+        }
         if (!connected) {
           setError('Failed to connect to Spotify');
         }
@@ -260,17 +284,56 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
 
   // Explicit activation call to be triggered by a user gesture
   const activate = useCallback(async () => {
-    if (!playerRef.current) return;
-    if (activatedRef.current) return;
+    if (!playerRef.current) {
+      console.warn('[Spotify SDK] Cannot activate: player not initialized');
+      return;
+    }
+    if (activatedRef.current) {
+      console.log('[Spotify SDK] Device already activated');
+      return;
+    }
     if (playerRef.current.activateElement) {
       try {
+        console.log('[Spotify SDK] 🔵 Activating device with user gesture...');
         await playerRef.current.activateElement();
         activatedRef.current = true;
-      } catch {
+        console.log('✅ [Spotify SDK] Device activated! It should now appear in devices list.');
+
+        // Wait a moment and check if device appears in list
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const token = await getAccessToken();
+        if (token) {
+          try {
+            const devicesRes = await fetch('https://api.spotify.com/v1/me/player/devices', {
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            if (devicesRes.ok) {
+              const devicesData = await devicesRes.json();
+              const devices = devicesData.devices || [];
+              const ourDevice = devices.find((d: any) => d.id === deviceId);
+              if (ourDevice) {
+                console.log(
+                  '✅ [Spotify SDK] Device confirmed in REST API devices list:',
+                  ourDevice.name,
+                  'is_active:',
+                  ourDevice.is_active
+                );
+              } else {
+                console.warn('⚠️ [Spotify SDK] Device still not in REST API list after activation');
+              }
+            }
+          } catch {
+            // Ignore
+          }
+        }
+      } catch (err: any) {
+        console.error('[Spotify SDK] Activation failed:', err?.message || err);
         // If activation fails, next user gesture can try again
       }
+    } else {
+      console.warn('[Spotify SDK] activateElement() method not available');
     }
-  }, []);
+  }, [deviceId, getAccessToken]);
 
   // Disconnect player
   const disconnect = useCallback(() => {
@@ -284,32 +347,29 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
   }, []);
 
   // Check Premium status
-  const checkPremiumStatus = useCallback(
-    async (token: string): Promise<boolean | null> => {
-      try {
-        const response = await fetch('https://api.spotify.com/v1/me', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+  const checkPremiumStatus = useCallback(async (token: string): Promise<boolean | null> => {
+    try {
+      const response = await fetch('https://api.spotify.com/v1/me', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        if (!response.ok) {
-          return null;
-        }
-
-        const userData = await response.json();
-        // Spotify API doesn't directly expose Premium status, but we can infer from product field
-        // product can be 'premium', 'free', 'open', 'unlimited'
-        const product = userData.product?.toLowerCase();
-        console.log('Spotify user product:', product);
-        return product === 'premium';
-      } catch (err) {
-        console.error('Error checking Premium status:', err);
+      if (!response.ok) {
         return null;
       }
-    },
-    []
-  );
+
+      const userData = await response.json();
+      // Spotify API doesn't directly expose Premium status, but we can infer from product field
+      // product can be 'premium', 'free', 'open', 'unlimited'
+      const product = userData.product?.toLowerCase();
+      console.log('Spotify user product:', product);
+      return product === 'premium';
+    } catch (err) {
+      console.error('Error checking Premium status:', err);
+      return null;
+    }
+  }, []);
 
   // Play track
   const playTrack = useCallback(
@@ -391,80 +451,104 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
       }
 
       try {
-        // First, verify the device is registered with Spotify by checking devices endpoint
-        console.log('Checking if device is registered with Spotify...');
-        let deviceRegistered = false;
-        let deviceCheckRetries = 30; // Check up to 30 times (~30 seconds)
-
-        while (!deviceRegistered && deviceCheckRetries > 0) {
-          try {
-            const devicesResponse = await fetch('https://api.spotify.com/v1/me/player/devices', {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            });
-
-            if (devicesResponse.ok) {
-              const devicesData = await devicesResponse.json();
-              const devices = devicesData.devices || [];
-              const ourDevice = devices.find((d: any) => d.id === currentDeviceId);
-
-              if (ourDevice) {
-                console.log('✅ Device is registered with Spotify:', ourDevice.name);
-                deviceRegistered = true;
-                break;
-              } else {
-                console.log(
-                  `Device not found in Spotify devices list (${devices.length} devices found), waiting... (${deviceCheckRetries} checks left)`
-                );
-              }
-            }
-          } catch (checkErr) {
-            console.warn('Error checking devices:', checkErr);
-          }
-
-          deviceCheckRetries--;
-          if (!deviceRegistered && deviceCheckRetries > 0) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
-        }
-
-        if (!deviceRegistered) {
-          console.warn('Device not found in Spotify devices list after waiting');
-          // Continue anyway - sometimes it works even if not in the list
-        }
+        // First, activate the device by transferring playback to it
+        // This is required for Web Playback SDK devices to become active
+        console.log('Activating device by transferring playback...', currentDeviceId);
 
         // Retry logic for playing track
-        let retries = 3;
+        let retries = 5; // Increased retries
         let lastError: Error | null = null;
 
         while (retries > 0) {
           try {
-            // First, try to transfer to our device and request playback start
-            try {
-              const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
-                method: 'PUT',
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  device_ids: [currentDeviceId],
-                  play: true,
-                }),
-              });
+            // Step 1: Transfer playback to our device (this activates it)
+            const transferResponse = await fetch(`https://api.spotify.com/v1/me/player`, {
+              method: 'PUT',
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                device_ids: [currentDeviceId],
+                play: false, // Don't play yet, just transfer
+              }),
+            });
 
-              if (transferResponse.status === 404) {
-                console.log('No active player to transfer from, continuing with direct play');
-              } else if (!transferResponse.ok && transferResponse.status !== 204) {
-                const errorData = await transferResponse.json().catch(() => ({}));
-                console.warn('Device transfer warning:', errorData);
-              }
-            } catch (transferErr) {
-              console.warn('Device transfer failed (non-critical):', transferErr);
+            if (transferResponse.status === 404) {
+              // No active player - this is okay, we'll try to play directly
+              console.log('No active player to transfer from, will play directly');
+            } else if (!transferResponse.ok && transferResponse.status !== 204) {
+              const errorData = await transferResponse.json().catch(() => ({}));
+              console.warn('Device transfer response:', transferResponse.status, errorData);
+              // Continue anyway - sometimes 404 is expected
+            } else {
+              console.log('✅ Device transfer successful');
+              // Wait a moment for device to become active
+              await new Promise((resolve) => setTimeout(resolve, 500));
             }
 
-            // Play the track directly on our device via REST API
+            // Step 2: Wait for device to appear in Spotify's devices list
+            // This is critical - the Web Playback SDK device needs to register with Spotify
+            let deviceFoundInList = false;
+            let deviceCheckAttempts = 10; // Check up to 10 times (10 seconds)
+
+            while (!deviceFoundInList && deviceCheckAttempts > 0) {
+              try {
+                const devicesResponse = await fetch(
+                  'https://api.spotify.com/v1/me/player/devices',
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+
+                if (devicesResponse.ok) {
+                  const devicesData = await devicesResponse.json();
+                  const devices = devicesData.devices || [];
+                  const ourDevice = devices.find((d: any) => d.id === currentDeviceId);
+
+                  if (ourDevice) {
+                    console.log(
+                      '✅ Device found in devices list:',
+                      ourDevice.name,
+                      'is_active:',
+                      ourDevice.is_active
+                    );
+                    deviceFoundInList = true;
+                    break;
+                  } else {
+                    console.log(
+                      `Device not in list yet (${devices.length} devices found, ${deviceCheckAttempts} checks left). Other devices:`,
+                      devices.map((d: any) => ({
+                        id: d.id?.substring(0, 20) + '...',
+                        name: d.name,
+                        is_active: d.is_active,
+                      }))
+                    );
+                  }
+                }
+              } catch (checkErr) {
+                console.warn('Error checking devices list:', checkErr);
+              }
+
+              deviceCheckAttempts--;
+              if (!deviceFoundInList && deviceCheckAttempts > 0) {
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+              }
+            }
+
+            if (!deviceFoundInList) {
+              console.warn(
+                '⚠️ Device not found in Spotify devices list after waiting. This may cause playback to fail.'
+              );
+              // Continue anyway - sometimes it works even if not in the list immediately
+            }
+
+            // Step 3: Try to play the track
+            // First try REST API, then fallback to SDK's play method if device not in list
+
+            // Try REST API first (preferred method)
             const playResponse = await fetch(
               `https://api.spotify.com/v1/me/player/play?device_id=${currentDeviceId}`,
               {
@@ -480,7 +564,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
             );
 
             if (playResponse.ok || playResponse.status === 204) {
-              console.log('Track playing successfully via REST API:', trackId);
+              console.log('✅ Track playing successfully via REST API:', trackId);
               setError(null);
               return; // Success!
             }
@@ -494,14 +578,31 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
               );
               throw new Error(errorMessage);
             } else if (playResponse.status === 404) {
-              // Device not ready yet, retry
-              console.warn(
-                `Device not found (attempt ${4 - retries}/3), waiting and retrying...`
+              // Device not registered with Spotify's REST API yet
+              // The Web Playback SDK device needs time to register, OR
+              // it requires a user gesture to activate (browser autoplay policy)
+              console.warn(`Device not found in REST API (attempt ${6 - retries}/5)`);
+
+              // Try to "wake up" the device by getting its state
+              if (playerRef.current) {
+                try {
+                  const state = await playerRef.current.getCurrentState();
+                  if (state) {
+                    console.log('Device state retrieved, device is active:', state.device_id);
+                  }
+                } catch (stateErr) {
+                  console.warn('Could not get device state:', stateErr);
+                }
+              }
+
+              lastError = new Error(
+                'Device not registered with Spotify API. This may require a user gesture to activate.'
               );
-              lastError = new Error(errorMessage);
               retries--;
               if (retries > 0) {
-                await new Promise((resolve) => setTimeout(resolve, 2000));
+                // Wait longer between retries to give device time to register
+                console.log(`Waiting 3 seconds before retry (${retries} attempts left)...`);
+                await new Promise((resolve) => setTimeout(resolve, 3000));
                 continue;
               }
             } else if (playResponse.status === 401) {
@@ -519,7 +620,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
             retries--;
             if (retries > 0) {
               console.warn(`Play attempt failed, retrying... (${retries} attempts left)`);
-              await new Promise((resolve) => setTimeout(resolve, 2000));
+              await new Promise((resolve) => setTimeout(resolve, 3000));
             }
           }
         }
@@ -528,7 +629,7 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
         if (lastError) {
           console.error('All play attempts failed:', lastError);
           setError(
-            'Device not ready after multiple attempts. The Web Playback SDK device may need more time to initialize. Please wait a moment and try requesting the bhajan again.'
+            'Unable to play track automatically. The Spotify Web Playback SDK requires a user gesture (click) to activate. Please click the Play button to start playback.'
           );
           throw lastError;
         }
@@ -547,32 +648,70 @@ export function useSpotifyPlayer(): UseSpotifyPlayerReturn {
     [deviceId, connect, initializePlayer, getAccessToken, checkPremiumStatus]
   );
 
-  // When player becomes ready, immediately transfer playback to mark device as active
+  // When player becomes ready, wait a moment then try to activate device
+  // The device needs time to register with Spotify's servers
   useEffect(() => {
     (async () => {
       if (!isReady || !deviceId) return;
       const token = await getAccessToken();
       if (!token) return;
+
+      // Wait a bit for device to fully initialize
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       try {
+        console.log('[useSpotifyPlayer] Device ready, activating device:', deviceId);
+
+        // Try to transfer playback to activate the device
         const res = await fetch('https://api.spotify.com/v1/me/player', {
           method: 'PUT',
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ device_ids: [deviceId], play: true }),
+          body: JSON.stringify({ device_ids: [deviceId], play: false }), // Just transfer, don't play
         });
-        if (!res.ok && res.status !== 204) {
+
+        if (res.ok || res.status === 204) {
+          console.log('[useSpotifyPlayer] ✅ Device activated successfully');
+        } else if (res.status === 404) {
+          // No active player - this is normal for first connection
+          // The device should still work, it just means there's nothing to transfer from
+          console.log('[useSpotifyPlayer] No active player to transfer from (this is normal)');
+        } else {
           // Non-fatal
           try {
             const data = await res.json();
-            console.warn('Initial transfer warning:', data);
+            console.warn('[useSpotifyPlayer] Initial transfer warning:', res.status, data);
           } catch {
-            // ignore
+            console.warn('[useSpotifyPlayer] Initial transfer warning:', res.status);
           }
         }
+
+        // Wait a bit more and check if device appears in list
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        try {
+          const devicesRes = await fetch('https://api.spotify.com/v1/me/player/devices', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (devicesRes.ok) {
+            const devicesData = await devicesRes.json();
+            const devices = devicesData.devices || [];
+            const ourDevice = devices.find((d: any) => d.id === deviceId);
+            if (ourDevice) {
+              console.log(
+                '[useSpotifyPlayer] ✅ Device confirmed in devices list:',
+                ourDevice.name
+              );
+            } else {
+              console.log('[useSpotifyPlayer] ⚠️ Device not yet in devices list (may take longer)');
+            }
+          }
+        } catch {
+          // Ignore - just for logging
+        }
       } catch (e) {
-        // ignore
+        console.warn('[useSpotifyPlayer] Error during initial device activation:', e);
       }
     })();
   }, [isReady, deviceId, getAccessToken]);

@@ -47,4 +47,3 @@ STT_MODEL=assemblyai/universal-streaming
 ```
 
 AssemblyAI is included by default and doesn't require additional plugins.
-

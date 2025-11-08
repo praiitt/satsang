@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Button } from '@/components/livekit/button';
 
 function WelcomeImage() {
@@ -29,18 +30,123 @@ export const WelcomeView = ({
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
   return (
-    <div ref={ref}>
-      <section className="bg-background flex flex-col items-center justify-center text-center">
+    <div ref={ref} className="w-full pb-24 md:pb-32">
+      {/* Hero Section - Always visible at top */}
+      <section className="bg-background flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[80vh] md:min-h-screen md:py-12">
         <WelcomeImage />
 
-        <p className="text-foreground max-w-prose pt-1 leading-6 font-medium">
-          अपने आध्यात्मिक गुरु से हिन्दी में सत्संग करें
+        <h1 className="text-foreground mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">
+          RRAASI सत्संग में आपका स्वागत है
+        </h1>
+        <p className="text-muted-foreground mx-auto mt-3 max-w-prose text-sm leading-6 sm:text-base md:text-lg">
+          यह सत्संग सुविधा RRAASI द्वारा प्रस्तुत है—जहाँ आप हिन्दी में अपने आध्यात्मिक मार्गदर्शन
+          के लिए जुड़ सकते हैं, प्रश्न पूछ सकते हैं और समूह के साथ आध्यात्मिक चर्चा कर सकते हैं।
         </p>
 
-        <div className="mt-6 flex flex-col items-center gap-3">
-          <Button variant="primary" size="lg" onClick={onStartCall} className="w-64 font-mono">
+        {/* Action Buttons - Prominently displayed */}
+        <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={onStartCall}
+            className="h-12 w-full text-base font-semibold shadow-lg sm:w-auto sm:min-w-[200px]"
+          >
             {startButtonText}
           </Button>
+          <Button
+            asChild
+            variant="outline"
+            size="lg"
+            className="h-12 w-full text-base font-semibold sm:w-auto sm:min-w-[200px]"
+          >
+            <Link href="/daily-satsang">डेली सत्संग जॉइन करें</Link>
+          </Button>
+        </div>
+      </section>
+
+      {/* Highlights */}
+      <section className="mx-auto mt-8 grid max-w-5xl grid-cols-1 gap-4 px-4 sm:mt-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="bg-background border-input rounded-2xl border p-5 text-left">
+          <h3 className="text-foreground mb-2 text-lg font-semibold">सरल जुड़ाव</h3>
+          <p className="text-muted-foreground text-sm leading-6">
+            सिर्फ एक क्लिक में सत्संग शुरू करें। कोई जटिल सेटअप नहीं—ब्राउज़र से सीधे जुड़ें।
+          </p>
+        </div>
+        <div className="bg-background border-input rounded-2xl border p-5 text-left">
+          <h3 className="text-foreground mb-2 text-lg font-semibold">लाइव संवाद</h3>
+          <p className="text-muted-foreground text-sm leading-6">
+            गुरुजी और समुदाय के साथ लाइव सत्संग, प्रश्नोत्तर और मार्गदर्शन—सब एक ही स्थान पर।
+          </p>
+        </div>
+        <div className="bg-background border-input rounded-2xl border p-5 text-left">
+          <h3 className="text-foreground mb-2 text-lg font-semibold">हिन्दी में मार्गदर्शन</h3>
+          <p className="text-muted-foreground text-sm leading-6">
+            सारे निर्देश और वार्तालाप हिन्दी में—ताकि समझना और जुड़ना आसान रहे।
+          </p>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="mx-auto mt-8 max-w-5xl px-4 sm:mt-10">
+        <div className="bg-background border-input rounded-2xl border p-6 text-left">
+          <h2 className="text-foreground mb-3 text-2xl font-bold">कैसे जुड़ें</h2>
+          <ol className="text-muted-foreground list-decimal space-y-2 pl-6 text-sm leading-6">
+            <li>अपने मोबाइल नंबर से लॉगिन/सत्यापन करें (तेज़ और सुरक्षित)।</li>
+            <li>ब्राउज़र से माइक/स्पीकर की अनुमति दें—बेहतर ऑडियो के लिए।</li>
+            <li>“सत्संग शुरू करें” पर क्लिक करें या “लाइव सत्संग जॉइन करें” से समूह में जुड़ें।</li>
+          </ol>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Button asChild variant="secondary">
+              <Link href="/livesatsang">समय सारिणी देखें</Link>
+            </Button>
+            <Button asChild variant="link">
+              <Link href="#faq">अक्सर पूछे जाने वाले प्रश्न</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Brand note */}
+      <section className="mx-auto mt-6 max-w-5xl px-4 sm:mt-8">
+        <div className="bg-background border-input rounded-2xl border p-6 text-left">
+          <h2 className="text-foreground mb-2 text-xl font-semibold">RRAASI द्वारा प्रस्तुत</h2>
+          <p className="text-muted-foreground text-sm leading-6">
+            RRAASI सत्संग का उद्देश्य तकनीक के माध्यम से आध्यात्मिक अनुभव को सहज बनाना है—ताकि हर
+            साधक आसानी से जुड़ सके और लाभान्वित हो।
+          </p>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="mx-auto my-8 max-w-5xl px-4 pb-8 sm:my-10 sm:pb-10">
+        <h2 className="text-foreground mb-4 text-2xl font-bold">अक्सर पूछे जाने वाले प्रश्न</h2>
+        <div className="space-y-3">
+          <details className="bg-background border-input rounded-xl border p-4">
+            <summary className="text-foreground cursor-pointer text-left font-medium">
+              यह सुविधा किसने विकसित की है?
+            </summary>
+            <p className="text-muted-foreground mt-2 text-sm leading-6">
+              यह सुविधा RRAASI द्वारा विकसित और प्रस्तुत की गई है, ताकि साधकों को सहज और सुरक्षित
+              अनुभव मिले।
+            </p>
+          </details>
+          <details className="bg-background border-input rounded-xl border p-4">
+            <summary className="text-foreground cursor-pointer text-left font-medium">
+              लाइव सत्संग कैसे जॉइन करें?
+            </summary>
+            <p className="text-muted-foreground mt-2 text-sm leading-6">
+              ऊपर दिए गए “लाइव सत्संग जॉइन करें” पर क्लिक करें। समय सारिणी के अनुसार सत्र उपलब्ध
+              होने पर जुड़ सकते हैं।
+            </p>
+          </details>
+          <details className="bg-background border-input rounded-xl border p-4">
+            <summary className="text-foreground cursor-pointer text-left font-medium">
+              माइक/स्पीकर काम नहीं कर रहा?
+            </summary>
+            <p className="text-muted-foreground mt-2 text-sm leading-6">
+              ब्राउज़र सेटिंग्स में साइट को माइक/स्पीकर की अनुमति दें और पेज को रीफ़्रेश करें।
+            </p>
+          </details>
         </div>
       </section>
     </div>

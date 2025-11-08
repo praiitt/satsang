@@ -17,12 +17,14 @@ export interface AppConfig {
   // for LiveKit Cloud Sandbox
   sandboxId?: string;
   agentName?: string;
+  // experimental: enable HeyGen avatar video sidecar
+  enableHeygenAvatar?: boolean;
 }
 
 export const APP_CONFIG_DEFAULTS: AppConfig = {
-  companyName: 'Satsang',
-  pageTitle: 'Satsang – Spiritual Voice Satsang',
-  pageDescription: 'Hindi spiritual conversation with your guru',
+  companyName: 'सत्संग',
+  pageTitle: 'सत्संग – आध्यात्मिक संवाद',
+  pageDescription: 'हिन्दी में अपने गुरु के साथ आध्यात्मिक संवाद',
 
   supportsChatInput: true,
   supportsVideoInput: false,
@@ -33,9 +35,10 @@ export const APP_CONFIG_DEFAULTS: AppConfig = {
   accent: '#ff7a00',
   logoDark: '/lk-logo-dark.svg',
   accentDark: '#ff9f4d',
-  startButtonText: 'सत्संग शुरू करें',
+  startButtonText: 'गुरुजी से बातचीत करें',
 
   // for LiveKit Cloud Sandbox
   sandboxId: undefined,
   agentName: process.env.NEXT_PUBLIC_AGENT_NAME || 'guruji',
+  enableHeygenAvatar: process.env.NEXT_PUBLIC_ENABLE_HEYGEN_AVATAR === 'true',
 };

@@ -185,7 +185,7 @@ export function LiveSatsangControls({
               />
               <DisconnectButton
                 onClick={onLeave}
-                className="col-span-2 h-11 w-full rounded-xl border border-destructive/60 bg-destructive px-4 font-semibold text-white transition-colors hover:bg-destructive/90 sm:h-12 sm:px-6"
+                className="border-destructive/60 bg-destructive hover:bg-destructive/90 col-span-2 h-11 w-full rounded-xl border px-4 font-semibold text-white transition-colors sm:h-12 sm:px-6"
               >
                 <span className="whitespace-nowrap">गुरुजी से बातचीत बंद करें</span>
               </DisconnectButton>

@@ -3,7 +3,8 @@ module.exports = {
     {
       name: 'satsang-livekit-agent',
       // Use Python directly from venv - simple and reliable
-      script: '/home/underlitigationcom/satsang/livekit_server/agent-starter-python/.venv/bin/python',
+      script:
+        '/home/underlitigationcom/satsang/livekit_server/agent-starter-python/.venv/bin/python',
       args: ['src/agent.py', 'start'],
       cwd: '/home/underlitigationcom/satsang/livekit_server/agent-starter-python',
       instances: 1,

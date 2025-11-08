@@ -10,11 +10,13 @@
    - Save
 
 2. **Visit the authorization URL in your browser:**
+
    ```
    https://accounts.spotify.com/authorize?response_type=code&client_id=65136cefd17d48ffb4c7d6ca07dd533f&scope=user-read-playback-state%20user-modify-playback-state%20user-read-currently-playing%20streaming%20user-read-email%20user-read-private&redirect_uri=https://satsang.rraasi.com/api/spotify/callback&state=xyz&show_dialog=true
    ```
 
 3. **After authorization, you'll be redirected to:**
+
    ```
    https://satsang.rraasi.com/api/spotify/callback?code=ACTUAL_CODE_HERE&state=xyz
    ```
@@ -22,6 +24,7 @@
 4. **Copy the `code` parameter from the URL** (the long string after `code=`)
 
 5. **Exchange the code for tokens using curl:**
+
    ```bash
    curl -X POST https://accounts.spotify.com/api/token \
      -H "Content-Type: application/x-www-form-urlencoded" \
@@ -41,11 +44,13 @@
 ## Using the Helper Script
 
 Run the automated script:
+
 ```bash
 ./get-spotify-refresh-token.sh
 ```
 
 This will:
+
 - Read your credentials from `.env.local`
 - Generate the authorization URL
 - Guide you through the process
@@ -59,4 +64,3 @@ This will:
 - Replace `ACTUAL_CODE_HERE` with the real code from the redirect URL
 - The refresh token doesn't expire (unless revoked)
 - You only need to do this once
-

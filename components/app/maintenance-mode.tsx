@@ -9,7 +9,7 @@ export function MaintenanceMode() {
         </div>
         <h1 className="text-2xl font-bold sm:text-3xl">Under Maintenance</h1>
         <p className="leading-relaxed text-white/80">
-          We&apos;re making some improvements to your Satsang experience. Please check back soon.
+          हम आपके सत्संग अनुभव को बेहतर बना रहे हैं। कृपया थोड़ी देर बाद पुनः देखें।
         </p>
         <p className="text-sm text-white/60">Thank you for your patience and blessings.</p>
       </div>

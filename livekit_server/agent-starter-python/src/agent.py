@@ -289,7 +289,40 @@ Always end with a question or invitation to continue the conversation when natur
                 f"क्या आप इनमें से कोई सुनना चाहेंगे: {available_list}?"
             )
         
-        # Build structured result for data channel (MP3 preview when available and Spotify info)
+        # Also search YouTube for video (async, non-blocking)
+        youtube_video_id = None
+        youtube_video_title = None
+        try:
+            # Lazy import YouTube search to avoid blocking if module not available
+            try:
+                # Try relative import first (when running as package)
+                try:
+                    from .youtube_search import find_youtube_video_async
+                except ImportError:
+                    # Fallback to absolute import (when running as script)
+                    import sys
+                    from pathlib import Path
+                    src_path = Path(__file__).resolve().parent
+                    if str(src_path) not in sys.path:
+                        sys.path.insert(0, str(src_path))
+                    from youtube_search import find_youtube_video_async
+                
+                youtube_result = await find_youtube_video_async(bhajan_name)
+                if youtube_result:
+                    youtube_video_id = youtube_result.get("video_id")
+                    youtube_video_title = youtube_result.get("title")
+                    logger.info(f"✅ Found YouTube video: {youtube_video_id} - {youtube_video_title}")
+                else:
+                    logger.info(f"⚠️ No YouTube video found for '{bhajan_name}'")
+            except ImportError as e:
+                logger.warning(f"YouTube search module not available: {e}")
+            except Exception as e:
+                logger.warning(f"Error searching YouTube (non-fatal): {e}", exc_info=True)
+        except Exception as e:
+            logger.warning(f"YouTube search failed (non-fatal): {e}", exc_info=True)
+        
+        # Build structured result for data channel
+        # Frontend will prefer YouTube if available, otherwise use Spotify
         # Frontend will use Spotify SDK if spotify_id is present and user is authenticated
         # Otherwise, it will use preview_url as fallback
         # IMPORTANT: Always include preview_url if available, even when spotify_id is present
@@ -300,10 +333,12 @@ Always end with a question or invitation to continue the conversation when natur
             "artist": track_info.get("artist", ""),
             "spotify_id": spotify_id,  # Spotify track ID for Web Playback SDK (can be None)
             "external_url": track_info.get("external_url"),  # Spotify web player URL (for reference only, not spoken)
+            "youtube_id": youtube_video_id,  # YouTube video ID for IFrame Player API (can be None)
+            "youtube_url": f"https://www.youtube.com/watch?v={youtube_video_id}" if youtube_video_id else None,  # Full YouTube URL
             "message": f"भजन '{track_info.get('name_en', bhajan_name)}' चल रहा है। आनंद लें!",
         }
         
-        logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}")
+        logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}, has_youtube_id={bool(youtube_video_id)}")
         logger.info(f"📦 Full result object: {json.dumps(result, indent=2)}")
         
         # Emit structured data over LiveKit data channel using injected publisher
@@ -333,6 +368,78 @@ Always end with a question or invitation to continue the conversation when natur
             logger.error(f"Traceback: {traceback.format_exc()}")
         # Speak only a friendly confirmation, without any URLs/JSON
         return f"मैं '{result['name']}' भजन चला रहा हूं। आनंद लें!"
+
+    @function_tool
+    async def search_vani(
+        self,
+        context: RunContext,
+        topic: str,
+        max_results: int = 5,
+    ) -> str:
+        """Search for spiritual discourses (vani/pravachan) on a topic.
+
+        Use this when the user asks for teachings/pravachan/satsang on a specific topic.
+
+        Args:
+            topic: The spiritual topic to search (e.g., "bhakti", "karma", "adhyatma").
+            max_results: Number of results to return (1-10).
+
+        Returns:
+            A short Hindi confirmation telling the user results were found and asking which to play.
+        """
+        import json
+        try:
+            try:
+                # Prefer package-relative import
+                from .youtube_search import find_vani_videos_async  # type: ignore
+            except ImportError:
+                import sys
+                from pathlib import Path
+                src_path = Path(__file__).resolve().parent
+                if str(src_path) not in sys.path:
+                    sys.path.insert(0, str(src_path))
+                from youtube_search import find_vani_videos_async  # type: ignore
+
+            max_results = max(1, min(int(max_results), 10))
+            results = await find_vani_videos_async(topic, max_results)
+        except Exception as e:
+            logger.error(f"vani search failed for topic='{topic}': {e}", exc_info=True)
+            results = []
+
+        # Build payload for frontend (list of lectures)
+        payload = {
+            "type": "vani.results",
+            "topic": topic,
+            "results": [
+                {
+                    "videoId": r.get("video_id"),
+                    "title": r.get("title"),
+                    "channelTitle": r.get("channel_title"),
+                    "thumbnail": r.get("thumbnail"),
+                    "url": r.get("url"),
+                }
+                for r in results
+            ],
+        }
+
+        # Publish with appropriate topic (handled by publisher)
+        try:
+            publish_fn = getattr(self, "_publish_data_fn", None)
+            if callable(publish_fn):
+                data_bytes = json.dumps(payload).encode("utf-8")
+                await publish_fn(data_bytes)  # publisher decides topic
+        except Exception as e:
+            logger.error(f"Failed to publish vani results: {e}", exc_info=True)
+
+        if results:
+            first_title = results[0].get("title", topic)
+            return (
+                f"मुझे '{topic}' विषय पर कुछ प्रवचन मिले हैं, जैसे '{first_title}'। क्या मैं इनमें से कोई चलाऊँ?"
+            )
+        else:
+            return (
+                f"क्षमा करें, '{topic}' विषय पर उपयुक्त प्रवचन अभी नहीं मिला। क्या आप कोई दूसरा विषय बताना चाहेंगे?"
+            )
 
 
 def prewarm(proc: JobProcess):
@@ -655,15 +762,27 @@ async def entrypoint(ctx: JobContext):
             if not lp:
                 logger.error("❌ Cannot publish: local_participant is None!")
                 return
-            
-            logger.info(f"📤 Publishing {len(data_bytes)} bytes to data channel with topic 'bhajan.track'")
+            # Detect payload type to choose topic
+            publish_topic = "bhajan.track"
+            try:
+                import json as _json
+                _obj = _json.loads(data_bytes.decode("utf-8", errors="ignore"))
+                _t = (_obj or {}).get("type")
+                if _t == "vani.results":
+                    publish_topic = "vani.search"
+            except Exception:
+                pass
+
+            logger.info(
+                f"📤 Publishing {len(data_bytes)} bytes to data channel with topic '{publish_topic}'"
+            )
             logger.info(f"   Room: {ctx.room.name}, Participants: {len(ctx.room.remote_participants)}")
             logger.info(f"   Data preview: {data_bytes[:200].decode('utf-8', errors='ignore')}...")
             
             try:
                 # Try with topic first - MUST await since publish_data is async
-                await lp.publish_data(data_bytes, reliable=True, topic="bhajan.track")
-                logger.info("✅ Published data with topic 'bhajan.track'")
+                await lp.publish_data(data_bytes, reliable=True, topic=publish_topic)
+                logger.info(f"✅ Published data with topic '{publish_topic}'")
             except TypeError as e:
                 logger.warning(f"Topic not supported, publishing without topic: {e}")
                 try:
@@ -713,9 +832,17 @@ async def entrypoint(ctx: JobContext):
     # Send a warm, proactive greeting as soon as the agent connects
     # The greeting should be engaging and invite conversation
     if is_live_satsang:
-        greeting = "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आज हम सभी साधकों के साथ सत्संग में हैं। क्या आपको कोई आध्यात्मिक प्रश्न है या कोई विषय जिस पर चर्चा करना चाहेंगे?"
+        greeting = (
+            "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आज हम सभी साधकों के साथ सत्संग में हैं। "
+            "क्या आप किसी विशेष विषय पर चर्चा करना चाहेंगे? मैं आपके लिए भक्ति भजन चला सकता हूं, "
+            "या किसी संत का प्रेरक वाणी प्रवचन भी ढूंढ सकता हूं।"
+        )
     else:
-        greeting = "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आप कैसे हैं? आज आप किस विषय पर चर्चा करना चाहेंगे - धर्म, योग, ध्यान, कर्म, या कोई अन्य आध्यात्मिक विषय?"
+        greeting = (
+            "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आप कैसे हैं? आप किस विषय पर चर्चा करना चाहेंगे - "
+            "धर्म, योग, ध्यान, कर्म, या कोई अन्य आध्यात्मिक विषय? यदि चाहें तो मैं उपयुक्त भजन चला सकता हूं "
+            "या गुरुओं के प्रवचन (वाणी) भी ढूंढ कर सुना सकता हूं।"
+        )
     
     logger.info("Sending proactive initial greeting to user")
     

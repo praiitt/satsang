@@ -4,8 +4,10 @@ import { RoomAudioRenderer, StartAudio } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
 import { SessionProvider } from '@/components/app/session-provider';
 import { ViewController } from '@/components/app/view-controller';
+import { AuthProvider } from '@/components/auth/auth-provider';
+import { HeygenAvatarPlayer } from '@/components/heygen/heygen-avatar-player';
 import { Toaster } from '@/components/livekit/toaster';
-import { BhajanPlayer } from '@/components/spotify/bhajan-player';
+import { PWAInstaller } from '@/components/pwa-installer';
 
 interface AppProps {
   appConfig: AppConfig;
@@ -13,14 +15,18 @@ interface AppProps {
 
 export function App({ appConfig }: AppProps) {
   return (
-    <SessionProvider appConfig={appConfig}>
-      <main className="grid h-svh grid-cols-1 place-content-center">
-        <ViewController />
-      </main>
-      <StartAudio label="Start Audio" />
-      <RoomAudioRenderer />
-      <BhajanPlayer />
-      <Toaster />
-    </SessionProvider>
+    <AuthProvider>
+      <SessionProvider appConfig={appConfig}>
+        <main className="min-h-svh w-full overflow-y-auto">
+          <ViewController />
+        </main>
+        <StartAudio label="Start Audio" />
+        <RoomAudioRenderer />
+        {appConfig.enableHeygenAvatar ? <HeygenAvatarPlayer /> : null}
+        {/* YouTube bhajan player is in SessionView (inside RoomContext) */}
+        <Toaster />
+        <PWAInstaller />
+      </SessionProvider>
+    </AuthProvider>
   );
 }

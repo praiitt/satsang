@@ -1,0 +1,38 @@
+import { MetadataRoute } from 'next';
+
+export default function manifest(): MetadataRoute.Manifest {
+  return {
+    name: 'सत्संग - लाइव आध्यात्मिक सभा',
+    short_name: 'सत्संग',
+    description: 'लाइव आध्यात्मिक सभा से जुड़ें और समुदाय से कनेक्ट करें',
+    start_url: '/',
+    display: 'standalone',
+    background_color: '#ffffff',
+    theme_color: '#f97316',
+    orientation: 'portrait-primary',
+    icons: [
+      {
+        src: '/icon-192.png',
+        sizes: '192x192',
+        type: 'image/png',
+        purpose: 'any',
+      },
+      {
+        src: '/icon-512.png',
+        sizes: '512x512',
+        type: 'image/png',
+        purpose: 'any',
+      },
+    ],
+    categories: ['spiritual', 'social', 'entertainment'],
+    shortcuts: [
+      {
+        name: 'लाइव सत्संग',
+        short_name: 'लाइव',
+        description: 'लाइव सत्संग सत्र जॉइन करें',
+        url: '/livesatsang',
+        icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+      },
+    ],
+  };
+}

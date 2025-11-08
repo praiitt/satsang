@@ -5,15 +5,18 @@ import { motion } from 'motion/react';
 import type { AppConfig } from '@/app-config';
 import { ChatTranscript } from '@/components/app/chat-transcript';
 import { PreConnectMessage } from '@/components/app/preconnect-message';
+import { useSession } from '@/components/app/session-provider';
 import { TileLayout } from '@/components/app/tile-layout';
+import { SessionAuthGuard } from '@/components/auth/session-auth-guard';
 import {
   AgentControlBar,
   type ControlBarControls,
 } from '@/components/livekit/agent-control-bar/agent-control-bar';
-import { BhajanPlayer } from '@/components/spotify/bhajan-player';
+import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { useConnectionTimeout } from '@/hooks/useConnectionTimout';
 import { useDebugMode } from '@/hooks/useDebug';
+import { useSessionTimer } from '@/hooks/useSessionTimer';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../livekit/scroll-area/scroll-area';
@@ -72,6 +75,8 @@ export const SessionView = ({
   useDebugMode({ enabled: IN_DEVELOPMENT });
   useWakeLock(true);
 
+  const { isSessionActive } = useSession();
+  const { minutesRemaining, secondsRemaining, isTrialExpired } = useSessionTimer(isSessionActive);
   const messages = useChatMessages();
   const [chatOpen, setChatOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -94,44 +99,56 @@ export const SessionView = ({
   }, [messages]);
 
   return (
-    <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
-      {/* Chat Transcript */}
-      <div
-        className={cn(
-          'fixed inset-0 grid grid-cols-1 grid-rows-1',
-          !chatOpen && 'pointer-events-none'
-        )}
-      >
-        <Fade top className="absolute inset-x-4 top-0 h-40" />
-        <ScrollArea ref={scrollAreaRef} className="px-4 pt-40 pb-[150px] md:px-6 md:pb-[180px]">
-          <ChatTranscript
-            hidden={!chatOpen}
-            messages={messages}
-            className="mx-auto max-w-2xl space-y-3 transition-opacity duration-300 ease-out"
-          />
-        </ScrollArea>
-      </div>
-
-      {/* Tile Layout */}
-      <TileLayout chatOpen={chatOpen} />
-
-      {/* Bottom */}
-      <MotionBottom
-        {...BOTTOM_VIEW_MOTION_PROPS}
-        className="fixed inset-x-3 bottom-0 z-50 md:inset-x-12"
-      >
-        {appConfig.isPreConnectBufferEnabled && (
-          <PreConnectMessage messages={messages} className="pb-4" />
-        )}
-        <div className="bg-background relative mx-auto max-w-2xl pb-3 md:pb-12">
-          <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
-          {/* Bhajan Player */}
-          <div className="mb-2 px-3">
-            <BhajanPlayer />
+    <SessionAuthGuard isSessionActive={isSessionActive}>
+      <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
+        {/* Free Trial Timer Indicator */}
+        {!isTrialExpired && (
+          <div className="bg-muted/80 text-muted-foreground fixed top-4 right-4 z-50 rounded-lg border px-3 py-2 text-sm shadow-lg">
+            <div className="font-semibold">Free Trial</div>
+            <div className="text-xs">
+              {minutesRemaining}:{secondsRemaining.toString().padStart(2, '0')} remaining
+            </div>
           </div>
-          <AgentControlBar controls={controls} onChatOpenChange={setChatOpen} />
+        )}
+
+        {/* Chat Transcript */}
+        <div
+          className={cn(
+            'fixed inset-0 grid grid-cols-1 grid-rows-1',
+            !chatOpen && 'pointer-events-none'
+          )}
+        >
+          <Fade top className="absolute inset-x-4 top-0 h-40" />
+          <ScrollArea ref={scrollAreaRef} className="px-4 pt-40 pb-[150px] md:px-6 md:pb-[180px]">
+            <ChatTranscript
+              hidden={!chatOpen}
+              messages={messages}
+              className="mx-auto max-w-2xl space-y-3 transition-opacity duration-300 ease-out"
+            />
+          </ScrollArea>
         </div>
-      </MotionBottom>
-    </section>
+
+        {/* Tile Layout */}
+        <TileLayout chatOpen={chatOpen} />
+
+        {/* Bottom */}
+        <MotionBottom
+          {...BOTTOM_VIEW_MOTION_PROPS}
+          className="fixed inset-x-3 bottom-0 z-50 md:inset-x-12"
+        >
+          {appConfig.isPreConnectBufferEnabled && (
+            <PreConnectMessage messages={messages} className="pb-4" />
+          )}
+          <div className="bg-background relative mx-auto max-w-2xl pb-[max(12px,env(safe-area-inset-bottom))] md:pb-12">
+            <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
+            {/* YouTube Bhajan Player with controls */}
+            <div className="mb-2 px-3">
+              <YouTubeBhajanPlayer />
+            </div>
+            <AgentControlBar controls={controls} onChatOpenChange={setChatOpen} />
+          </div>
+        </MotionBottom>
+      </section>
+    </SessionAuthGuard>
   );
 };
