@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Room, RoomEvent } from 'livekit-client';
 import { RoomAudioRenderer, RoomContext, StartAudio } from '@livekit/components-react';
+import { TileLayout } from '@/components/app/tile-layout';
 import { Toaster } from '@/components/livekit/toaster';
 import { ParticipantList } from '@/components/livesatsang/participant-list';
-import { ParticipantVideoGrid } from '@/components/livesatsang/participant-video-grid';
 import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player';
 import { DailySatsangOrchestrator } from './orchestrator';
 
@@ -82,6 +82,7 @@ export function DailySatsangApp() {
       ) : room ? (
         <RoomContext.Provider value={room}>
           <div className="bg-background flex h-full flex-col overflow-hidden">
+            {started && <TileLayout chatOpen={false} />}
             {/* Top header */}
             <div className="pointer-events-none absolute inset-x-0 top-0 z-40 flex items-center justify-between p-3 sm:p-4">
               <div className="border-border bg-card/90 text-card-foreground pointer-events-auto flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold shadow-lg backdrop-blur-md">
