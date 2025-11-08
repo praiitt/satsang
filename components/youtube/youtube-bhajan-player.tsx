@@ -321,6 +321,14 @@ export function YouTubeBhajanPlayer() {
     if (match && match[1]) {
       const videoId = match[1];
       console.log('[YouTubeBhajanPlayer] Found YouTube URL in chat message:', videoId);
+
+      // Try to derive a friendly title from the message (remove the URL and trim)
+      const derivedName = messageText.replace(match[0], '').replace(/\s+/g, ' ').trim();
+      const displayName = derivedName.length > 0 ? derivedName : 'Bhajan';
+
+      setCurrentTrackName(displayName);
+      setShowControls(true);
+
       playVideo(videoId)
         .then(async () => {
           await setAgentAudioMuted(true);

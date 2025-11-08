@@ -17,6 +17,10 @@ export function DailySatsangApp() {
   const [showParticipants, setShowParticipants] = useState(false);
   const [started, setStarted] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
+  const dailyAgentName =
+    process.env.NEXT_PUBLIC_DAILY_SATSANG_AGENT_NAME ||
+    process.env.NEXT_PUBLIC_AGENT_NAME ||
+    'guruji-daily';
 
   const defaultDurations = useMemo(
     () => ({ intro: 120, bhajan: 300, pravachan: 900, qa: 420, closing: 60 }),
@@ -28,7 +32,7 @@ export function DailySatsangApp() {
       const response = await fetch('/api/daily-satsang/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ participantName: name, role }),
+        body: JSON.stringify({ participantName: name, role, agentName: dailyAgentName }),
       });
       if (!response.ok) throw new Error('Failed to get access token');
       const { serverUrl, roomName, participantToken } = await response.json();

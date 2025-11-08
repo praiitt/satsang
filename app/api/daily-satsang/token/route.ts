@@ -5,6 +5,7 @@ import { RoomConfiguration } from '@livekit/protocol';
 type DailySatsangTokenRequest = {
   participantName: string;
   role?: 'host' | 'participant';
+  agentName?: string;
 };
 
 type DailySatsangTokenResponse = {
@@ -12,6 +13,7 @@ type DailySatsangTokenResponse = {
   roomName: string;
   participantToken: string;
   participantName: string;
+  agentName: string;
 };
 
 const API_KEY = process.env.LIVEKIT_API_KEY;
@@ -20,8 +22,9 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 
 // Room name for DailySatsang - shared room for all users
 const DAILY_SATSANG_ROOM_NAME = 'DailySatsang';
-// Use a dedicated agent name for Daily Satsang to avoid conflicts with main 'guruji'
-const AGENT_NAME = 'guruji-daily';
+// Default agent name for Daily Satsang; can be overridden per-request
+const DEFAULT_AGENT_NAME =
+  process.env.LIVEKIT_DAILY_SATSANG_AGENT_NAME ?? process.env.LIVEKIT_AGENT_NAME ?? 'guruji-daily';
 
 export const revalidate = 0;
 
@@ -34,9 +37,14 @@ export async function POST(req: Request) {
     const body: DailySatsangTokenRequest = await req.json();
     const participantName = body.participantName || `User_${Math.floor(Math.random() * 10_000)}`;
     const role = body.role || 'participant';
+    const agentName = (body.agentName || DEFAULT_AGENT_NAME).trim();
+
+    if (!agentName) {
+      throw new Error('Agent name is required for Daily Satsang');
+    }
 
     console.log(
-      `[DailySatsang Token] Generating token for ${participantName} (${role}) to join room: ${DAILY_SATSANG_ROOM_NAME}`
+      `[DailySatsang Token] Generating token for ${participantName} (${role}) to join room: ${DAILY_SATSANG_ROOM_NAME} with agent "${agentName}"`
     );
 
     const participantIdentity = `dailysatsang_${role}_${Math.floor(Math.random() * 10_000)}_${Date.now()}`;
@@ -44,7 +52,8 @@ export async function POST(req: Request) {
     const participantToken = await createParticipantToken(
       { identity: participantIdentity, name: participantName },
       DAILY_SATSANG_ROOM_NAME,
-      role
+      role,
+      agentName
     );
 
     const data: DailySatsangTokenResponse = {
@@ -52,9 +61,12 @@ export async function POST(req: Request) {
       roomName: DAILY_SATSANG_ROOM_NAME,
       participantToken,
       participantName,
+      agentName,
     };
 
-    console.log(`[DailySatsang Token] Token generated successfully for room: ${data.roomName}`);
+    console.log(
+      `[DailySatsang Token] Token generated successfully for room: ${data.roomName} (agent: ${agentName})`
+    );
 
     const headers = new Headers({ 'Cache-Control': 'no-store' });
     return NextResponse.json(data, { headers });
@@ -70,7 +82,8 @@ export async function POST(req: Request) {
 function createParticipantToken(
   userInfo: AccessTokenOptions,
   roomName: string,
-  role: 'host' | 'participant'
+  role: 'host' | 'participant',
+  agentName: string
 ): Promise<string> {
   console.log(`[Token Creation] Creating token for room: "${roomName}"`);
 
@@ -90,11 +103,11 @@ function createParticipantToken(
   };
 
   at.addGrant(grant);
-  at.roomConfig = new RoomConfiguration({ agents: [{ agentName: AGENT_NAME }] });
+  at.roomConfig = new RoomConfiguration({ agents: [{ agentName }] });
 
   const token = at.toJwt();
   console.log(
-    `[Token Creation] Token created for room: "${roomName}", Identity: ${userInfo.identity}, Agent: ${AGENT_NAME}`
+    `[Token Creation] Token created for room: "${roomName}", Identity: ${userInfo.identity}, Agent: ${agentName}`
   );
   return Promise.resolve(token);
 }
