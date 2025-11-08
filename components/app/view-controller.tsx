@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef } from 'react';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, type Transition, type Variants, motion } from 'motion/react';
 import { useRoomContext } from '@livekit/components-react';
 import { useSession } from '@/components/app/session-provider';
 import { SessionView } from '@/components/app/session-view';
@@ -10,23 +10,27 @@ import { WelcomeView } from '@/components/app/welcome-view';
 const MotionWelcomeView = motion.create(WelcomeView);
 const MotionSessionView = motion.create(SessionView);
 
-const VIEW_MOTION_PROPS = {
-  variants: {
-    visible: {
-      opacity: 1,
-    },
-    hidden: {
-      opacity: 0,
-    },
+const viewVariants: Variants = {
+  visible: {
+    opacity: 1,
   },
+  hidden: {
+    opacity: 0,
+  },
+};
+
+const viewTransition: Transition = {
+  duration: 0.5,
+  ease: [0.16, 1, 0.3, 1],
+};
+
+const VIEW_MOTION_PROPS = {
+  variants: viewVariants,
   initial: 'hidden',
   animate: 'visible',
   exit: 'hidden',
-  transition: {
-    duration: 0.5,
-    ease: 'linear',
-  },
-};
+  transition: viewTransition,
+} as const;
 
 export function ViewController() {
   const room = useRoomContext();
