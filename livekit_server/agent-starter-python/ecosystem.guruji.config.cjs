@@ -22,6 +22,7 @@ module.exports = {
         LIVEKIT_AGENT_NAME: 'guruji',
         LIVEKIT_LOG_LEVEL: 'debug',
         PYTHONUNBUFFERED: '1',
+        LIVEKIT_MAX_CONCURRENCY: '2',
       },
       error_file: './logs/guruji-error.log',
       out_file: './logs/guruji-out.log',
