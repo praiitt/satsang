@@ -23,6 +23,7 @@ module.exports = {
         LIVEKIT_LOG_LEVEL: 'debug',
         PYTHONUNBUFFERED: '1',
         LIVEKIT_MAX_CONCURRENCY: '2',
+        LIVEKIT_HTTP_PORT: '8091',
       },
       error_file: './logs/guruji-error.log',
       out_file: './logs/guruji-out.log',
