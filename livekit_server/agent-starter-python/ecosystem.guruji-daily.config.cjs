@@ -1,9 +1,16 @@
+const fs = require('fs');
+const path = require('path');
+
+const venvPython = fs.existsSync(path.join(__dirname, 'venv', 'bin', 'python'))
+  ? './venv/bin/python'
+  : './.venv/bin/python';
+
 module.exports = {
   apps: [
     {
       name: 'guruji-daily',
       cwd: __dirname,
-      interpreter: './venv/bin/python',
+      interpreter: venvPython,
       script: 'src/agent.py',
       args: ['start'],
       instances: 1,
