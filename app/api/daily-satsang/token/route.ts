@@ -22,9 +22,9 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 
 // Room name for DailySatsang - shared room for all users
 const DAILY_SATSANG_ROOM_NAME = 'DailySatsang';
-// Default agent name for Daily Satsang; can be overridden per-request
+// Default agent name for Daily Satsang; prefer dedicated env var and fall back to guruji-daily
 const DEFAULT_AGENT_NAME =
-  process.env.LIVEKIT_DAILY_SATSANG_AGENT_NAME ?? process.env.LIVEKIT_AGENT_NAME ?? 'guruji-daily';
+  (process.env.LIVEKIT_DAILY_SATSANG_AGENT_NAME?.trim() ?? '') || 'guruji-daily';
 
 export const revalidate = 0;
 

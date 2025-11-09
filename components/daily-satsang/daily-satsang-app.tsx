@@ -18,9 +18,7 @@ export function DailySatsangApp() {
   const [started, setStarted] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
   const dailyAgentName =
-    process.env.NEXT_PUBLIC_DAILY_SATSANG_AGENT_NAME ||
-    process.env.NEXT_PUBLIC_AGENT_NAME ||
-    'guruji-daily';
+    (process.env.NEXT_PUBLIC_DAILY_SATSANG_AGENT_NAME?.trim() ?? '') || 'guruji-daily';
 
   const defaultDurations = useMemo(
     () => ({ intro: 120, bhajan: 300, pravachan: 900, qa: 420, closing: 60 }),
