@@ -340,6 +340,10 @@ Always end with a question or invitation to continue the conversation when natur
         # Otherwise, it will use preview_url as fallback
         # IMPORTANT: Always include preview_url if available, even when spotify_id is present
         # This ensures playback works for non-authenticated users
+        
+        # Log YouTube search result before building result object
+        logger.info(f"🔍 Final YouTube search result: youtube_video_id={youtube_video_id}, youtube_video_title={youtube_video_title}")
+        
         result = {
             "url": preview_url,  # Direct MP3 URL for HTML5 audio player (fallback, can be None)
             "name": track_info.get("name_en", bhajan_name),
@@ -353,6 +357,8 @@ Always end with a question or invitation to continue the conversation when natur
         
         logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}, has_youtube_id={bool(youtube_video_id)}")
         logger.info(f"📦 Full result object: {json.dumps(result, indent=2)}")
+        logger.info(f"🔍 Result object youtube_id field: {result.get('youtube_id')}")
+        logger.info(f"🔍 Result object youtube_url field: {result.get('youtube_url')}")
         
         # Emit structured data over LiveKit data channel using injected publisher
         try:
