@@ -21,6 +21,17 @@ async def _get_youtube_api_key() -> Optional[str]:
     api_key = os.getenv("YOUTUBE_API_KEY")
     if not api_key:
         logger.warning("YOUTUBE_API_KEY not set in environment")
+        return None
+    
+    # Clean the API key - remove any whitespace or extra characters
+    api_key = api_key.strip()
+    
+    # Log first and last few characters for debugging (without exposing full key)
+    if len(api_key) > 10:
+        logger.info(f"🔍 [YouTubeSearch] API key loaded: {api_key[:5]}...{api_key[-5:]} (length: {len(api_key)})")
+    else:
+        logger.warning(f"⚠️ [YouTubeSearch] API key seems too short: {len(api_key)} characters")
+    
     return api_key
 
 
@@ -69,17 +80,37 @@ async def find_youtube_video_async(query: str) -> Optional[Dict]:
             ) as response:
                 logger.info(f"🔍 [YouTubeSearch] Response status: {response.status}")
                 
+                if response.status == 400:
+                    error_text = await response.text()
+                    logger.error(f"❌ [YouTubeSearch] YouTube API Bad Request (400). Response: {error_text[:500]}")
+                    logger.error(f"❌ [YouTubeSearch] This usually means invalid API key or malformed request. Check YOUTUBE_API_KEY.")
+                    try:
+                        error_json = await response.json()
+                        logger.error(f"❌ [YouTubeSearch] Error details: {error_json}")
+                    except:
+                        pass
+                    return None
                 if response.status == 401:
                     error_text = await response.text()
-                    logger.error(f"❌ [YouTubeSearch] YouTube API authentication failed - check API key. Response: {error_text[:200]}")
+                    logger.error(f"❌ [YouTubeSearch] YouTube API authentication failed - check API key. Response: {error_text[:500]}")
+                    try:
+                        error_json = await response.json()
+                        logger.error(f"❌ [YouTubeSearch] Error details: {error_json}")
+                    except:
+                        pass
                     return None
                 if response.status == 403:
                     error_text = await response.text()
-                    logger.error(f"❌ [YouTubeSearch] YouTube API quota exceeded or access forbidden. Response: {error_text[:200]}")
+                    logger.error(f"❌ [YouTubeSearch] YouTube API quota exceeded or access forbidden. Response: {error_text[:500]}")
+                    try:
+                        error_json = await response.json()
+                        logger.error(f"❌ [YouTubeSearch] Error details: {error_json}")
+                    except:
+                        pass
                     return None
                 if response.status == 429:
                     error_text = await response.text()
-                    logger.warning(f"⚠️ [YouTubeSearch] YouTube API rate limit hit. Response: {error_text[:200]}")
+                    logger.warning(f"⚠️ [YouTubeSearch] YouTube API rate limit hit. Response: {error_text[:500]}")
                     return None
                 
                 response.raise_for_status()

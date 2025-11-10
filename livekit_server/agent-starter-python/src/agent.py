@@ -254,44 +254,13 @@ Always end with a question or invitation to continue the conversation when natur
         """
         import json
         
-        # Lazy load bhajan search module
-        get_bhajan_url_async_func, list_available_bhajans_async_func, find_bhajan_by_name_async_func = _load_bhajan_search()
-        
         logger.info(f"User requested bhajan: '{bhajan_name}' (artist: {artist})")
         
-        # Get base URL from environment or use relative path (not used for Spotify, but kept for compatibility)
-        base_url = os.getenv("BHAJAN_API_BASE_URL", None)
-        
-        # Get full track info (async) - use lazy-loaded function
-        track_info = await find_bhajan_by_name_async_func(bhajan_name)
-        
-        if not track_info:
-            # List available bhajans for helpful error message (spoken only)
-            available = await list_available_bhajans_async_func()
-            available_list = ", ".join(available[:5])  # Show first 5
-            logger.warning(f"Bhajan not found: {bhajan_name}. Available: {available}")
-            return f"क्षमा करें, '{bhajan_name}' भजन अभी उपलब्ध नहीं है। आप इनमें से कोई सुनना चाहेंगे: {available_list}?"
-        
-        logger.info(f"Found bhajan track: {track_info.get('name_en')} - {track_info.get('preview_url') or track_info.get('spotify_id')}")
-        
-        # Get track info
-        preview_url = track_info.get("preview_url")
-        spotify_id = track_info.get("spotify_id")
-        
-        # If we have spotify_id, we can use Spotify SDK even without preview URL
-        # Only return error if we have NEITHER preview_url NOR spotify_id
-        if not preview_url and not spotify_id:
-            available = await list_available_bhajans_async_func()
-            available_list = ", ".join(available[:5])
-            # Do not speak URLs; just inform politely
-            return (
-                f"क्षमा करें, '{bhajan_name}' का ऑडियो यहाँ उपलब्ध नहीं है। "
-                f"क्या आप इनमें से कोई सुनना चाहेंगे: {available_list}?"
-            )
-        
-        # Also search YouTube for video (async, non-blocking)
+        # Search YouTube for video
         youtube_video_id = None
         youtube_video_title = None
+        youtube_video_name = bhajan_name  # Default to requested name
+        
         logger.info(f"🔍 Starting YouTube search for bhajan: '{bhajan_name}'")
         try:
             # Lazy import YouTube search to avoid blocking if module not available
@@ -313,7 +282,8 @@ Always end with a question or invitation to continue the conversation when natur
                 # Check if API key is available
                 youtube_api_key = os.getenv("YOUTUBE_API_KEY")
                 if not youtube_api_key:
-                    logger.warning("⚠️ YOUTUBE_API_KEY not found in environment - YouTube search will fail")
+                    logger.error("❌ YOUTUBE_API_KEY not found in environment - YouTube search will fail")
+                    return f"क्षमा करें, YouTube खोज सेवा उपलब्ध नहीं है। कृपया बाद में कोशिश करें।"
                 else:
                     logger.info(f"✅ YOUTUBE_API_KEY is set (length: {len(youtube_api_key)})")
                 
@@ -324,38 +294,38 @@ Always end with a question or invitation to continue the conversation when natur
                 if youtube_result:
                     youtube_video_id = youtube_result.get("video_id")
                     youtube_video_title = youtube_result.get("title")
+                    youtube_video_name = youtube_result.get("title", bhajan_name)
                     logger.info(f"✅ Found YouTube video: {youtube_video_id} - {youtube_video_title}")
                 else:
                     logger.warning(f"⚠️ No YouTube video found for '{bhajan_name}' (search returned None)")
+                    return f"क्षमा करें, '{bhajan_name}' भजन YouTube पर नहीं मिला। कृपया कोई अन्य भजन सुनने के लिए कहें।"
             except ImportError as e:
                 logger.error(f"❌ YouTube search module not available: {e}", exc_info=True)
+                return f"क्षमा करें, YouTube खोज मॉड्यूल उपलब्ध नहीं है।"
             except Exception as e:
-                logger.error(f"❌ Error searching YouTube (non-fatal): {e}", exc_info=True)
+                logger.error(f"❌ Error searching YouTube: {e}", exc_info=True)
+                return f"क्षमा करें, YouTube खोज में त्रुटि हुई। कृपया बाद में कोशिश करें।"
         except Exception as e:
-            logger.error(f"❌ YouTube search failed (non-fatal): {e}", exc_info=True)
+            logger.error(f"❌ YouTube search failed: {e}", exc_info=True)
+            return f"क्षमा करें, YouTube खोज असफल रही। कृपया बाद में कोशिश करें।"
         
-        # Build structured result for data channel
-        # Frontend will prefer YouTube if available, otherwise use Spotify
-        # Frontend will use Spotify SDK if spotify_id is present and user is authenticated
-        # Otherwise, it will use preview_url as fallback
-        # IMPORTANT: Always include preview_url if available, even when spotify_id is present
-        # This ensures playback works for non-authenticated users
+        # If no YouTube video found, return error
+        if not youtube_video_id:
+            logger.error(f"❌ No YouTube video ID found for bhajan: '{bhajan_name}'")
+            return f"क्षमा करें, '{bhajan_name}' भजन YouTube पर नहीं मिला। कृपया कोई अन्य भजन सुनने के लिए कहें।"
         
-        # Log YouTube search result before building result object
+        # Build structured result for data channel - YouTube only
         logger.info(f"🔍 Final YouTube search result: youtube_video_id={youtube_video_id}, youtube_video_title={youtube_video_title}")
         
         result = {
-            "url": preview_url,  # Direct MP3 URL for HTML5 audio player (fallback, can be None)
-            "name": track_info.get("name_en", bhajan_name),
-            "artist": track_info.get("artist", ""),
-            "spotify_id": spotify_id,  # Spotify track ID for Web Playback SDK (can be None)
-            "external_url": track_info.get("external_url"),  # Spotify web player URL (for reference only, not spoken)
-            "youtube_id": youtube_video_id,  # YouTube video ID for IFrame Player API (can be None)
-            "youtube_url": f"https://www.youtube.com/watch?v={youtube_video_id}" if youtube_video_id else None,  # Full YouTube URL
-            "message": f"भजन '{track_info.get('name_en', bhajan_name)}' चल रहा है। आनंद लें!",
+            "name": youtube_video_name,
+            "artist": artist or "",
+            "youtube_id": youtube_video_id,  # YouTube video ID for IFrame Player API
+            "youtube_url": f"https://www.youtube.com/watch?v={youtube_video_id}",  # Full YouTube URL
+            "message": f"भजन '{youtube_video_name}' चल रहा है। आनंद लें!",
         }
         
-        logger.info(f"Returning bhajan result: name={result['name']}, has_url={bool(preview_url)}, has_spotify_id={bool(spotify_id)}, has_youtube_id={bool(youtube_video_id)}")
+        logger.info(f"Returning bhajan result: name={result['name']}, has_youtube_id={bool(youtube_video_id)}")
         logger.info(f"📦 Full result object: {json.dumps(result, indent=2)}")
         logger.info(f"🔍 Result object youtube_id field: {result.get('youtube_id')}")
         logger.info(f"🔍 Result object youtube_url field: {result.get('youtube_url')}")
@@ -385,8 +355,9 @@ Always end with a question or invitation to continue the conversation when natur
             logger.error(f"❌ Failed to publish bhajan data message: {e}", exc_info=True)
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
+        
         # Speak only a friendly confirmation, without any URLs/JSON
-        return f"मैं '{result['name']}' भजन चला रहा हूं। आनंद लें!"
+        return f"मैं '{youtube_video_name}' भजन चला रहा हूं। आनंद लें!"
 
     @function_tool
     async def search_vani(
@@ -806,9 +777,8 @@ async def entrypoint(ctx: JobContext):
                 logger.info(f"   ✅ Data object keys: {list(data_obj.keys())}")
                 logger.info(f"   ✅ youtube_id: {data_obj.get('youtube_id')}")
                 logger.info(f"   ✅ youtube_url: {data_obj.get('youtube_url')}")
-                logger.info(f"   ✅ spotify_id: {data_obj.get('spotify_id')}")
-                logger.info(f"   ✅ url: {data_obj.get('url')}")
                 logger.info(f"   ✅ name: {data_obj.get('name')}")
+                logger.info(f"   ✅ artist: {data_obj.get('artist')}")
             except Exception as e:
                 logger.warning(f"   ⚠️ Could not parse data object: {e}")
             
