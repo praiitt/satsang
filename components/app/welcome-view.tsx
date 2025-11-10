@@ -48,10 +48,10 @@ export const WelcomeView = ({
         <section className="mt-6 w-full max-w-5xl sm:mt-8">
           <div className="w-full py-4">
             <h2 className="text-foreground mx-auto mb-3 px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
-              RRAASI satsang
+              RRAASI सत्संग
             </h2>
             <div 
-              className="relative w-full bg-background rounded-lg overflow-hidden" 
+              className="relative w-full rounded-lg overflow-hidden" 
               style={{ 
                 paddingBottom: '56.25%',
                 backgroundColor: 'var(--background)'
@@ -61,14 +61,14 @@ export const WelcomeView = ({
                 width="560"
                 height="315"
                 src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1&t=3"
-                title="HeyGen video player"
+                title="HeyGen वीडियो प्लेयर"
                 frameBorder="0"
                 allow="encrypted-media; fullscreen; autoplay;"
                 allowFullScreen
                 className="absolute left-0 top-0 h-full w-full"
                 style={{ 
                   border: 'none',
-                  backgroundColor: 'var(--background)'
+                  backgroundColor: 'transparent'
                 }}
               />
             </div>
