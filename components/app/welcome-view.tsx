@@ -67,7 +67,7 @@ export const WelcomeView = ({
             <iframe
               width="560"
               height="315"
-              src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1"
+              src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1&t=3"
               title="HeyGen video player"
               frameBorder="0"
               allow="encrypted-media; fullscreen; autoplay;"
