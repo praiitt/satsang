@@ -58,11 +58,7 @@ export function HeygenSpeakerExample() {
           {isSpeaking ? '🔊 Speaking...' : '🎤 Speak'}
         </Button>
 
-        {error && (
-          <div className="text-destructive text-sm">
-            Error: {error.message}
-          </div>
-        )}
+        {error && <div className="text-destructive text-sm">Error: {error.message}</div>}
       </div>
 
       <div className="text-muted-foreground text-xs">
@@ -71,4 +67,3 @@ export function HeygenSpeakerExample() {
     </div>
   );
 }
-
