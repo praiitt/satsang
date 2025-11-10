@@ -790,7 +790,21 @@ async def entrypoint(ctx: JobContext):
                 f"📤 Publishing {len(data_bytes)} bytes to data channel with topic '{publish_topic}'"
             )
             logger.info(f"   Room: {ctx.room.name}, Participants: {len(ctx.room.remote_participants)}")
-            logger.info(f"   Data preview: {data_bytes[:200].decode('utf-8', errors='ignore')}...")
+            # Log full data object for debugging
+            full_data_str = data_bytes.decode('utf-8')
+            logger.info(f"   Data preview (first 200 chars): {full_data_str[:200]}...")
+            logger.info(f"   📦 FULL DATA OBJECT BEING SENT: {full_data_str}")
+            # Parse and log key fields
+            try:
+                data_obj = json.loads(full_data_str)
+                logger.info(f"   ✅ Data object keys: {list(data_obj.keys())}")
+                logger.info(f"   ✅ youtube_id: {data_obj.get('youtube_id')}")
+                logger.info(f"   ✅ youtube_url: {data_obj.get('youtube_url')}")
+                logger.info(f"   ✅ spotify_id: {data_obj.get('spotify_id')}")
+                logger.info(f"   ✅ url: {data_obj.get('url')}")
+                logger.info(f"   ✅ name: {data_obj.get('name')}")
+            except Exception as e:
+                logger.warning(f"   ⚠️ Could not parse data object: {e}")
             
             try:
                 # Try with topic first - MUST await since publish_data is async
