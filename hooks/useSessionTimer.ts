@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const FREE_TRIAL_DURATION_MS = 10 * 1000; // 10 seconds in milliseconds
+const FREE_TRIAL_DURATION_MS = 15 * 60 * 1000; // 15 minutes in milliseconds
 const STORAGE_KEY = 'satsang_session_start_time';
 
 interface UseSessionTimerReturn {
