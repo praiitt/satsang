@@ -64,25 +64,17 @@ export const WelcomeView = ({
             RRAASI satsang
           </h2>
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-            <video
-              className="absolute left-0 top-0 h-full w-full rounded-lg"
-              controls
-              autoPlay
-              muted
-              playsInline
-              style={{ objectFit: 'contain' }}
-              onLoadedMetadata={(e) => {
-                // Start video at 3 seconds
-                const video = e.currentTarget;
-                video.currentTime = 3;
-              }}
-            >
-              <source
-                src="https://app.heygen.com/videos/2d4bdf6e4d2c41dc9a4b8a8670f82911"
-                type="video/mp4"
-              />
-              Your browser does not support the video tag.
-            </video>
+            <iframe
+              width="560"
+              height="315"
+              src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1&t=3"
+              title="HeyGen video player"
+              frameBorder="0"
+              allow="encrypted-media; fullscreen; autoplay;"
+              allowFullScreen
+              className="absolute left-0 top-0 h-full w-full"
+              style={{ border: 'none' }}
+            />
           </div>
         </div>
       </section>
