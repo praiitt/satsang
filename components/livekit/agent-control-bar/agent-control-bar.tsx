@@ -103,7 +103,7 @@ export function AgentControlBar({
         />
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2">
         {/* Chat Button - Prominent */}
         {visibleControls.chat && (
           <Button
@@ -173,7 +173,7 @@ export function AgentControlBar({
             size="lg"
             onClick={handleDisconnect}
             disabled={!isSessionActive}
-            className="relative z-10 min-h-[56px] w-full justify-center gap-2 text-base font-bold shadow-xl transition-all hover:shadow-2xl"
+            className="relative z-10 min-h-[50px] w-full justify-center gap-2 text-base font-bold shadow-xl transition-all hover:shadow-2xl"
             aria-label="End call"
           >
             <PhoneDisconnectIcon weight="bold" className="h-6 w-6" />
