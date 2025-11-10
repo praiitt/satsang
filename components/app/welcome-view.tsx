@@ -1,6 +1,6 @@
 import Link from 'next/link';
+import { useEffect, useRef } from 'react';
 import { Button } from '@/components/livekit/button';
-import { HeygenVideoPlayer } from '@/components/heygen/heygen-video-player';
 
 function WelcomeImage() {
   return (
