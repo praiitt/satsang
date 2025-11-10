@@ -63,17 +63,19 @@ export const WelcomeView = ({
         </div>
       </section>
 
-      {/* Product Description Video */}
-      <section className="mx-auto mt-8 max-w-5xl px-4 sm:mt-12">
+      {/* Product Description Video - Full Width */}
+      <section className="mt-8 w-full sm:mt-12">
         <div className="bg-background border-input rounded-2xl border p-4 sm:p-6">
           <h2 className="text-foreground mb-4 text-center text-xl font-bold sm:text-2xl">
             सत्संग क्या है? (What is Satsang?)
           </h2>
-          <HeygenVideoPlayer
-            videoId="2d4bdf6e4d2c41dc9a4b8a8670f82911"
-            title="सत्संग उत्पाद विवरण (Satsang Product Description)"
-            className="w-full"
-          />
+          <div className="mx-auto max-w-7xl">
+            <HeygenVideoPlayer
+              videoId="2d4bdf6e4d2c41dc9a4b8a8670f82911"
+              title="सत्संग उत्पाद विवरण (Satsang Product Description)"
+              className="w-full"
+            />
+          </div>
         </div>
       </section>
 
