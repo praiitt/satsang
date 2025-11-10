@@ -53,14 +53,6 @@ export const WelcomeView = ({
           >
             {startButtonText}
           </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="h-12 w-full text-base font-semibold sm:w-auto sm:min-w-[200px]"
-          >
-            <Link href="/daily-satsang">डेली सत्संग जॉइन करें</Link>
-          </Button>
         </div>
       </section>
 
