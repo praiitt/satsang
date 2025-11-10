@@ -58,16 +58,22 @@ export const WelcomeView = ({
       </section>
 
       {/* Product Description Video - Full Width */}
-      <section className="mt-8 w-full sm:mt-12">
-        <div className="bg-background w-full py-6">
-          <h2 className="text-foreground mx-auto mb-4 max-w-7xl px-4 text-center text-xl font-bold sm:px-6 sm:text-2xl">
+      <section className="mt-4 w-full sm:mt-6">
+        <div className="bg-background w-full py-4">
+          <h2 className="text-foreground mx-auto mb-3 max-w-7xl px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
             सत्संग क्या है? (What is Satsang?)
           </h2>
-          <div className="w-full">
-            <HeygenVideoPlayer
-              videoId="2d4bdf6e4d2c41dc9a4b8a8670f82911"
-              title="सत्संग उत्पाद विवरण (Satsang Product Description)"
-              className="w-full"
+          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+            <iframe
+              width="560"
+              height="315"
+              src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1"
+              title="HeyGen video player"
+              frameBorder="0"
+              allow="encrypted-media; fullscreen; autoplay;"
+              allowFullScreen
+              className="absolute left-0 top-0 h-full w-full"
+              style={{ border: 'none' }}
             />
           </div>
         </div>
