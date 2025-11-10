@@ -16,6 +16,7 @@ import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player'
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { useConnectionTimeout } from '@/hooks/useConnectionTimout';
 import { useDebugMode } from '@/hooks/useDebug';
+import { useIdleTimeout } from '@/hooks/useIdleTimeout';
 import { useSessionTimer } from '@/hooks/useSessionTimer';
 import { useWakeLock } from '@/hooks/useWakeLock';
 import { cn } from '@/lib/utils';
@@ -78,6 +79,12 @@ export const SessionView = ({
   useConnectionTimeout(200_000);
   useDebugMode({ enabled: IN_DEVELOPMENT });
   useWakeLock(true);
+
+  // Idle timeout: disconnect after 5 minutes of inactivity (configurable via env)
+  const idleTimeoutMs = process.env.NEXT_PUBLIC_IDLE_TIMEOUT_MS
+    ? parseInt(process.env.NEXT_PUBLIC_IDLE_TIMEOUT_MS, 10)
+    : 5 * 60 * 1000; // Default: 5 minutes
+  useIdleTimeout(idleTimeoutMs, true);
 
   const { isSessionActive } = useSession();
   const { minutesRemaining, secondsRemaining, isTrialExpired } = useSessionTimer(isSessionActive);

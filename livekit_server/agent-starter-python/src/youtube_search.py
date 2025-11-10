@@ -34,15 +34,20 @@ async def find_youtube_video_async(query: str) -> Optional[Dict]:
     Returns:
         Dict with keys: video_id, title, channel_title, or None if not found
     """
+    logger.info(f"🔍 [YouTubeSearch] Starting search for: '{query}'")
     api_key = await _get_youtube_api_key()
     if not api_key:
-        logger.warning("YouTube API key not available, cannot search")
+        logger.error("❌ [YouTubeSearch] YouTube API key not available, cannot search")
         return None
+    
+    logger.info(f"✅ [YouTubeSearch] API key found (length: {len(api_key)})")
     
     # Add "bhajan" keyword if not present for better results
     search_query = query.lower()
     if "bhajan" not in search_query and "devotional" not in search_query:
         search_query = f"{search_query} bhajan"
+    
+    logger.info(f"🔍 [YouTubeSearch] Search query: '{search_query}'")
     
     url = f"{YOUTUBE_API_BASE}/search"
     params = {
@@ -54,26 +59,41 @@ async def find_youtube_video_async(query: str) -> Optional[Dict]:
         "regionCode": "IN",  # Prioritize Indian content
     }
     
+    logger.info(f"🔍 [YouTubeSearch] Making API request to: {url}")
+    logger.info(f"🔍 [YouTubeSearch] Params: part={params['part']}, q={params['q']}, type={params['type']}, maxResults={params['maxResults']}, regionCode={params['regionCode']}")
+    
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 url, params=params, timeout=aiohttp.ClientTimeout(total=10)
             ) as response:
+                logger.info(f"🔍 [YouTubeSearch] Response status: {response.status}")
+                
                 if response.status == 401:
-                    logger.error("YouTube API authentication failed - check API key")
+                    error_text = await response.text()
+                    logger.error(f"❌ [YouTubeSearch] YouTube API authentication failed - check API key. Response: {error_text[:200]}")
                     return None
                 if response.status == 403:
-                    logger.error("YouTube API quota exceeded or access forbidden")
+                    error_text = await response.text()
+                    logger.error(f"❌ [YouTubeSearch] YouTube API quota exceeded or access forbidden. Response: {error_text[:200]}")
                     return None
                 if response.status == 429:
-                    logger.warning("YouTube API rate limit hit")
+                    error_text = await response.text()
+                    logger.warning(f"⚠️ [YouTubeSearch] YouTube API rate limit hit. Response: {error_text[:200]}")
                     return None
+                
                 response.raise_for_status()
                 data = await response.json()
                 
+                logger.info(f"🔍 [YouTubeSearch] API response received, checking items...")
+                
                 items = data.get("items", [])
+                logger.info(f"🔍 [YouTubeSearch] Found {len(items)} items in response")
+                
                 if not items:
-                    logger.info(f"No YouTube videos found for '{query}'")
+                    logger.warning(f"⚠️ [YouTubeSearch] No YouTube videos found for '{query}' (empty items array)")
+                    # Log the full response for debugging
+                    logger.debug(f"🔍 [YouTubeSearch] Full API response: {data}")
                     return None
                 
                 # Return the first (best match) video
@@ -81,12 +101,14 @@ async def find_youtube_video_async(query: str) -> Optional[Dict]:
                 video_id = video.get("id", {}).get("videoId")
                 snippet = video.get("snippet", {})
                 
+                logger.info(f"🔍 [YouTubeSearch] First video item: id={video.get('id')}, snippet keys={list(snippet.keys()) if snippet else 'None'}")
+                
                 if not video_id:
-                    logger.warning(f"No video ID found in YouTube search result for '{query}'")
+                    logger.error(f"❌ [YouTubeSearch] No video ID found in YouTube search result for '{query}'. Video object: {video}")
                     return None
                 
                 logger.info(
-                    f"Found YouTube video: '{snippet.get('title')}' by {snippet.get('channelTitle')} - {video_id}"
+                    f"✅ [YouTubeSearch] Found YouTube video: '{snippet.get('title')}' by {snippet.get('channelTitle')} - {video_id}"
                 )
                 return {
                     "video_id": video_id,
@@ -96,13 +118,13 @@ async def find_youtube_video_async(query: str) -> Optional[Dict]:
                     "thumbnail": snippet.get("thumbnails", {}).get("default", {}).get("url"),
                 }
     except asyncio.TimeoutError:
-        logger.error(f"Timeout searching YouTube for '{query}'")
+        logger.error(f"❌ [YouTubeSearch] Timeout searching YouTube for '{query}'")
         return None
     except aiohttp.ClientError as e:
-        logger.error(f"HTTP error searching YouTube for '{query}': {e}")
+        logger.error(f"❌ [YouTubeSearch] HTTP error searching YouTube for '{query}': {e}", exc_info=True)
         return None
     except Exception as e:
-        logger.error(f"Unexpected error searching YouTube for '{query}': {e}")
+        logger.error(f"❌ [YouTubeSearch] Unexpected error searching YouTube for '{query}': {e}", exc_info=True)
         return None
 
 

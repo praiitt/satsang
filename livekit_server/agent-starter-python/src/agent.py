@@ -292,12 +292,14 @@ Always end with a question or invitation to continue the conversation when natur
         # Also search YouTube for video (async, non-blocking)
         youtube_video_id = None
         youtube_video_title = None
+        logger.info(f"🔍 Starting YouTube search for bhajan: '{bhajan_name}'")
         try:
             # Lazy import YouTube search to avoid blocking if module not available
             try:
                 # Try relative import first (when running as package)
                 try:
                     from .youtube_search import find_youtube_video_async
+                    logger.info("✅ Imported YouTube search module (relative)")
                 except ImportError:
                     # Fallback to absolute import (when running as script)
                     import sys
@@ -306,20 +308,31 @@ Always end with a question or invitation to continue the conversation when natur
                     if str(src_path) not in sys.path:
                         sys.path.insert(0, str(src_path))
                     from youtube_search import find_youtube_video_async
+                    logger.info("✅ Imported YouTube search module (absolute)")
                 
+                # Check if API key is available
+                youtube_api_key = os.getenv("YOUTUBE_API_KEY")
+                if not youtube_api_key:
+                    logger.warning("⚠️ YOUTUBE_API_KEY not found in environment - YouTube search will fail")
+                else:
+                    logger.info(f"✅ YOUTUBE_API_KEY is set (length: {len(youtube_api_key)})")
+                
+                logger.info(f"🔍 Calling find_youtube_video_async('{bhajan_name}')...")
                 youtube_result = await find_youtube_video_async(bhajan_name)
+                logger.info(f"🔍 YouTube search returned: {youtube_result}")
+                
                 if youtube_result:
                     youtube_video_id = youtube_result.get("video_id")
                     youtube_video_title = youtube_result.get("title")
                     logger.info(f"✅ Found YouTube video: {youtube_video_id} - {youtube_video_title}")
                 else:
-                    logger.info(f"⚠️ No YouTube video found for '{bhajan_name}'")
+                    logger.warning(f"⚠️ No YouTube video found for '{bhajan_name}' (search returned None)")
             except ImportError as e:
-                logger.warning(f"YouTube search module not available: {e}")
+                logger.error(f"❌ YouTube search module not available: {e}", exc_info=True)
             except Exception as e:
-                logger.warning(f"Error searching YouTube (non-fatal): {e}", exc_info=True)
+                logger.error(f"❌ Error searching YouTube (non-fatal): {e}", exc_info=True)
         except Exception as e:
-            logger.warning(f"YouTube search failed (non-fatal): {e}", exc_info=True)
+            logger.error(f"❌ YouTube search failed (non-fatal): {e}", exc_info=True)
         
         # Build structured result for data channel
         # Frontend will prefer YouTube if available, otherwise use Spotify
