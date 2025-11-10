@@ -63,7 +63,13 @@ export const WelcomeView = ({
           <h2 className="text-foreground mx-auto mb-3 max-w-7xl px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
             RRAASI satsang
           </h2>
-          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+          <div 
+            className="relative w-full bg-background rounded-lg overflow-hidden" 
+            style={{ 
+              paddingBottom: '56.25%',
+              backgroundColor: 'var(--background)'
+            }}
+          >
             <iframe
               width="560"
               height="315"
@@ -73,7 +79,10 @@ export const WelcomeView = ({
               allow="encrypted-media; fullscreen; autoplay;"
               allowFullScreen
               className="absolute left-0 top-0 h-full w-full"
-              style={{ border: 'none' }}
+              style={{ 
+                border: 'none',
+                backgroundColor: 'var(--background)'
+              }}
             />
           </div>
         </div>
