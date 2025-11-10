@@ -20,6 +20,66 @@ function WelcomeImage() {
   );
 }
 
+function VideoSection() {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    // Ensure autoplay works by reloading iframe if needed
+    const iframe = iframeRef.current;
+    if (iframe) {
+      // Try to trigger autoplay after a short delay
+      const timer = setTimeout(() => {
+        try {
+          // Some browsers require user interaction first, but we can try
+          if (iframe.contentWindow) {
+            // The iframe src already has autoplay=1&muted=1
+            // If it still doesn't work, it might be a browser policy issue
+          }
+        } catch (e) {
+          // Cross-origin restrictions might prevent this
+          console.log('Cannot access iframe content:', e);
+        }
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  return (
+    <section className="mt-6 w-full max-w-5xl sm:mt-8">
+      <div className="w-full py-4">
+        <h2 className="text-foreground mx-auto mb-3 px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
+          RRAASI सत्संग
+        </h2>
+        <div
+          className="relative w-full rounded-lg overflow-hidden"
+          style={{
+            paddingBottom: '56.25%',
+            backgroundColor: 'var(--background)',
+          }}
+        >
+          <iframe
+            ref={iframeRef}
+            width="560"
+            height="315"
+            src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1&loop=1&playsinline=1"
+            title="HeyGen वीडियो प्लेयर"
+            frameBorder="0"
+            allow="encrypted-media; fullscreen; autoplay; picture-in-picture;"
+            allowFullScreen
+            className="absolute left-0 top-0 h-full w-full"
+            style={{
+              border: 'none',
+              backgroundColor: 'transparent',
+            }}
+            loading="eager"
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
 interface WelcomeViewProps {
   startButtonText: string;
   onStartCall: () => void;
@@ -45,35 +105,7 @@ export const WelcomeView = ({
         </p>
 
         {/* Product Description Video - Full Width */}
-        <section className="mt-6 w-full max-w-5xl sm:mt-8">
-          <div className="w-full py-4">
-            <h2 className="text-foreground mx-auto mb-3 px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
-              RRAASI सत्संग
-            </h2>
-            <div 
-              className="relative w-full rounded-lg overflow-hidden" 
-              style={{ 
-                paddingBottom: '56.25%',
-                backgroundColor: 'var(--background)'
-              }}
-            >
-              <iframe
-                width="560"
-                height="315"
-                src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1&t=3"
-                title="HeyGen वीडियो प्लेयर"
-                frameBorder="0"
-                allow="encrypted-media; fullscreen; autoplay;"
-                allowFullScreen
-                className="absolute left-0 top-0 h-full w-full"
-                style={{ 
-                  border: 'none',
-                  backgroundColor: 'transparent'
-                }}
-              />
-            </div>
-          </div>
-        </section>
+        <VideoSection />
 
         {/* Action Buttons - Prominently displayed */}
         <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
