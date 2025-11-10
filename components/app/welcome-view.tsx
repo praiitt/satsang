@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Button } from '@/components/livekit/button';
+import { PushNotificationButton } from '@/components/push-notification-button';
 
 function WelcomeImage() {
   return (
@@ -53,6 +54,11 @@ export const WelcomeView = ({
           >
             {startButtonText}
           </Button>
+        </div>
+
+        {/* Push Notification Button */}
+        <div className="mt-4">
+          <PushNotificationButton className="h-10 text-sm" />
         </div>
       </section>
 
