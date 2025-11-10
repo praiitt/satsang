@@ -61,7 +61,7 @@ export const WelcomeView = ({
       <section className="mt-4 w-full sm:mt-6">
         <div className="bg-background w-full py-4">
           <h2 className="text-foreground mx-auto mb-3 max-w-7xl px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
-            सत्संग क्या है? (What is Satsang?)
+            RRAASI satsang
           </h2>
           <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
             <iframe
