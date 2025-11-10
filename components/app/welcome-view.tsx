@@ -44,6 +44,37 @@ export const WelcomeView = ({
           के लिए जुड़ सकते हैं, प्रश्न पूछ सकते हैं और समूह के साथ आध्यात्मिक चर्चा कर सकते हैं।
         </p>
 
+        {/* Product Description Video - Full Width */}
+        <section className="mt-6 w-full max-w-5xl sm:mt-8">
+          <div className="w-full py-4">
+            <h2 className="text-foreground mx-auto mb-3 px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
+              RRAASI satsang
+            </h2>
+            <div 
+              className="relative w-full bg-background rounded-lg overflow-hidden" 
+              style={{ 
+                paddingBottom: '56.25%',
+                backgroundColor: 'var(--background)'
+              }}
+            >
+              <iframe
+                width="560"
+                height="315"
+                src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1&t=3"
+                title="HeyGen video player"
+                frameBorder="0"
+                allow="encrypted-media; fullscreen; autoplay;"
+                allowFullScreen
+                className="absolute left-0 top-0 h-full w-full"
+                style={{ 
+                  border: 'none',
+                  backgroundColor: 'var(--background)'
+                }}
+              />
+            </div>
+          </div>
+        </section>
+
         {/* Action Buttons - Prominently displayed */}
         <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
           <Button
@@ -54,37 +85,6 @@ export const WelcomeView = ({
           >
             {startButtonText}
           </Button>
-        </div>
-      </section>
-
-      {/* Product Description Video - Full Width */}
-      <section className="mt-4 w-full sm:mt-6">
-        <div className="w-full py-4">
-          <h2 className="text-foreground mx-auto mb-3 max-w-7xl px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
-            RRAASI satsang
-          </h2>
-          <div 
-            className="relative w-full bg-background rounded-lg overflow-hidden" 
-            style={{ 
-              paddingBottom: '56.25%',
-              backgroundColor: 'var(--background)'
-            }}
-          >
-            <iframe
-              width="560"
-              height="315"
-              src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1&t=3"
-              title="HeyGen video player"
-              frameBorder="0"
-              allow="encrypted-media; fullscreen; autoplay;"
-              allowFullScreen
-              className="absolute left-0 top-0 h-full w-full"
-              style={{ 
-                border: 'none',
-                backgroundColor: 'var(--background)'
-              }}
-            />
-          </div>
         </div>
       </section>
 
