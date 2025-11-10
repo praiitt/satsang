@@ -159,12 +159,88 @@ Body: { session_id: string, session_token: string }
 - ✅ Error handling
 - ✅ Session management
 
+## Pricing & Costs
+
+### For 1 Minute of Avatar Speech
+
+**Important Note**: The pricing below is for the **Video Generation API** (pre-recorded videos). The **Streaming API** (real-time text-to-speech) may have different pricing. Please check HeyGen's official pricing page for the most current streaming API costs.
+
+#### Free Plan
+- **Cost**: $0/month
+- **Credits**: 10 API credits per month
+- **Credit Usage**: 1 minute of video = 0.2 credits
+- **Total**: ~50 minutes of video per month (free)
+- **For 1 minute**: 0.2 credits (free within monthly limit)
+
+#### Pro Plan
+- **Cost**: $99/month
+- **Credits**: 100 API credits per month
+- **Credit Usage**: 1 minute of video = 0.2 credits
+- **Total**: ~500 minutes of video per month
+- **For 1 minute**: 0.2 credits
+- **Effective cost per minute**: ~$0.20 (if using all credits)
+
+#### Scale Plan
+- **Cost**: $330/month
+- **Credits**: 660 API credits per month
+- **Credit Usage**: 1 minute of video = 0.2 credits
+- **Total**: ~3,300 minutes of video per month
+- **For 1 minute**: 0.2 credits
+- **Effective cost per minute**: ~$0.10 (if using all credits)
+
+### Streaming API Pricing
+
+The **Streaming API** (real-time text-to-speech) pricing may differ from video generation. Key differences:
+
+1. **Real-time streaming**: Charges are typically based on streaming duration
+2. **Session-based**: May charge per session or per minute of streaming
+3. **Different tiers**: Streaming API may have separate pricing tiers
+
+**⚠️ Important**: 
+- Check HeyGen's official pricing page for current streaming API rates
+- Streaming API pricing may be different from video generation pricing
+- Contact HeyGen support for enterprise pricing if you need high volume
+
+### Cost Estimation Examples
+
+For a typical usage scenario:
+
+- **10 minutes/day** = 300 minutes/month
+  - Free Plan: Not enough (need ~60 credits, have 10)
+  - Pro Plan: Costs $99/month (uses 60 credits)
+  - Cost per minute: ~$0.33
+
+- **5 minutes/day** = 150 minutes/month
+  - Free Plan: Not enough (need ~30 credits, have 10)
+  - Pro Plan: Costs $99/month (uses 30 credits)
+  - Cost per minute: ~$0.66
+
+- **2 minutes/day** = 60 minutes/month
+  - Free Plan: Not enough (need ~12 credits, have 10)
+  - Pro Plan: Costs $99/month (uses 12 credits)
+  - Cost per minute: ~$1.65
+
+### Cost Optimization Tips
+
+1. **Use Free Plan for Testing**: Start with the free plan to test functionality
+2. **Batch Requests**: Group multiple text snippets into longer sessions
+3. **Cache Common Responses**: Cache frequently used audio/text combinations
+4. **Monitor Usage**: Track your API usage to optimize costs
+5. **Consider Alternatives**: For static content, pre-generate videos instead of streaming
+
+### Resources
+
+- [HeyGen Pricing Page](https://www.heygen.com/pricing)
+- [HeyGen API Pricing Guide](https://help.heygen.com/en/articles/10060327-heygen-api-pricing-subscriptions-explained)
+- Contact HeyGen support for custom pricing for high-volume usage
+
 ## Limitations
 
 1. **Browser Support**: Requires WebRTC support (modern browsers)
 2. **Network**: Requires stable internet connection
-3. **API Limits**: Subject to HeyGen API rate limits
+3. **API Limits**: Subject to HeyGen API rate limits and pricing tiers
 4. **Audio Only**: The streaming API provides audio only (video requires the video player component)
+5. **Cost**: Real-time streaming may have different pricing than video generation
 
 ## Troubleshooting
 
