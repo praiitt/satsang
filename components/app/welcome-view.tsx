@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/livekit/button';
 import { PushNotificationButton } from '@/components/push-notification-button';
+import { HeygenVideoPlayer } from '@/components/heygen/heygen-video-player';
 
 function WelcomeImage() {
   return (
@@ -68,16 +69,11 @@ export const WelcomeView = ({
           <h2 className="text-foreground mb-4 text-center text-xl font-bold sm:text-2xl">
             सत्संग क्या है? (What is Satsang?)
           </h2>
-          <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-            <iframe
-              src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911"
-              title="HeyGen video player"
-              allow="encrypted-media; fullscreen;"
-              allowFullScreen
-              className="absolute left-0 top-0 h-full w-full rounded-lg"
-              style={{ border: 'none' }}
-            />
-          </div>
+          <HeygenVideoPlayer
+            videoId="2d4bdf6e4d2c41dc9a4b8a8670f82911"
+            title="सत्संग उत्पाद विवरण (Satsang Product Description)"
+            className="w-full"
+          />
         </div>
       </section>
 
