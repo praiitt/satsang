@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 /**
  * API endpoint to save push notification subscription.
  * This stores the subscription in your database or storage.
- * 
+ *
  * For production, you should:
  * 1. Authenticate the user
  * 2. Store subscription in database with user ID
@@ -14,10 +14,7 @@ export async function POST(req: NextRequest) {
     const { subscription } = await req.json();
 
     if (!subscription) {
-      return NextResponse.json(
-        { error: 'Subscription is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Subscription is required' }, { status: 400 });
     }
 
     // TODO: Store subscription in your database
@@ -52,4 +49,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

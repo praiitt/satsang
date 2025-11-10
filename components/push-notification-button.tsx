@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { Button } from '@/components/livekit/button';
 import { toastAlert } from '@/components/livekit/alert-toast';
+import { Button } from '@/components/livekit/button';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface PushNotificationButtonProps {
   className?: string;
@@ -54,7 +54,7 @@ export function PushNotificationButton({ className }: PushNotificationButtonProp
   if (permission === 'denied') {
     return (
       <div className={className}>
-        <p className="text-sm text-muted-foreground">
+        <p className="muted-foreground text-sm">
           Push notifications are blocked. Please enable them in your browser settings.
         </p>
       </div>
@@ -64,7 +64,7 @@ export function PushNotificationButton({ className }: PushNotificationButtonProp
   return (
     <Button
       onClick={handleToggle}
-      disabled={isLoading || permission === 'denied'}
+      disabled={isLoading}
       variant={isSubscribed ? 'outline' : 'default'}
       className={className}
     >
@@ -76,4 +76,3 @@ export function PushNotificationButton({ className }: PushNotificationButtonProp
     </Button>
   );
 }
-

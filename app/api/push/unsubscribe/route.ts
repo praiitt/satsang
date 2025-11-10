@@ -9,10 +9,7 @@ export async function POST(req: NextRequest) {
     const { subscription } = await req.json();
 
     if (!subscription) {
-      return NextResponse.json(
-        { error: 'Subscription is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Subscription is required' }, { status: 400 });
     }
 
     // TODO: Remove subscription from your database
@@ -40,4 +37,3 @@ export async function POST(req: NextRequest) {
     );
   }
 }
-

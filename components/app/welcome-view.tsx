@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { Button } from '@/components/livekit/button';
 
 function WelcomeImage() {
@@ -52,7 +52,7 @@ function VideoSection() {
           RRAASI सत्संग
         </h2>
         <div
-          className="relative w-full rounded-lg overflow-hidden"
+          className="relative w-full overflow-hidden rounded-lg"
           style={{
             paddingBottom: '56.25%',
             backgroundColor: 'var(--background)',
@@ -67,7 +67,7 @@ function VideoSection() {
             frameBorder="0"
             allow="encrypted-media; fullscreen; autoplay; picture-in-picture;"
             allowFullScreen
-            className="absolute left-0 top-0 h-full w-full"
+            className="absolute top-0 left-0 h-full w-full"
             style={{
               border: 'none',
               backgroundColor: 'transparent',

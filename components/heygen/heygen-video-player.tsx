@@ -12,10 +12,10 @@ interface HeygenVideoPlayerProps {
 
 /**
  * HeyGen Embedded Video Player Component
- * 
+ *
  * Displays a HeyGen pre-recorded video in a responsive iframe.
  * The video automatically adjusts to screen size with a 16:9 aspect ratio.
- * 
+ *
  * @param videoId - The HeyGen video ID (from the embedded player URL)
  * @param title - Optional title for the video
  * @param className - Additional CSS classes
@@ -49,17 +49,16 @@ export function HeygenVideoPlayer({
         title={title}
         allow="encrypted-media; fullscreen; autoplay"
         allowFullScreen
-        className="absolute left-0 top-0 h-full w-full rounded-lg"
+        className="absolute top-0 left-0 h-full w-full rounded-lg"
         style={{ border: 'none' }}
         loading="lazy"
         onLoad={() => setIsLoaded(true)}
       />
       {!isLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted rounded-lg">
+        <div className="bg-muted absolute inset-0 flex items-center justify-center rounded-lg">
           <div className="text-muted-foreground text-sm">Loading video...</div>
         </div>
       )}
     </div>
   );
 }
-
