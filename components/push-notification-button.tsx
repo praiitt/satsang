@@ -14,7 +14,7 @@ interface PushNotificationButtonProps {
  * Shows current subscription status and allows toggling.
  */
 export function PushNotificationButton({ className }: PushNotificationButtonProps) {
-  const { isSupported, isSubscribed, permission, subscribe, unsubscribe, error } =
+  const { isSupported, isSubscribed, permission, subscribe, unsubscribe } =
     usePushNotifications();
   const [isLoading, setIsLoading] = useState(false);
 
