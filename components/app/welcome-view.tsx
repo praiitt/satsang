@@ -99,7 +99,10 @@ export const WelcomeView = ({
         <h1 className="text-foreground mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
           आपका आध्यात्मिक गुरु अब आपके साथ है
         </h1>
-        <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-base leading-7 sm:text-lg md:text-xl">RRAASI सत्संग - एक AI-संचालित आध्यात्मिक सहायक जो हिन्दी में आपसे बात करता है, प्रश्नों के उत्तर देता है, भजन चलाता है, और गुरुओं के प्रवचन सुनाता है। बस बोलिए और आनंद लीजिए!</p>
+        <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-base leading-7 sm:text-lg md:text-xl">
+          RRAASI सत्संग - एक AI-संचालित आध्यात्मिक सहायक जो हिन्दी में आपसे बात करता है, प्रश्नों के
+          उत्तर देता है, भजन चलाता है, और गुरुओं के प्रवचन सुनाता है। बस बोलिए और आनंद लीजिए!
+        </p>
 
         {/* Product Description Video - Full Width */}
         <VideoSection />
@@ -275,19 +278,27 @@ export const WelcomeView = ({
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-background border-input rounded-xl border p-5 text-center">
             <div className="mb-2 text-2xl">💬</div>
-            <p className="text-muted-foreground text-sm">आध्यात्मिक प्रश्नों के उत्तर प्राप्त करें</p>
+            <p className="text-muted-foreground text-sm">
+              आध्यात्मिक प्रश्नों के उत्तर प्राप्त करें
+            </p>
           </div>
           <div className="bg-background border-input rounded-xl border p-5 text-center">
             <div className="mb-2 text-2xl">🎵</div>
-            <p className="text-muted-foreground text-sm">अपने पसंदीदा भजन सुनें</p>
+            <p className="text-muted-foreground text-sm">
+              अपने पसंदीदा भजन सुनें
+            </p>
           </div>
           <div className="bg-background border-input rounded-xl border p-5 text-center">
             <div className="mb-2 text-2xl">📚</div>
-            <p className="text-muted-foreground text-sm">गुरुओं के प्रवचन सुनें</p>
+            <p className="text-muted-foreground text-sm">
+              गुरुओं के प्रवचन सुनें
+            </p>
           </div>
           <div className="bg-background border-input rounded-xl border p-5 text-center">
             <div className="mb-2 text-2xl">🧘</div>
-            <p className="text-muted-foreground text-sm">ध्यान और योग के बारे में जानें</p>
+            <p className="text-muted-foreground text-sm">
+              ध्यान और योग के बारे में जानें
+            </p>
           </div>
         </div>
       </section>
@@ -299,7 +310,11 @@ export const WelcomeView = ({
             बस एक क्लिक दूर — गुरुजी से बातचीत शुरू करें।
           </p>
           <div className="flex gap-3">
-            <Button onClick={onStartCall} variant="ghost" className="h-12 bg-white/10 hover:bg-white/20">
+            <Button
+              onClick={onStartCall}
+              variant="ghost"
+              className="h-12 bg-white/10 hover:bg-white/20"
+            >
               अभी शुरू करें
             </Button>
             <Button asChild variant="ghost" className="h-12 bg-white/10 hover:bg-white/20">
@@ -321,10 +336,10 @@ export const WelcomeView = ({
             सहज, सुलभ और सार्थक बनाया जाए।
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
-            <div className="bg-muted rounded-lg px-4 py-2 text-muted-foreground">🤖 AI-संचालित</div>
-            <div className="bg-muted rounded-lg px-4 py-2 text-muted-foreground">🎯 वास्तविक समय</div>
-            <div className="bg-muted rounded-lg px-4 py-2 text-muted-foreground">🔒 सुरक्षित</div>
-            <div className="bg-muted rounded-lg px-4 py-2 text-muted-foreground">🌐 ब्राउज़र-आधारित</div>
+            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">🤖 AI-संचालित</div>
+            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">🎯 वास्तविक समय</div>
+            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">🔒 सुरक्षित</div>
+            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">🌐 ब्राउज़र-आधारित</div>
           </div>
         </div>
       </section>
