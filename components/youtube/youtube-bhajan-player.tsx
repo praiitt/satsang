@@ -3,7 +3,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { RemoteParticipant, RemoteTrackPublication, RoomEvent } from 'livekit-client';
 import { useRoomContext } from '@livekit/components-react';
-import { PauseIcon, PlayIcon } from '@phosphor-icons/react/dist/ssr';
+import {
+  PauseIcon,
+  PlayIcon,
+  SpeakerHigh,
+  SpeakerLow,
+  SpeakerX,
+  X,
+} from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/livekit/button';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
@@ -19,10 +26,23 @@ export function YouTubeBhajanPlayer() {
   const room = useRoomContext();
   const lastProcessedMessageRef = useRef<string>('');
 
-  const { isReady, error, isPlaying, currentVideoId, playVideo, pause, resume } =
-    useYouTubePlayer();
+  const {
+    isReady,
+    error,
+    isPlaying,
+    currentVideoId,
+    playVideo,
+    pause,
+    resume,
+    stop,
+    setVolume,
+    player,
+  } = useYouTubePlayer();
   const [showControls, setShowControls] = useState(false);
   const [currentTrackName, setCurrentTrackName] = useState<string | null>(null);
+  const [volume, setVolumeState] = useState(50); // Default volume 50%
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
 
   // --- Agent sleep/wake + audio mute helpers ---
   const publishAgentControl = async (action: 'sleep' | 'wake', reason: string): Promise<void> => {
@@ -324,6 +344,9 @@ export function YouTubeBhajanPlayer() {
           })
           .catch((err) => {
             console.error('[YouTubeBhajanPlayer] ❌ Play error:', err);
+            // Notify agent that playback failed
+            void setAgentAudioMuted(false);
+            void publishAgentControl('wake', 'bhajan_playback_failed');
           });
       } catch (error) {
         // Log errors for debugging
@@ -398,14 +421,104 @@ export function YouTubeBhajanPlayer() {
     }
   }, [currentVideoId, isPlaying]);
 
+  // Notify agent when YouTube error occurs (especially error 150 - embedding not allowed)
+  useEffect(() => {
+    if (error && error.includes('embedding')) {
+      console.log('[YouTubeBhajanPlayer] ⚠️ Video embedding error detected, notifying agent');
+      // Notify agent that the video failed to play due to embedding restrictions
+      void setAgentAudioMuted(false);
+      void publishAgentControl('wake', 'video_embedding_error');
+    }
+  }, [error, setAgentAudioMuted, publishAgentControl]);
+
+  // Get current volume from player when it's ready
+  useEffect(() => {
+    if (player && isReady) {
+      try {
+        const currentVol = player.getVolume();
+        setVolumeState(currentVol);
+        setIsMuted(player.isMuted());
+      } catch (err) {
+        // Ignore errors
+      }
+    }
+  }, [player, isReady]);
+
+  // Handle volume change
+  const handleVolumeChange = (newVolume: number) => {
+    const clampedVolume = Math.max(0, Math.min(100, newVolume));
+    setVolumeState(clampedVolume);
+    setVolume(clampedVolume);
+    if (clampedVolume > 0 && isMuted) {
+      setIsMuted(false);
+      try {
+        player?.unMute();
+      } catch (err) {
+        // Ignore errors
+      }
+    }
+  };
+
+  // Handle mute toggle
+  const handleMuteToggle = () => {
+    if (!player) return;
+    try {
+      if (isMuted) {
+        player.unMute();
+        setIsMuted(false);
+      } else {
+        player.mute();
+        setIsMuted(true);
+      }
+    } catch (err) {
+      console.error('[YouTubeBhajanPlayer] Mute toggle error:', err);
+    }
+  };
+
+  // Handle close/stop
+  const handleClose = async () => {
+    await stop();
+    setShowControls(false);
+    setCurrentTrackName(null);
+    await setAgentAudioMuted(false);
+    await publishAgentControl('wake', 'player_closed');
+  };
+
   if (!isReady && !error) {
     return null; // Loading
   }
 
   if (error) {
     return (
-      <div className="bg-destructive/10 text-destructive border-destructive/20 mx-3 mb-2 rounded-lg border p-2 text-xs">
-        YouTube Player Error: {error}
+      <div className="bg-destructive/10 text-destructive border-destructive/20 mx-3 mb-2 rounded-lg border p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex-1">
+            <div className="text-destructive text-sm font-semibold">⚠️ Playback Error</div>
+            <div className="text-destructive/80 mt-1 text-xs">{error}</div>
+            {error.includes('embedding') && (
+              <div className="text-destructive/70 mt-2 text-xs">
+                This video cannot be played here. Please try requesting the bhajan again or ask for
+                a different one.
+              </div>
+            )}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={async () => {
+              // Clear error and notify agent that video failed
+              await setAgentAudioMuted(false);
+              await publishAgentControl('wake', 'video_failed');
+              setShowControls(false);
+              setCurrentTrackName(null);
+              // Reset error by stopping the player
+              await stop();
+            }}
+            className="text-destructive hover:text-destructive/80 h-8 px-2 text-xs"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     );
   }
@@ -416,7 +529,7 @@ export function YouTubeBhajanPlayer() {
   }
 
   return (
-    <div className="bg-primary/10 border-primary/30 mb-3 flex items-center gap-3 rounded-xl border-2 p-3 shadow-md">
+    <div className="bg-primary/10 border-primary/30 mb-3 flex items-center gap-2 rounded-xl border-2 p-3 shadow-md">
       <div className="min-w-0 flex-1">
         {currentTrackName && (
           <div className="text-foreground truncate text-sm font-semibold">{currentTrackName}</div>
@@ -425,6 +538,52 @@ export function YouTubeBhajanPlayer() {
           {isPlaying ? '▶️ Playing...' : '⏸️ Paused'}
         </div>
       </div>
+
+      {/* Volume Control */}
+      <div className="relative flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleMuteToggle}
+          className="h-9 w-9 p-0"
+          title={isMuted ? 'Unmute' : 'Mute'}
+        >
+          {isMuted || volume === 0 ? (
+            <SpeakerX className="h-5 w-5" weight="fill" />
+          ) : volume < 50 ? (
+            <SpeakerLow className="h-5 w-5" weight="fill" />
+          ) : (
+            <SpeakerHigh className="h-5 w-5" weight="fill" />
+          )}
+        </Button>
+
+        {showVolumeSlider && (
+          <div className="bg-background border-input absolute right-0 bottom-full mb-2 rounded-lg border p-3 shadow-lg">
+            <input
+              type="range"
+              min="0"
+              max="100"
+              value={isMuted ? 0 : volume}
+              onChange={(e) => handleVolumeChange(Number(e.target.value))}
+              className="w-24"
+              title={`Volume: ${volume}%`}
+            />
+            <div className="text-muted-foreground mt-1 text-center text-xs">{volume}%</div>
+          </div>
+        )}
+
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+          className="h-9 w-9 p-0"
+          title="Volume"
+        >
+          <div className="text-muted-foreground text-xs font-semibold">{volume}%</div>
+        </Button>
+      </div>
+
+      {/* Play/Pause Button */}
       <div className="flex items-center gap-2">
         {isPlaying ? (
           <Button
@@ -466,6 +625,17 @@ export function YouTubeBhajanPlayer() {
             <PlayIcon className="h-6 w-6" weight="fill" />
           </Button>
         )}
+
+        {/* Close Button */}
+        <Button
+          variant="ghost"
+          size="lg"
+          onClick={handleClose}
+          className="text-muted-foreground hover:text-foreground h-12 w-12 p-0 transition-colors"
+          title="Close Player"
+        >
+          <X className="h-5 w-5" weight="bold" />
+        </Button>
       </div>
     </div>
   );

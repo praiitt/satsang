@@ -1,4 +1,5 @@
 # सत्संग - AI-Powered Spiritual Guidance Platform
+
 ## Product Marketing Document
 
 ---
@@ -33,6 +34,7 @@
 ### Target Audience
 
 **Primary Users:**
+
 - Spiritual seekers interested in Hindu and Sanatana Dharma
 - Individuals seeking guidance on spiritual practices
 - People looking for answers to life's philosophical questions
@@ -40,6 +42,7 @@
 - Users who prefer Hindi language interaction
 
 **Demographics:**
+
 - Age: 18-65+
 - Language: Hindi speakers (India and diaspora)
 - Tech-savviness: Basic smartphone/browser users
@@ -53,6 +56,7 @@
 ### 1. **AI-Powered Spiritual Guru (Guruji)**
 
 **Features:**
+
 - Conversational AI that understands Hindi (Romanized input)
 - Proactive and engaging responses
 - Contextual understanding of spiritual concepts
@@ -60,6 +64,7 @@
 - Encourages deeper exploration of topics
 
 **Benefits:**
+
 - 24/7 availability
 - Personalized guidance
 - Non-judgmental conversation
@@ -68,6 +73,7 @@
 ### 2. **Voice-First Interaction**
 
 **Features:**
+
 - Real-time voice conversations
 - Speech-to-text in Hindi
 - Text-to-speech responses
@@ -75,6 +81,7 @@
 - Microphone and speaker controls
 
 **Benefits:**
+
 - Hands-free interaction
 - Natural communication
 - Accessible for all literacy levels
@@ -83,6 +90,7 @@
 ### 3. **Devotional Content Playback**
 
 **Features:**
+
 - Play bhajans on demand
 - Search and play from YouTube
 - Hindi devotional songs
@@ -90,6 +98,7 @@
 - Background playback support
 
 **Benefits:**
+
 - Enhances spiritual experience
 - Creates devotional atmosphere
 - On-demand access to content
@@ -98,12 +107,14 @@
 ### 4. **Spiritual Discourse Search (Vani/Pravachan)**
 
 **Features:**
+
 - Search for spiritual discourses on topics
 - Access to pravachans and satsangs
 - YouTube video integration
 - Topic-based recommendations
 
 **Benefits:**
+
 - Deepen spiritual understanding
 - Access to teachings from gurus
 - Learn about specific topics
@@ -112,6 +123,7 @@
 ### 5. **Progressive Web App (PWA)**
 
 **Features:**
+
 - Works on mobile and desktop
 - No app installation required
 - Offline capability (cached content)
@@ -120,6 +132,7 @@
 - Fast loading and responsive
 
 **Benefits:**
+
 - Easy access from any device
 - No app store downloads
 - Works on all modern browsers
@@ -128,12 +141,14 @@
 ### 6. **Push Notifications**
 
 **Features:**
+
 - Receive notifications about new sessions
 - Reminders for upcoming events
 - Important updates
 - Customizable preferences
 
 **Benefits:**
+
 - Stay connected
 - Never miss important updates
 - Personalized notifications
@@ -142,12 +157,14 @@
 ### 7. **Free Trial Session**
 
 **Features:**
+
 - 15-minute free trial per user
 - Full feature access during trial
 - No credit card required
 - Easy authentication
 
 **Benefits:**
+
 - Risk-free experience
 - Try before committing
 - Accessible to all users
@@ -156,12 +173,14 @@
 ### 8. **Mobile-First Design**
 
 **Features:**
+
 - Responsive design
 - Touch-friendly interface
 - Optimized for mobile browsers
 - Works on iOS and Android
 
 **Benefits:**
+
 - Access from anywhere
 - Mobile-optimized experience
 - Works on all devices
@@ -295,12 +314,14 @@
 ### Differentiation
 
 **vs. Traditional Spiritual Apps:**
+
 - Voice-first interaction (not just text)
 - AI-powered (not pre-recorded content)
 - Integrated content (bhajans + guidance)
 - Hindi native (not translated)
 
 **vs. General AI Chatbots:**
+
 - Spiritual focus (specialized knowledge)
 - Cultural context (understands Indian spirituality)
 - Devotional content (bhajans and discourses)
@@ -608,5 +629,4 @@
 
 ---
 
-*This document is intended for marketing and sales purposes. For technical documentation, please refer to the technical documentation files.*
-
+_This document is intended for marketing and sales purposes. For technical documentation, please refer to the technical documentation files._

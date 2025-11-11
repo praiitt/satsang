@@ -1,8 +1,8 @@
-import { useEffect, useRef, useCallback } from 'react';
-import { useRoomContext, useLocalParticipant } from '@livekit/components-react';
-import { Track, LocalTrackPublication } from 'livekit-client';
-import { useChatMessages } from './useChatMessages';
+import { useCallback, useEffect, useRef } from 'react';
+import { LocalTrackPublication, Track } from 'livekit-client';
+import { useLocalParticipant, useRoomContext } from '@livekit/components-react';
 import { toastAlert } from '@/components/livekit/alert-toast';
+import { useChatMessages } from './useChatMessages';
 
 /**
  * Hook to disconnect the room after a period of user inactivity.
@@ -10,7 +10,7 @@ import { toastAlert } from '@/components/livekit/alert-toast';
  * - Microphone audio activity
  * - Chat messages sent by user
  * - User interactions (clicks, keyboard, touch)
- * 
+ *
  * @param idleTimeoutMs - Time in milliseconds before disconnecting (default: 5 minutes)
  * @param enabled - Whether idle timeout is enabled (default: true)
  */
@@ -44,8 +44,10 @@ export function useIdleTimeout(
     // Set new timeout
     timeoutRef.current = setTimeout(() => {
       if (room.state !== 'disconnected') {
-        console.log(`[IdleTimeout] Disconnecting due to ${idleTimeoutMs / 1000 / 60} minutes of inactivity`);
-        
+        console.log(
+          `[IdleTimeout] Disconnecting due to ${idleTimeoutMs / 1000 / 60} minutes of inactivity`
+        );
+
         toastAlert({
           title: 'Session ended',
           description: `आप ${Math.round(idleTimeoutMs / 1000 / 60)} मिनट से निष्क्रिय थे, इसलिए कनेक्शन बंद कर दिया गया।`,
@@ -63,7 +65,9 @@ export function useIdleTimeout(
     }
 
     // Get microphone track publication
-    const micPublication = localParticipant.getTrackPublication(Track.Source.Microphone) as LocalTrackPublication | undefined;
+    const micPublication = localParticipant.getTrackPublication(Track.Source.Microphone) as
+      | LocalTrackPublication
+      | undefined;
     const micTrack = micPublication?.track;
 
     if (!micTrack || !(micTrack instanceof MediaStreamTrack)) {
@@ -74,13 +78,13 @@ export function useIdleTimeout(
     // Create audio context to analyze audio levels
     let audioContext: AudioContext | null = null;
     let analyser: AnalyserNode | null = null;
-    
+
     try {
       audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       analyser = audioContext.createAnalyser();
       const source = audioContext.createMediaStreamSource(new MediaStream([micTrack]));
       source.connect(analyser);
-      
+
       analyser.fftSize = 256;
       const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
@@ -209,4 +213,3 @@ export function useIdleTimeout(
     };
   }, []);
 }
-

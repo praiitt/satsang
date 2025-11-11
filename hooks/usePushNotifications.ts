@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface PushSubscriptionState {
   isSupported: boolean;
@@ -24,9 +24,7 @@ export function usePushNotifications() {
   // Check if push notifications are supported
   useEffect(() => {
     const isSupported =
-      'serviceWorker' in navigator &&
-      'PushManager' in window &&
-      'Notification' in window;
+      'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
     const permission = Notification.permission;
 
@@ -46,7 +44,7 @@ export function usePushNotifications() {
     try {
       const registration = await navigator.serviceWorker.ready;
       const subscription = await registration.pushManager.getSubscription();
-      
+
       setState((prev) => ({
         ...prev,
         isSubscribed: !!subscription,
@@ -98,7 +96,9 @@ export function usePushNotifications() {
       // Get VAPID public key from environment or use a default
       const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
       if (!vapidPublicKey) {
-        throw new Error('VAPID public key not configured. Set NEXT_PUBLIC_VAPID_PUBLIC_KEY in .env.local');
+        throw new Error(
+          'VAPID public key not configured. Set NEXT_PUBLIC_VAPID_PUBLIC_KEY in .env.local'
+        );
       }
 
       // Convert VAPID key to Uint8Array
@@ -206,4 +206,3 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   }
   return outputArray;
 }
-

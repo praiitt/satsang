@@ -143,8 +143,30 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
             );
           },
           onError: (event) => {
-            console.error('[YouTubePlayer] Error:', event.data);
-            setError(`YouTube error: ${event.data}`);
+            const errorCode = event.data;
+            console.error('[YouTubePlayer] Error:', errorCode);
+
+            // YouTube error codes mapping
+            let errorMessage = 'Unknown error';
+            switch (errorCode) {
+              case 2:
+                errorMessage = 'Invalid video ID';
+                break;
+              case 5:
+                errorMessage = 'HTML5 player error';
+                break;
+              case 100:
+                errorMessage = 'Video not found or has been removed';
+                break;
+              case 101:
+              case 150:
+                errorMessage = 'Video is not available for embedding or playback is restricted';
+                break;
+              default:
+                errorMessage = `YouTube error ${errorCode}`;
+            }
+
+            setError(errorMessage);
           },
         },
       });
@@ -238,6 +260,8 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
     }
 
     try {
+      // Clear any previous errors when attempting to play a new video
+      setError(null);
       setCurrentVideoId(videoId);
       playerRef.current.loadVideoById(videoId, startSeconds);
       // Try to play immediately (may require user gesture for autoplay)
@@ -279,6 +303,7 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
     try {
       playerRef.current.stopVideo();
       setCurrentVideoId(null);
+      setError(null); // Clear error when stopping
     } catch (err) {
       console.error('Failed to stop:', err);
     }

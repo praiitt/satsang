@@ -5,6 +5,7 @@ This guide explains how to set up push notifications for the Satsang web app.
 ## Overview
 
 Push notifications allow the app to send notifications to users even when the app is not open. This is useful for:
+
 - Notifying users about new satsang sessions
 - Reminding users about upcoming events
 - Sending important updates
@@ -26,6 +27,7 @@ node scripts/generate-vapid-keys.js
 ```
 
 This will output:
+
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` - Add to `.env.local`
 - `VAPID_PRIVATE_KEY` - Add to server-side `.env` (keep secret!)
 
@@ -110,18 +112,22 @@ const subscription = {
 };
 
 // Send notification
-await webpush.sendNotification(subscription, JSON.stringify({
-  title: 'नया सत्संग सत्र',
-  body: 'एक नया सत्संग सत्र शुरू हो रहा है',
-  icon: '/icon-192.png',
-  badge: '/icon-192.png',
-  url: '/',
-}));
+await webpush.sendNotification(
+  subscription,
+  JSON.stringify({
+    title: 'नया सत्संग सत्र',
+    body: 'एक नया सत्संग सत्र शुरू हो रहा है',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
+    url: '/',
+  })
+);
 ```
 
 ## Step 5: Testing
 
 1. **Build and start the app**:
+
    ```bash
    pnpm build
    pnpm start
@@ -188,4 +194,3 @@ await webpush.sendNotification(subscription, JSON.stringify({
 3. Add notification preferences (users can choose what to receive)
 4. Implement notification scheduling
 5. Add analytics for notification delivery
-

@@ -1,7 +1,9 @@
+'use client';
+
 /* eslint-disable prettier/prettier */
-import { useEffect, useRef } from 'react';
-import Link from 'next/link';
+import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { Button } from '@/components/livekit/button';
+import { useLanguage } from '@/contexts/language-context';
 
 function WelcomeImage() {
   return (
@@ -22,60 +24,20 @@ function WelcomeImage() {
 }
 
 function VideoSection() {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    // Ensure autoplay works by reloading iframe if needed
-    const iframe = iframeRef.current;
-    if (iframe) {
-      // Try to trigger autoplay after a short delay
-      const timer = setTimeout(() => {
-        try {
-          // Some browsers require user interaction first, but we can try
-          if (iframe.contentWindow) {
-            // The iframe src already has autoplay=1&muted=1
-            // If it still doesn't work, it might be a browser policy issue
-          }
-        } catch (e) {
-          // Cross-origin restrictions might prevent this
-          console.log('Cannot access iframe content:', e);
-        }
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
+  const { t } = useLanguage();
   return (
-    <section id="product-video" className="mt-6 w-full max-w-5xl sm:mt-8">
+    <section className="mt-6 w-full max-w-5xl sm:mt-8">
       <div className="w-full py-4">
         <h2 className="text-foreground mx-auto mb-3 px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
-          RRAASI सत्संग
+          {t('welcome.videoTitle')}
         </h2>
-        <div
-          className="relative w-full overflow-hidden rounded-lg"
-          style={{
-            paddingBottom: '56.25%',
-            backgroundColor: 'var(--background)',
-          }}
-        >
-          <iframe
-            ref={iframeRef}
-            width="560"
-            height="315"
-            src="https://app.heygen.com/embedded-player/2d4bdf6e4d2c41dc9a4b8a8670f82911?autoplay=1&muted=1&loop=1&playsinline=1"
-            title="HeyGen वीडियो प्लेयर"
-            frameBorder="0"
-            allow="encrypted-media; fullscreen; autoplay; picture-in-picture;"
-            allowFullScreen
-            className="absolute top-0 left-0 h-full w-full"
-            style={{
-              border: 'none',
-              backgroundColor: 'transparent',
-            }}
-            loading="eager"
-          />
-        </div>
+        <HeroVideoPlayer
+          src="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro_wide.mp4"
+          poster="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro_wide.mp4#t=0.1"
+          autoPlay
+          loop
+          className="w-full"
+        />
       </div>
     </section>
   );
@@ -91,6 +53,7 @@ export const WelcomeView = ({
   onStartCall,
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
+  const { t } = useLanguage();
   return (
     <div ref={ref} className="w-full pb-24 md:pb-32">
       {/* Hero Section - Always visible at top */}
@@ -98,11 +61,10 @@ export const WelcomeView = ({
         <WelcomeImage />
 
         <h1 className="text-foreground mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
-          आपका आध्यात्मिक गुरु अब आपके साथ है
+          {t('welcome.title')}
         </h1>
         <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-base leading-7 sm:text-lg md:text-xl">
-          RRAASI सत्संग - एक AI-संचालित आध्यात्मिक सहायक जो हिन्दी में आपसे बात करता है, प्रश्नों के
-          उत्तर देता है, भजन चलाता है, और गुरुओं के प्रवचन सुनाता है। बस बोलिए और आनंद लीजिए!
+          {t('welcome.description')}
         </p>
 
         {/* Product Description Video - Full Width */}
@@ -119,75 +81,71 @@ export const WelcomeView = ({
             {startButtonText}
           </Button>
         </div>
-        <p className="text-muted-foreground mt-3 text-sm">
-          🎁 15 मिनट का निःशुल्क परीक्षण - कोई क्रेडिट कार्ड की आवश्यकता नहीं
-        </p>
+        <p className="text-muted-foreground mt-3 text-sm">{t('welcome.freeTrial')}</p>
       </section>
 
       {/* Key Features Section */}
       <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-16">
         <h2 className="text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
-          मुख्य विशेषताएं
+          {t('welcome.features')}
         </h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Feature 1: Voice AI Assistant */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🎤</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">आवाज़-आधारित AI सहायक</h3>
-            <p className="text-muted-foreground text-sm leading-6">
-              हिन्दी में बोलकर अपने आध्यात्मिक गुरु से बातचीत करें। वास्तविक समय में प्रश्न पूछें, 
-              मार्गदर्शन प्राप्त करें, और गहन आध्यात्मिक चर्चा करें।
-            </p>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('welcome.voiceAI')}</h3>
+            <p className="text-muted-foreground text-sm leading-6">{t('welcome.voiceAIDesc')}</p>
           </div>
 
           {/* Feature 2: Hindi Language Support */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🇮🇳</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">पूर्ण हिन्दी समर्थन</h3>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">
+              {t('welcome.hindiSupport')}
+            </h3>
             <p className="text-muted-foreground text-sm leading-6">
-              भाषण-से-पाठ, AI प्रसंस्करण, और पाठ-से-भाषण - सभी हिन्दी में। 
-              बोलिए हिन्दी में, सुनिए हिन्दी में, समझिए हिन्दी में।
+              {t('welcome.hindiSupportDesc')}
             </p>
           </div>
 
           {/* Feature 3: Bhajan Playback */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🎵</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">भजन चलाएं</h3>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">
+              {t('welcome.playBhajans')}
+            </h3>
             <p className="text-muted-foreground text-sm leading-6">
-              बस कहिए “कृष्ण का भजन सुनाओ” या “हरे कृष्ण सुनाओ” - AI तुरंत YouTube से 
-              भजन खोजकर चला देगा। हजारों भजन आपकी आवाज़ के एक आदेश पर।
+              {t('welcome.playBhajansDesc')}
             </p>
           </div>
 
           {/* Feature 4: Vani/Pravachan Playback */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">📿</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">प्रवचन और वाणी</h3>
-          <p className="text-muted-foreground text-sm leading-6">
-              किसी विषय पर प्रवचन सुनना चाहते हैं? बस कहिए “भक्ति पर प्रवचन सुनाओ” या 
-              “सद्गुरु का प्रवचन सुनाओ” - AI तुरंत उपयुक्त प्रवचन खोजकर चला देगा।
-          </p>
-        </div>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">
+              {t('welcome.pravachanVani')}
+            </h3>
+            <p className="text-muted-foreground text-sm leading-6">
+              {t('welcome.pravachanVaniDesc')}
+            </p>
+          </div>
 
           {/* Feature 5: Spiritual Guidance */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🕉️</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">आध्यात्मिक मार्गदर्शन</h3>
-          <p className="text-muted-foreground text-sm leading-6">
-              धर्म, योग, ध्यान, कर्म, भक्ति, वेदांत - किसी भी आध्यात्मिक विषय पर प्रश्न पूछें। 
-              गीता, वेद, उपनिषद, रामायण, महाभारत से उत्तर प्राप्त करें।
-          </p>
-        </div>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">
+              {t('welcome.spiritualGuidance')}
+            </h3>
+            <p className="text-muted-foreground text-sm leading-6">
+              {t('welcome.spiritualGuidanceDesc')}
+            </p>
+          </div>
 
           {/* Feature 6: Easy Setup */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">✨</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">सरल और तेज़</h3>
-          <p className="text-muted-foreground text-sm leading-6">
-              कोई ऐप इंस्टॉल करने की आवश्यकता नहीं। बस ब्राउज़र खोलिए, माइक की अनुमति दीजिए, 
-              और शुरू करें। सेकंडों में अपने आध्यात्मिक गुरु से जुड़ें।
-          </p>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('welcome.easySetup')}</h3>
+            <p className="text-muted-foreground text-sm leading-6">{t('welcome.easySetupDesc')}</p>
           </div>
         </div>
       </section>
@@ -196,14 +154,14 @@ export const WelcomeView = ({
       <section className="mx-auto mt-6 max-w-4xl px-4">
         <div className="bg-background border-input flex flex-col items-center gap-3 rounded-2xl border p-6 text-center shadow-sm sm:flex-row sm:justify-between">
           <p className="text-foreground text-base font-medium sm:text-left">
-            तैयार हैं? अभी अपने AI गुरु से बातचीत शुरू करें।
+            {t('welcome.ctaReady')}
           </p>
           <div className="flex gap-3">
             <Button onClick={onStartCall} variant="primary" size="lg" className="h-12">
-              सत्संग शुरू करें
+              {t('welcome.ctaStartSatsang')}
             </Button>
             <Button asChild variant="secondary" className="h-12">
-              <a href="#product-video">डेमो देखें</a>
+              <a href="#product-video">{t('welcome.ctaWatchDemo')}</a>
             </Button>
           </div>
         </div>
@@ -212,7 +170,7 @@ export const WelcomeView = ({
       {/* How It Works Section */}
       <section className="mx-auto mt-12 max-w-4xl px-4 sm:mt-16">
         <h2 className="text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
-          यह कैसे काम करता है?
+          {t('welcome.howItWorks')}
         </h2>
         <div className="bg-background border-input rounded-2xl border p-8 shadow-sm">
           <div className="space-y-6">
@@ -221,10 +179,10 @@ export const WelcomeView = ({
                 1
               </div>
               <div>
-                <h3 className="text-foreground mb-2 text-lg font-semibold">लॉगिन करें</h3>
-                <p className="text-muted-foreground text-sm leading-6">
-                  अपने मोबाइल नंबर से त्वरित और सुरक्षित लॉगिन/सत्यापन करें। कोई जटिल प्रक्रिया नहीं।
-                </p>
+                <h3 className="text-foreground mb-2 text-lg font-semibold">
+                  {t('welcome.step1Title')}
+                </h3>
+                <p className="text-muted-foreground text-sm leading-6">{t('welcome.step1Desc')}</p>
               </div>
             </div>
             <div className="flex gap-4">
@@ -232,10 +190,10 @@ export const WelcomeView = ({
                 2
               </div>
               <div>
-                <h3 className="text-foreground mb-2 text-lg font-semibold">माइक की अनुमति दें</h3>
-                <p className="text-muted-foreground text-sm leading-6">
-                  ब्राउज़र से माइक और स्पीकर की अनुमति दें। यह केवल एक बार करना होता है।
-                </p>
+                <h3 className="text-foreground mb-2 text-lg font-semibold">
+                  {t('welcome.step2Title')}
+                </h3>
+                <p className="text-muted-foreground text-sm leading-6">{t('welcome.step2Desc')}</p>
               </div>
             </div>
             <div className="flex gap-4">
@@ -243,11 +201,10 @@ export const WelcomeView = ({
                 3
               </div>
               <div>
-                <h3 className="text-foreground mb-2 text-lg font-semibold">बातचीत शुरू करें</h3>
-                <p className="text-muted-foreground text-sm leading-6">
-                  “गुरुजी से बातचीत” बटन पर क्लिक करें और हिन्दी में बोलना शुरू करें। 
-                  प्रश्न पूछें, भजन सुनने को कहें, या प्रवचन सुनने को कहें।
-                </p>
+                <h3 className="text-foreground mb-2 text-lg font-semibold">
+                  {t('welcome.step3Title')}
+                </h3>
+                <p className="text-muted-foreground text-sm leading-6">{t('welcome.step3Desc')}</p>
               </div>
             </div>
             <div className="flex gap-4">
@@ -255,17 +212,16 @@ export const WelcomeView = ({
                 4
               </div>
               <div>
-                <h3 className="text-foreground mb-2 text-lg font-semibold">आनंद लें</h3>
-                <p className="text-muted-foreground text-sm leading-6">
-                  AI गुरु आपकी बात सुनता है, समझता है, और उचित उत्तर देता है। 
-                  भजन और प्रवचन का आनंद लें, और अपनी आध्यात्मिक यात्रा में आगे बढ़ें।
-                </p>
+                <h3 className="text-foreground mb-2 text-lg font-semibold">
+                  {t('welcome.step4Title')}
+                </h3>
+                <p className="text-muted-foreground text-sm leading-6">{t('welcome.step4Desc')}</p>
               </div>
             </div>
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild variant="link">
-              <Link href="#faq">अक्सर पूछे जाने वाले प्रश्न</Link>
+              <a href="#faq">{t('welcome.faq')}</a>
             </Button>
           </div>
         </div>
@@ -274,32 +230,24 @@ export const WelcomeView = ({
       {/* Use Cases Section */}
       <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-16">
         <h2 className="text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
-          आप क्या कर सकते हैं?
+          {t('welcome.useCases')}
         </h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="bg-background border-input rounded-xl border p-5 text-center">
             <div className="mb-2 text-2xl">💬</div>
-            <p className="text-muted-foreground text-sm">
-              आध्यात्मिक प्रश्नों के उत्तर प्राप्त करें
-            </p>
+            <p className="text-muted-foreground text-sm">{t('welcome.useCase1')}</p>
           </div>
           <div className="bg-background border-input rounded-xl border p-5 text-center">
             <div className="mb-2 text-2xl">🎵</div>
-            <p className="text-muted-foreground text-sm">
-              अपने पसंदीदा भजन सुनें
-            </p>
+            <p className="text-muted-foreground text-sm">{t('welcome.useCase2')}</p>
           </div>
           <div className="bg-background border-input rounded-xl border p-5 text-center">
             <div className="mb-2 text-2xl">📚</div>
-            <p className="text-muted-foreground text-sm">
-              गुरुओं के प्रवचन सुनें
-            </p>
+            <p className="text-muted-foreground text-sm">{t('welcome.useCase3')}</p>
           </div>
           <div className="bg-background border-input rounded-xl border p-5 text-center">
             <div className="mb-2 text-2xl">🧘</div>
-            <p className="text-muted-foreground text-sm">
-              ध्यान और योग के बारे में जानें
-            </p>
+            <p className="text-muted-foreground text-sm">{t('welcome.useCase4')}</p>
           </div>
         </div>
       </section>
@@ -307,19 +255,17 @@ export const WelcomeView = ({
       {/* CTA: After Use Cases */}
       <section className="mx-auto mt-8 max-w-4xl px-4">
         <div className="bg-primary text-primary-foreground flex flex-col items-center gap-3 rounded-2xl p-6 text-center shadow-sm sm:flex-row sm:justify-between">
-          <p className="text-base font-semibold sm:text-left">
-            बस एक क्लिक दूर — गुरुजी से बातचीत शुरू करें।
-          </p>
+          <p className="text-base font-semibold sm:text-left">{t('welcome.ctaOneClick')}</p>
           <div className="flex gap-3">
             <Button
               onClick={onStartCall}
               variant="ghost"
               className="h-12 bg-white/10 hover:bg-white/20"
             >
-              अभी शुरू करें
+              {t('welcome.ctaStartNow')}
             </Button>
             <Button asChild variant="ghost" className="h-12 bg-white/10 hover:bg-white/20">
-              <a href="#faq">FAQ देखें</a>
+              <a href="#faq">{t('welcome.ctaViewFAQ')}</a>
             </Button>
           </div>
         </div>
@@ -329,18 +275,24 @@ export const WelcomeView = ({
       <section className="mx-auto mt-12 max-w-4xl px-4 sm:mt-16">
         <div className="bg-background border-input rounded-2xl border p-8 text-center shadow-sm">
           <h2 className="text-foreground mb-4 text-2xl font-bold sm:text-3xl">
-            आधुनिक तकनीक, पारंपरिक ज्ञान
+            {t('welcome.technology')}
           </h2>
           <p className="text-muted-foreground mx-auto max-w-2xl text-sm leading-7 sm:text-base">
-            RRAASI सत्संग AI और आधुनिक तकनीक का उपयोग करता है ताकि हर साधक को आध्यात्मिक ज्ञान 
-            तक आसान पहुंच मिल सके। हमारा उद्देश्य है कि तकनीक के माध्यम से आध्यात्मिक अनुभव को 
-            सहज, सुलभ और सार्थक बनाया जाए।
+            {t('welcome.technologyDesc')}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
-            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">🤖 AI-संचालित</div>
-            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">🎯 वास्तविक समय</div>
-            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">🔒 सुरक्षित</div>
-            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">🌐 ब्राउज़र-आधारित</div>
+            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">
+              {t('welcome.aiPowered')}
+            </div>
+            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">
+              {t('welcome.realTime')}
+            </div>
+            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">
+              {t('welcome.secure')}
+            </div>
+            <div className="bg-muted text-muted-foreground rounded-lg px-4 py-2">
+              {t('welcome.browserBased')}
+            </div>
           </div>
         </div>
       </section>
@@ -348,40 +300,72 @@ export const WelcomeView = ({
       {/* FAQ */}
       <section id="faq" className="mx-auto my-12 max-w-4xl px-4 pb-8 sm:my-16 sm:pb-10">
         <h2 className="text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
-          अक्सर पूछे जाने वाले प्रश्न
+          {t('welcome.faq')}
         </h2>
         <div className="space-y-4">
           <details className="bg-background border-input rounded-xl border p-5 shadow-sm">
-            <summary className="hover:text-primary cursor-pointer text-left font-semibold">यह सुविधा क्या है और यह कैसे काम करती है?</summary>
-            <p className="text-muted-foreground mt-3 text-sm leading-7">RRAASI सत्संग एक AI-संचालित आध्यात्मिक सहायक है जो आपसे हिन्दी में बात करता है। आप आवाज़ के माध्यम से प्रश्न पूछ सकते हैं, भजन सुनने को कह सकते हैं, या प्रवचन सुनने को कह सकते हैं। AI आपकी बात समझता है और उचित उत्तर देता है या मांगी गई सामग्री चलाता है।</p>
+            <summary className="hover:text-primary cursor-pointer text-left font-semibold">
+              {t('welcome.faq1Question')}
+            </summary>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              {t('welcome.faq1Answer')}
+            </p>
           </details>
           <details className="bg-background border-input rounded-xl border p-5 shadow-sm">
-            <summary className="hover:text-primary cursor-pointer text-left font-semibold">क्या मुझे कोई ऐप डाउनलोड करना होगा?</summary>
-            <p className="text-muted-foreground mt-3 text-sm leading-7">नहीं! RRAASI सत्संग पूर्णतः ब्राउज़र-आधारित है। आपको केवल अपने ब्राउज़र में वेबसाइट खोलनी है, माइक की अनुमति देनी है, और शुरू करना है। कोई ऐप इंस्टॉल करने की आवश्यकता नहीं है।</p>
+            <summary className="hover:text-primary cursor-pointer text-left font-semibold">
+              {t('welcome.faq2Question')}
+            </summary>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              {t('welcome.faq2Answer')}
+            </p>
           </details>
           <details className="bg-background border-input rounded-xl border p-5 shadow-sm">
-            <summary className="hover:text-primary cursor-pointer text-left font-semibold">मैं कौन से भजन सुन सकता हूं?</summary>
-            <p className="text-muted-foreground mt-3 text-sm leading-7">आप किसी भजन का नाम बोलकर सुन सकते हैं। उदाहरण के लिए, ‘कृष्ण का भजन सुनाओ’, ‘हरे कृष्ण सुनाओ’, ‘ओम नमः शिवाय सुनाओ’, आदि। AI YouTube से उपयुक्त भजन खोजकर तुरंत चला देगा।</p>
+            <summary className="hover:text-primary cursor-pointer text-left font-semibold">
+              {t('welcome.faq3Question')}
+            </summary>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              {t('welcome.faq3Answer')}
+            </p>
           </details>
           <details className="bg-background border-input rounded-xl border p-5 shadow-sm">
-            <summary className="hover:text-primary cursor-pointer text-left font-semibold">क्या मैं प्रवचन या वाणी सुन सकता हूं?</summary>
-            <p className="text-muted-foreground mt-3 text-sm leading-7">हाँ! आप किसी विषय पर प्रवचन सुनने के लिए कह सकते हैं। उदाहरण के लिए, ‘भक्ति पर प्रवचन सुनाओ’, ‘सद्गुरु का प्रवचन सुनाओ’, ‘ओशो की वाणी सुनाओ’, आदि। AI उपयुक्त प्रवचन खोजकर चला देगा।</p>
+            <summary className="hover:text-primary cursor-pointer text-left font-semibold">
+              {t('welcome.faq4Question')}
+            </summary>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              {t('welcome.faq4Answer')}
+            </p>
           </details>
           <details className="bg-background border-input rounded-xl border p-5 shadow-sm">
-            <summary className="hover:text-primary cursor-pointer text-left font-semibold">माइक/स्पीकर काम नहीं कर रहा है - क्या करूं?</summary>
-            <p className="text-muted-foreground mt-3 text-sm leading-7">सुनिश्चित करें कि आपने ब्राउज़र को माइक और स्पीकर की अनुमति दी है। ब्राउज़र सेटिंग्स में जाकर इस साइट के लिए माइक/स्पीकर की अनुमति चेक करें। यदि समस्या बनी रहे, तो पेज को रीफ़्रेश करें और फिर से अनुमति दें।</p>
+            <summary className="hover:text-primary cursor-pointer text-left font-semibold">
+              {t('welcome.faq5Question')}
+            </summary>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              {t('welcome.faq5Answer')}
+            </p>
           </details>
           <details className="bg-background border-input rounded-xl border p-5 shadow-sm">
-            <summary className="hover:text-primary cursor-pointer text-left font-semibold">क्या यह सेवा निःशुल्क है?</summary>
-            <p className="text-muted-foreground mt-3 text-sm leading-7">हाँ, हम 15 मिनट का निःशुल्क परीक्षण प्रदान करते हैं जिसमें कोई क्रेडिट कार्ड की आवश्यकता नहीं है। इसके बाद, सेवा का उपयोग जारी रखने के लिए सदस्यता लेने की आवश्यकता हो सकती है।</p>
+            <summary className="hover:text-primary cursor-pointer text-left font-semibold">
+              {t('welcome.faq6Question')}
+            </summary>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              {t('welcome.faq6Answer')}
+            </p>
           </details>
           <details className="bg-background border-input rounded-xl border p-5 shadow-sm">
-            <summary className="hover:text-primary cursor-pointer text-left font-semibold">क्या मैं अंग्रेजी में बात कर सकता हूं?</summary>
-            <p className="text-muted-foreground mt-3 text-sm leading-7">RRAASI सत्संग मुख्य रूप से हिन्दी भाषा के लिए डिज़ाइन किया गया है, लेकिन AI कई भाषाओं को समझ सकता है। हालाँकि, सर्वोत्तम अनुभव के लिए हिन्दी में बात करने की सलाह दी जाती है।</p>
+            <summary className="hover:text-primary cursor-pointer text-left font-semibold">
+              {t('welcome.faq7Question')}
+            </summary>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              {t('welcome.faq7Answer')}
+            </p>
           </details>
           <details className="bg-background border-input rounded-xl border p-5 shadow-sm">
-            <summary className="hover:text-primary cursor-pointer text-left font-semibold">यह सुविधा किसने विकसित की है?</summary>
-            <p className="text-muted-foreground mt-3 text-sm leading-7">यह सुविधा RRAASI द्वारा विकसित और प्रस्तुत की गई है। हमारा उद्देश्य तकनीक के माध्यम से आध्यात्मिक अनुभव को सहज, सुलभ और सार्थक बनाना है, ताकि हर साधक आसानी से जुड़ सके और लाभान्वित हो।</p>
+            <summary className="hover:text-primary cursor-pointer text-left font-semibold">
+              {t('welcome.faq8Question')}
+            </summary>
+            <p className="text-muted-foreground mt-3 text-sm leading-7">
+              {t('welcome.faq8Answer')}
+            </p>
           </details>
         </div>
       </section>

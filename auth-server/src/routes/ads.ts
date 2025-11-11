@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getDb } from '../firebase.js';
-import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
+import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -75,11 +75,7 @@ router.get('/briefs', requireAuth, async (req, res) => {
   try {
     const db = getDb();
     const limit = Math.min(parseInt(String(req.query.limit ?? '20'), 10) || 20, 100);
-    const snap = await db
-      .collection(COLLECTION)
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .get();
+    const snap = await db.collection(COLLECTION).orderBy('createdAt', 'desc').limit(limit).get();
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     return res.json({ items });
   } catch (e) {

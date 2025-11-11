@@ -5,11 +5,13 @@
 For **1 minute of avatar speech** using HeyGen:
 
 ### Video Generation API (Pre-recorded)
+
 - **Free Plan**: 0.2 credits (free, up to 50 minutes/month)
 - **Pro Plan ($99/month)**: 0.2 credits = ~$0.20 per minute
 - **Scale Plan ($330/month)**: 0.2 credits = ~$0.10 per minute
 
 ### Streaming API (Real-time) ⚠️
+
 - **Pricing may differ** from video generation
 - Check HeyGen's official pricing for current streaming rates
 - Typically charged per minute of streaming time
@@ -17,6 +19,7 @@ For **1 minute of avatar speech** using HeyGen:
 ## Detailed Pricing Breakdown
 
 ### Free Plan
+
 - **Monthly Cost**: $0
 - **Credits**: 10 API credits/month
 - **Credit to Video Ratio**: 1 credit = 5 minutes of video
@@ -24,6 +27,7 @@ For **1 minute of avatar speech** using HeyGen:
 - **Monthly Limit**: ~50 minutes of video (free)
 
 ### Pro Plan
+
 - **Monthly Cost**: $99
 - **Credits**: 100 API credits/month
 - **Credit to Video Ratio**: 1 credit = 5 minutes of video
@@ -32,6 +36,7 @@ For **1 minute of avatar speech** using HeyGen:
 - **Cost per Minute**: ~$0.20 (if using all credits)
 
 ### Scale Plan
+
 - **Monthly Cost**: $330
 - **Credits**: 660 API credits/month
 - **Credit to Video Ratio**: 1 credit = 5 minutes of video
@@ -42,6 +47,7 @@ For **1 minute of avatar speech** using HeyGen:
 ## Real-World Cost Examples
 
 ### Example 1: Light Usage (2 minutes/day)
+
 - **Monthly Usage**: 60 minutes
 - **Credits Needed**: 12 credits
 - **Free Plan**: ❌ Not enough (only 10 credits)
@@ -49,6 +55,7 @@ For **1 minute of avatar speech** using HeyGen:
 - **Effective Cost**: $1.65 per minute
 
 ### Example 2: Medium Usage (5 minutes/day)
+
 - **Monthly Usage**: 150 minutes
 - **Credits Needed**: 30 credits
 - **Free Plan**: ❌ Not enough
@@ -56,6 +63,7 @@ For **1 minute of avatar speech** using HeyGen:
 - **Effective Cost**: $0.66 per minute
 
 ### Example 3: Heavy Usage (10 minutes/day)
+
 - **Monthly Usage**: 300 minutes
 - **Credits Needed**: 60 credits
 - **Free Plan**: ❌ Not enough
@@ -63,6 +71,7 @@ For **1 minute of avatar speech** using HeyGen:
 - **Effective Cost**: $0.33 per minute
 
 ### Example 4: Very Heavy Usage (30 minutes/day)
+
 - **Monthly Usage**: 900 minutes
 - **Credits Needed**: 180 credits
 - **Free Plan**: ❌ Not enough
@@ -73,12 +82,14 @@ For **1 minute of avatar speech** using HeyGen:
 ## Streaming API vs Video Generation API
 
 ### Video Generation API
+
 - **Use Case**: Pre-recorded videos
 - **Pricing**: Based on credits (1 credit = 5 minutes)
 - **Best For**: Static content, batch processing
 - **Cost**: As shown above
 
 ### Streaming API (Real-time)
+
 - **Use Case**: Real-time text-to-speech (what we're using)
 - **Pricing**: May differ from video generation
 - **Best For**: Interactive applications, live conversations
@@ -92,7 +103,7 @@ For **1 minute of avatar speech** using HeyGen:
 2. **Batch Processing**: Group multiple text snippets into longer sessions
 3. **Cache Common Responses**: Cache frequently used audio/text
 4. **Monitor Usage**: Track API usage to avoid surprises
-5. **Consider Alternatives**: 
+5. **Consider Alternatives**:
    - Use pre-generated videos for static content
    - Use TTS services for audio-only needs
    - Combine with other services for cost efficiency
@@ -100,16 +111,19 @@ For **1 minute of avatar speech** using HeyGen:
 ## When to Use Each Plan
 
 ### Free Plan ✅
+
 - Testing and development
 - Low-volume applications (< 50 minutes/month)
 - Prototyping and demos
 
 ### Pro Plan ✅
+
 - Production applications
 - Moderate usage (50-500 minutes/month)
 - Small to medium businesses
 
 ### Scale Plan ✅
+
 - High-volume applications
 - Heavy usage (500+ minutes/month)
 - Enterprise applications
@@ -143,4 +157,3 @@ For **1 minute of avatar speech** using HeyGen:
 - Credits don't roll over (use them or lose them)
 - Check HeyGen's official pricing for the most current information
 - Enterprise pricing may be available for high-volume usage
-

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
 import { toastAlert } from '@/components/livekit/alert-toast';
 import { Button } from '@/components/livekit/button';
+import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
 import { useAuth } from './auth-provider';
 
@@ -14,6 +15,7 @@ interface PhoneAuthFormProps {
 
 export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
   const { sendOTP, verifyOTP } = useAuth();
+  const { t } = useLanguage();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
@@ -166,12 +168,10 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
             </svg>
           </div>
           <h2 className="text-foreground text-2xl font-bold">
-            {step === 'phone' ? 'सत्संग में आपका स्वागत है' : 'अपना नंबर सत्यापित करें'}
+            {step === 'phone' ? t('auth.welcome') : t('auth.verifyNumber')}
           </h2>
           <p className="text-muted-foreground mt-2 text-sm">
-            {step === 'phone'
-              ? 'Enter your phone number to continue'
-              : 'We sent a code to your phone'}
+            {step === 'phone' ? t('auth.enterPhone') : t('auth.codeSent')}
           </p>
         </div>
 
@@ -185,7 +185,7 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
               <label htmlFor="phone" className="text-foreground mb-2 block text-sm font-medium">
-                Phone Number
+                {t('auth.phoneNumber')}
               </label>
               <div className="relative">
                 <input
@@ -193,26 +193,24 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
                   type="tel"
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="+91 9876543210"
+                  placeholder={t('auth.phonePlaceholder')}
                   className="border-input bg-background text-foreground focus:ring-ring h-12 w-full rounded-lg border px-4 text-base focus:ring-2 focus:outline-none"
                   required
                   disabled={loading}
                   autoComplete="tel"
                 />
               </div>
-              <p className="text-muted-foreground mt-2 text-xs">
-                Enter your phone number with country code (e.g., +91 for India)
-              </p>
+              <p className="text-muted-foreground mt-2 text-xs">{t('auth.phoneHint')}</p>
             </div>
             <Button type="submit" disabled={loading} className="h-12 w-full text-base">
-              {loading ? 'Sending...' : 'Send OTP'}
+              {loading ? t('auth.sending') : t('auth.sendOTP')}
             </Button>
           </form>
         ) : (
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div>
               <label htmlFor="otp" className="text-foreground mb-2 block text-sm font-medium">
-                Enter OTP Code
+                {t('auth.enterOTP')}
               </label>
               <input
                 ref={otpInputRef}
@@ -231,11 +229,11 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
               />
               {otpSupported && (
                 <p className="text-muted-foreground mt-2 text-center text-xs">
-                  📱 OTP will be auto-detected from SMS
+                  {t('auth.autoDetect')}
                 </p>
               )}
               <p className="text-muted-foreground mt-2 text-center text-xs">
-                Code sent to {phoneNumber.replace(/(\d{2})\d+(\d{4})/, '$1****$2')}
+                {t('auth.codeSentTo')} {phoneNumber.replace(/(\d{2})\d+(\d{4})/, '$1****$2')}
               </p>
             </div>
             <div className="flex gap-3">
@@ -246,10 +244,10 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
                 disabled={loading}
                 className="h-12 flex-1"
               >
-                Back
+                {t('auth.back')}
               </Button>
               <Button type="submit" disabled={loading} className="h-12 flex-1">
-                {loading ? 'Verifying...' : 'Verify'}
+                {loading ? t('auth.verifying') : t('auth.verify')}
               </Button>
             </div>
             <button
@@ -257,7 +255,7 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
               onClick={handleBack}
               className="text-muted-foreground hover:text-foreground w-full text-sm underline"
             >
-              Didn&apos;t receive code? Resend
+              {t('auth.resend')}
             </button>
           </form>
         )}

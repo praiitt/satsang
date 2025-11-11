@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useRoomContext } from '@livekit/components-react';
 import { toastAlert } from '@/components/livekit/alert-toast';
 import { useSessionTimer } from '@/hooks/useSessionTimer';
 import { useAuth } from './auth-provider';
-import { PhoneAuthForm } from './phone-auth-form';
 
 interface SessionAuthGuardProps {
   children: React.ReactNode;
@@ -13,13 +14,17 @@ interface SessionAuthGuardProps {
 
 /**
  * Guards session access after 15-minute free trial expires
- * Shows auth form when trial time is up, allows seamless continuation after auth
+ * Redirects to login page when trial time is up
  */
 export function SessionAuthGuard({ children, isSessionActive }: SessionAuthGuardProps) {
-  const { isAuthenticated, loading, refreshUser } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const room = useRoomContext();
+  const { isAuthenticated, loading } = useAuth();
   const { isTrialExpired, minutesRemaining, secondsRemaining, resetTimer } =
     useSessionTimer(isSessionActive);
   const [hasShownWarning, setHasShownWarning] = useState(false);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   // Always log state for debugging
   console.log('[SessionAuthGuard] Render:', {
@@ -87,15 +92,36 @@ export function SessionAuthGuard({ children, isSessionActive }: SessionAuthGuard
     hasShownWarning,
   ]);
 
-  // Show expiration message
+  // Redirect to login when trial expires
   useEffect(() => {
-    if (isSessionActive && !isAuthenticated && isTrialExpired) {
+    if (isSessionActive && !isAuthenticated && isTrialExpired && !hasRedirected && !loading) {
+      setHasRedirected(true);
+
+      // Disconnect room before redirecting
+      if (room && room.state !== 'disconnected') {
+        room.disconnect();
+      }
+
+      // Show toast notification
       toastAlert({
         title: 'Free trial expired',
-        description: 'Please sign up to continue your session with Guruji.',
+        description: 'Please login to continue your session with Guruji.',
       });
+
+      // Redirect to login page with return URL
+      const returnUrl = pathname || '/(app)';
+      router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
     }
-  }, [isSessionActive, isAuthenticated, isTrialExpired]);
+  }, [
+    isSessionActive,
+    isAuthenticated,
+    isTrialExpired,
+    hasRedirected,
+    loading,
+    router,
+    pathname,
+    room,
+  ]);
 
   // If loading, show children (don't block)
   if (loading) {
@@ -118,47 +144,13 @@ export function SessionAuthGuard({ children, isSessionActive }: SessionAuthGuard
     console.log('[SessionAuthGuard] ⚠️ TEST MODE: Forcing trial check even though authenticated');
   }
 
-  // If trial expired AND (user is NOT authenticated OR test mode is enabled), show auth form overlay
-  // Note: Authenticated users bypass the trial (they get unlimited access) unless test mode is enabled
-  const shouldShowOverlay =
-    isTrialExpired && isSessionActive && (!isAuthenticated || forceTrialCheck);
-
-  console.log('[SessionAuthGuard] Checking expiration:', {
-    isTrialExpired,
-    isSessionActive,
-    isAuthenticated,
-    forceTrialCheck,
-    willShowOverlay: shouldShowOverlay,
-  });
-
-  if (shouldShowOverlay) {
-    console.log('[SessionAuthGuard] ✅✅✅ SHOWING AUTH OVERLAY - ALL CONDITIONS MET!');
+  // If trial expired and we're redirecting, show loading state
+  if (isTrialExpired && isSessionActive && !isAuthenticated && hasRedirected) {
     return (
-      <div className="relative h-full w-full">
-        {/* Blurred background */}
-        <div className="absolute inset-0 blur-sm">{children}</div>
-
-        {/* Auth overlay */}
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md">
-            <div className="mb-4 rounded-lg bg-white p-4 text-center shadow-lg">
-              <h2 className="mb-2 text-xl font-bold text-gray-900">Free Trial Ended</h2>
-              <p className="mb-4 text-sm text-gray-600">
-                Your free trial has ended. Please sign up to continue your session with Guruji.
-              </p>
-            </div>
-            <PhoneAuthForm
-              onSuccess={async () => {
-                // Refresh auth state to ensure isAuthenticated is updated
-                await refreshUser();
-                // Reset timer since user is now authenticated
-                resetTimer();
-                console.log(
-                  '[SessionAuthGuard] Authentication successful - overlay should disappear'
-                );
-              }}
-            />
-          </div>
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="text-center">
+          <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
+          <p className="text-muted-foreground">Redirecting to login...</p>
         </div>
       </div>
     );

@@ -1,31 +1,30 @@
 'use client';
 
 import { AuthGuard } from '@/components/auth/auth-guard';
-import { AuthProvider, useAuth } from '@/components/auth/auth-provider';
+import { useAuth } from '@/components/auth/auth-provider';
 import { LogoutButton } from '@/components/auth/logout-button';
 import { PhoneAuthForm } from '@/components/auth/phone-auth-form';
 
 export default function TestAuthPage() {
+  // AuthProvider is now at root level in app/layout.tsx
   return (
-    <AuthProvider>
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-        <AuthGuard
-          fallback={
-            <div className="w-full max-w-md">
-              <div className="mb-6 text-center">
-                <h1 className="text-3xl font-bold text-gray-900">Test Authentication</h1>
-                <p className="mt-2 text-sm text-gray-600">
-                  Use Firebase test credentials: +91 84540 83097 / OTP: 123456
-                </p>
-              </div>
-              <PhoneAuthForm />
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <AuthGuard
+        fallback={
+          <div className="w-full max-w-md">
+            <div className="mb-6 text-center">
+              <h1 className="text-3xl font-bold text-gray-900">Test Authentication</h1>
+              <p className="mt-2 text-sm text-gray-600">
+                Use Firebase test credentials: +91 84540 83097 / OTP: 123456
+              </p>
             </div>
-          }
-        >
-          <AuthSuccessView />
-        </AuthGuard>
-      </div>
-    </AuthProvider>
+            <PhoneAuthForm />
+          </div>
+        }
+      >
+        <AuthSuccessView />
+      </AuthGuard>
+    </div>
   );
 }
 

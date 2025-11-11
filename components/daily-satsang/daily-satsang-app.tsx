@@ -2,12 +2,37 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Room, RoomEvent } from 'livekit-client';
-import { RoomAudioRenderer, RoomContext, StartAudio } from '@livekit/components-react';
+import { RoomAudioRenderer, RoomContext, StartAudio, useChat } from '@livekit/components-react';
 import { TileLayout } from '@/components/app/tile-layout';
 import { Toaster } from '@/components/livekit/toaster';
 import { ParticipantList } from '@/components/livesatsang/participant-list';
 import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player';
 import { DailySatsangOrchestrator } from './orchestrator';
+
+// Component to send wait message to agent when room connects
+function AgentWaitHandler({ room, isConnected }: { room: Room | null; isConnected: boolean }) {
+  const { send } = useChat();
+  const waitSentRef = useMemo(() => ({ current: false }), []);
+
+  useEffect(() => {
+    if (!room || !isConnected || waitSentRef.current) return;
+
+    // Send wait message via chat to tell agent not to respond yet
+    const waitMessage = `[WAIT MODE - DO NOT RESPOND YET]
+
+कृपया प्रतीक्षा करें। सत्र अभी शुरू नहीं हुआ है। 
+
+महत्वपूर्ण: अभी कुछ न बोलें, कोई अभिवादन न करें, और कोई प्रतिक्रिया न दें। 
+
+जब होस्ट "शुरू करें" बटन दबाएगा, तभी आपको बोलना शुरू करना होगा। तब तक चुप रहें और प्रतीक्षा करें।`;
+
+    void send(waitMessage);
+    waitSentRef.current = true;
+    console.log('[DailySatsang] Sent wait message to agent');
+  }, [room, isConnected, send, waitSentRef]);
+
+  return null;
+}
 
 export function DailySatsangApp() {
   const [room, setRoom] = useState<Room | null>(null);
@@ -17,13 +42,30 @@ export function DailySatsangApp() {
   const [showParticipants, setShowParticipants] = useState(false);
   const [started, setStarted] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
+  // Daily satsang must use guruji-daily agent only
   const dailyAgentName =
     (process.env.NEXT_PUBLIC_DAILY_SATSANG_AGENT_NAME?.trim() ?? '') || 'guruji-daily';
+
+  console.log('[DailySatsang] Using agent name:', dailyAgentName);
 
   const defaultDurations = useMemo(
     () => ({ intro: 120, bhajan: 300, pravachan: 900, qa: 420, closing: 60 }),
     []
   );
+
+  // Helper function to send message to agent via data channel
+  const sendMessageToAgent = (room: Room, message: Record<string, unknown>) => {
+    try {
+      const data = new TextEncoder().encode(JSON.stringify(message));
+      room.localParticipant.publishData(data, {
+        reliable: true,
+        topic: 'daily_satsang',
+      });
+      console.log('[DailySatsang] → agent', message);
+    } catch (e) {
+      console.error('[DailySatsang] Failed to send message to agent', e);
+    }
+  };
 
   const handleJoin = async (name: string, role: 'host' | 'participant') => {
     try {
@@ -32,15 +74,63 @@ export function DailySatsangApp() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ participantName: name, role, agentName: dailyAgentName }),
       });
-      if (!response.ok) throw new Error('Failed to get access token');
-      const { serverUrl, roomName, participantToken } = await response.json();
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[DailySatsang] Token request failed:', errorText);
+        throw new Error(`Failed to get access token: ${errorText}`);
+      }
+      const {
+        serverUrl,
+        roomName,
+        participantToken,
+        agentName: returnedAgentName,
+      } = await response.json();
+      console.log('[DailySatsang] Token received. Room:', roomName, 'Agent:', returnedAgentName);
 
       if (roomName !== 'DailySatsang') {
         console.error(`Warning: Room name mismatch. Expected 'DailySatsang', got '${roomName}'`);
       }
 
       const newRoom = new Room();
-      newRoom.on(RoomEvent.Connected, () => setIsConnected(true));
+
+      // Listen for participants joining (including the agent)
+      newRoom.on(RoomEvent.ParticipantConnected, (participant) => {
+        console.log(
+          '[DailySatsang] Participant connected:',
+          participant.identity,
+          participant.name
+        );
+        if (participant.isAgent) {
+          console.log('[DailySatsang] ✅ Agent joined the room!', participant.name);
+        }
+      });
+
+      newRoom.on(RoomEvent.Connected, () => {
+        setIsConnected(true);
+        console.log('[DailySatsang] Room connected. Waiting for agent to join...');
+        console.log('[DailySatsang] Current participants:', newRoom.remoteParticipants.size);
+
+        // Check if agent is already in the room
+        const agentParticipant = Array.from(newRoom.remoteParticipants.values()).find(
+          (p) => p.isAgent
+        );
+        if (agentParticipant) {
+          console.log('[DailySatsang] ✅ Agent already in room:', agentParticipant.name);
+        } else {
+          console.warn(
+            '[DailySatsang] ⚠️ Agent not found in room. Make sure agent worker is running with name:',
+            dailyAgentName
+          );
+        }
+
+        // Send wait message to agent immediately on connection
+        // This tells the agent to wait and not respond until start button is clicked
+        sendMessageToAgent(newRoom, {
+          type: 'wait',
+          message:
+            'कृपया प्रतीक्षा करें। सत्र अभी शुरू नहीं हुआ है। जब होस्ट "शुरू करें" बटन दबाएगा, तभी आपको बोलना शुरू करना होगा।',
+        });
+      });
       newRoom.on(RoomEvent.Disconnected, () => {
         setIsConnected(false);
         setRoom(null);
@@ -83,6 +173,7 @@ export function DailySatsangApp() {
         <DailySatsangOrchestrator.Join onJoin={handleJoin} />
       ) : room ? (
         <RoomContext.Provider value={room}>
+          <AgentWaitHandler room={room} isConnected={isConnected} />
           <div className="bg-background flex h-full flex-col overflow-hidden">
             {started && <TileLayout chatOpen={false} />}
             {/* Top header */}

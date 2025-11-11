@@ -54,7 +54,7 @@ async def test_search(query: str):
             print(f"   Channel: {result.get('channel_title')}")
             print(f"   YouTube URL: https://www.youtube.com/watch?v={result.get('video_id')}")
             return result
-        else:
+else:
             print(f"\n❌ FAILED - No video found for '{query}'")
             return None
     except Exception as e:

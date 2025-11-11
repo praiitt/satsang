@@ -3,8 +3,8 @@ import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
 import { initFirebaseAdmin } from './firebase.js';
-import authRoutes from './routes/auth.js';
 import adsRoutes from './routes/ads.js';
+import authRoutes from './routes/auth.js';
 
 const app = express();
 

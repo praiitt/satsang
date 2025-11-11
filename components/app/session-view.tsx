@@ -7,12 +7,14 @@ import { ChatTranscript } from '@/components/app/chat-transcript';
 import { PreConnectMessage } from '@/components/app/preconnect-message';
 import { useSession } from '@/components/app/session-provider';
 import { TileLayout } from '@/components/app/tile-layout';
+import { useAuth } from '@/components/auth/auth-provider';
 import { SessionAuthGuard } from '@/components/auth/session-auth-guard';
 import {
   AgentControlBar,
   type ControlBarControls,
 } from '@/components/livekit/agent-control-bar/agent-control-bar';
 import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player';
+import { useLanguage } from '@/contexts/language-context';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { useConnectionTimeout } from '@/hooks/useConnectionTimout';
 import { useDebugMode } from '@/hooks/useDebug';
@@ -87,10 +89,14 @@ export const SessionView = ({
   useIdleTimeout(idleTimeoutMs, true);
 
   const { isSessionActive } = useSession();
+  const { isAuthenticated } = useAuth();
+  const { t } = useLanguage();
   const { minutesRemaining, secondsRemaining, isTrialExpired } = useSessionTimer(isSessionActive);
   const messages = useChatMessages();
   const [chatOpen, setChatOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const bottomSectionRef = useRef<HTMLDivElement>(null);
+  const [bottomPadding, setBottomPadding] = useState(150);
 
   const controls: ControlBarControls = {
     leave: true,
@@ -109,15 +115,57 @@ export const SessionView = ({
     }
   }, [messages]);
 
+  // Update bottom padding based on bottom section height (accounts for player)
+  useEffect(() => {
+    const updatePadding = () => {
+      if (bottomSectionRef.current) {
+        const height = bottomSectionRef.current.offsetHeight;
+        // Add extra padding to ensure all content is visible
+        const newPadding = Math.max(150, height + 20);
+        setBottomPadding(newPadding);
+      }
+    };
+
+    // Update on mount and when chat opens
+    updatePadding();
+    const resizeObserver = new ResizeObserver(updatePadding);
+
+    if (bottomSectionRef.current) {
+      resizeObserver.observe(bottomSectionRef.current);
+    }
+
+    // Also update when chat opens/closes
+    const timeoutId = setTimeout(updatePadding, 100);
+
+    return () => {
+      resizeObserver.disconnect();
+      clearTimeout(timeoutId);
+    };
+  }, [chatOpen]);
+
+  // Scroll to bottom when chat opens
+  useEffect(() => {
+    if (chatOpen && scrollAreaRef.current) {
+      // Small delay to ensure padding is updated
+      const timeoutId = setTimeout(() => {
+        if (scrollAreaRef.current) {
+          scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+        }
+      }, 150);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [chatOpen, bottomPadding]);
+
   return (
     <SessionAuthGuard isSessionActive={isSessionActive}>
       <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
-        {/* Free Trial Timer Indicator */}
-        {!isTrialExpired && (
-          <div className="bg-muted/80 text-muted-foreground fixed top-4 right-4 z-50 rounded-lg border px-3 py-2 text-sm shadow-lg">
-            <div className="font-semibold">Free Trial</div>
+        {/* Free Trial Timer Indicator - Only show if user is not authenticated */}
+        {!isAuthenticated && !isTrialExpired && (
+          <div className="bg-muted/80 text-muted-foreground fixed top-20 right-4 z-50 rounded-lg border px-3 py-2 text-sm shadow-lg md:top-4">
+            <div className="font-semibold">{t('common.freeTrial')}</div>
             <div className="text-xs">
-              {minutesRemaining}:{secondsRemaining.toString().padStart(2, '0')} remaining
+              {minutesRemaining}:{secondsRemaining.toString().padStart(2, '0')}{' '}
+              {t('common.remaining')}
             </div>
           </div>
         )}
@@ -130,7 +178,11 @@ export const SessionView = ({
           )}
         >
           <Fade top className="absolute inset-x-4 top-0 h-40" />
-          <ScrollArea ref={scrollAreaRef} className="px-4 pt-40 pb-[150px] md:px-6 md:pb-[180px]">
+          <ScrollArea
+            ref={scrollAreaRef}
+            className="px-4 pt-40 md:px-6"
+            style={{ paddingBottom: `${bottomPadding}px` }}
+          >
             <ChatTranscript
               hidden={!chatOpen}
               messages={messages}
@@ -150,7 +202,10 @@ export const SessionView = ({
           {appConfig.isPreConnectBufferEnabled && (
             <PreConnectMessage messages={messages} className="pb-4" />
           )}
-          <div className="bg-background relative mx-auto max-w-2xl pb-[max(12px,env(safe-area-inset-bottom))] md:pb-12">
+          <div
+            ref={bottomSectionRef}
+            className="bg-background relative mx-auto max-w-2xl pb-[max(12px,env(safe-area-inset-bottom))] md:pb-12"
+          >
             <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
             {/* YouTube Bhajan Player with controls */}
             <div className="mb-2 px-3">

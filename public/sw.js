@@ -39,7 +39,7 @@ self.addEventListener('activate', (event) => {
 // Push event - handle incoming push notifications
 self.addEventListener('push', (event) => {
   console.log('[Service Worker] Push received:', event);
-  
+
   let notificationData = {
     title: 'सत्संग',
     body: 'आपको एक नया संदेश मिला है',
@@ -104,7 +104,7 @@ self.addEventListener('push', (event) => {
 // Notification click event - handle user clicking on notification
 self.addEventListener('notificationclick', (event) => {
   console.log('[Service Worker] Notification clicked:', event);
-  
+
   event.notification.close();
 
   if (event.action === 'close') {

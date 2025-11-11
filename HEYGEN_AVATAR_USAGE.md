@@ -101,10 +101,7 @@ export function DynamicSpeaker() {
         onChange={(e) => setText(e.target.value)}
         placeholder="Enter text to speak..."
       />
-      <button
-        onClick={() => speak(text)}
-        disabled={!isReady || !text}
-      >
+      <button onClick={() => speak(text)} disabled={!isReady || !text}>
         Speak
       </button>
     </div>
@@ -126,24 +123,28 @@ window.heygenSendText('नमस्ते! मैं आपका आध्य�
 The following API routes are available:
 
 ### 1. Create Session
+
 ```
 POST /api/heygen/session/new
 Body: { avatar_id?: string, avatar_name?: string }
 ```
 
 ### 2. Start Session
+
 ```
 POST /api/heygen/session/start
 Body: { session_id: string, session_token: string }
 ```
 
 ### 3. Send Text to Speak
+
 ```
 POST /api/heygen/session/task
 Body: { session_id: string, session_token: string, text: string, task_type?: 'talk' | 'repeat' }
 ```
 
 ### 4. Stop Session
+
 ```
 POST /api/heygen/session/stop
 Body: { session_id: string, session_token: string }
@@ -166,6 +167,7 @@ Body: { session_id: string, session_token: string }
 **Important Note**: The pricing below is for the **Video Generation API** (pre-recorded videos). The **Streaming API** (real-time text-to-speech) may have different pricing. Please check HeyGen's official pricing page for the most current streaming API costs.
 
 #### Free Plan
+
 - **Cost**: $0/month
 - **Credits**: 10 API credits per month
 - **Credit Usage**: 1 minute of video = 0.2 credits
@@ -173,6 +175,7 @@ Body: { session_id: string, session_token: string }
 - **For 1 minute**: 0.2 credits (free within monthly limit)
 
 #### Pro Plan
+
 - **Cost**: $99/month
 - **Credits**: 100 API credits per month
 - **Credit Usage**: 1 minute of video = 0.2 credits
@@ -181,6 +184,7 @@ Body: { session_id: string, session_token: string }
 - **Effective cost per minute**: ~$0.20 (if using all credits)
 
 #### Scale Plan
+
 - **Cost**: $330/month
 - **Credits**: 660 API credits per month
 - **Credit Usage**: 1 minute of video = 0.2 credits
@@ -196,7 +200,8 @@ The **Streaming API** (real-time text-to-speech) pricing may differ from video g
 2. **Session-based**: May charge per session or per minute of streaming
 3. **Different tiers**: Streaming API may have separate pricing tiers
 
-**⚠️ Important**: 
+**⚠️ Important**:
+
 - Check HeyGen's official pricing page for current streaming API rates
 - Streaming API pricing may be different from video generation pricing
 - Contact HeyGen support for enterprise pricing if you need high volume
@@ -245,17 +250,20 @@ For a typical usage scenario:
 ## Troubleshooting
 
 ### Avatar not speaking
+
 - Check that `HEYGEN_API_KEY` is set correctly
 - Verify the avatar ID is correct
 - Check browser console for errors
 - Ensure session is initialized before speaking
 
 ### Session creation fails
+
 - Verify API key is valid
 - Check network connectivity
 - Review HeyGen API documentation for changes
 
 ### Audio not playing
+
 - Check browser audio permissions
 - Verify WebRTC is supported
 - Check browser console for errors
@@ -272,4 +280,3 @@ For a typical usage scenario:
 - [HeyGen API Documentation](https://docs.heygen.com/)
 - [HeyGen Dashboard](https://app.heygen.com/)
 - [HeyGen Interactive Avatar Demo](https://github.com/HeyGen-Official/InteractiveAvatarNextJSDemo)
-

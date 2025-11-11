@@ -2,14 +2,14 @@
 
 /**
  * Script to generate VAPID keys for Web Push Notifications.
- * 
+ *
  * Usage:
  *   node scripts/generate-vapid-keys.js
- * 
+ *
  * This will generate a public and private key pair that you need to:
  * 1. Add NEXT_PUBLIC_VAPID_PUBLIC_KEY to your .env.local (public key)
  * 2. Add VAPID_PRIVATE_KEY to your server-side .env (private key - keep secret!)
- * 
+ *
  * The private key is used on the server to send push notifications.
  * The public key is used in the browser to subscribe to push notifications.
  */
@@ -72,4 +72,3 @@ console.log('\n⚠️  Important:');
 console.log('   - Public key: Safe to expose in frontend (.env.local)');
 console.log('   - Private key: Keep secret, only use on server');
 console.log('   - Never commit private key to git!\n');
-

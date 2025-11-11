@@ -336,7 +336,10 @@ export const DailySatsangOrchestrator = {
         publishToAgent({ type: 'start' });
 
         // Direct prompt to start intro phase immediately - NO greeting
-        const startPrompt = `[Daily Satsang Mode - START IMMEDIATELY]
+        // This overrides any previous wait message
+        const startPrompt = `[Daily Satsang Mode - START IMMEDIATELY - WAIT MODE IS NOW OVER]
+
+अब सत्र शुरू हो रहा है। प्रतीक्षा मोड समाप्त हो गया है। अभी तुरंत बोलना शुरू करें।
 
 आप गुरुजी हैं। अभी डेली सत्संग शुरू करें। कोई सामान्य अभिवादन न करें - सीधे परिचय चरण शुरू करें।
 
