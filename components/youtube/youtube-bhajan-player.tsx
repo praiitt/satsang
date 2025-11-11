@@ -163,7 +163,10 @@ export function YouTubeBhajanPlayer() {
               });
             return;
           } else {
-            console.warn('[YouTubeBhajanPlayer] ⚠️ No valid video ID in vani results:', firstResult);
+            console.warn(
+              '[YouTubeBhajanPlayer] ⚠️ No valid video ID in vani results:',
+              firstResult
+            );
           }
         }
 
