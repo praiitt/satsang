@@ -152,9 +152,6 @@ export const WelcomeView = ({
             <li>“सत्संग शुरू करें” पर क्लिक करें या “लाइव सत्संग जॉइन करें” से समूह में जुड़ें।</li>
           </ol>
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button asChild variant="secondary">
-              <Link href="/livesatsang">समय सारिणी देखें</Link>
-            </Button>
             <Button asChild variant="link">
               <Link href="#faq">अक्सर पूछे जाने वाले प्रश्न</Link>
             </Button>
