@@ -31,3 +31,8 @@ export function getAuth() {
   if (!initialized) initFirebaseAdmin();
   return admin.auth();
 }
+
+export function getDb() {
+  if (!initialized) initFirebaseAdmin();
+  return admin.firestore();
+}

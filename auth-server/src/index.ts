@@ -4,6 +4,7 @@ import 'dotenv/config';
 import express from 'express';
 import { initFirebaseAdmin } from './firebase.js';
 import authRoutes from './routes/auth.js';
+import adsRoutes from './routes/ads.js';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/auth', authRoutes);
+app.use('/ads', adsRoutes);
 
 app.get('/', (_req, res) => res.json({ name: 'satsang-auth-server', ok: true }));
 
