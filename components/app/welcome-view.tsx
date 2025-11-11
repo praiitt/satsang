@@ -46,7 +46,7 @@ function VideoSection() {
   }, []);
 
   return (
-    <section className="mt-6 w-full max-w-5xl sm:mt-8">
+    <section id="product-video" className="mt-6 w-full max-w-5xl sm:mt-8">
       <div className="w-full py-4">
         <h2 className="text-foreground mx-auto mb-3 px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
           RRAASI सत्संग
@@ -192,6 +192,23 @@ export const WelcomeView = ({
         </div>
       </section>
 
+      {/* CTA: After Features */}
+      <section className="mx-auto mt-6 max-w-4xl px-4">
+        <div className="bg-background border-input flex flex-col items-center gap-3 rounded-2xl border p-6 text-center shadow-sm sm:flex-row sm:justify-between">
+          <p className="text-foreground text-base font-medium sm:text-left">
+            तैयार हैं? अभी अपने AI गुरु से बातचीत शुरू करें।
+          </p>
+          <div className="flex gap-3">
+            <Button onClick={onStartCall} variant="primary" size="lg" className="h-12">
+              सत्संग शुरू करें
+            </Button>
+            <Button asChild variant="secondary" className="h-12">
+              <a href="#product-video">डेमो देखें</a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* How It Works Section */}
       <section className="mx-auto mt-12 max-w-4xl px-4 sm:mt-16">
         <h2 className="text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
@@ -287,6 +304,23 @@ export const WelcomeView = ({
         </div>
       </section>
 
+      {/* CTA: After Use Cases */}
+      <section className="mx-auto mt-8 max-w-4xl px-4">
+        <div className="bg-primary text-primary-foreground flex flex-col items-center gap-3 rounded-2xl p-6 text-center shadow-sm sm:flex-row sm:justify-between">
+          <p className="text-base font-semibold sm:text-left">
+            बस एक क्लिक दूर — गुरुजी से बातचीत शुरू करें।
+          </p>
+          <div className="flex gap-3">
+            <Button onClick={onStartCall} variant="ghost" className="h-12 bg-white/10 hover:bg-white/20">
+              अभी शुरू करें
+            </Button>
+            <Button asChild variant="ghost" className="h-12 bg-white/10 hover:bg-white/20">
+              <a href="#faq">FAQ देखें</a>
+            </Button>
+          </div>
+        </div>
+      </section>
+
       {/* Technology Section */}
       <section className="mx-auto mt-12 max-w-4xl px-4 sm:mt-16">
         <div className="bg-background border-input rounded-2xl border p-8 text-center shadow-sm">
@@ -345,7 +379,7 @@ export const WelcomeView = ({
               मैं कौन से भजन सुन सकता हूं?
             </summary>
             <p className="text-muted-foreground mt-3 text-sm leading-7">
-              आप किसी भी भजन का नाम बोलकर सुन सकते हैं। उदाहरण के लिए, "कृष्ण का भजन सुनाओ", 
+              आप किसी भजन का नाम बोलकर सुन सकते हैं। उदाहरण के लिए, "कृष्ण का भजन सुनाओ", 
               "हरे कृष्ण सुनाओ", "ओम नमः शिवाय सुनाओ", आदि। AI YouTube से उपयुक्त भजन खोजकर तुरंत चला देगा।
             </p>
           </details>
