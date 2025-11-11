@@ -422,9 +422,31 @@ Always end with a question or invitation to continue the conversation when natur
             logger.error(f"Failed to publish vani results: {e}", exc_info=True)
 
         if results:
-            first_title = results[0].get("title", topic)
+            first_result = results[0]
+            first_title = first_result.get("title", topic)
+            first_video_id = first_result.get("video_id")
+            
+            # Also publish the first result in bhajan.track format for automatic playback
+            if first_video_id:
+                try:
+                    publish_fn = getattr(self, "_publish_data_fn", None)
+                    if callable(publish_fn):
+                        # Publish in bhajan.track format for automatic playback
+                        play_payload = {
+                            "name": first_title,
+                            "artist": first_result.get("channel_title", ""),
+                            "youtube_id": first_video_id,
+                            "youtube_url": first_result.get("url", f"https://www.youtube.com/watch?v={first_video_id}"),
+                            "message": f"प्रवचन '{first_title}' चल रहा है।",
+                        }
+                        play_data_bytes = json.dumps(play_payload).encode("utf-8")
+                        await publish_fn(play_data_bytes)
+                        logger.info(f"✅ Published first vani for playback: {first_title} ({first_video_id})")
+                except Exception as e:
+                    logger.error(f"Failed to publish vani for playback: {e}", exc_info=True)
+            
             return (
-                f"मुझे '{topic}' विषय पर कुछ प्रवचन मिले हैं, जैसे '{first_title}'। क्या मैं इनमें से कोई चलाऊँ?"
+                f"मुझे '{topic}' विषय पर प्रवचन मिला है। मैं '{first_title}' चला रहा हूं। आनंद लें!"
             )
         else:
             return (

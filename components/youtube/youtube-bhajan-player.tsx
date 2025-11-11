@@ -82,13 +82,13 @@ export function YouTubeBhajanPlayer() {
     if (!room) return;
 
     const onData = (payload: Uint8Array, participant: unknown, kind: unknown, topic?: string) => {
-      // Accept both 'bhajan.track' (same as Spotify) and 'bhajan.video' topics
-      // Also accept 'daily_satsang' topic for daily satsang sessions
+      // Accept 'bhajan.track', 'bhajan.video', 'daily_satsang', and 'vani.search' topics
       if (
         topic !== undefined &&
         topic !== 'bhajan.track' &&
         topic !== 'bhajan.video' &&
-        topic !== 'daily_satsang'
+        topic !== 'daily_satsang' &&
+        topic !== 'vani.search'
       ) {
         return;
       }
@@ -101,6 +101,15 @@ export function YouTubeBhajanPlayer() {
         );
 
         const parsed = JSON.parse(text) as {
+          type?: string; // For vani.results
+          topic?: string; // For vani.results
+          results?: Array<{
+            videoId?: string;
+            title?: string;
+            channelTitle?: string;
+            thumbnail?: string;
+            url?: string;
+          }>; // For vani.results
           url?: string;
           name?: string;
           artist?: string;
@@ -116,6 +125,7 @@ export function YouTubeBhajanPlayer() {
 
         console.log('[YouTubeBhajanPlayer] 🔵 Parsed JSON:', parsed);
         console.log('[YouTubeBhajanPlayer] 🔵 Available fields:', {
+          type: parsed.type,
           hasYoutubeId: !!parsed.youtube_id,
           hasYoutubeUrl: !!parsed.youtube_url,
           hasVideoId: !!parsed.videoId,
@@ -124,8 +134,38 @@ export function YouTubeBhajanPlayer() {
           hasArtist: !!parsed.artist,
           hasSpotifyId: !!parsed.spotify_id,
           hasMessage: !!parsed.message,
+          hasResults: !!parsed.results,
+          resultsCount: parsed.results?.length || 0,
           allKeys: Object.keys(parsed),
         });
+
+        // Handle vani.results format (array of videos)
+        if (parsed.type === 'vani.results' && parsed.results && parsed.results.length > 0) {
+          const firstResult = parsed.results[0];
+          const videoId = firstResult.videoId || extractYouTubeVideoId(firstResult.url || '');
+          const title = firstResult.title || parsed.topic || 'Vani';
+
+          if (videoId) {
+            console.log('[YouTubeBhajanPlayer] ✅ Playing vani from results:', {
+              videoId,
+              title,
+              topic: parsed.topic,
+            });
+            setCurrentTrackName(title);
+            setShowControls(true);
+            playVideo(videoId, 0)
+              .then(async () => {
+                await setAgentAudioMuted(true);
+                await publishAgentControl('sleep', 'vani_playing');
+              })
+              .catch((err) => {
+                console.error('[YouTubeBhajanPlayer] Vani play error:', err);
+              });
+            return;
+          } else {
+            console.warn('[YouTubeBhajanPlayer] ⚠️ No valid video ID in vani results:', firstResult);
+          }
+        }
 
         // Handle daily_satsang format (action-based commands)
         if (parsed.action === 'play' && parsed.videoId) {
