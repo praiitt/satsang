@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/livekit/button';
@@ -163,30 +164,30 @@ export const WelcomeView = ({
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">📿</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">प्रवचन और वाणी</h3>
-            <p className="text-muted-foreground text-sm leading-6">
+          <p className="text-muted-foreground text-sm leading-6">
               किसी विषय पर प्रवचन सुनना चाहते हैं? बस कहिए “भक्ति पर प्रवचन सुनाओ” या 
               “सद्गुरु का प्रवचन सुनाओ” - AI तुरंत उपयुक्त प्रवचन खोजकर चला देगा।
-            </p>
-          </div>
+          </p>
+        </div>
 
           {/* Feature 5: Spiritual Guidance */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🕉️</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">आध्यात्मिक मार्गदर्शन</h3>
-            <p className="text-muted-foreground text-sm leading-6">
+          <p className="text-muted-foreground text-sm leading-6">
               धर्म, योग, ध्यान, कर्म, भक्ति, वेदांत - किसी भी आध्यात्मिक विषय पर प्रश्न पूछें। 
               गीता, वेद, उपनिषद, रामायण, महाभारत से उत्तर प्राप्त करें।
-            </p>
-          </div>
+          </p>
+        </div>
 
           {/* Feature 6: Easy Setup */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">✨</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">सरल और तेज़</h3>
-            <p className="text-muted-foreground text-sm leading-6">
+          <p className="text-muted-foreground text-sm leading-6">
               कोई ऐप इंस्टॉल करने की आवश्यकता नहीं। बस ब्राउज़र खोलिए, माइक की अनुमति दीजिए, 
               और शुरू करें। सेकंडों में अपने आध्यात्मिक गुरु से जुड़ें।
-            </p>
+          </p>
           </div>
         </div>
       </section>
