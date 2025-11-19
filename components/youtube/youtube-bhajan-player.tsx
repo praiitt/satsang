@@ -555,7 +555,7 @@ export function YouTubeBhajanPlayer() {
     return true;
   }, []);
 
-  const showMandala = enableMandalaVisualizer && (isPlaying || !!currentVideoId);
+  const showMandala = enableMandalaVisualizer && isPlaying;
 
   if (!isReady && !error) {
     return null; // Loading
@@ -603,7 +603,12 @@ export function YouTubeBhajanPlayer() {
 
   return (
     <div className="mb-3">
-      {showMandala && <MeditationMandalaVisualizer isActive={isPlaying} />}
+      {showMandala && (
+        <MeditationMandalaVisualizer
+          isActive={isPlaying}
+          className="via-background/70 to-background mt-4 mb-4 h-64 w-full overflow-hidden rounded-3xl bg-gradient-to-b from-transparent"
+        />
+      )}
       <div className="bg-primary/10 border-primary/30 flex items-center gap-2 rounded-xl border-2 p-3 shadow-md">
         <div className="min-w-0 flex-1">
           {currentTrackName && (

@@ -875,7 +875,11 @@ export function BhajanPlayer() {
     <>
       <audio ref={audioRef} preload="auto" />
       {showMandala && (
-        <MeditationMandalaVisualizer audioRef={audioRef} isActive={currentlyPlaying} />
+        <MeditationMandalaVisualizer
+          audioRef={audioRef}
+          isActive={currentlyPlaying}
+          className="via-background/70 to-background mt-4 mb-4 h-64 w-full overflow-hidden rounded-3xl bg-gradient-to-b from-transparent"
+        />
       )}
       {/* Visible Player UI */}
       <div className="bg-background/95 border-input/50 animate-in slide-in-from-bottom-2 mb-2 rounded-lg border p-3 shadow-lg backdrop-blur-sm duration-300 md:p-4">

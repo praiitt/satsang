@@ -167,10 +167,16 @@ export function MeditationMandalaVisualizer({
       ctx.fillStyle = radialGradient;
       ctx.fillRect(0, 0, width, height);
 
-      const petals = 48;
+      // Slightly amplify visual response so it feels more alive
+      const visualEnergy = Math.min(1, 0.2 + energy * 1.2);
+
+      const petals = 64;
 
       ctx.save();
       ctx.translate(centerX, centerY);
+      // Slow mandala rotation over time for a more meditative feel
+      const rotation = (time / 1000) * 0.25; // radians per second
+      ctx.rotate(rotation);
 
       for (let i = 0; i < petals; i += 1) {
         const angle = (i / petals) * Math.PI * 2;
@@ -178,7 +184,7 @@ export function MeditationMandalaVisualizer({
         const sample = dataArray[sampleIndex] / 255; // 0–1
 
         // Blend global energy with per-petal sample
-        const intensity = 0.4 * energy + 0.6 * sample;
+        const intensity = 0.4 * visualEnergy + 0.6 * sample;
         const radius = baseRadius + intensity * (maxRadius - baseRadius);
 
         const hue = 30 + i * 2; // warm saffron-to-gold ring
@@ -203,7 +209,7 @@ export function MeditationMandalaVisualizer({
       }
 
       // Central core
-      const coreRadius = baseRadius * (1.1 + energy * 0.6);
+      const coreRadius = baseRadius * (1.1 + visualEnergy * 0.9);
       const coreGradient = ctx.createRadialGradient(0, 0, coreRadius * 0.2, 0, 0, coreRadius);
       coreGradient.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
       coreGradient.addColorStop(1, 'rgba(255, 180, 120, 0.0)');
@@ -233,7 +239,10 @@ export function MeditationMandalaVisualizer({
 
   return (
     <div
-      className={className ?? 'mt-1 mb-2 h-32 w-full overflow-hidden rounded-2xl bg-transparent'}
+      className={
+        className ??
+        'via-background/60 to-background mt-2 mb-4 h-56 w-full overflow-hidden rounded-3xl bg-gradient-to-b from-transparent'
+      }
     >
       <canvas ref={canvasRef} className="h-full w-full" />
     </div>
