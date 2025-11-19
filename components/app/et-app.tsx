@@ -55,12 +55,7 @@ function ETViewController() {
     <AnimatePresence mode="wait">
       {/* Welcome screen */}
       {!isSessionActive && (
-        <MotionETWelcomeView
-          key="welcome"
-          {...VIEW_MOTION_PROPS}
-          startButtonText={appConfig.startButtonText}
-          onStartCall={startSession}
-        />
+        <MotionETWelcomeView key="welcome" {...VIEW_MOTION_PROPS} onStartCall={startSession} />
       )}
       {/* Session view */}
       {isSessionActive && (

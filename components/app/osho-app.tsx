@@ -55,12 +55,7 @@ function OshoViewController() {
     <AnimatePresence mode="wait">
       {/* Welcome screen */}
       {!isSessionActive && (
-        <MotionOshoWelcomeView
-          key="welcome"
-          {...VIEW_MOTION_PROPS}
-          startButtonText={appConfig.startButtonText}
-          onStartCall={startSession}
-        />
+        <MotionOshoWelcomeView key="welcome" {...VIEW_MOTION_PROPS} onStartCall={startSession} />
       )}
       {/* Session view */}
       {isSessionActive && (
