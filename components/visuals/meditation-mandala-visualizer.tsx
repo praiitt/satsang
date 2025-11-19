@@ -3,7 +3,12 @@
 import { useEffect, useRef } from 'react';
 
 interface MeditationMandalaVisualizerProps {
-  audioRef: React.RefObject<HTMLAudioElement | null>;
+  /**
+   * Optional HTML audio element to drive the visualization from real audio data.
+   * When omitted, the mandala uses a smooth time-based pattern instead – still
+   * reactive to play/pause (via isActive) but not frequency-accurate.
+   */
+  audioRef?: React.RefObject<HTMLAudioElement | null>;
   isActive: boolean;
   className?: string;
 }
@@ -37,7 +42,7 @@ export function MeditationMandalaVisualizer({
   };
 
   useEffect(() => {
-    if (!isActive || !audioRef.current || typeof window === 'undefined') {
+    if (!isActive || typeof window === 'undefined') {
       if (animationFrameRef.current !== null) {
         cancelAnimationFrame(animationFrameRef.current);
         animationFrameRef.current = null;
@@ -59,8 +64,11 @@ export function MeditationMandalaVisualizer({
 
     resizeCanvas();
 
+    const audioElement = audioRef?.current ?? undefined;
+    const hasAudioElement = !!audioElement;
+
     // Lazily create AudioContext + analyser once
-    if (!audioContextRef.current) {
+    if (!audioContextRef.current && hasAudioElement) {
       try {
         const AudioContextCtor =
           window.AudioContext ||
@@ -77,41 +85,64 @@ export function MeditationMandalaVisualizer({
     }
 
     const audioContext = audioContextRef.current;
-    if (!audioContext) return;
+    // For YouTube / non-audioElement paths, we allow audioContext to be null and
+    // fall back to time-based breathing animation.
 
     // Create or reuse analyser
-    if (!analyserRef.current) {
+    if (!analyserRef.current && audioContext && hasAudioElement) {
       const analyser = audioContext.createAnalyser();
       analyser.fftSize = 256;
       analyser.smoothingTimeConstant = 0.85;
       analyserRef.current = analyser;
 
-      try {
-        const source = audioContext.createMediaElementSource(audioRef.current);
-        source.connect(analyser);
-        analyser.connect(audioContext.destination);
-      } catch (error) {
-        // createMediaElementSource can only be called once per audio element per context
-        // If it was already created elsewhere, fail silently.
-        console.warn(
-          '[MeditationMandalaVisualizer] Unable to create media element source (possibly already connected).',
-          error
-        );
+      if (audioElement) {
+        try {
+          const source = audioContext.createMediaElementSource(audioElement);
+          source.connect(analyser);
+          analyser.connect(audioContext.destination);
+        } catch (error) {
+          // createMediaElementSource can only be called once per audio element per context
+          // If it was already created elsewhere, fail silently.
+          console.warn(
+            '[MeditationMandalaVisualizer] Unable to create media element source (possibly already connected).',
+            error
+          );
+        }
       }
     }
 
     const analyser = analyserRef.current;
-    if (!analyser) return;
-
-    const bufferLength = analyser.frequencyBinCount;
+    const bufferLength = analyser ? analyser.frequencyBinCount : 64;
     const dataArray = new Uint8Array(bufferLength);
 
-    const draw = () => {
+    const draw = (time: number) => {
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      analyser.getByteFrequencyData(dataArray);
+      let energy = 0.4;
+      const sampleCount = Math.min(40, bufferLength);
+
+      if (analyser) {
+        analyser.getByteFrequencyData(dataArray);
+
+        // Normalize a subset of low/mid frequencies for smoother breathing
+        energy = 0;
+        for (let i = 0; i < sampleCount; i += 1) {
+          energy += dataArray[i];
+        }
+        energy /= sampleCount * 255; // 0–1
+      } else {
+        // Time-based breathing pattern when we don't have direct audio data
+        const t = time / 1000;
+        energy = 0.35 + 0.25 * ((Math.sin(t * 0.7) + 1) / 2); // 0.35–0.6
+        // Fill dataArray with a soft gradient based on energy
+        for (let i = 0; i < bufferLength; i += 1) {
+          const pct = i / bufferLength;
+          const local = energy * (0.7 + 0.3 * Math.cos(pct * Math.PI));
+          dataArray[i] = Math.round(local * 255);
+        }
+      }
 
       const { width, height } = canvas;
       ctx.clearRect(0, 0, width, height);
@@ -135,14 +166,6 @@ export function MeditationMandalaVisualizer({
       radialGradient.addColorStop(1, 'rgba(80, 30, 120, 0.05)'); // soft outer
       ctx.fillStyle = radialGradient;
       ctx.fillRect(0, 0, width, height);
-
-      // Normalize a subset of low/mid frequencies for smoother breathing
-      let energy = 0;
-      const sampleCount = Math.min(40, bufferLength);
-      for (let i = 0; i < sampleCount; i += 1) {
-        energy += dataArray[i];
-      }
-      energy /= sampleCount * 255; // 0–1
 
       const petals = 48;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RemoteParticipant, RemoteTrackPublication, RoomEvent } from 'livekit-client';
 import { useRoomContext } from '@livekit/components-react';
 import {
@@ -12,6 +12,7 @@ import {
   X,
 } from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/livekit/button';
+import { MeditationMandalaVisualizer } from '@/components/visuals/meditation-mandala-visualizer';
 import { useAgentControl } from '@/hooks/useAgentControl';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
@@ -544,6 +545,18 @@ export function YouTubeBhajanPlayer() {
     await publishAgentControl('wake', 'player_closed');
   };
 
+  const enableMandalaVisualizer = useMemo(() => {
+    if (typeof window === 'undefined') return true;
+    const globalWindow = window as unknown as { NEXT_PUBLIC_ENABLE_MANDALA_VISUALIZER?: string };
+    const flag = globalWindow.NEXT_PUBLIC_ENABLE_MANDALA_VISUALIZER;
+    if (typeof flag === 'string') {
+      return flag !== 'false';
+    }
+    return true;
+  }, []);
+
+  const showMandala = enableMandalaVisualizer && (isPlaying || !!currentVideoId);
+
   if (!isReady && !error) {
     return null; // Loading
   }
@@ -589,116 +602,119 @@ export function YouTubeBhajanPlayer() {
   }
 
   return (
-    <div className="bg-primary/10 border-primary/30 mb-3 flex items-center gap-2 rounded-xl border-2 p-3 shadow-md">
-      <div className="min-w-0 flex-1">
-        {currentTrackName && (
-          <div className="text-foreground truncate text-sm font-semibold">{currentTrackName}</div>
-        )}
-        <div className="text-muted-foreground text-xs">
-          {isPlaying ? '▶️ Playing...' : '⏸️ Paused'}
-        </div>
-      </div>
-
-      {/* Volume Control */}
-      <div className="relative flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleMuteToggle}
-          className="h-9 w-9 p-0"
-          title={isMuted ? 'Unmute' : 'Mute'}
-        >
-          {isMuted || volume === 0 ? (
-            <SpeakerX className="h-5 w-5" weight="fill" />
-          ) : volume < 50 ? (
-            <SpeakerLow className="h-5 w-5" weight="fill" />
-          ) : (
-            <SpeakerHigh className="h-5 w-5" weight="fill" />
+    <div className="mb-3">
+      {showMandala && <MeditationMandalaVisualizer isActive={isPlaying} />}
+      <div className="bg-primary/10 border-primary/30 flex items-center gap-2 rounded-xl border-2 p-3 shadow-md">
+        <div className="min-w-0 flex-1">
+          {currentTrackName && (
+            <div className="text-foreground truncate text-sm font-semibold">{currentTrackName}</div>
           )}
-        </Button>
-
-        {showVolumeSlider && (
-          <div className="bg-background border-input absolute right-0 bottom-full mb-2 rounded-lg border p-3 shadow-lg">
-            <input
-              type="range"
-              min="0"
-              max="100"
-              value={isMuted ? 0 : volume}
-              onChange={(e) => handleVolumeChange(Number(e.target.value))}
-              className="w-24"
-              title={`Volume: ${volume}%`}
-            />
-            <div className="text-muted-foreground mt-1 text-center text-xs">{volume}%</div>
+          <div className="text-muted-foreground text-xs">
+            {isPlaying ? '▶️ Playing...' : '⏸️ Paused'}
           </div>
-        )}
+        </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowVolumeSlider(!showVolumeSlider)}
-          className="h-9 w-9 p-0"
-          title="Volume"
-        >
-          <div className="text-muted-foreground text-xs font-semibold">{volume}%</div>
-        </Button>
-      </div>
-
-      {/* Play/Pause Button */}
-      <div className="flex items-center gap-2">
-        {isPlaying ? (
+        {/* Volume Control */}
+        <div className="relative flex items-center gap-1">
           <Button
-            variant="default"
-            size="lg"
-            onClick={() => {
-              pause()
-                .then(async () => {
-                  await setAgentAudioMuted(false);
-                  await publishAgentControl('wake', 'bhajan_paused');
-                })
-                .catch((err) => {
-                  console.error('[YouTubeBhajanPlayer] Pause error:', err);
-                });
-            }}
-            className="h-12 w-12 p-0 shadow-lg transition-transform hover:scale-105"
-            title="Pause"
+            variant="ghost"
+            size="sm"
+            onClick={handleMuteToggle}
+            className="h-9 w-9 p-0"
+            title={isMuted ? 'Unmute' : 'Mute'}
           >
-            <PauseIcon className="h-6 w-6" weight="fill" />
+            {isMuted || volume === 0 ? (
+              <SpeakerX className="h-5 w-5" weight="fill" />
+            ) : volume < 50 ? (
+              <SpeakerLow className="h-5 w-5" weight="fill" />
+            ) : (
+              <SpeakerHigh className="h-5 w-5" weight="fill" />
+            )}
           </Button>
-        ) : (
-          <Button
-            variant="default"
-            size="lg"
-            onClick={() => {
-              resume()
-                .then(async () => {
-                  await setAgentAudioMuted(true);
-                  // Only sleep agent if not already sleeping (don't override manual sleep)
-                  if (!agentIsSleeping) {
-                    await publishAgentControl('sleep', 'bhajan_resumed');
-                  }
-                })
-                .catch((err) => {
-                  console.error('[YouTubeBhajanPlayer] Resume error:', err);
-                });
-            }}
-            className="h-12 w-12 p-0 shadow-lg transition-transform hover:scale-105"
-            title="Resume"
-            disabled={!currentVideoId}
-          >
-            <PlayIcon className="h-6 w-6" weight="fill" />
-          </Button>
-        )}
 
-        {/* Close Button */}
-        <Button
-          variant="ghost"
-          size="lg"
-          onClick={handleClose}
-          className="text-muted-foreground hover:text-foreground h-12 w-12 p-0 transition-colors"
-          title="Close Player"
-        >
-          <X className="h-5 w-5" weight="bold" />
-        </Button>
+          {showVolumeSlider && (
+            <div className="bg-background border-input absolute right-0 bottom-full mb-2 rounded-lg border p-3 shadow-lg">
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={isMuted ? 0 : volume}
+                onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                className="w-24"
+                title={`Volume: ${volume}%`}
+              />
+              <div className="text-muted-foreground mt-1 text-center text-xs">{volume}%</div>
+            </div>
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+            className="h-9 w-9 p-0"
+            title="Volume"
+          >
+            <div className="text-muted-foreground text-xs font-semibold">{volume}%</div>
+          </Button>
+        </div>
+
+        {/* Play/Pause Button */}
+        <div className="flex items-center gap-2">
+          {isPlaying ? (
+            <Button
+              variant="default"
+              size="lg"
+              onClick={() => {
+                pause()
+                  .then(async () => {
+                    await setAgentAudioMuted(false);
+                    await publishAgentControl('wake', 'bhajan_paused');
+                  })
+                  .catch((err) => {
+                    console.error('[YouTubeBhajanPlayer] Pause error:', err);
+                  });
+              }}
+              className="h-12 w-12 p-0 shadow-lg transition-transform hover:scale-105"
+              title="Pause"
+            >
+              <PauseIcon className="h-6 w-6" weight="fill" />
+            </Button>
+          ) : (
+            <Button
+              variant="default"
+              size="lg"
+              onClick={() => {
+                resume()
+                  .then(async () => {
+                    await setAgentAudioMuted(true);
+                    // Only sleep agent if not already sleeping (don't override manual sleep)
+                    if (!agentIsSleeping) {
+                      await publishAgentControl('sleep', 'bhajan_resumed');
+                    }
+                  })
+                  .catch((err) => {
+                    console.error('[YouTubeBhajanPlayer] Resume error:', err);
+                  });
+              }}
+              className="h-12 w-12 p-0 shadow-lg transition-transform hover:scale-105"
+              title="Resume"
+              disabled={!currentVideoId}
+            >
+              <PlayIcon className="h-6 w-6" weight="fill" />
+            </Button>
+          )}
+
+          {/* Close Button */}
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={handleClose}
+            className="text-muted-foreground hover:text-foreground h-12 w-12 p-0 transition-colors"
+            title="Close Player"
+          >
+            <X className="h-5 w-5" weight="bold" />
+          </Button>
+        </div>
       </div>
     </div>
   );
