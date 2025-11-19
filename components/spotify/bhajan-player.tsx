@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RoomEvent } from 'livekit-client';
 import { useRoomContext } from '@livekit/components-react';
+import { MeditationMandalaVisualizer } from '@/components/visuals/meditation-mandala-visualizer';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { useSpotifyPlayer } from '@/hooks/useSpotifyPlayer';
 
@@ -44,6 +45,16 @@ export function BhajanPlayer() {
     resume,
     activate,
   } = useSpotifyPlayer();
+
+  const enableMandalaVisualizer = useMemo(() => {
+    if (typeof window === 'undefined') return true;
+    const globalWindow = window as unknown as { NEXT_PUBLIC_ENABLE_MANDALA_VISUALIZER?: string };
+    const flag = globalWindow.NEXT_PUBLIC_ENABLE_MANDALA_VISUALIZER;
+    if (typeof flag === 'string') {
+      return flag !== 'false';
+    }
+    return true;
+  }, []);
 
   // Log component mount and room state
   useEffect(() => {
@@ -857,10 +868,15 @@ export function BhajanPlayer() {
   };
 
   const currentlyPlaying = isPlaying || (audioRef.current && !audioRef.current.paused);
+  const showMandala =
+    enableMandalaVisualizer && currentlyPlaying && !useSpotify && !!currentTrack.url;
 
   return (
     <>
       <audio ref={audioRef} preload="auto" />
+      {showMandala && (
+        <MeditationMandalaVisualizer audioRef={audioRef} isActive={currentlyPlaying} />
+      )}
       {/* Visible Player UI */}
       <div className="bg-background/95 border-input/50 animate-in slide-in-from-bottom-2 mb-2 rounded-lg border p-3 shadow-lg backdrop-blur-sm duration-300 md:p-4">
         <div className="flex items-center gap-3">
