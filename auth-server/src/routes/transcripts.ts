@@ -5,6 +5,7 @@ import { listRecentMP3Files, downloadMP3FromGCS, getMP3SignedUrl } from '../serv
 import { transcribeAudio, parseConversation } from '../services/whisper-transcribe.js';
 import { transcribeAudioWithSarvam, parseConversation as parseConversationSarvam } from '../services/sarvam-transcribe.js';
 import * as fs from 'fs/promises';
+import { type Stats } from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
@@ -89,7 +90,7 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
       console.log(`[transcripts] ✅ Download completed`);
 
       // Verify file exists and get size
-      let stats: fs.Stats | undefined;
+      let stats: Stats | undefined;
       try {
         stats = await fs.stat(tempFilePath);
         console.log(`[transcripts] File size: ${(stats.size / 1024 / 1024).toFixed(2)} MB`);
