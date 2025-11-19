@@ -3,10 +3,14 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
-import { GURUS, type GuruTradition, getAllTraditions } from '@/lib/gurus';
+import { GURUS, type GuruDefinition, type GuruTradition, getAllTraditions } from '@/lib/gurus';
 import { GuruCard } from './guru-card';
 
-export function GuruDirectoryView() {
+interface GuruDirectoryViewProps {
+  onGuruSelect?: (guru: GuruDefinition) => void;
+}
+
+export function GuruDirectoryView({ onGuruSelect }: GuruDirectoryViewProps) {
   const { t } = useLanguage();
   const [selectedTradition, setSelectedTradition] = useState<GuruTradition | 'All'>('All');
 
@@ -49,7 +53,11 @@ export function GuruDirectoryView() {
       {/* Guru Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {filteredGurus.map((guru) => (
-          <GuruCard key={guru.id} guru={guru} />
+          <GuruCard
+            key={guru.id}
+            guru={guru}
+            onClick={onGuruSelect ? () => onGuruSelect(guru) : undefined}
+          />
         ))}
 
         {/* Create Your Own Guru Card - Disabled for now, will launch later */}

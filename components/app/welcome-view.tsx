@@ -1,10 +1,13 @@
 'use client';
 
 /* eslint-disable prettier/prettier */
+import { useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { GuruDirectoryView } from '@/components/app/guru-directory-view';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
+import type { GuruDefinition } from '@/lib/gurus';
 
 function WelcomeImage() {
   return (
@@ -55,6 +58,18 @@ export const WelcomeView = ({
   ref,
 }: React.ComponentProps<'div'> & WelcomeViewProps) => {
   const { t } = useLanguage();
+  const router = useRouter();
+
+  const handleGuruSelect = useCallback(
+    (guru: GuruDefinition) => {
+      if (guru.id === 'guruji') {
+        onStartCall();
+        return;
+      }
+      router.push(guru.route);
+    },
+    [onStartCall, router]
+  );
   return (
     <div ref={ref} className="w-full pb-24 md:pb-32">
       {/* Hero Section - Always visible at top */}
@@ -120,7 +135,7 @@ export const WelcomeView = ({
 
       {/* Guru Directory Section */}
       <div id="guru-directory">
-        <GuruDirectoryView />
+        <GuruDirectoryView onGuruSelect={handleGuruSelect} />
       </div>
 
       {/* Key Features Section */}
