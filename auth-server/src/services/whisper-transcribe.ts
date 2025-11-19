@@ -155,7 +155,7 @@ async function transcribeSingleAudio(
         }
       );
 
-      req.on('error', (error) => {
+      req.on('error', (error: Error) => {
         clearTimeout(timeoutId);
         reject(error);
       });
