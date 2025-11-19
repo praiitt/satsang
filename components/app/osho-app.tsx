@@ -94,4 +94,3 @@ export function OshoApp({ appConfig }: OshoAppProps) {
     </SessionProvider>
   );
 }
-

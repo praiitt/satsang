@@ -1,5 +1,7 @@
 'use client';
 
+/* eslint-disable prettier/prettier */
+
 import React, { useEffect, useRef, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
 import { toastAlert } from '@/components/livekit/alert-toast';

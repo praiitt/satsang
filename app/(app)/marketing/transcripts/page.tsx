@@ -1,5 +1,9 @@
 'use client';
 
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/livekit/button';
 

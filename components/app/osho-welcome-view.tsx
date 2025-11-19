@@ -129,12 +129,8 @@ export const OshoWelcomeView = ({
           {/* Feature 5: Sannyas */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🟠</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">
-              {t('oshoAgent.sannyas')}
-            </h3>
-            <p className="text-muted-foreground text-sm leading-6">
-              {t('oshoAgent.sannyasDesc')}
-            </p>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('oshoAgent.sannyas')}</h3>
+            <p className="text-muted-foreground text-sm leading-6">{t('oshoAgent.sannyasDesc')}</p>
           </div>
 
           {/* Feature 6: Osho Discourses */}
@@ -168,4 +164,3 @@ export const OshoWelcomeView = ({
     </div>
   );
 };
-

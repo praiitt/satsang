@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prettier/prettier */
 import { NextResponse } from 'next/server';
-import {
-  EncodedFileOutput,
-  EncodedFileType,
-  GCPUpload,
-} from 'livekit-server-sdk';
+import { EncodedFileOutput, EncodedFileType, GCPUpload } from 'livekit-server-sdk';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { getEgressClient, getGcpUploadConfig } from '@/lib/livekit-egress';
 

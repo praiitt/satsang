@@ -16,4 +16,3 @@ export default async function OshoAgentPage() {
 
   return <OshoApp appConfig={appConfig} />;
 }
-

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/livekit/button';
 import { getCurrentUser } from '@/lib/auth-api';
 
@@ -32,7 +33,7 @@ export default function MarketingPodcastPage() {
   // Pre-fill with working talking photo ID and voice ID
   const DEFAULT_TALKING_PHOTO_ID = 'f31ce977d65e47caa3e92a46703d6b1f';
   const DEFAULT_VOICE_ID = 'dc5370c68baa4905be87f702758df4b0';
-  
+
   const [hostAvatarId, setHostAvatarId] = useState(DEFAULT_TALKING_PHOTO_ID);
   const [guestAvatarId, setGuestAvatarId] = useState(DEFAULT_TALKING_PHOTO_ID);
   const [hostVoiceId, setHostVoiceId] = useState(DEFAULT_VOICE_ID);
@@ -49,11 +50,15 @@ export default function MarketingPodcastPage() {
   const [urlInput, setUrlInput] = useState('');
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null);
   const [isPlayingSequence, setIsPlayingSequence] = useState(false);
-  const [talkingPhotos, setTalkingPhotos] = useState<Array<{ id: string; name: string; isPublic?: boolean; type?: string }>>([]);
+  const [talkingPhotos, setTalkingPhotos] = useState<
+    Array<{ id: string; name: string; isPublic?: boolean; type?: string }>
+  >([]);
   const [loadingPhotos, setLoadingPhotos] = useState(false);
   const [hostPhotoFilter, setHostPhotoFilter] = useState<string>(''); // 'all', 'my', 'public'
   const [guestPhotoFilter, setGuestPhotoFilter] = useState<string>(''); // 'all', 'my', 'public'
-  const [voices, setVoices] = useState<Array<{ id: string; name: string; language?: string; gender?: string; previewAudio?: string }>>([]);
+  const [voices, setVoices] = useState<
+    Array<{ id: string; name: string; language?: string; gender?: string; previewAudio?: string }>
+  >([]);
   const [loadingVoices, setLoadingVoices] = useState(false);
   const [previewingVoice, setPreviewingVoice] = useState<string | null>(null);
   const [hostLanguageFilter, setHostLanguageFilter] = useState<string>('');
@@ -61,7 +66,6 @@ export default function MarketingPodcastPage() {
   const [guestLanguageFilter, setGuestLanguageFilter] = useState<string>('');
   const [guestGenderFilter, setGuestGenderFilter] = useState<string>('');
   const [isStitching, setIsStitching] = useState(false);
-  const [stitchedVideoUrl, setStitchedVideoUrl] = useState<string | null>(null);
   // Separate video stitching state
   const [stitchVideoUrls, setStitchVideoUrls] = useState<string[]>(['']);
   const [stitchVideoFiles, setStitchVideoFiles] = useState<(File | null)[]>([null]); // Start with one file slot
@@ -75,9 +79,7 @@ export default function MarketingPodcastPage() {
   };
 
   const handleUpdateTurn = (index: number, patch: Partial<TurnInput>) => {
-    setTurns((prev) =>
-      prev.map((t, i) => (i === index ? { ...t, ...patch } : t))
-    );
+    setTurns((prev) => prev.map((t, i) => (i === index ? { ...t, ...patch } : t)));
   };
 
   const handleRemoveTurn = (index: number) => {
@@ -129,9 +131,7 @@ export default function MarketingPodcastPage() {
 
       const data = (await res.json()) as any;
       if (!res.ok) {
-        throw new Error(
-          data?.error || data?.details || 'Failed to create podcast job'
-        );
+        throw new Error(data?.error || data?.details || 'Failed to create podcast job');
       }
 
       const jobData: PodcastJobResponse = {
@@ -166,9 +166,7 @@ export default function MarketingPodcastPage() {
         });
         const data = (await res.json()) as any;
         if (!res.ok) {
-          throw new Error(
-            data?.error || data?.details || 'Failed to fetch podcast status'
-          );
+          throw new Error(data?.error || data?.details || 'Failed to fetch podcast status');
         }
 
         const jobData: PodcastJobResponse = {
@@ -197,7 +195,7 @@ export default function MarketingPodcastPage() {
 
   const updateVideoUrl = async (turnIndex: number, videoUrl: string) => {
     if (!job) return;
-    
+
     try {
       const res = await fetch(`${PODCAST_API_BASE}/${job.jobId}/${turnIndex}`, {
         method: 'PATCH',
@@ -252,7 +250,12 @@ export default function MarketingPodcastPage() {
     try {
       const res = await fetch('/api/marketing/podcast/voices');
       const data = await res.json();
-      console.log('[fetchVoices] Response:', { ok: res.ok, status: res.status, voicesCount: data.voices?.length, error: data.error });
+      console.log('[fetchVoices] Response:', {
+        ok: res.ok,
+        status: res.status,
+        voicesCount: data.voices?.length,
+        error: data.error,
+      });
       if (res.ok && data.voices) {
         setVoices(data.voices);
         console.log(`[fetchVoices] Loaded ${data.voices.length} voices`);
@@ -269,7 +272,7 @@ export default function MarketingPodcastPage() {
     }
   };
 
-  const previewVoice = async (voiceId: string, isHost: boolean) => {
+  const previewVoice = async (voiceId: string) => {
     setPreviewingVoice(voiceId);
     try {
       // First, try to use preview_audio if available (instant preview)
@@ -313,7 +316,9 @@ export default function MarketingPodcastPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        alert(`Preview video is being generated! Video ID: ${data.videoId}\n\nCheck your HeyGen dashboard to see the preview video.`);
+        alert(
+          `Preview video is being generated! Video ID: ${data.videoId}\n\nCheck your HeyGen dashboard to see the preview video.`
+        );
       } else {
         alert(`Failed to create preview: ${data.error}`);
       }
@@ -343,7 +348,9 @@ export default function MarketingPodcastPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setStitchedVideoUrl(data.outputUrl);
-        alert(`✅ Videos stitched successfully! ${data.videoCount} videos combined.\n\nOutput: ${data.outputPath}`);
+        alert(
+          `✅ Videos stitched successfully! ${data.videoCount} videos combined.\n\nOutput: ${data.outputPath}`
+        );
         // Refresh job to get updated stitchedVideoUrl
         await pollJob(job.jobId);
       } else {
@@ -391,8 +398,8 @@ export default function MarketingPodcastPage() {
 
   const handleStitchStandalone = async () => {
     const validUrls = stitchVideoUrls.filter((url) => url.trim().length > 0);
-      const validFiles = stitchVideoFiles.filter((file): file is File => file != null);
-    
+    const validFiles = stitchVideoFiles.filter((file): file is File => file != null);
+
     if (validUrls.length === 0 && validFiles.length === 0) {
       alert('Please add at least one video URL or upload a video file to stitch.');
       return;
@@ -439,7 +446,9 @@ export default function MarketingPodcastPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         setStandaloneStitchedUrl(data.outputUrl);
-        alert(`✅ Videos stitched successfully! ${data.videoCount} videos combined.\n\nOutput: ${data.outputPath}`);
+        alert(
+          `✅ Videos stitched successfully! ${data.videoCount} videos combined.\n\nOutput: ${data.outputPath}`
+        );
         // Clear files after successful stitch
         setStitchVideoFiles([]);
         setStitchVideoUrls(['']);
@@ -469,7 +478,8 @@ export default function MarketingPodcastPage() {
   const getFilteredVoices = (languageFilter: string, genderFilter: string) => {
     return voices.filter((voice) => {
       const matchesLanguage = !languageFilter || voice.language === languageFilter;
-      const matchesGender = !genderFilter || voice.gender?.toLowerCase() === genderFilter.toLowerCase();
+      const matchesGender =
+        !genderFilter || voice.gender?.toLowerCase() === genderFilter.toLowerCase();
       return matchesLanguage && matchesGender;
     });
   };
@@ -501,10 +511,10 @@ export default function MarketingPodcastPage() {
 
   const handleVideoEnd = (index: number) => {
     if (!job || !isPlayingSequence) return;
-    
+
     const readyTurns = job.turns.filter((t) => t.videoUrl && t.status === 'ready');
     const currentIndex = readyTurns.findIndex((t) => t.index === index);
-    
+
     if (currentIndex < readyTurns.length - 1) {
       // Play next video
       setCurrentPlayingIndex(currentIndex + 1);
@@ -522,10 +532,10 @@ export default function MarketingPodcastPage() {
           Marketing Podcast (HeyGen Talking Photos)
         </h1>
         <p className="text-muted-foreground mt-2 text-sm">
-          Create a two-avatar podcast conversation using HeyGen talking photo avatars.
-          Configure host and guest talking photo IDs, write their dialogue, and generate
-          video clips that you can stitch into a podcast-style video. Uses the working
-          HeyGen API format with 720p resolution.
+          Create a two-avatar podcast conversation using HeyGen talking photo avatars. Configure
+          host and guest talking photo IDs, write their dialogue, and generate video clips that you
+          can stitch into a podcast-style video. Uses the working HeyGen API format with 720p
+          resolution.
         </p>
       </div>
 
@@ -537,8 +547,8 @@ export default function MarketingPodcastPage() {
             Videos are generated in 720p format (free plan compatible).
           </p>
           <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
                 Host Talking Photo
                 <div className="mt-1 space-y-1">
                   <select
@@ -573,12 +583,12 @@ export default function MarketingPodcastPage() {
                     ))}
                   </select>
                 </div>
-              <input
-                type="text"
-                value={hostAvatarId}
-                onChange={(e) => setHostAvatarId(e.target.value)}
+                <input
+                  type="text"
+                  value={hostAvatarId}
+                  onChange={(e) => setHostAvatarId(e.target.value)}
                   placeholder="Or type talking photo ID..."
-                  className="mt-1 w-full rounded-md border px-2 py-1 text-sm font-mono text-xs"
+                  className="mt-1 w-full rounded-md border px-2 py-1 font-mono text-sm text-xs"
                 />
               </label>
               <label className="text-sm font-medium">
@@ -632,7 +642,8 @@ export default function MarketingPodcastPage() {
                       </option>
                       {filteredHostVoices.map((voice) => (
                         <option key={voice.id} value={voice.id}>
-                          {voice.name} {voice.language ? `(${voice.language})` : ''} {voice.gender ? `[${voice.gender}]` : ''}
+                          {voice.name} {voice.language ? `(${voice.language})` : ''}{' '}
+                          {voice.gender ? `[${voice.gender}]` : ''}
                         </option>
                       ))}
                     </select>
@@ -640,9 +651,9 @@ export default function MarketingPodcastPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => previewVoice(hostVoiceId, true)}
+                      onClick={() => previewVoice(hostVoiceId)}
                       disabled={!hostVoiceId || previewingVoice === hostVoiceId}
-                      className="text-xs px-2"
+                      className="px-2 text-xs"
                       title="Preview voice"
                     >
                       {previewingVoice === hostVoiceId ? '⏳' : '▶️'}
@@ -654,12 +665,12 @@ export default function MarketingPodcastPage() {
                   value={hostVoiceId}
                   onChange={(e) => setHostVoiceId(e.target.value)}
                   placeholder="Or type voice ID..."
-                  className="mt-1 w-full rounded-md border px-2 py-1 text-sm font-mono text-xs"
-              />
-            </label>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
+                  className="mt-1 w-full rounded-md border px-2 py-1 font-mono text-sm text-xs"
+                />
+              </label>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">
                 Guest Talking Photo
                 <div className="mt-1 space-y-1">
                   <select
@@ -694,12 +705,12 @@ export default function MarketingPodcastPage() {
                     ))}
                   </select>
                 </div>
-              <input
-                type="text"
-                value={guestAvatarId}
-                onChange={(e) => setGuestAvatarId(e.target.value)}
+                <input
+                  type="text"
+                  value={guestAvatarId}
+                  onChange={(e) => setGuestAvatarId(e.target.value)}
                   placeholder="Or type talking photo ID..."
-                  className="mt-1 w-full rounded-md border px-2 py-1 text-sm font-mono text-xs"
+                  className="mt-1 w-full rounded-md border px-2 py-1 font-mono text-sm text-xs"
                 />
               </label>
               <label className="text-sm font-medium">
@@ -753,7 +764,8 @@ export default function MarketingPodcastPage() {
                       </option>
                       {filteredGuestVoices.map((voice) => (
                         <option key={voice.id} value={voice.id}>
-                          {voice.name} {voice.language ? `(${voice.language})` : ''} {voice.gender ? `[${voice.gender}]` : ''}
+                          {voice.name} {voice.language ? `(${voice.language})` : ''}{' '}
+                          {voice.gender ? `[${voice.gender}]` : ''}
                         </option>
                       ))}
                     </select>
@@ -761,9 +773,9 @@ export default function MarketingPodcastPage() {
                       type="button"
                       variant="outline"
                       size="sm"
-                      onClick={() => previewVoice(guestVoiceId, false)}
+                      onClick={() => previewVoice(guestVoiceId)}
                       disabled={!guestVoiceId || previewingVoice === guestVoiceId}
-                      className="text-xs px-2"
+                      className="px-2 text-xs"
                       title="Preview voice"
                     >
                       {previewingVoice === guestVoiceId ? '⏳' : '▶️'}
@@ -775,18 +787,14 @@ export default function MarketingPodcastPage() {
                   value={guestVoiceId}
                   onChange={(e) => setGuestVoiceId(e.target.value)}
                   placeholder="Or type voice ID..."
-                  className="mt-1 w-full rounded-md border px-2 py-1 text-sm font-mono text-xs"
-              />
-            </label>
+                  className="mt-1 w-full rounded-md border px-2 py-1 font-mono text-sm text-xs"
+                />
+              </label>
             </div>
           </div>
-          <div className="flex gap-4 text-xs text-muted-foreground">
-            {talkingPhotos.length > 0 && (
-              <span>✅ {talkingPhotos.length} talking photos</span>
-            )}
-            {voices.length > 0 && (
-              <span>✅ {voices.length} voices</span>
-            )}
+          <div className="text-muted-foreground flex gap-4 text-xs">
+            {talkingPhotos.length > 0 && <span>✅ {talkingPhotos.length} talking photos</span>}
+            {voices.length > 0 && <span>✅ {voices.length} voices</span>}
           </div>
           {talkingPhotos.length > 0 && voices.length > 0 && (
             <p className="text-muted-foreground text-xs">
@@ -797,11 +805,7 @@ export default function MarketingPodcastPage() {
 
         <div className="space-y-3">
           <h2 className="text-lg font-semibold">Actions</h2>
-          <Button
-            onClick={createJob}
-            disabled={isSubmitting || isPolling}
-            className="w-full"
-          >
+          <Button onClick={createJob} disabled={isSubmitting || isPolling} className="w-full">
             {isSubmitting ? 'Creating Podcast Job...' : 'Create Podcast Job'}
           </Button>
 
@@ -845,8 +849,7 @@ export default function MarketingPodcastPage() {
                   variant="default"
                   size="sm"
                   disabled={
-                    isStitching ||
-                    !job.turns.some((t) => t.videoUrl && t.status === 'ready')
+                    isStitching || !job.turns.some((t) => t.videoUrl && t.status === 'ready')
                   }
                   onClick={handleStitchVideos}
                 >
@@ -869,23 +872,14 @@ export default function MarketingPodcastPage() {
             </div>
           )}
 
-          {error && (
-            <div className="text-destructive mt-2 text-sm">
-              Error: {error}
-            </div>
-          )}
+          {error && <div className="text-destructive mt-2 text-sm">Error: {error}</div>}
         </div>
       </div>
 
       <div className="space-y-3 rounded-lg border p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Conversation Script</h2>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={handleAddTurn}
-          >
+          <Button type="button" variant="outline" size="sm" onClick={handleAddTurn}>
             + Add Turn
           </Button>
         </div>
@@ -914,7 +908,7 @@ export default function MarketingPodcastPage() {
                     <option value="host">Host</option>
                     <option value="guest">Guest</option>
                   </select>
-                  <span className="hidden text-xs text-muted-foreground md:inline">
+                  <span className="text-muted-foreground hidden text-xs md:inline">
                     #{index + 1}
                   </span>
                 </div>
@@ -925,9 +919,7 @@ export default function MarketingPodcastPage() {
                     </span>
                     <textarea
                       value={turn.text}
-                      onChange={(e) =>
-                        handleUpdateTurn(index, { text: e.target.value })
-                      }
+                      onChange={(e) => handleUpdateTurn(index, { text: e.target.value })}
                       rows={2}
                       className="w-full rounded-md border px-2 py-1 text-xs md:text-sm"
                       placeholder={
@@ -950,7 +942,7 @@ export default function MarketingPodcastPage() {
                     ✕
                   </Button>
                   {job && job.turns[index] && (
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-muted-foreground text-[10px]">
                       {job.turns[index].status}
                     </span>
                   )}
@@ -977,28 +969,33 @@ export default function MarketingPodcastPage() {
             )}
           </div>
           <p className="text-muted-foreground text-xs">
-            Each turn becomes a separate HeyGen talking photo video clip (720p).
-            Videos typically take 3-5 minutes to generate. When ready in HeyGen dashboard,
-            paste the video URL below to mark it as ready.
+            Each turn becomes a separate HeyGen talking photo video clip (720p). Videos typically
+            take 3-5 minutes to generate. When ready in HeyGen dashboard, paste the video URL below
+            to mark it as ready.
           </p>
           <ol className="space-y-3 text-sm">
             {job.turns.map((turn) => (
               <li key={turn.index} className="rounded-md border p-3">
-                <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="mb-2 flex items-start justify-between gap-2">
                   <div className="flex-1">
-                  <span className="font-medium">
-                    #{turn.index + 1} {turn.speaker === 'host' ? 'Host' : 'Guest'}
-                  </span>
-                    <span className={`ml-2 text-xs ${
-                      turn.status === 'ready' ? 'text-green-600' :
-                      turn.status === 'failed' ? 'text-red-600' :
-                      turn.status === 'processing' ? 'text-yellow-600' :
-                      'text-gray-500'
-                    }`}>
-                    {turn.status}
-                  </span>
+                    <span className="font-medium">
+                      #{turn.index + 1} {turn.speaker === 'host' ? 'Host' : 'Guest'}
+                    </span>
+                    <span
+                      className={`ml-2 text-xs ${
+                        turn.status === 'ready'
+                          ? 'text-green-600'
+                          : turn.status === 'failed'
+                            ? 'text-red-600'
+                            : turn.status === 'processing'
+                              ? 'text-yellow-600'
+                              : 'text-gray-500'
+                      }`}
+                    >
+                      {turn.status}
+                    </span>
                     {turn.heygenVideoId && (
-                      <span className="text-muted-foreground ml-2 text-xs font-mono">
+                      <span className="text-muted-foreground ml-2 font-mono text-xs">
                         HeyGen ID: {turn.heygenVideoId.slice(0, 8)}...
                       </span>
                     )}
@@ -1016,13 +1013,13 @@ export default function MarketingPodcastPage() {
                 </div>
 
                 {editingUrlIndex === turn.index ? (
-                  <div className="space-y-2 mt-2">
+                  <div className="mt-2 space-y-2">
                     <input
                       type="text"
                       value={urlInput}
                       onChange={(e) => setUrlInput(e.target.value)}
                       placeholder="Paste video URL from HeyGen dashboard..."
-                      className="w-full rounded-md border px-2 py-1 text-xs font-mono"
+                      className="w-full rounded-md border px-2 py-1 font-mono text-xs"
                     />
                     <div className="flex gap-2">
                       <Button
@@ -1046,11 +1043,17 @@ export default function MarketingPodcastPage() {
                 ) : turn.videoUrl && turn.status === 'ready' ? (
                   <div className="mt-2">
                     {(() => {
-                      const readyTurns = job.turns.filter((t) => t.videoUrl && t.status === 'ready');
+                      const readyTurns = job.turns.filter(
+                        (t) => t.videoUrl && t.status === 'ready'
+                      );
                       const readyIndex = readyTurns.findIndex((t) => t.index === turn.index);
-                      const isCurrentPlaying = isPlayingSequence && currentPlayingIndex === readyIndex;
-                      const isUpcoming = isPlayingSequence && currentPlayingIndex !== null && readyIndex > currentPlayingIndex;
-                      
+                      const isCurrentPlaying =
+                        isPlayingSequence && currentPlayingIndex === readyIndex;
+                      const isUpcoming =
+                        isPlayingSequence &&
+                        currentPlayingIndex !== null &&
+                        readyIndex > currentPlayingIndex;
+
                       return (
                         <>
                           {isCurrentPlaying ? (
@@ -1068,34 +1071,32 @@ export default function MarketingPodcastPage() {
                             <video
                               src={turn.videoUrl}
                               controls={!isPlayingSequence}
-                              className={`w-full rounded-md ${
-                                isUpcoming ? 'opacity-50' : ''
-                              }`}
+                              className={`w-full rounded-md ${isUpcoming ? 'opacity-50' : ''}`}
                               preload="metadata"
                             >
                               Your browser does not support the video tag.
                             </video>
                           )}
                           {isCurrentPlaying && (
-                            <p className="text-xs text-blue-600 mt-1">▶️ Now playing...</p>
+                            <p className="mt-1 text-xs text-blue-600">▶️ Now playing...</p>
                           )}
                           {isUpcoming && (
-                            <p className="text-xs text-gray-500 mt-1">⏸️ Up next...</p>
+                            <p className="mt-1 text-xs text-gray-500">⏸️ Up next...</p>
                           )}
                         </>
                       );
                     })()}
-                  <a
-                    href={turn.videoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                      className="text-xs text-blue-600 underline hover:text-blue-800 mt-1 inline-block"
+                    <a
+                      href={turn.videoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-block text-xs text-blue-600 underline hover:text-blue-800"
                     >
                       Open in new tab
                     </a>
                   </div>
                 ) : turn.status === 'processing' ? (
-                  <p className="text-muted-foreground text-xs mt-2">
+                  <p className="text-muted-foreground mt-2 text-xs">
                     Video is generating... Check HeyGen dashboard and paste URL when ready.
                   </p>
                 ) : null}
@@ -1110,8 +1111,9 @@ export default function MarketingPodcastPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">Video Stitching Tool</h2>
-            <p className="text-muted-foreground text-xs mt-1">
-              Stitch multiple videos together into a single video. Upload video files or paste video URLs. Videos will be stitched in the order you add them.
+            <p className="text-muted-foreground mt-1 text-xs">
+              Stitch multiple videos together into a single video. Upload video files or paste video
+              URLs. Videos will be stitched in the order you add them.
             </p>
           </div>
         </div>
@@ -1121,15 +1123,15 @@ export default function MarketingPodcastPage() {
           <div className="space-y-2">
             <p className="text-sm font-medium">Upload Video Files:</p>
             {stitchVideoFiles.map((file, index) => (
-              <div key={`file-${index}`} className="flex gap-2 items-center">
+              <div key={`file-${index}`} className="flex items-center gap-2">
                 <input
                   type="file"
                   accept="video/*"
                   onChange={(e) => handleFileSelect(e, index)}
-                  className="flex-1 text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  className="flex-1 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
                 />
                 {file && (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
                   </span>
                 )}
@@ -1144,20 +1146,15 @@ export default function MarketingPodcastPage() {
                 </Button>
               </div>
             ))}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddFileSlot}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={handleAddFileSlot}>
               + Add File Upload
             </Button>
           </div>
 
           <div className="border-t pt-3">
-            <p className="text-sm font-medium mb-2">Or Enter Video URLs:</p>
+            <p className="mb-2 text-sm font-medium">Or Enter Video URLs:</p>
             {stitchVideoUrls.map((url, index) => (
-              <div key={`url-${index}`} className="flex gap-2 mb-2">
+              <div key={`url-${index}`} className="mb-2 flex gap-2">
                 <input
                   type="text"
                   value={url}
@@ -1181,12 +1178,7 @@ export default function MarketingPodcastPage() {
           </div>
 
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddStitchUrl}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={handleAddStitchUrl}>
               + Add Video URL
             </Button>
             <Button
@@ -1196,7 +1188,9 @@ export default function MarketingPodcastPage() {
               onClick={handleStitchStandalone}
               disabled={
                 isStitchingStandalone ||
-                (stitchVideoUrls.filter((url) => url.trim().length > 0).length + stitchVideoFiles.filter((f) => f != null).length) < 2
+                stitchVideoUrls.filter((url) => url.trim().length > 0).length +
+                  stitchVideoFiles.filter((f) => f != null).length <
+                  2
               }
             >
               {isStitchingStandalone ? 'Stitching...' : '🎬 Stitch Videos'}
@@ -1205,7 +1199,7 @@ export default function MarketingPodcastPage() {
 
           {standaloneStitchedUrl && (
             <div className="mt-4 rounded-md border border-green-500 bg-green-50 p-3 dark:bg-green-950">
-              <p className="font-medium text-green-700 dark:text-green-300 mb-2">
+              <p className="mb-2 font-medium text-green-700 dark:text-green-300">
                 ✅ Stitched Video Ready!
               </p>
               <div className="flex flex-col gap-2">
@@ -1213,14 +1207,14 @@ export default function MarketingPodcastPage() {
                   href={standaloneStitchedUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-blue-600 underline hover:text-blue-800 text-sm"
+                  className="text-sm text-blue-600 underline hover:text-blue-800"
                 >
                   Download Stitched Video
                 </a>
                 <video
                   src={standaloneStitchedUrl}
                   controls
-                  className="w-full rounded-md border max-h-96"
+                  className="max-h-96 w-full rounded-md border"
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -1229,9 +1223,9 @@ export default function MarketingPodcastPage() {
           )}
 
           <div className="text-muted-foreground text-xs">
-            <p className="font-medium mb-1">💡 Tips:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li>You can mix uploaded files and URLs - they'll be stitched in order</li>
+            <p className="mb-1 font-medium">💡 Tips:</p>
+            <ul className="list-inside list-disc space-y-1">
+              <li>You can mix uploaded files and URLs - they will be stitched in order</li>
               <li>Videos will be stitched in the order you add them (files first, then URLs)</li>
               <li>All videos should be in the same format (MP4 recommended)</li>
               <li>Make sure ffmpeg is installed on the server</li>
@@ -1243,5 +1237,3 @@ export default function MarketingPodcastPage() {
     </div>
   );
 }
-
-

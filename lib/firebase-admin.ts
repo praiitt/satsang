@@ -33,9 +33,10 @@ function init() {
       credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
     });
     initialized = true;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { code?: string };
     // If app already exists, that's fine - just mark as initialized
-    if (error?.code === 'app/already-exists') {
+    if (err.code === 'app/already-exists') {
       initialized = true;
       return;
     }

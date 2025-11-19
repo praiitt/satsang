@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
 import { Button } from '@/components/livekit/button';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';

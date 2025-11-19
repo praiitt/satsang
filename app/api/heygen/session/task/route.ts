@@ -28,7 +28,7 @@ export async function POST(req: Request) {
 
     const data = await response.json().catch(() => ({}));
     return NextResponse.json(data);
-  } catch (_e) {
+  } catch {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }

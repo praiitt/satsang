@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prettier/prettier */
 import { NextRequest, NextResponse } from 'next/server';
 import https from 'node:https';
 

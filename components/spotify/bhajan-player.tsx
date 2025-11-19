@@ -214,7 +214,6 @@ export function BhajanPlayer() {
     const onStateChange = () => {
       console.log('[BhajanPlayer] Room state changed:', room.state);
     };
-    
     // Handle room disconnect - stop bhajan playback
     const onDisconnected = async () => {
       console.log('[BhajanPlayer] Room disconnected - stopping bhajan playback');
@@ -235,7 +234,7 @@ export function BhajanPlayer() {
         console.error('[BhajanPlayer] Error stopping on disconnect:', err);
       }
     };
-    
+
     room.on(RoomEvent.Connected, onStateChange);
     room.on(RoomEvent.Disconnected, onDisconnected);
 

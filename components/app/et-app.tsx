@@ -94,4 +94,3 @@ export function ETApp({ appConfig }: ETAppProps) {
     </SessionProvider>
   );
 }
-

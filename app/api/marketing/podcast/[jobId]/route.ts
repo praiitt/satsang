@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { NextRequest, NextResponse } from 'next/server';
 
 const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL || 'http://localhost:4000';

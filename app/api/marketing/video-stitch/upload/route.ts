@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable prettier/prettier */
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
+import { mkdir, writeFile } from 'fs/promises';
 import { join } from 'path';
-
-const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL || 'http://localhost:4000';
 
 export async function POST(request: NextRequest) {
   try {

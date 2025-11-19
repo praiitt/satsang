@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Room } from 'livekit-client';
 import { Button } from '@/components/livekit/button';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 
@@ -10,7 +9,6 @@ import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 
 export default function TestYouTubeBindingPage() {
   const [testResults, setTestResults] = useState<string[]>([]);
-  const [isConnected, setIsConnected] = useState(false);
   const { isReady, error, playVideo, pause, resume, isPlaying, currentVideoId } =
     useYouTubePlayer();
 
