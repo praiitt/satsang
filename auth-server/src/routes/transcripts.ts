@@ -112,16 +112,19 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
       console.log(`[transcripts] ⏱️  This may take several minutes for large files...`);
       
       const startTime = Date.now();
-      let transcription;
+      // Note: transcribeAudioWithSarvam and transcribeAudio return slightly different
+      // TranscriptionResponse types. For our usage (text + basic segments), they are
+      // structurally compatible, so we treat them as a generic object here.
+      let transcription: any;
       try {
         transcription = shouldUseSarvam
           ? await transcribeAudioWithSarvam(tempFilePath, transcriptionLanguage || 'hi')
           : await transcribeAudio(tempFilePath, transcriptionLanguage);
       } catch (sarvamError: any) {
         // If SARVAM fails (e.g., 404 endpoint error), fall back to Whisper
-        if (shouldUseSarvam && sarvamError.message?.includes('404') || sarvamError.message?.includes('endpoint')) {
+        if ((shouldUseSarvam && sarvamError.message?.includes('404')) || sarvamError.message?.includes('endpoint')) {
           console.warn(`[transcripts] ⚠️  SARVAM failed, falling back to Whisper: ${sarvamError.message}`);
-          console.log(`[transcripts] Using Whisper instead for this transcription`);
+          console.log('[transcripts] Using Whisper instead for this transcription');
           transcription = await transcribeAudio(tempFilePath, transcriptionLanguage);
         } else {
           throw sarvamError; // Re-throw if it's not an endpoint error
@@ -131,9 +134,11 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
       console.log(`[transcripts] ✅ Transcription completed in ${duration}s`);
 
       // Parse conversation turns
+      // Cast to any here because the two transcription types come from different services
+      // but share the fields we care about (text, start/end, etc.).
       const conversation = shouldUseSarvam
-        ? parseConversationSarvam(transcription)
-        : parseConversation(transcription);
+        ? parseConversationSarvam(transcription as any)
+        : parseConversation(transcription as any);
 
       // Save to Firebase
       let transcriptId: string | null = null;
