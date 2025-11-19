@@ -1,0 +1,111 @@
+
+> agent-starter-react@0.1.0 build
+> next build
+
+   ▲ Next.js 15.5.2
+   - Environments: .env.local, .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 8.6s
+   Linting and checking validity of types ...
+
+./components/daily-satsang/orchestrator.tsx
+64:5  Warning: 'participantName' is defined but never used.  @typescript-eslint/no-unused-vars
+118:11  Warning: The 'getDuration' function makes the dependencies of useCallback Hook (at line 165) change on every render. To fix this, wrap the definition of 'getDuration' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+232:8  Warning: React Hook useEffect has a missing dependency: 'getDuration'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/livekit/agent-control-bar/agent-control-bar.tsx
+12:10  Warning: 'Toggle' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/livesatsang/livesatsang-controls.tsx
+8:3  Warning: 'MediaDeviceMenu' is defined but never used.  @typescript-eslint/no-unused-vars
+
+./components/spotify/bhajan-player.tsx
+598:26  Warning: The ref value 'messageTimeoutsRef.current' will likely have changed by the time this effect cleanup function runs. If this ref points to a node rendered by React, copy 'messageTimeoutsRef.current' to a variable inside the effect, and use that variable in the cleanup function.  react-hooks/exhaustive-deps
+600:6  Warning: React Hook useEffect has a missing dependency: 'PREFER_EVENTS'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+
+./components/youtube/youtube-bhajan-player.tsx
+56:9  Warning: The 'setAgentAudioMuted' function makes the dependencies of useEffect Hook (at line 457) change on every render. To fix this, wrap the definition of 'setAgentAudioMuted' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+56:9  Warning: The 'setAgentAudioMuted' function makes the dependencies of useEffect Hook (at line 482) change on every render. To fix this, wrap the definition of 'setAgentAudioMuted' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+56:9  Warning: The 'setAgentAudioMuted' function makes the dependencies of useEffect Hook (at line 492) change on every render. To fix this, wrap the definition of 'setAgentAudioMuted' in its own useCallback() Hook.  react-hooks/exhaustive-deps
+368:6  Warning: React Hook useEffect has a missing dependency: 'setAgentAudioMuted'. Either include it or remove the dependency array.  react-hooks/exhaustive-deps
+410:6  Warning: React Hook useEffect has missing dependencies: 'room' and 'setAgentAudioMuted'. Either include them or remove the dependency array.  react-hooks/exhaustive-deps
+501:16  Warning: 'err' is defined but never used.  @typescript-eslint/no-unused-vars
+516:16  Warning: 'err' is defined but never used.  @typescript-eslint/no-unused-vars
+
+info  - Need to disable some ESLint rules? Learn more here: https://nextjs.org/docs/app/api-reference/config/eslint#disabling-rules
+   Collecting page data ...
+   Generating static pages (0/43) ...
+   Generating static pages (10/43) 
+   Generating static pages (21/43) 
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+   Generating static pages (32/43) 
+ ✓ Generating static pages (43/43)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                        Size  First Load JS
+┌ ƒ /                                           7.43 kB         417 kB
+├ ƒ /_not-found                                   997 B         103 kB
+├ ƒ /api/auth/[...path]                           228 B         102 kB
+├ ƒ /api/bhajans/[...path]                        228 B         102 kB
+├ ƒ /api/connection-details                       228 B         102 kB
+├ ƒ /api/daily-satsang/agent-token                228 B         102 kB
+├ ƒ /api/daily-satsang/token                      228 B         102 kB
+├ ƒ /api/egress/start                             228 B         102 kB
+├ ƒ /api/egress/stop                              228 B         102 kB
+├ ƒ /api/gcs/test-upload                          228 B         102 kB
+├ ƒ /api/heygen/session/new                       228 B         102 kB
+├ ƒ /api/heygen/session/start                     228 B         102 kB
+├ ƒ /api/heygen/session/stop                      228 B         102 kB
+├ ƒ /api/heygen/session/task                      228 B         102 kB
+├ ƒ /api/livesatsang/agent-token                  228 B         102 kB
+├ ƒ /api/livesatsang/token                        228 B         102 kB
+├ ƒ /api/marketing/podcast                        228 B         102 kB
+├ ƒ /api/marketing/podcast/[jobId]                228 B         102 kB
+├ ƒ /api/marketing/podcast/[jobId]/[turnIndex]    228 B         102 kB
+├ ƒ /api/marketing/podcast/[jobId]/stitch         228 B         102 kB
+├ ƒ /api/marketing/podcast/preview-voice          228 B         102 kB
+├ ƒ /api/marketing/podcast/talking-photos         228 B         102 kB
+├ ƒ /api/marketing/podcast/voices                 228 B         102 kB
+├ ƒ /api/marketing/transcripts/[...gcsPath]       228 B         102 kB
+├ ƒ /api/marketing/transcripts/[gcsPath]          228 B         102 kB
+├ ƒ /api/marketing/transcripts/audio-files        228 B         102 kB
+├ ƒ /api/marketing/transcripts/signed-url         228 B         102 kB
+├ ƒ /api/marketing/transcripts/transcribe         228 B         102 kB
+├ ƒ /api/marketing/video-stitch                   228 B         102 kB
+├ ƒ /api/marketing/video-stitch/upload            228 B         102 kB
+├ ƒ /api/push/subscribe                           228 B         102 kB
+├ ƒ /api/push/unsubscribe                         228 B         102 kB
+├ ƒ /api/spotify/auth                             228 B         102 kB
+├ ƒ /api/spotify/callback                         228 B         102 kB
+├ ƒ /api/spotify/me                               228 B         102 kB
+├ ƒ /api/spotify/refresh-token                    228 B         102 kB
+├ ƒ /api/spotify/token                            228 B         102 kB
+├ ƒ /api/youtube/search                           228 B         102 kB
+├ ƒ /create-guru                                2.82 kB         124 kB
+├ ƒ /daily-satsang                              9.75 kB         309 kB
+├ ƒ /et-agent                                   1.85 kB         412 kB
+├ ƒ /livesatsang                                7.22 kB         252 kB
+├ ƒ /login                                        889 B         213 kB
+├ ƒ /maintenance                                  590 B         102 kB
+├ ○ /manifest.webmanifest                         228 B         102 kB
+├ ƒ /marketing/podcast                          8.53 kB         118 kB
+├ ƒ /marketing/transcripts                      5.33 kB         115 kB
+├ ƒ /opengraph-image-xg4ifa                       228 B         102 kB
+├ ƒ /osho                                       1.86 kB         412 kB
+├ ƒ /test-auth                                  1.22 kB         213 kB
+├ ƒ /test-youtube                               5.51 kB         115 kB
+├ ƒ /test-youtube-binding                       5.69 kB         115 kB
+└ ƒ /ui                                           765 B         393 kB
++ First Load JS shared by all                    102 kB
+  ├ chunks/100-46564d22e87e077e.js              45.4 kB
+  ├ chunks/3d23170f-42f5a479f5bf5f80.js         54.2 kB
+  └ other shared chunks (total)                 1.93 kB
+
+
+ƒ Middleware                                    33.1 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
