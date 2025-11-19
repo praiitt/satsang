@@ -103,7 +103,7 @@ export async function listRecentMP3Files(limit: number = 20): Promise<AudioFile[
         return {
           name: file.name.split('/').pop() || file.name,
           path: file.name,
-          size: metadata?.size ? parseInt(metadata.size, 10) : 0,
+          size: metadata?.size != null ? Number(metadata.size) : 0,
           created: metadata?.timeCreated 
             ? new Date(metadata.timeCreated) 
             : (metadata?.updated ? new Date(metadata.updated) : new Date()),
