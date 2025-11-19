@@ -3,12 +3,13 @@
 import { type HTMLAttributes, useCallback, useState } from 'react';
 import { Track } from 'livekit-client';
 import { useChat, useRemoteParticipants } from '@livekit/components-react';
-import { ChatTextIcon, PhoneDisconnectIcon } from '@phosphor-icons/react/dist/ssr';
+import { ChatTextIcon, PhoneDisconnectIcon, Moon, Sun } from '@phosphor-icons/react/dist/ssr';
 import { useSession } from '@/components/app/session-provider';
 import { TrackToggle } from '@/components/livekit/agent-control-bar/track-toggle';
 import { Button } from '@/components/livekit/button';
 import { Toggle } from '@/components/livekit/toggle';
 import { cn } from '@/lib/utils';
+import { useAgentControl } from '@/hooks/useAgentControl';
 import { ChatInput } from './chat-input';
 import { UseInputControlsProps, useInputControls } from './hooks/use-input-controls';
 import { usePublishPermissions } from './hooks/use-publish-permissions';
@@ -46,6 +47,7 @@ export function AgentControlBar({
   const [chatOpen, setChatOpen] = useState(false);
   const publishPermissions = usePublishPermissions();
   const { isSessionActive, endSession } = useSession();
+  const { sleep, wake, agentIsSleeping } = useAgentControl();
 
   const {
     micTrackRef,
@@ -74,6 +76,18 @@ export function AgentControlBar({
     endSession();
     onDisconnect?.();
   }, [endSession, onDisconnect]);
+
+  const handleToggleAgentSleep = useCallback(async () => {
+    try {
+      if (agentIsSleeping) {
+        await wake('manual_wake');
+      } else {
+        await sleep('manual_sleep');
+      }
+    } catch (error) {
+      console.error('[AgentControlBar] Failed to toggle agent sleep:', error);
+    }
+  }, [agentIsSleeping, sleep, wake]);
 
   const visibleControls = {
     leave: controls?.leave ?? true,
@@ -104,6 +118,22 @@ export function AgentControlBar({
       )}
 
       <div className="flex flex-col gap-2">
+        {/* Agent sleep/wake status banner */}
+        {agentIsSleeping && (
+          <div className="bg-amber-500/10 border-amber-400/40 text-amber-800 dark:text-amber-200 flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs animate-pulse">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-400/70 shadow-sm">
+              <Moon weight="fill" className="h-4 w-4 text-amber-900" />
+            </div>
+            <div className="flex flex-col">
+              <span className="font-semibold text-[11px] tracking-wide">
+                गुरुजी विश्राम मोड में हैं
+              </span>
+              <span className="text-[10px] opacity-80">
+                भजन या वाणी चल रही है — समाप्त या pausa होने पर फिर से सुनना शुरू करेंगे।
+              </span>
+            </div>
+          </div>
+        )}
         {/* Chat Button - Prominent */}
         {visibleControls.chat && (
           <Button
@@ -163,6 +193,25 @@ export function AgentControlBar({
                 onPressedChange={screenShareToggle.toggle}
               />
             )}
+
+            {/* Manual Agent Sleep/Wake Toggle */}
+            <Button
+              size="icon"
+              variant={agentIsSleeping ? 'secondary' : 'outline'}
+              onClick={handleToggleAgentSleep}
+              className={cn(
+                'transition-colors',
+                agentIsSleeping && 'bg-yellow-500/20 hover:bg-yellow-500/30'
+              )}
+              title={agentIsSleeping ? 'Wake Agent (Agent is sleeping)' : 'Sleep Agent (Agent is awake)'}
+              aria-label={agentIsSleeping ? 'Wake agent' : 'Sleep agent'}
+            >
+              {agentIsSleeping ? (
+                <Moon weight="fill" className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              ) : (
+                <Sun weight="fill" className="h-5 w-5" />
+              )}
+            </Button>
           </div>
         </div>
 

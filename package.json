@@ -11,6 +11,8 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@google-cloud/storage": "^7.12.1",
+    "firebase-admin": "^12.6.0",
     "@livekit/components-react": "^2.9.15",
     "@livekit/protocol": "^1.40.0",
     "@phosphor-icons/react": "^2.1.8",

@@ -832,8 +832,16 @@ async def entrypoint(ctx: JobContext):
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
 
+    # Agent sleep/wake state management (shared between data handler and agent)
+    # When YouTube playback is active, agent should sleep (stop listening) but maintain context
+    agent_is_sleeping = False
+    agent_sleep_reason = None
+    
+    # Create assistant instance (we'll pass sleep state to it)
+    assistant = Assistant(is_group_conversation=is_live_satsang, publish_data_fn=_publish_bhajan_bytes)
+    
     await session.start(
-        agent=Assistant(is_group_conversation=is_live_satsang, publish_data_fn=_publish_bhajan_bytes),
+        agent=assistant,
         room=ctx.room,
         room_input_options=RoomInputOptions(
             # For telephony applications, use `BVCTelephony` for best results
@@ -843,6 +851,289 @@ async def entrypoint(ctx: JobContext):
 
     # Join the room and connect to the user
     await ctx.connect()
+
+    # Subscribe to data channel messages from frontend for agent.control commands
+    from livekit import rtc
+    
+    async def on_data_received(data, participant: rtc.RemoteParticipant | None = None, kind=None, topic: str | None = None):
+        """Handle data channel messages from frontend (agent.control commands)."""
+        nonlocal agent_is_sleeping, agent_sleep_reason
+        
+        try:
+            # Log all received data for debugging - THIS IS CRITICAL FOR DEBUGGING
+            logger.info(f"🔔 [DATA_RECEIVED] Received data: type={type(data)}, participant={participant.identity if participant else 'None'}, kind={kind}, topic={topic}")
+            
+            # Parse JSON payload - handle both bytes and string
+            import json
+            
+            # Extract data bytes from DataPacket or handle different formats
+            data_bytes = None
+            if isinstance(data, rtc.DataPacket):
+                data_bytes = data.data
+            elif isinstance(data, bytes):
+                data_bytes = data
+            elif hasattr(data, 'data'):
+                data_bytes = data.data
+            else:
+                logger.warning(f"Unexpected data type: {type(data)}, value: {data}")
+                # Try to convert to bytes
+                try:
+                    if isinstance(data, str):
+                        data_bytes = data.encode('utf-8')
+                    else:
+                        logger.warning(f"Cannot convert data to bytes: {type(data)}")
+                        return
+                except Exception as e:
+                    logger.warning(f"Failed to convert data to bytes: {e}")
+                    return
+            
+            if data_bytes is None:
+                logger.warning("No data bytes extracted")
+                return
+            
+            # Decode bytes to string
+            if isinstance(data_bytes, bytes):
+                payload_str = data_bytes.decode('utf-8')
+            else:
+                payload_str = str(data_bytes)
+            
+            logger.info(f"[DATA_RECEIVED] Decoded payload (first 200 chars): {payload_str[:200]}")
+            
+            # Parse JSON
+            try:
+                payload = json.loads(payload_str)
+                logger.info(f"[DATA_RECEIVED] Parsed JSON: {payload}")
+            except json.JSONDecodeError as e:
+                logger.debug(f"Not JSON data (ignoring): {e}, payload: {payload_str[:100]}")
+                return
+            
+            # Only handle agent.control messages
+            # Check topic first (if provided), then check payload type
+            if topic and topic != 'agent.control':
+                logger.debug(f"Ignoring data with topic: {topic} (expected 'agent.control')")
+                return
+            
+            if payload.get('type') != 'agent.control':
+                logger.debug(f"Ignoring data with type: {payload.get('type')} (expected 'agent.control')")
+                return
+            
+            action = payload.get('action')
+            reason = payload.get('reason', 'unknown')
+            
+            logger.info(f"[agent.control] Received action: {action}, reason: {reason}, topic: {topic}")
+            
+            if action == 'sleep':
+                if not agent_is_sleeping:
+                    agent_is_sleeping = True
+                    agent_sleep_reason = reason
+                    logger.info(f"😴 Agent going to sleep (reason: {reason})")
+                    
+                    # Multiple strategies to stop the agent from listening
+                    sleep_success = False
+                    
+                    # Strategy 1: Try to pause the voice pipeline
+                    try:
+                        if hasattr(session, '_voice_pipeline'):
+                            pipeline = session._voice_pipeline
+                            if hasattr(pipeline, 'pause'):
+                                pipeline.pause()
+                                logger.info("✅ Voice pipeline paused - agent is sleeping")
+                                sleep_success = True
+                            else:
+                                logger.warning("Voice pipeline doesn't have pause() method")
+                    except Exception as e:
+                        logger.warning(f"Failed to pause voice pipeline: {e}")
+                    
+                    # Strategy 2: Try to disable input through session
+                    if not sleep_success:
+                        try:
+                            if hasattr(session, 'disable_input'):
+                                session.disable_input()
+                                logger.info("✅ Session input disabled - agent is sleeping")
+                                sleep_success = True
+                        except Exception as e:
+                            logger.warning(f"Failed to disable session input: {e}")
+                    
+                    # Strategy 3: Try to mute/unsubscribe from remote audio tracks (MOST RELIABLE)
+                    if not sleep_success:
+                        try:
+                            # Unsubscribe from all remote participant *audio* tracks
+                            unsubscribed_count = 0
+                            for remote_participant in ctx.room.remote_participants.values():
+                                for track_pub in remote_participant.track_publications.values():
+                                    # Only touch audio tracks
+                                    if (
+                                        track_pub.kind == rtc.TrackKind.KIND_AUDIO
+                                        and track_pub.subscribed
+                                    ):
+                                        # set_subscribed is a synchronous method in the Python SDK
+                                        track_pub.set_subscribed(False)
+                                        unsubscribed_count += 1
+                                        logger.info(
+                                            f"✅ Unsubscribed from {remote_participant.identity} audio track {track_pub.sid}"
+                                        )
+                            
+                            if unsubscribed_count > 0:
+                                logger.info(f"✅ Unsubscribed from {unsubscribed_count} audio track(s) - agent is sleeping")
+                                sleep_success = True
+                            else:
+                                logger.warning("No subscribed audio tracks found to unsubscribe")
+                        except Exception as e:
+                            logger.warning(f"Failed to unsubscribe from audio tracks: {e}", exc_info=True)
+                    
+                    # Strategy 4: Set a flag and prevent processing in the agent
+                    # This is a fallback that will be checked in the agent's processing loop
+                    if not sleep_success:
+                        logger.warning("⚠️ Could not pause pipeline/session - using flag-based sleep (may not fully stop listening)")
+                    
+                    logger.info(f"Agent sleep status: {'✅ Successfully paused' if sleep_success else '⚠️ Using flag-based fallback'}")
+            elif action == 'wake':
+                if agent_is_sleeping:
+                    agent_is_sleeping = False
+                    logger.info(f"🌅 Agent waking up (was sleeping due to: {agent_sleep_reason})")
+                    agent_sleep_reason = None
+                    
+                    # Multiple strategies to wake the agent
+                    wake_success = False
+                    
+                    # Strategy 1: Try to resume the voice pipeline
+                    try:
+                        if hasattr(session, '_voice_pipeline'):
+                            pipeline = session._voice_pipeline
+                            if hasattr(pipeline, 'resume'):
+                                pipeline.resume()
+                                logger.info("✅ Voice pipeline resumed - agent is awake")
+                                wake_success = True
+                            else:
+                                logger.warning("Voice pipeline doesn't have resume() method")
+                    except Exception as e:
+                        logger.warning(f"Failed to resume voice pipeline: {e}")
+                    
+                    # Strategy 2: Try to enable input through session
+                    if not wake_success:
+                        try:
+                            if hasattr(session, 'enable_input'):
+                                session.enable_input()
+                                logger.info("✅ Session input enabled - agent is awake")
+                                wake_success = True
+                        except Exception as e:
+                            logger.warning(f"Failed to enable session input: {e}")
+                    
+                    # Strategy 3: Re-subscribe to remote audio tracks (MOST RELIABLE)
+                    if not wake_success:
+                        try:
+                            # Re-subscribe to all remote participant *audio* tracks
+                            resubscribed_count = 0
+                            for remote_participant in ctx.room.remote_participants.values():
+                                for track_pub in remote_participant.track_publications.values():
+                                    # Only touch audio tracks
+                                    if (
+                                        track_pub.kind == rtc.TrackKind.KIND_AUDIO
+                                        and not track_pub.subscribed
+                                    ):
+                                        # set_subscribed is a synchronous method in the Python SDK
+                                        track_pub.set_subscribed(True)
+                                        resubscribed_count += 1
+                                        logger.info(
+                                            f"✅ Re-subscribed to {remote_participant.identity} audio track {track_pub.sid}"
+                                        )
+                            
+                            if resubscribed_count > 0:
+                                logger.info(f"✅ Re-subscribed to {resubscribed_count} audio track(s) - agent is awake")
+                                wake_success = True
+                            else:
+                                logger.info("All audio tracks already subscribed")
+                                wake_success = True  # Consider this success if already subscribed
+                        except Exception as e:
+                            logger.warning(f"Failed to re-subscribe to audio tracks: {e}", exc_info=True)
+                    
+                    if not wake_success:
+                        logger.warning("⚠️ Could not resume pipeline/session - using flag-based wake")
+                    
+                    logger.info(f"Agent wake status: {'✅ Successfully resumed' if wake_success else '⚠️ Using flag-based fallback'}")
+            else:
+                logger.warning(f"Unknown agent.control action: {action}")
+        except Exception as e:
+            logger.error(f"Error processing agent.control message: {e}", exc_info=True)
+
+    # Subscribe to data channel messages from remote participants
+    # In LiveKit Python SDK, we need to listen for data from remote participants
+    # Try multiple approaches to ensure we receive the messages
+    
+    def _handle_room_data(data, participant=None, kind=None, topic: str | None = None):
+        """
+        Synchronous callback invoked by LiveKit when data is received.
+        We immediately schedule the async `on_data_received` to do the real work.
+        """
+        try:
+            # Get the current event loop or create a new one
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            if loop.is_running():
+                asyncio.create_task(on_data_received(data, participant, kind, topic))
+            else:
+                loop.run_until_complete(on_data_received(data, participant, kind, topic))
+        except Exception as e:
+            logger.error(f"Error scheduling on_data_received task: {e}", exc_info=True)
+    
+    # Subscribe to room-level data events
+    ctx.room.on("data_received", _handle_room_data)
+    logger.info("✅ Data channel listener registered on room for agent.control messages")
+    
+    # Also subscribe to data from each remote participant as they connect
+    async def _subscribe_to_participant_data(participant: rtc.RemoteParticipant):
+        """Subscribe to data channel messages from a specific remote participant."""
+        def _handle_participant_data(data, kind=None, topic: str | None = None):
+            try:
+                # Get the current event loop or create a new one
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                
+                if loop.is_running():
+                    asyncio.create_task(on_data_received(data, participant, kind, topic))
+                else:
+                    loop.run_until_complete(on_data_received(data, participant, kind, topic))
+            except Exception as e:
+                logger.error(f"Error scheduling on_data_received task from participant: {e}", exc_info=True)
+        
+        # Try to subscribe to participant's data channel
+        try:
+            participant.on("data_received", _handle_participant_data)
+            logger.info(f"✅ Data channel listener registered for participant: {participant.identity}")
+        except Exception as e:
+            logger.warning(f"Could not subscribe to participant data channel: {e}")
+    
+    # Subscribe to existing remote participants
+    for participant in ctx.room.remote_participants.values():
+        await _subscribe_to_participant_data(participant)
+    
+    # Subscribe to new participants as they connect
+    async def _on_participant_connected(participant: rtc.RemoteParticipant):
+        logger.info(f"🆕 Remote participant connected: {participant.identity}")
+        try:
+            await _subscribe_to_participant_data(participant)
+        except Exception as e:
+            logger.error(f"Error subscribing to participant data: {e}", exc_info=True)
+    
+    def _handle_participant_connected(participant: rtc.RemoteParticipant):
+        """Synchronous wrapper for participant_connected event."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.create_task(_on_participant_connected(participant))
+            else:
+                loop.run_until_complete(_on_participant_connected(participant))
+        except Exception as e:
+            logger.error(f"Error handling participant connected: {e}", exc_info=True)
+    
+    ctx.room.on("participant_connected", _handle_participant_connected)
 
     # For group conversations, log participant info and ensure agent is ready
     if is_live_satsang:

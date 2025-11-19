@@ -214,18 +214,40 @@ export function BhajanPlayer() {
     const onStateChange = () => {
       console.log('[BhajanPlayer] Room state changed:', room.state);
     };
+    
+    // Handle room disconnect - stop bhajan playback
+    const onDisconnected = async () => {
+      console.log('[BhajanPlayer] Room disconnected - stopping bhajan playback');
+      try {
+        // Stop audio element if playing
+        if (audioRef.current && !audioRef.current.paused) {
+          audioRef.current.pause();
+          audioRef.current.currentTime = 0;
+        }
+        // Stop Spotify player if playing
+        if (isPlaying && pause) {
+          await pause();
+        }
+        // Clear current track
+        setCurrentTrack(null);
+        setIsPlaying(false);
+      } catch (err) {
+        console.error('[BhajanPlayer] Error stopping on disconnect:', err);
+      }
+    };
+    
     room.on(RoomEvent.Connected, onStateChange);
-    room.on(RoomEvent.Disconnected, onStateChange);
+    room.on(RoomEvent.Disconnected, onDisconnected);
 
     return () => {
       console.log('[BhajanPlayer] Cleaning up data channel listener');
       room.off(RoomEvent.DataReceived, onData);
       room.off(RoomEvent.DataReceived, testAllEvents);
       room.off(RoomEvent.Connected, onStateChange);
-      room.off(RoomEvent.Disconnected, onStateChange);
+      room.off(RoomEvent.Disconnected, onDisconnected);
       room.off(RoomEvent.ParticipantConnected, onParticipantConnected);
     };
-  }, [room, isAuthenticated]);
+  }, [room, isAuthenticated, isPlaying, pause]);
 
   // Parse agent messages for bhajan playback info (fallback only)
   useEffect(() => {

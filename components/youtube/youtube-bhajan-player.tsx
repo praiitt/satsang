@@ -12,6 +12,7 @@ import {
   X,
 } from '@phosphor-icons/react/dist/ssr';
 import { Button } from '@/components/livekit/button';
+import { useAgentControl } from '@/hooks/useAgentControl';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 
@@ -45,20 +46,7 @@ export function YouTubeBhajanPlayer() {
   const [isMuted, setIsMuted] = useState(false);
 
   // --- Agent sleep/wake + audio mute helpers ---
-  const publishAgentControl = async (action: 'sleep' | 'wake', reason: string): Promise<void> => {
-    try {
-      if (!room) return;
-      const payload = new TextEncoder().encode(
-        JSON.stringify({ type: 'agent.control', action, reason })
-      );
-      // reliable delivery; topic helps agent filter
-      // @ts-expect-error publishData topic overload
-      await room.localParticipant.publishData(payload, true, 'agent.control');
-      console.log('[YouTubeBhajanPlayer] → agent.control', { action, reason });
-    } catch (e) {
-      console.warn('[YouTubeBhajanPlayer] Failed to publish agent.control', e);
-    }
-  };
+  const { publishAgentControl, agentIsSleeping } = useAgentControl();
 
   type AgentParticipant = RemoteParticipant & {
     isAgent?: boolean;
@@ -176,7 +164,10 @@ export function YouTubeBhajanPlayer() {
             playVideo(videoId, 0)
               .then(async () => {
                 await setAgentAudioMuted(true);
-                await publishAgentControl('sleep', 'vani_playing');
+                // Only sleep agent if not already sleeping (don't override manual sleep)
+                if (!agentIsSleeping) {
+                  await publishAgentControl('sleep', 'vani_playing');
+                }
               })
               .catch((err) => {
                 console.error('[YouTubeBhajanPlayer] Vani play error:', err);
@@ -204,7 +195,10 @@ export function YouTubeBhajanPlayer() {
             playVideo(videoId, parsed.startSeconds || 0)
               .then(async () => {
                 await setAgentAudioMuted(true);
-                await publishAgentControl('sleep', 'bhajan_playing');
+                // Only sleep agent if not already sleeping (don't override manual sleep)
+                if (!agentIsSleeping) {
+                  await publishAgentControl('sleep', 'bhajan_playing');
+                }
               })
               .catch((err) => {
                 console.error('[YouTubeBhajanPlayer] Play error:', err);
@@ -229,7 +223,10 @@ export function YouTubeBhajanPlayer() {
           resume()
             .then(async () => {
               await setAgentAudioMuted(true);
-              await publishAgentControl('sleep', 'bhajan_resumed');
+              // Only sleep agent if not already sleeping (don't override manual sleep)
+              if (!agentIsSleeping) {
+                await publishAgentControl('sleep', 'bhajan_resumed');
+              }
             })
             .catch((err) => {
               console.error('[YouTubeBhajanPlayer] Resume error:', err);
@@ -340,7 +337,10 @@ export function YouTubeBhajanPlayer() {
         playVideo(extractedVideoId, 0)
           .then(async () => {
             await setAgentAudioMuted(true);
-            await publishAgentControl('sleep', 'bhajan_playing');
+            // Only sleep agent if not already sleeping (don't override manual sleep)
+            if (!agentIsSleeping) {
+              await publishAgentControl('sleep', 'bhajan_playing');
+            }
           })
           .catch((err) => {
             console.error('[YouTubeBhajanPlayer] ❌ Play error:', err);
@@ -365,7 +365,7 @@ export function YouTubeBhajanPlayer() {
       console.log('[YouTubeBhajanPlayer] Cleaning up data channel listener');
       room.off(RoomEvent.DataReceived, onData);
     };
-  }, [room, playVideo, pause, resume]);
+  }, [room, playVideo, pause, resume, agentIsSleeping, publishAgentControl]);
 
   // Also listen to chat messages for backward compatibility (extract YouTube URLs)
   useEffect(() => {
@@ -398,13 +398,16 @@ export function YouTubeBhajanPlayer() {
       playVideo(videoId)
         .then(async () => {
           await setAgentAudioMuted(true);
-          await publishAgentControl('sleep', 'bhajan_playing');
+          // Only sleep agent if not already sleeping (don't override manual sleep)
+          if (!agentIsSleeping) {
+            await publishAgentControl('sleep', 'bhajan_playing');
+          }
         })
         .catch((err) => {
           console.error('[YouTubeBhajanPlayer] Play from chat error:', err);
         });
     }
-  }, [messages, playVideo]);
+  }, [messages, playVideo, agentIsSleeping, publishAgentControl]);
 
   // Update showControls based on playing state
   useEffect(() => {
@@ -420,6 +423,63 @@ export function YouTubeBhajanPlayer() {
       setCurrentTrackName(null);
     }
   }, [currentVideoId, isPlaying]);
+
+  // Listen for room disconnect to stop bhajan playback and clear all data
+  useEffect(() => {
+    if (!room) return;
+
+    const handleDisconnected = async () => {
+      console.log('[YouTubeBhajanPlayer] Room disconnected - clearing all player data');
+      try {
+        // Stop the video player
+        await stop();
+        // Clear all UI state
+        setShowControls(false);
+        setCurrentTrackName(null);
+        // Reset volume and mute state
+        setVolumeState(50);
+        setIsMuted(false);
+        // Unmute agent audio
+        await setAgentAudioMuted(false);
+        // Wake agent if sleeping
+        await publishAgentControl('wake', 'room_disconnected');
+        console.log('[YouTubeBhajanPlayer] ✅ All player data cleared');
+      } catch (err) {
+        console.error('[YouTubeBhajanPlayer] Error clearing player data on disconnect:', err);
+      }
+    };
+
+    room.on(RoomEvent.Disconnected, handleDisconnected);
+
+    return () => {
+      room.off(RoomEvent.Disconnected, handleDisconnected);
+    };
+  }, [room, stop, setAgentAudioMuted, publishAgentControl]);
+
+  // Listen for YouTube video ended/paused events to wake agent
+  useEffect(() => {
+    const handleVideoEnded = async () => {
+      console.log('[YouTubeBhajanPlayer] Video ended - waking agent');
+      await setAgentAudioMuted(false);
+      await publishAgentControl('wake', 'video_ended');
+    };
+
+    const handleVideoPaused = async () => {
+      // Note: We already handle pause in the pause button click handler
+      // This is a backup in case video pauses for other reasons
+      console.log('[YouTubeBhajanPlayer] Video paused - waking agent');
+      await setAgentAudioMuted(false);
+      await publishAgentControl('wake', 'video_paused');
+    };
+
+    window.addEventListener('youtube-video-ended', handleVideoEnded);
+    window.addEventListener('youtube-video-paused', handleVideoPaused);
+
+    return () => {
+      window.removeEventListener('youtube-video-ended', handleVideoEnded);
+      window.removeEventListener('youtube-video-paused', handleVideoPaused);
+    };
+  }, [setAgentAudioMuted, publishAgentControl]);
 
   // Notify agent when YouTube error occurs (especially error 150 - embedding not allowed)
   useEffect(() => {
@@ -612,7 +672,10 @@ export function YouTubeBhajanPlayer() {
               resume()
                 .then(async () => {
                   await setAgentAudioMuted(true);
-                  await publishAgentControl('sleep', 'bhajan_resumed');
+                  // Only sleep agent if not already sleeping (don't override manual sleep)
+                  if (!agentIsSleeping) {
+                    await publishAgentControl('sleep', 'bhajan_resumed');
+                  }
                 })
                 .catch((err) => {
                   console.error('[YouTubeBhajanPlayer] Resume error:', err);

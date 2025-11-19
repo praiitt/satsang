@@ -133,7 +133,7 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
           },
           onStateChange: (event) => {
             const state = event.data;
-            // YT.PlayerState.PLAYING = 1, PAUSED = 2, ENDED = 0
+            // YT.PlayerState.PLAYING = 1, PAUSED = 2, ENDED = 0, BUFFERING = 3
             const playing = state === 1; // PLAYING
             setIsPlaying(playing);
             console.log(
@@ -141,6 +141,16 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
               state,
               playing ? 'PLAYING' : state === 2 ? 'PAUSED' : state === 0 ? 'ENDED' : 'OTHER'
             );
+            
+            // Notify components when video ends or pauses (for agent wake)
+            // Components listening to isPlaying will handle agent.control messages
+            if (state === 0) {
+              // Video ended - notify via custom event
+              window.dispatchEvent(new CustomEvent('youtube-video-ended'));
+            } else if (state === 2) {
+              // Video paused - notify via custom event
+              window.dispatchEvent(new CustomEvent('youtube-video-paused'));
+            }
           },
           onError: (event) => {
             const errorCode = event.data;

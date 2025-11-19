@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@google-cloud/storage':
+        specifier: ^7.17.3
+        version: 7.17.3
       cookie-parser:
         specifier: ^1.4.6
         version: 1.4.7
@@ -26,6 +29,9 @@ importers:
       firebase-admin:
         specifier: ^12.5.0
         version: 12.7.0
+      form-data:
+        specifier: ^4.0.5
+        version: 4.0.5
     devDependencies:
       '@types/cookie-parser':
         specifier: ^1.4.7
@@ -36,6 +42,9 @@ importers:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
+      '@types/form-data':
+        specifier: ^2.5.2
+        version: 2.5.2
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@types/node@24.10.0)(typescript@5.9.3)
@@ -572,6 +581,10 @@ packages:
   '@types/express@4.17.25':
     resolution: {integrity: sha512-dVd04UKsfpINUnK0yBoYHDF3xu7xVH4BuDotC/xGuycx4CgbP48X/KF/586bcObxT0HENHXEU8Nqtu6NR+eKhw==}
 
+  '@types/form-data@2.5.2':
+    resolution: {integrity: sha512-tfmcyHn1Pp9YHAO5r40+UuZUPAZbUEgqTel3EuEKpmF9hPkXgR4l41853raliXnb4gwyPNoQOfvgGGlHN5WSog==}
+    deprecated: This is a stub types definition. form-data provides its own type definitions, so you do not need this installed.
+
   '@types/http-errors@2.0.5':
     resolution: {integrity: sha512-r8Tayk8HJnX0FztbZN7oVqGccWgw98T/0neJphO91KkmOzug1KkofZURD4UaD5uH8AqcFLfdPErnBod0u71/qg==}
 
@@ -910,6 +923,10 @@ packages:
   form-data@2.5.5:
     resolution: {integrity: sha512-jqdObeR2rxZZbPSGL+3VckHMYtu+f9//KXBsVny6JSX/pa38Fy+bGjuG8eW/H6USNQWhLi8Num++cU2yOCNz4A==}
     engines: {node: '>= 0.12'}
+
+  form-data@4.0.5:
+    resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
+    engines: {node: '>= 6'}
 
   forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
@@ -2000,13 +2017,10 @@ snapshots:
     dependencies:
       arrify: 2.0.1
       extend: 3.0.2
-    optional: true
 
-  '@google-cloud/projectify@4.0.0':
-    optional: true
+  '@google-cloud/projectify@4.0.0': {}
 
-  '@google-cloud/promisify@4.0.0':
-    optional: true
+  '@google-cloud/promisify@4.0.0': {}
 
   '@google-cloud/storage@7.17.3':
     dependencies:
@@ -2028,7 +2042,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   '@grpc/grpc-js@1.14.0':
     dependencies:
@@ -2094,8 +2107,7 @@ snapshots:
 
   '@protobufjs/utf8@1.1.0': {}
 
-  '@tootallnate/once@2.0.0':
-    optional: true
+  '@tootallnate/once@2.0.0': {}
 
   '@tsconfig/node10@1.0.11': {}
 
@@ -2110,8 +2122,7 @@ snapshots:
       '@types/connect': 3.4.38
       '@types/node': 24.10.0
 
-  '@types/caseless@0.12.5':
-    optional: true
+  '@types/caseless@0.12.5': {}
 
   '@types/connect@3.4.38':
     dependencies:
@@ -2138,6 +2149,10 @@ snapshots:
       '@types/express-serve-static-core': 4.19.7
       '@types/qs': 6.14.0
       '@types/serve-static': 1.15.10
+
+  '@types/form-data@2.5.2':
+    dependencies:
+      form-data: 4.0.5
 
   '@types/http-errors@2.0.5': {}
 
@@ -2168,10 +2183,9 @@ snapshots:
   '@types/request@2.48.13':
     dependencies:
       '@types/caseless': 0.12.5
-      '@types/node': 22.19.0
+      '@types/node': 24.10.0
       '@types/tough-cookie': 4.0.5
       form-data: 2.5.5
-    optional: true
 
   '@types/send@0.17.6':
     dependencies:
@@ -2192,13 +2206,11 @@ snapshots:
 
   '@types/strip-json-comments@0.0.30': {}
 
-  '@types/tough-cookie@4.0.5':
-    optional: true
+  '@types/tough-cookie@4.0.5': {}
 
   abort-controller@3.0.0:
     dependencies:
       event-target-shim: 5.0.1
-    optional: true
 
   accepts@1.3.8:
     dependencies:
@@ -2216,10 +2228,8 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
-  agent-base@7.1.4:
-    optional: true
+  agent-base@7.1.4: {}
 
   ansi-regex@5.0.1: {}
 
@@ -2236,24 +2246,19 @@ snapshots:
 
   array-flatten@1.1.1: {}
 
-  arrify@2.0.1:
-    optional: true
+  arrify@2.0.1: {}
 
   async-retry@1.3.3:
     dependencies:
       retry: 0.13.1
-    optional: true
 
-  asynckit@0.4.0:
-    optional: true
+  asynckit@0.4.0: {}
 
   balanced-match@1.0.2: {}
 
-  base64-js@1.5.1:
-    optional: true
+  base64-js@1.5.1: {}
 
-  bignumber.js@9.3.1:
-    optional: true
+  bignumber.js@9.3.1: {}
 
   binary-extensions@2.3.0: {}
 
@@ -2326,7 +2331,6 @@ snapshots:
   combined-stream@1.0.8:
     dependencies:
       delayed-stream: 1.0.0
-    optional: true
 
   concat-map@0.0.1: {}
 
@@ -2362,8 +2366,7 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
-  delayed-stream@1.0.0:
-    optional: true
+  delayed-stream@1.0.0: {}
 
   depd@2.0.0: {}
 
@@ -2385,7 +2388,6 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
       stream-shift: 1.0.3
-    optional: true
 
   dynamic-dedupe@0.3.0:
     dependencies:
@@ -2406,7 +2408,6 @@ snapshots:
   end-of-stream@1.4.5:
     dependencies:
       once: 1.4.0
-    optional: true
 
   es-define-property@1.0.1: {}
 
@@ -2422,7 +2423,6 @@ snapshots:
       get-intrinsic: 1.3.0
       has-tostringtag: 1.0.2
       hasown: 2.0.2
-    optional: true
 
   esbuild@0.25.12:
     optionalDependencies:
@@ -2459,8 +2459,7 @@ snapshots:
 
   etag@1.8.1: {}
 
-  event-target-shim@5.0.1:
-    optional: true
+  event-target-shim@5.0.1: {}
 
   express@4.21.2:
     dependencies:
@@ -2498,8 +2497,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  extend@3.0.2:
-    optional: true
+  extend@3.0.2: {}
 
   farmhash-modern@1.1.0: {}
 
@@ -2509,7 +2507,6 @@ snapshots:
   fast-xml-parser@4.5.3:
     dependencies:
       strnum: 1.1.2
-    optional: true
 
   faye-websocket@0.11.4:
     dependencies:
@@ -2590,7 +2587,14 @@ snapshots:
       hasown: 2.0.2
       mime-types: 2.1.35
       safe-buffer: 5.2.1
-    optional: true
+
+  form-data@4.0.5:
+    dependencies:
+      asynckit: 0.4.0
+      combined-stream: 1.0.8
+      es-set-tostringtag: 2.1.0
+      hasown: 2.0.2
+      mime-types: 2.1.35
 
   forwarded@0.2.0: {}
 
@@ -2616,7 +2620,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   gcp-metadata@6.1.1:
     dependencies:
@@ -2626,7 +2629,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   get-caller-file@2.0.5: {}
 
@@ -2676,7 +2678,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   google-gax@4.6.1:
     dependencies:
@@ -2697,8 +2698,7 @@ snapshots:
       - supports-color
     optional: true
 
-  google-logging-utils@0.0.2:
-    optional: true
+  google-logging-utils@0.0.2: {}
 
   gopd@1.2.0: {}
 
@@ -2709,21 +2709,18 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   has-symbols@1.1.0: {}
 
   has-tostringtag@1.0.2:
     dependencies:
       has-symbols: 1.1.0
-    optional: true
 
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
 
-  html-entities@2.6.0:
-    optional: true
+  html-entities@2.6.0: {}
 
   http-errors@2.0.0:
     dependencies:
@@ -2742,7 +2739,6 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   https-proxy-agent@5.0.1:
     dependencies:
@@ -2750,7 +2746,6 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   https-proxy-agent@7.0.6:
     dependencies:
@@ -2758,7 +2753,6 @@ snapshots:
       debug: 4.4.3
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   iconv-lite@0.4.24:
     dependencies:
@@ -2793,15 +2787,13 @@ snapshots:
 
   is-number@7.0.0: {}
 
-  is-stream@2.0.1:
-    optional: true
+  is-stream@2.0.1: {}
 
   jose@4.15.9: {}
 
   json-bigint@1.0.0:
     dependencies:
       bignumber.js: 9.3.1
-    optional: true
 
   jsonwebtoken@9.0.2:
     dependencies:
@@ -2827,7 +2819,6 @@ snapshots:
       buffer-equal-constant-time: 1.0.1
       ecdsa-sig-formatter: 1.0.11
       safe-buffer: 5.2.1
-    optional: true
 
   jwks-rsa@3.2.0:
     dependencies:
@@ -2849,7 +2840,6 @@ snapshots:
     dependencies:
       jwa: 2.0.1
       safe-buffer: 5.2.1
-    optional: true
 
   limiter@1.1.5: {}
 
@@ -2900,8 +2890,7 @@ snapshots:
 
   mime@1.6.0: {}
 
-  mime@3.0.0:
-    optional: true
+  mime@3.0.0: {}
 
   minimatch@3.1.2:
     dependencies:
@@ -2920,7 +2909,6 @@ snapshots:
   node-fetch@2.7.0:
     dependencies:
       whatwg-url: 5.0.0
-    optional: true
 
   node-forge@1.3.1: {}
 
@@ -2944,7 +2932,6 @@ snapshots:
   p-limit@3.1.0:
     dependencies:
       yocto-queue: 0.1.0
-    optional: true
 
   parseurl@1.3.3: {}
 
@@ -2999,7 +2986,6 @@ snapshots:
       inherits: 2.0.4
       string_decoder: 1.3.0
       util-deprecate: 1.0.2
-    optional: true
 
   readdirp@3.6.0:
     dependencies:
@@ -3023,10 +3009,8 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
-  retry@0.13.1:
-    optional: true
+  retry@0.13.1: {}
 
   rimraf@2.7.1:
     dependencies:
@@ -3107,10 +3091,8 @@ snapshots:
   stream-events@1.0.5:
     dependencies:
       stubs: 3.0.0
-    optional: true
 
-  stream-shift@1.0.3:
-    optional: true
+  stream-shift@1.0.3: {}
 
   string-width@4.2.3:
     dependencies:
@@ -3121,7 +3103,6 @@ snapshots:
   string_decoder@1.3.0:
     dependencies:
       safe-buffer: 5.2.1
-    optional: true
 
   strip-ansi@6.0.1:
     dependencies:
@@ -3131,11 +3112,9 @@ snapshots:
 
   strip-json-comments@2.0.1: {}
 
-  strnum@1.1.2:
-    optional: true
+  strnum@1.1.2: {}
 
-  stubs@3.0.0:
-    optional: true
+  stubs@3.0.0: {}
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
@@ -3149,7 +3128,6 @@ snapshots:
     transitivePeerDependencies:
       - encoding
       - supports-color
-    optional: true
 
   to-regex-range@5.0.1:
     dependencies:
@@ -3157,8 +3135,7 @@ snapshots:
 
   toidentifier@1.0.1: {}
 
-  tr46@0.0.3:
-    optional: true
+  tr46@0.0.3: {}
 
   tree-kill@1.2.2: {}
 
@@ -3227,18 +3204,15 @@ snapshots:
 
   unpipe@1.0.0: {}
 
-  util-deprecate@1.0.2:
-    optional: true
+  util-deprecate@1.0.2: {}
 
   utils-merge@1.0.1: {}
 
   uuid@10.0.0: {}
 
-  uuid@8.3.2:
-    optional: true
+  uuid@8.3.2: {}
 
-  uuid@9.0.1:
-    optional: true
+  uuid@9.0.1: {}
 
   v8-compile-cache-lib@3.0.1: {}
 
@@ -3246,8 +3220,7 @@ snapshots:
 
   web-vitals@4.2.4: {}
 
-  webidl-conversions@3.0.1:
-    optional: true
+  webidl-conversions@3.0.1: {}
 
   websocket-driver@0.7.4:
     dependencies:
@@ -3261,7 +3234,6 @@ snapshots:
     dependencies:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
-    optional: true
 
   wrap-ansi@7.0.0:
     dependencies:
@@ -3291,5 +3263,4 @@ snapshots:
 
   yn@3.1.1: {}
 
-  yocto-queue@0.1.0:
-    optional: true
+  yocto-queue@0.1.0: {}

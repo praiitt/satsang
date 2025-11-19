@@ -4,8 +4,10 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
 import { toastAlert } from '@/components/livekit/alert-toast';
 import { Button } from '@/components/livekit/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/livekit/select';
 import { useLanguage } from '@/contexts/language-context';
 import { cn } from '@/lib/utils';
+import { DEFAULT_COUNTRY, countries, type Country } from '@/lib/countries';
 import { useAuth } from './auth-provider';
 
 interface PhoneAuthFormProps {
@@ -15,8 +17,9 @@ interface PhoneAuthFormProps {
 
 export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
   const { sendOTP, verifyOTP } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -92,12 +95,15 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
     setLoading(true);
 
     try {
-      // Validate phone number
+      // Validate phone number (without country code)
       if (!phoneNumber || phoneNumber.length < 10) {
         throw new Error('Please enter a valid phone number');
       }
 
-      const result = await sendOTP(phoneNumber);
+      // Combine country code with phone number
+      const fullPhoneNumber = `${selectedCountry.dialCode}${phoneNumber.replace(/\D/g, '')}`;
+
+      const result = await sendOTP(fullPhoneNumber);
       confirmationResultRef.current = result;
       setStep('otp');
     } catch (err: unknown) {
@@ -105,6 +111,13 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
       setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCountryChange = (countryCode: string) => {
+    const country = countries.find((c) => c.code === countryCode);
+    if (country) {
+      setSelectedCountry(country);
     }
   };
 
@@ -184,23 +197,58 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
         {step === 'phone' ? (
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
+              <label htmlFor="country" className="text-foreground mb-2 block text-sm font-medium">
+                {language === 'hi' ? 'देश' : 'Country'}
+              </label>
+              <Select value={selectedCountry.code} onValueChange={handleCountryChange}>
+                <SelectTrigger className="h-12 w-full rounded-lg">
+                  <SelectValue>
+                    <div className="flex items-center gap-2">
+                      <span>{selectedCountry.flag}</span>
+                      <span>{language === 'hi' ? selectedCountry.nameHindi : selectedCountry.name}</span>
+                      <span className="text-muted-foreground">({selectedCountry.dialCode})</span>
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.code} value={country.code}>
+                      <div className="flex items-center gap-2">
+                        <span>{country.flag}</span>
+                        <span>{language === 'hi' ? country.nameHindi : country.name}</span>
+                        <span className="text-muted-foreground">({country.dialCode})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
               <label htmlFor="phone" className="text-foreground mb-2 block text-sm font-medium">
                 {t('auth.phoneNumber')}
               </label>
-              <div className="relative">
+              <div className="relative flex">
+                <div className="border-input bg-muted text-foreground flex items-center rounded-l-lg border border-r-0 px-4 text-base">
+                  {selectedCountry.dialCode}
+                </div>
                 <input
                   id="phone"
                   type="tel"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder={t('auth.phonePlaceholder')}
-                  className="border-input bg-background text-foreground focus:ring-ring h-12 w-full rounded-lg border px-4 text-base focus:ring-2 focus:outline-none"
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                  placeholder={language === 'hi' ? '9876543210' : '9876543210'}
+                  className="border-input bg-background text-foreground focus:ring-ring h-12 flex-1 rounded-r-lg border px-4 text-base focus:ring-2 focus:outline-none"
                   required
                   disabled={loading}
-                  autoComplete="tel"
+                  autoComplete="tel-national"
+                  inputMode="numeric"
                 />
               </div>
-              <p className="text-muted-foreground mt-2 text-xs">{t('auth.phoneHint')}</p>
+              <p className="text-muted-foreground mt-2 text-xs">
+                {language === 'hi'
+                  ? `देश कोड ${selectedCountry.dialCode} स्वचालित रूप से जोड़ा जाएगा`
+                  : `Country code ${selectedCountry.dialCode} will be added automatically`}
+              </p>
             </div>
             <Button type="submit" disabled={loading} className="h-12 w-full text-base">
               {loading ? t('auth.sending') : t('auth.sendOTP')}
@@ -233,7 +281,7 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
                 </p>
               )}
               <p className="text-muted-foreground mt-2 text-center text-xs">
-                {t('auth.codeSentTo')} {phoneNumber.replace(/(\d{2})\d+(\d{4})/, '$1****$2')}
+                {t('auth.codeSentTo')} {selectedCountry.dialCode}{phoneNumber.replace(/(\d{2})\d+(\d{4})/, '$1****$2')}
               </p>
             </div>
             <div className="flex gap-3">

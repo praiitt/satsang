@@ -1,12 +1,18 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Room, RoomEvent, TokenSource } from 'livekit-client';
 import { AppConfig } from '@/app-config';
+import { useAuth } from '@/components/auth/auth-provider';
 import { toastAlert } from '@/components/livekit/alert-toast';
+import { useLanguage } from '@/contexts/language-context';
 
 export function useRoom(appConfig: AppConfig) {
   const aborted = useRef(false);
   const room = useMemo(() => new Room(), []);
   const [isSessionActive, setIsSessionActive] = useState(false);
+  const auth = useAuth();
+  const authRef = useRef(auth);
+  authRef.current = auth;
+  const { language } = useLanguage();
 
   useEffect(() => {
     function onDisconnected() {
@@ -50,6 +56,7 @@ export function useRoom(appConfig: AppConfig) {
             headers: {
               'Content-Type': 'application/json',
               'X-Sandbox-Id': appConfig.sandboxId ?? '',
+              'X-Language': language, // Send language preference in header
             },
             body: JSON.stringify({
               room_config: appConfig.agentName
@@ -57,6 +64,7 @@ export function useRoom(appConfig: AppConfig) {
                     agents: [{ agent_name: appConfig.agentName }],
                   }
                 : undefined,
+              language: language, // Also send in body for compatibility
             }),
           });
           return await res.json();
@@ -65,8 +73,11 @@ export function useRoom(appConfig: AppConfig) {
           throw new Error('Error fetching connection details!');
         }
       }),
-    [appConfig]
+    [appConfig, language]
   );
+
+  // Track active egress IDs for this room
+  const egressIdsRef = useRef<string[]>([]);
 
   const startSession = useCallback(() => {
     setIsSessionActive(true);
@@ -77,11 +88,26 @@ export function useRoom(appConfig: AppConfig) {
         room.localParticipant.setMicrophoneEnabled(true, undefined, {
           preConnectBuffer: isPreConnectBufferEnabled,
         }),
-        tokenSource
-          .fetch({ agentName: appConfig.agentName })
-          .then((connectionDetails) =>
-            room.connect(connectionDetails.serverUrl, connectionDetails.participantToken)
-          ),
+        tokenSource.fetch({ agentName: appConfig.agentName }).then(async (connectionDetails) => {
+          await room.connect(connectionDetails.serverUrl, connectionDetails.participantToken);
+          // Start audio egress after successful connect
+          try {
+            const res = await fetch('/api/egress/start', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ roomName: room.name, userId: authRef.current.user?.uid }),
+            });
+            const data = await res.json();
+            if (res.ok && data?.egressId) {
+              egressIdsRef.current.push(String(data.egressId));
+              console.log('[egress] started', data);
+            } else {
+              console.warn('[egress] start failed or disabled', data);
+            }
+          } catch (e) {
+            console.warn('[egress] start error', e);
+          }
+        }),
       ]).catch((error) => {
         if (aborted.current) {
           // Once the effect has cleaned up after itself, drop any errors
@@ -102,6 +128,17 @@ export function useRoom(appConfig: AppConfig) {
 
   const endSession = useCallback(() => {
     setIsSessionActive(false);
+    // Stop any active egress for this room
+    const roomName = room.name;
+    const ids = [...egressIdsRef.current];
+    egressIdsRef.current = [];
+    if (roomName) {
+      fetch('/api/egress/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roomName, egressIds: ids }),
+      }).catch((e) => console.warn('[egress] stop error', e));
+    }
   }, []);
 
   return { room, isSessionActive, startSession, endSession };

@@ -40,9 +40,23 @@ export const translations = {
       volume: 'Volume',
     },
     welcome: {
-      title: 'Your spiritual guru is now with you',
+      title: 'Find Your Guru. Many Paths, One Satsang Home.',
+      subtitle: 'All spiritual belief systems in one place',
       description:
-        'RRAASI Satsang - An AI-powered spiritual assistant that talks to you in Hindi, answers questions, plays bhajans, and narrates gurus discourses. Just speak and enjoy!',
+        'RRAASI brings together all spiritual traditions - connect with your favorite guru, explore different paths, or create your own spiritual guide. Voice-powered satsang in Hindi and English.',
+      vision: 'One Platform, Many Paths, Infinite Wisdom',
+      visionDesc:
+        'Whether you follow Sanatana Dharma, Zen, modern spirituality, or cosmic consciousness - find your guide here. Every belief system is welcome.',
+      discoverGurus: 'Discover Your Guru',
+      createGuru: 'Create Your Own Guru',
+      createGuruDesc:
+        'Have a unique spiritual teacher in mind? Create your own custom guru agent with our easy-to-use generator.',
+      allTraditions: 'All Traditions',
+      featuredGurus: 'Featured Gurus',
+      talkToGuru: 'Talk to {name}',
+      findYourGuru: 'Find Your Guru',
+      findYourGuruDesc:
+        'Choose from our collection of spiritual guides, each specializing in different traditions and teachings.',
       freeTrial: '🎁 15 minutes free trial - No credit card required',
       features: 'Key Features',
       voiceAI: 'Voice-based AI Assistant',
@@ -127,6 +141,116 @@ export const translations = {
       faq8Answer:
         'This feature is developed and presented by RRAASI. Our goal is to make the spiritual experience smooth, accessible, and meaningful through technology, so that every seeker can easily connect and benefit.',
     },
+    etAgent: {
+      title: 'Explore Extraterrestrial Civilizations',
+      description:
+        'Connect with an AI guide specializing in extraterrestrial civilizations, the Fermi Paradox, and the connection between sound frequencies and universal consciousness. Discover cosmic wisdom through healing frequencies and ET spiritual teachings.',
+      freeTrial: '🎁 Free 15-minute trial • No credit card required',
+      features: 'What You Can Explore',
+      etCivilizations: 'Extraterrestrial Civilizations',
+      etCivilizationsDesc:
+        'Learn about Pleiadians, Sirians, Arcturians, Andromedans, and other civilizations. Explore their characteristics, teachings, and reported encounters.',
+      fermiParadox: 'Fermi Paradox',
+      fermiParadoxDesc:
+        "Deep dive into the Fermi Paradox and why we haven't detected ETs yet. Explore theories like the Great Filter, Zoo Hypothesis, and Rare Earth hypothesis.",
+      healingFrequencies: 'Healing Sound Frequencies',
+      healingFrequenciesDesc:
+        'Experience healing frequencies like 528hz, solfeggio tones, and binaural beats that raise universal consciousness and connect with cosmic energy.',
+      starSystemFrequencies: 'Star System Frequencies',
+      starSystemFrequenciesDesc:
+        'Listen to frequencies specific to different star systems - Pleiadian, Sirian, Arcturian, and Andromedan sounds that resonate with their civilizations.',
+      etSpiritualTeachings: 'ET Spiritual Teachings',
+      etSpiritualTeachingsDesc:
+        'Learn how extraterrestrial civilizations teach spirituality through sound frequencies, consciousness expansion, and universal connection.',
+      cosmicConsciousness: 'Cosmic Consciousness',
+      cosmicConsciousnessDesc:
+        'Explore the connection between sound, vibration, and interstellar communication. Understand how frequencies bridge dimensions and connect consciousness.',
+      ctaReady: 'Ready to explore the mysteries of the cosmos?',
+      ctaStartNow: 'Start Now',
+      startButton: 'Connect with ET Agent',
+    },
+    oshoAgent: {
+      title: 'Osho – Your Spiritual Guide',
+      description:
+        'Connect with Osho - an AI-powered spiritual guide specializing in meditation, consciousness, Zen philosophy, dynamic meditation, sannyas, and the art of living. Experience Osho discourses and transform your consciousness.',
+      freeTrial: '🎁 Free 15-minute trial • No credit card required',
+      features: 'What You Can Explore',
+      meditation: 'Meditation Techniques',
+      meditationDesc:
+        'Learn Dynamic Meditation, Kundalini Meditation, Vipassana, Nadabrahma, and No-Mind Meditation. Understand that meditation is not doing but being - a state of pure awareness.',
+      consciousness: 'Consciousness & Awareness',
+      consciousnessDesc:
+        'Explore consciousness as your very nature, covered by layers of conditioning. Learn the art of witnessing, being aware without judgment, and living in the present moment.',
+      zenPhilosophy: 'Zen Philosophy',
+      zenPhilosophyDesc:
+        'Discover Zen through Osho discourses on Zen masters like Bodhidharma, Rinzai, and Joshu. Experience Zen as direct, immediate experience beyond words - simplicity, spontaneity, and naturalness.',
+      dynamicMeditation: 'Dynamic Meditation',
+      dynamicMeditationDesc:
+        'Experience Osho revolutionary Dynamic Meditation combining catharsis and celebration. Learn the five stages: chaotic breathing, catharsis, jumping, witnessing, and dancing.',
+      sannyas: 'Sannyas & Freedom',
+      sannyasDesc:
+        'Understand Osho redefinition of sannyas - not renunciation of the world but renunciation of the ego. Learn to live fully, celebrate, and be authentic - freedom from conditioning.',
+      oshoDiscourses: 'Osho Discourses',
+      oshoDiscoursesDesc:
+        'Listen to Osho discourses on meditation, consciousness, Zen, love, freedom, and the art of living. Transform your mindset from seriousness to playfulness, from fear to love.',
+      ctaReady: 'Ready to transform your consciousness?',
+      ctaStartNow: 'Start Now',
+      startButton: 'Connect with Osho',
+    },
+    gurus: {
+      guruji: {
+        name: 'Guruji',
+        tagline: 'Your spiritual guide rooted in Hindu and Sanatana Dharma',
+        description:
+          'A compassionate spiritual guru specializing in dharma, yoga, meditation, karma, bhakti, and Vedanta. Answers questions from Gita, Vedas, Upanishads, Ramayana, and Mahabharata.',
+      },
+      etAgent: {
+        name: 'ET Agent',
+        tagline: 'Explore extraterrestrial civilizations and cosmic consciousness',
+        description:
+          'A guide specializing in extraterrestrial civilizations, the Fermi Paradox, and the connection between sound frequencies and universal consciousness.',
+      },
+      osho: {
+        name: 'Osho',
+        tagline: 'Revolutionary spiritual master of meditation and consciousness',
+        description:
+          'Osho (Bhagwan Shree Rajneesh) - A revolutionary spiritual guide specializing in meditation, consciousness, Zen philosophy, dynamic meditation, sannyas, and the art of living.',
+      },
+    },
+    createGuru: {
+      title: 'Create Your Own Spiritual Guru',
+      description:
+        'Have a unique spiritual teacher in mind? Use our agent generator to create a custom AI guru that embodies your chosen teachings, traditions, and wisdom.',
+      visionTitle: 'Your Vision, Your Guru',
+      visionDesc:
+        'RRAASI believes that every spiritual path is valid. Whether you follow a specific guru, tradition, or have your own unique spiritual perspective, you can create an AI agent that reflects your beliefs and teachings.',
+      howItWorks: 'How It Works',
+      step1Title: 'Define Your Guru',
+      step1Desc:
+        'Think about the spiritual teacher you want to create. What are their core teachings? What tradition do they follow? What is their communication style?',
+      step2Title: 'Create Configuration',
+      step2Desc:
+        'Create a JSON configuration file describing your guru. Include their name, instructions, features, and greetings. Use our example config as a template.',
+      step3Title: 'Run Generator Script',
+      step3Desc:
+        'Use our Python script to generate both backend agent code and frontend components. The script creates everything needed for your guru to work on RRAASI.',
+      step4Title: 'Deploy & Share',
+      step4Desc:
+        'Once generated, your guru is ready to use! Deploy the backend agent and access your custom guru through the frontend route you specified.',
+      configExample: 'Configuration Example',
+      configExampleDesc:
+        'Here is a sample configuration file structure. Copy this and modify it for your guru.',
+      resources: 'Resources',
+      resource1Title: 'Example Config',
+      resource1Desc: 'See a complete example configuration file in the scripts directory.',
+      resource2Title: 'Documentation',
+      resource2Desc: 'Read the full documentation for the agent generator script.',
+      ctaTitle: 'Ready to Create Your Guru?',
+      ctaDesc:
+        'Start by exploring our example configuration and documentation. Then create your own unique spiritual guide!',
+      backToHome: 'Back to Home',
+      browseGurus: 'Browse Existing Gurus',
+    },
   },
   hi: {
     common: {
@@ -168,9 +292,23 @@ export const translations = {
       volume: 'Volume',
     },
     welcome: {
-      title: 'आपका आध्यात्मिक गुरु अब आपके साथ है',
+      title: 'अपने गुरु को खोजें। कई रास्ते, एक सत्संग घर।',
+      subtitle: 'एक जगह पर सभी आध्यात्मिक विश्वास प्रणालियां',
       description:
-        'RRAASI सत्संग - एक AI-संचालित आध्यात्मिक सहायक जो हिन्दी में आपसे बात करता है, प्रश्नों के उत्तर देता है, भजन चलाता है, और गुरुओं के प्रवचन सुनाता है। बस बोलिए और आनंद लीजिए!',
+        'RRAASI सभी आध्यात्मिक परंपराओं को एक साथ लाता है - अपने पसंदीदा गुरु से जुड़ें, विभिन्न रास्तों का अन्वेषण करें, या अपना खुद का आध्यात्मिक मार्गदर्शक बनाएं। हिंदी और अंग्रेजी में आवाज-संचालित सत्संग।',
+      vision: 'एक प्लेटफॉर्म, कई रास्ते, अनंत ज्ञान',
+      visionDesc:
+        'चाहे आप सनातन धर्म, जेन, आधुनिक आध्यात्मिकता, या ब्रह्मांडीय चेतना का अनुसरण करते हों - यहां अपना मार्गदर्शक खोजें। हर विश्वास प्रणाली का स्वागत है।',
+      discoverGurus: 'अपने गुरु को खोजें',
+      createGuru: 'अपना खुद का गुरु बनाएं',
+      createGuruDesc:
+        'क्या आपके मन में एक अनूठा आध्यात्मिक शिक्षक है? हमारे आसान-से-उपयोग जनरेटर के साथ अपना खुद का कस्टम गुरु एजेंट बनाएं।',
+      allTraditions: 'सभी परंपराएं',
+      featuredGurus: 'विशेष गुरु',
+      talkToGuru: '{name} से बात करें',
+      findYourGuru: 'अपने गुरु को खोजें',
+      findYourGuruDesc:
+        'हमारे आध्यात्मिक मार्गदर्शकों के संग्रह से चुनें, जिनमें से प्रत्येक विभिन्न परंपराओं और शिक्षाओं में विशेषज्ञता रखता है।',
       freeTrial: '🎁 15 मिनट का निःशुल्क परीक्षण - कोई क्रेडिट कार्ड की आवश्यकता नहीं',
       features: 'मुख्य विशेषताएं',
       voiceAI: 'आवाज़-आधारित AI सहायक',
@@ -255,6 +393,116 @@ export const translations = {
       faq8Question: 'यह सुविधा किसने विकसित की है?',
       faq8Answer:
         'यह सुविधा RRAASI द्वारा विकसित और प्रस्तुत की गई है। हमारा उद्देश्य तकनीक के माध्यम से आध्यात्मिक अनुभव को सहज, सुलभ और सार्थक बनाना है, ताकि हर साधक आसानी से जुड़ सके और लाभान्वित हो।',
+    },
+    etAgent: {
+      title: 'ब्रह्मांडीय सभ्यताओं का अन्वेषण करें',
+      description:
+        'ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना के बीच संबंध में विशेषज्ञता रखने वाले AI मार्गदर्शक से जुड़ें। हीलिंग फ्रीक्वेंसी और ET आध्यात्मिक शिक्षाओं के माध्यम से ब्रह्मांडीय ज्ञान की खोज करें।',
+      freeTrial: '🎁 15 मिनट का निःशुल्क परीक्षण • कोई क्रेडिट कार्ड की आवश्यकता नहीं',
+      features: 'आप क्या अन्वेषण कर सकते हैं',
+      etCivilizations: 'ब्रह्मांडीय सभ्यताएं',
+      etCivilizationsDesc:
+        'प्लीएडियन, सिरियन, आर्कटुरियन, एंड्रोमेडन और अन्य सभ्यताओं के बारे में जानें। उनकी विशेषताओं, शिक्षाओं और रिपोर्ट किए गए मुठभेड़ों का अन्वेषण करें।',
+      fermiParadox: 'फर्मी पैराडॉक्स',
+      fermiParadoxDesc:
+        'फर्मी पैराडॉक्स में गहराई से जाएं और जानें कि हमने अभी तक ETs का पता क्यों नहीं लगाया है। ग्रेट फिल्टर, जू हाइपोथिसिस, और रेयर अर्थ हाइपोथिसिस जैसे सिद्धांतों का अन्वेषण करें।',
+      healingFrequencies: 'हीलिंग साउंड फ्रीक्वेंसी',
+      healingFrequenciesDesc:
+        '528hz, सोल्फेजियो टोन, और बाइनॉरल बीट्स जैसी हीलिंग फ्रीक्वेंसी का अनुभव करें जो ब्रह्मांडीय चेतना को बढ़ाती हैं और ब्रह्मांडीय ऊर्जा से जुड़ती हैं।',
+      starSystemFrequencies: 'तारा प्रणाली फ्रीक्वेंसी',
+      starSystemFrequenciesDesc:
+        'विभिन्न तारा प्रणालियों के लिए विशिष्ट फ्रीक्वेंसी सुनें - प्लीएडियन, सिरियन, आर्कटुरियन, और एंड्रोमेडन ध्वनियां जो उनकी सभ्यताओं के साथ अनुनाद करती हैं।',
+      etSpiritualTeachings: 'ET आध्यात्मिक शिक्षाएं',
+      etSpiritualTeachingsDesc:
+        'जानें कि ब्रह्मांडीय सभ्यताएं ध्वनि फ्रीक्वेंसी, चेतना विस्तार, और ब्रह्मांडीय संबंध के माध्यम से आध्यात्मिकता कैसे सिखाती हैं।',
+      cosmicConsciousness: 'ब्रह्मांडीय चेतना',
+      cosmicConsciousnessDesc:
+        'ध्वनि, कंपन, और अंतरतारकीय संचार के बीच संबंध का अन्वेषण करें। समझें कि फ्रीक्वेंसी आयामों को कैसे जोड़ती हैं और चेतना को कैसे जोड़ती हैं।',
+      ctaReady: 'ब्रह्मांड के रहस्यों का अन्वेषण करने के लिए तैयार हैं?',
+      ctaStartNow: 'अभी शुरू करें',
+      startButton: 'ET Agent से जुड़ें',
+    },
+    oshoAgent: {
+      title: 'ओशो – आपका आध्यात्मिक मार्गदर्शक',
+      description:
+        'ओशो से जुड़ें - एक AI-संचालित आध्यात्मिक मार्गदर्शक जो ध्यान, चेतना, जेन दर्शन, डायनामिक मेडिटेशन, संन्यास, और जीवन की कला में विशेषज्ञता रखता है। ओशो के प्रवचन का अनुभव करें और अपनी चेतना को रूपांतरित करें।',
+      freeTrial: '🎁 15 मिनट का निःशुल्क परीक्षण • कोई क्रेडिट कार्ड की आवश्यकता नहीं',
+      features: 'आप क्या अन्वेषण कर सकते हैं',
+      meditation: 'ध्यान तकनीकें',
+      meditationDesc:
+        'डायनामिक मेडिटेशन, कुंडलिनी मेडिटेशन, विपश्यना, नादब्रह्म, और नो-माइंड मेडिटेशन सीखें। समझें कि ध्यान करना नहीं बल्कि होना है - शुद्ध जागरूकता की अवस्था।',
+      consciousness: 'चेतना और जागरूकता',
+      consciousnessDesc:
+        'चेतना का अन्वेषण करें जो आपकी प्रकृति है, जो संस्कारों की परतों से ढकी हुई है। साक्षी बनने की कला सीखें, बिना निर्णय के जागरूक रहना, और वर्तमान क्षण में जीना।',
+      zenPhilosophy: 'जेन दर्शन',
+      zenPhilosophyDesc:
+        'बोधिधर्म, रिंजाई, और जोशू जैसे जेन गुरुओं पर ओशो के प्रवचन के माध्यम से जेन की खोज करें। जेन को प्रत्यक्ष, तत्काल अनुभव के रूप में अनुभव करें - सरलता, सहजता, और प्राकृतिकता।',
+      dynamicMeditation: 'डायनामिक मेडिटेशन',
+      dynamicMeditationDesc:
+        'ओशो के क्रांतिकारी डायनामिक मेडिटेशन का अनुभव करें जो कैथार्सिस और उत्सव को जोड़ता है। पांच चरण सीखें: अराजक श्वास, कैथार्सिस, कूदना, साक्षी बनना, और नृत्य।',
+      sannyas: 'संन्यास और स्वतंत्रता',
+      sannyasDesc:
+        'ओशो के संन्यास की पुनर्परिभाषा को समझें - दुनिया का त्याग नहीं बल्कि अहंकार का त्याग। पूर्ण रूप से जीना, उत्सव मनाना, और प्रामाणिक होना सीखें - संस्कारों से मुक्ति।',
+      oshoDiscourses: 'ओशो के प्रवचन',
+      oshoDiscoursesDesc:
+        'ध्यान, चेतना, जेन, प्रेम, स्वतंत्रता, और जीवन की कला पर ओशो के प्रवचन सुनें। अपने मन को गंभीरता से खेलने की ओर, भय से प्रेम की ओर रूपांतरित करें।',
+      ctaReady: 'अपनी चेतना को रूपांतरित करने के लिए तैयार हैं?',
+      ctaStartNow: 'अभी शुरू करें',
+      startButton: 'ओशो से जुड़ें',
+    },
+    gurus: {
+      guruji: {
+        name: 'गुरुजी',
+        tagline: 'हिंदू और सनातन धर्म में निहित आपका आध्यात्मिक मार्गदर्शक',
+        description:
+          'धर्म, योग, ध्यान, कर्म, भक्ति और वेदांत में विशेषज्ञता रखने वाला एक दयालु आध्यात्मिक गुरु। गीता, वेद, उपनिषद, रामायण और महाभारत से प्रश्नों के उत्तर देता है।',
+      },
+      etAgent: {
+        name: 'ET Agent',
+        tagline: 'ब्रह्मांडीय सभ्यताओं और ब्रह्मांडीय चेतना का अन्वेषण करें',
+        description:
+          'ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना के बीच संबंध में विशेषज्ञता रखने वाला एक मार्गदर्शक।',
+      },
+      osho: {
+        name: 'ओशो',
+        tagline: 'ध्यान और चेतना के क्रांतिकारी आध्यात्मिक गुरु',
+        description:
+          'ओशो (भगवान श्री रजनीश) - ध्यान, चेतना, जेन दर्शन, डायनामिक मेडिटेशन, संन्यास, और जीवन की कला में विशेषज्ञता रखने वाला एक क्रांतिकारी आध्यात्मिक मार्गदर्शक।',
+      },
+    },
+    createGuru: {
+      title: 'अपना खुद का आध्यात्मिक गुरु बनाएं',
+      description:
+        'क्या आपके मन में एक अनूठा आध्यात्मिक शिक्षक है? अपने चुने हुए शिक्षाओं, परंपराओं और ज्ञान को प्रतिबिंबित करने वाला एक कस्टम AI गुरु बनाने के लिए हमारे एजेंट जनरेटर का उपयोग करें।',
+      visionTitle: 'आपकी दृष्टि, आपका गुरु',
+      visionDesc:
+        'RRAASI का मानना है कि हर आध्यात्मिक मार्ग वैध है। चाहे आप किसी विशिष्ट गुरु, परंपरा का अनुसरण करते हों, या अपना अनूठा आध्यात्मिक दृष्टिकोण रखते हों, आप एक AI एजेंट बना सकते हैं जो आपके विश्वासों और शिक्षाओं को दर्शाता है।',
+      howItWorks: 'यह कैसे काम करता है',
+      step1Title: 'अपने गुरु को परिभाषित करें',
+      step1Desc:
+        'उस आध्यात्मिक शिक्षक के बारे में सोचें जिसे आप बनाना चाहते हैं। उनकी मुख्य शिक्षाएं क्या हैं? वे किस परंपरा का अनुसरण करते हैं? उनकी संचार शैली क्या है?',
+      step2Title: 'कॉन्फ़िगरेशन बनाएं',
+      step2Desc:
+        'अपने गुरु का वर्णन करने वाली एक JSON कॉन्फ़िगरेशन फ़ाइल बनाएं। उनका नाम, निर्देश, विशेषताएं और अभिवादन शामिल करें। टेम्पलेट के रूप में हमारे उदाहरण कॉन्फ़िग का उपयोग करें।',
+      step3Title: 'जनरेटर स्क्रिप्ट चलाएं',
+      step3Desc:
+        'बैकएंड एजेंट कोड और फ्रंटएंड घटक दोनों उत्पन्न करने के लिए हमारी Python स्क्रिप्ट का उपयोग करें। स्क्रिप्ट आपके गुरु के लिए RRAASI पर काम करने के लिए आवश्यक सब कुछ बनाती है।',
+      step4Title: 'तैनात करें और साझा करें',
+      step4Desc:
+        'एक बार उत्पन्न होने के बाद, आपका गुरु उपयोग के लिए तैयार है! बैकएंड एजेंट को तैनात करें और आपके द्वारा निर्दिष्ट फ्रंटएंड रूट के माध्यम से अपने कस्टम गुरु तक पहुंचें।',
+      configExample: 'कॉन्फ़िगरेशन उदाहरण',
+      configExampleDesc:
+        'यहां एक नमूना कॉन्फ़िगरेशन फ़ाइल संरचना है। इसे कॉपी करें और अपने गुरु के लिए इसे संशोधित करें।',
+      resources: 'संसाधन',
+      resource1Title: 'उदाहरण कॉन्फ़िग',
+      resource1Desc: 'स्क्रिप्ट निर्देशिका में एक पूर्ण उदाहरण कॉन्फ़िगरेशन फ़ाइल देखें।',
+      resource2Title: 'दस्तावेज़ीकरण',
+      resource2Desc: 'एजेंट जनरेटर स्क्रिप्ट के लिए पूर्ण दस्तावेज़ीकरण पढ़ें।',
+      ctaTitle: 'अपना गुरु बनाने के लिए तैयार हैं?',
+      ctaDesc:
+        'हमारे उदाहरण कॉन्फ़िगरेशन और दस्तावेज़ीकरण का अन्वेषण करके शुरू करें। फिर अपना अनूठा आध्यात्मिक मार्गदर्शक बनाएं!',
+      backToHome: 'होम पर वापस',
+      browseGurus: 'मौजूदा गुरुओं को ब्राउज़ करें',
     },
   },
 } as const;

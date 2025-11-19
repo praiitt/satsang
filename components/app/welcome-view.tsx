@@ -2,6 +2,7 @@
 
 /* eslint-disable prettier/prettier */
 import { HeroVideoPlayer } from '@/components/app/hero-video-player';
+import { GuruDirectoryView } from '@/components/app/guru-directory-view';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 
@@ -63,9 +64,26 @@ export const WelcomeView = ({
         <h1 className="text-foreground mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
           {t('welcome.title')}
         </h1>
+        {t('welcome.subtitle') && (
+          <p className="text-muted-foreground mx-auto mt-2 max-w-2xl text-base font-medium sm:text-lg">
+            {t('welcome.subtitle')}
+          </p>
+        )}
         <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-base leading-7 sm:text-lg md:text-xl">
           {t('welcome.description')}
         </p>
+
+        {/* Vision Statement */}
+        {t('welcome.vision') && (
+          <div className="bg-primary/10 border-primary/20 mx-auto mt-6 max-w-3xl rounded-xl border p-6 text-center">
+            <h2 className="text-foreground mb-2 text-xl font-bold sm:text-2xl">
+              {t('welcome.vision')}
+            </h2>
+            <p className="text-muted-foreground text-sm leading-6 sm:text-base">
+              {t('welcome.visionDesc')}
+            </p>
+          </div>
+        )}
 
         {/* Product Description Video - Full Width */}
         <VideoSection />
@@ -75,14 +93,35 @@ export const WelcomeView = ({
           <Button
             variant="primary"
             size="lg"
-            onClick={onStartCall}
+            onClick={() => {
+              // Scroll to guru directory
+              const element = document.getElementById('guru-directory');
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              } else {
+                onStartCall();
+              }
+            }}
             className="h-14 w-full text-lg font-semibold shadow-lg sm:w-auto sm:min-w-[240px]"
+          >
+            {t('welcome.discoverGurus')}
+          </Button>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={onStartCall}
+            className="h-14 w-full text-lg font-semibold sm:w-auto sm:min-w-[240px]"
           >
             {startButtonText}
           </Button>
         </div>
         <p className="text-muted-foreground mt-3 text-sm">{t('welcome.freeTrial')}</p>
       </section>
+
+      {/* Guru Directory Section */}
+      <div id="guru-directory">
+        <GuruDirectoryView />
+      </div>
 
       {/* Key Features Section */}
       <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-16">
