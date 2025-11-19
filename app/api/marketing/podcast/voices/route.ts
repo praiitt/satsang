@@ -65,6 +65,7 @@ function httpRequest<T = any>(method: 'GET' | 'POST', path: string): Promise<T> 
 }
 
 export async function GET(request: NextRequest) {
+  void request;
   if (!HEYGEN_API_KEY) {
     console.error('[voices] HEYGEN_API_KEY not configured');
     return NextResponse.json(

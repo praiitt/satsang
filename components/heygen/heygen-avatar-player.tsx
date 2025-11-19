@@ -59,7 +59,7 @@ export function HeygenAvatarPlayer({
         });
         roomRef.current = room;
 
-        room.on(RoomEvent.TrackSubscribed, (_track, publication, participant) => {
+        room.on(RoomEvent.TrackSubscribed, (_track, publication) => {
           const track = publication.track;
           if (!track) return;
           if (track.kind === Track.Kind.Video && videoRef.current) {
@@ -75,7 +75,7 @@ export function HeygenAvatarPlayer({
         });
 
         await room.connect(sessionInfo.url, sessionInfo.access_token);
-      } catch (_e) {
+      } catch {
         // swallow for now; UI remains voice-only
       } finally {
         if (!cancelled) setConnecting(false);

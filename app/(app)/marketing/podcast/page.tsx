@@ -347,7 +347,6 @@ export default function MarketingPodcastPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setStitchedVideoUrl(data.outputUrl);
         alert(
           `✅ Videos stitched successfully! ${data.videoCount} videos combined.\n\nOutput: ${data.outputPath}`
         );

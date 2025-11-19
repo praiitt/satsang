@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
 
     return nextResponse;
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('[marketing-podcast] POST proxy error', error);
     return NextResponse.json(
       { error: 'Podcast server unavailable' },

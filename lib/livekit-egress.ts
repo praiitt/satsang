@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { EgressClient } from 'livekit-server-sdk';
 
 function required(name: string): string {
@@ -30,7 +28,7 @@ export function getGcpUploadConfig() {
       credsJson = Buffer.from(credentials, 'base64').toString('utf8');
     }
     JSON.parse(credsJson);
-  } catch (_e) {
+  } catch {
     throw new Error('LIVEKIT_EGRESS_GCP_CREDENTIALS is not valid JSON or base64-encoded JSON');
   }
 

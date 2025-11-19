@@ -36,7 +36,6 @@ export async function POST(request: NextRequest) {
 
     return nextResponse;
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('[video-stitch] POST proxy error', error);
     return NextResponse.json(
       { error: 'Video stitching server unavailable' },

@@ -1,7 +1,6 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import { GURUS, type GuruTradition, getAllTraditions } from '@/lib/gurus';
@@ -9,7 +8,6 @@ import { GuruCard } from './guru-card';
 
 export function GuruDirectoryView() {
   const { t } = useLanguage();
-  const router = useRouter();
   const [selectedTradition, setSelectedTradition] = useState<GuruTradition | 'All'>('All');
 
   const traditions = useMemo(() => ['All' as const, ...getAllTraditions()], []);

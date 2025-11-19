@@ -49,7 +49,6 @@ export async function PATCH(
 
     return nextResponse;
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('[marketing-podcast] PATCH proxy error', error);
     return NextResponse.json(
       { error: 'Podcast server unavailable' },

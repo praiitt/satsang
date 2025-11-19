@@ -1,7 +1,6 @@
 'use client';
 
 import { Globe } from '@phosphor-icons/react/dist/ssr';
-import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 
 export function LanguageSelector() {

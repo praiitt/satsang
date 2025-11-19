@@ -48,7 +48,6 @@ export async function getRecaptchaVerifier(
   // Import RecaptchaVerifier from firebase/auth
   const authModule = await import('firebase/auth');
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const RecaptchaVerifier = (authModule as { RecaptchaVerifier?: unknown }).RecaptchaVerifier;
 
   if (!RecaptchaVerifier) {
@@ -64,7 +63,6 @@ export async function getRecaptchaVerifier(
     document.body.appendChild(containerElement);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new (RecaptchaVerifier as new (...args: unknown[]) => unknown)(auth, containerElement, {
     size: 'invisible',
     callback: () => {

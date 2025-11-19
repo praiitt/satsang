@@ -46,7 +46,6 @@ export async function POST(
 
     return nextResponse;
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('[marketing-podcast] POST stitch proxy error', error);
     return NextResponse.json(
       { error: 'Podcast server unavailable' },

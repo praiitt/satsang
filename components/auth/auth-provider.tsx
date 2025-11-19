@@ -1,7 +1,6 @@
 'use client';
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-// eslint-disable-next-line import/named
 import type { ConfirmationResult } from 'firebase/auth';
 // eslint-disable-next-line import/named
 import { signInWithPhoneNumber } from 'firebase/auth';
@@ -23,7 +22,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [recaptchaVerifier, setRecaptchaVerifier] = useState<unknown>(null);
 
   // Initialize reCAPTCHA verifier

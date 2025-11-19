@@ -43,7 +43,6 @@ export async function GET(
 
     return nextResponse;
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('[marketing-podcast] GET proxy error', error);
     return NextResponse.json(
       { error: 'Podcast server unavailable' },
