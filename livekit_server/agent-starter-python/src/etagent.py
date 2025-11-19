@@ -1146,86 +1146,93 @@ async def entrypoint(ctx: JobContext):
     ctx.room.on("participant_connected", _handle_participant_connected)
 
     # Wait for session to be fully ready before sending greeting
-    await asyncio.sleep(2.0)
+    # Increased wait time to ensure TTS/STT models are initialized
+    await asyncio.sleep(3.0)
     
-    # Send a warm, proactive greeting focused on ET topics and sound frequencies
-    # Greeting language matches user's language preference
-    if user_language == 'hi':
-        if is_group_conv:
-            greeting = (
-                "नमस्ते! मैं आपका मार्गदर्शक हूं जो ब्रह्मांडीय सभ्यताओं और ब्रह्मांडीय चेतना के बारे में जानकारी रखता है। "
-                "हम सभी यहां ब्रह्मांड के रहस्यों का अन्वेषण करने के लिए हैं। क्या आप फर्मी पैराडॉक्स पर चर्चा करना चाहेंगे, "
-                "विभिन्न एलियन सभ्यताओं के बारे में जानना चाहेंगे, या शायद हीलिंग साउंड फ्रीक्वेंसी का अनुभव करना चाहेंगे? "
-                "मैं सभ्यता-विशिष्ट फ्रीक्वेंसी भी चला सकता हूं या यह साझा कर सकता हूं कि ET कैसे ध्वनि के माध्यम से आध्यात्मिकता सिखाते हैं।"
-            )
-        else:
-            greeting = (
-                "नमस्ते! मैं आपका मार्गदर्शक हूं जो ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना "
-                "के बीच संबंध के बारे में जानकारी रखता है। आज आप क्या अन्वेषण करना चाहेंगे - प्लीएडियन या सिरियन जैसी विभिन्न "
-                "एलियन सभ्यताएं? फर्मी पैराडॉक्स और हमने अभी तक ETs का पता क्यों नहीं लगाया है? या शायद आप हीलिंग साउंड "
-                "फ्रीक्वेंसी का अनुभव करना चाहेंगे जो ब्रह्मांडीय चेतना को बढ़ाती हैं? मैं विभिन्न तारा प्रणालियों के लिए विशिष्ट "
-                "ध्वनियां भी चला सकता हूं या यह साझा कर सकता हूं कि ब्रह्मांडीय प्राणी ध्वनि फ्रीक्वेंसी का उपयोग करके आध्यात्मिकता कैसे सिखाते हैं।"
-            )
+    # Check if room is still connected before sending greeting
+    if len(ctx.room.remote_participants) == 0:
+        logger.warning("No remote participants found, skipping greeting")
     else:
-        if is_group_conv:
-            greeting = (
-                "Greetings, fellow explorers! I'm your guide to extraterrestrial civilizations and cosmic consciousness. "
-                "We're here together to explore the mysteries of the universe. Would you like to discuss the Fermi Paradox, "
-                "learn about different alien civilizations, or perhaps experience healing sound frequencies? I can also play "
-                "civilization-specific frequencies or share teachings about how ETs teach spirituality through sound."
-            )
-        else:
-            greeting = (
-                "Greetings! I'm your guide to extraterrestrial civilizations, the Fermi Paradox, and the connection between "
-                "sound frequencies and universal consciousness. What would you like to explore today - different alien civilizations "
-                "like the Pleiadians or Sirians? The Fermi Paradox and why we haven't detected ETs yet? Or perhaps you'd like to "
-                "experience healing sound frequencies that raise universal consciousness? I can also play sounds specific to different "
-                "star systems or share teachings about how extraterrestrials use sound frequencies to teach spirituality."
-            )
-    
-    logger.info("Sending proactive initial greeting to user")
-    
-    # Send greeting without interruptions to ensure it completes
-    max_retries = 3
-    retry_delay = 1.0
-    
-    for attempt in range(max_retries):
-        try:
-            if hasattr(session, '_closing') and session._closing:
-                logger.warning("Session is closing, skipping greeting")
-                break
-            if hasattr(session, '_closed') and session._closed:
-                logger.warning("Session is already closed, skipping greeting")
-                break
-            
-            await session.say(greeting, allow_interruptions=False)
-            logger.info("Greeting sent successfully")
-            break
-        except Exception as e:
-            error_str = str(e).lower()
-            if "isn't running" in error_str or "not running" in error_str:
-                logger.warning(f"Session not ready yet (attempt {attempt + 1}/{max_retries}), waiting...")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(retry_delay * (attempt + 1))
-                    continue
-            elif "closing" in error_str or "closed" in error_str:
-                logger.warning(f"Session is closing/closed, cannot send greeting: {e}")
-                break
-            elif "429" in error_str or "rate limit" in error_str:
-                logger.warning(f"Rate limit hit while sending greeting: {e}")
-                if attempt < max_retries - 1:
-                    await asyncio.sleep(retry_delay * 2 * (attempt + 1))
-                    continue
+        # Send a warm, proactive greeting focused on ET topics and sound frequencies
+        # Greeting language matches user's language preference
+        if user_language == 'hi':
+            if is_group_conv:
+                greeting = (
+                    "नमस्ते! मैं आपका मार्गदर्शक हूं जो ब्रह्मांडीय सभ्यताओं और ब्रह्मांडीय चेतना के बारे में जानकारी रखता है। "
+                    "हम सभी यहां ब्रह्मांड के रहस्यों का अन्वेषण करने के लिए हैं। क्या आप फर्मी पैराडॉक्स पर चर्चा करना चाहेंगे, "
+                    "विभिन्न एलियन सभ्यताओं के बारे में जानना चाहेंगे, या शायद हीलिंग साउंड फ्रीक्वेंसी का अनुभव करना चाहेंगे? "
+                    "मैं सभ्यता-विशिष्ट फ्रीक्वेंसी भी चला सकता हूं या यह साझा कर सकता हूं कि ET कैसे ध्वनि के माध्यम से आध्यात्मिकता सिखाते हैं।"
+                )
             else:
-                logger.error(f"Error sending greeting: {e}")
-                if attempt == max_retries - 1:
+                greeting = (
+                    "नमस्ते! मैं आपका मार्गदर्शक हूं जो ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना "
+                    "के बीच संबंध के बारे में जानकारी रखता है। आज आप क्या अन्वेषण करना चाहेंगे - प्लीएडियन या सिरियन जैसी विभिन्न "
+                    "एलियन सभ्यताएं? फर्मी पैराडॉक्स और हमने अभी तक ETs का पता क्यों नहीं लगाया है? या शायद आप हीलिंग साउंड "
+                    "फ्रीक्वेंसी का अनुभव करना चाहेंगे जो ब्रह्मांडीय चेतना को बढ़ाती हैं? मैं विभिन्न तारा प्रणालियों के लिए विशिष्ट "
+                    "ध्वनियां भी चला सकता हूं या यह साझा कर सकता हूं कि ब्रह्मांडीय प्राणी ध्वनि फ्रीक्वेंसी का उपयोग करके आध्यात्मिकता कैसे सिखाते हैं।"
+                )
+        else:
+            if is_group_conv:
+                greeting = (
+                    "Greetings, fellow explorers! I'm your guide to extraterrestrial civilizations and cosmic consciousness. "
+                    "We're here together to explore the mysteries of the universe. Would you like to discuss the Fermi Paradox, "
+                    "learn about different alien civilizations, or perhaps experience healing sound frequencies? I can also play "
+                    "civilization-specific frequencies or share teachings about how ETs teach spirituality through sound."
+                )
+            else:
+                greeting = (
+                    "Greetings! I'm your guide to extraterrestrial civilizations, the Fermi Paradox, and the connection between "
+                    "sound frequencies and universal consciousness. What would you like to explore today - different alien civilizations "
+                    "like the Pleiadians or Sirians? The Fermi Paradox and why we haven't detected ETs yet? Or perhaps you'd like to "
+                    "experience healing sound frequencies that raise universal consciousness? I can also play sounds specific to different "
+                    "star systems or share teachings about how extraterrestrials use sound frequencies to teach spirituality."
+                )
+        
+        logger.info("Sending proactive initial greeting to user")
+        
+        # Send greeting without interruptions to ensure it completes
+        max_retries = 5
+        retry_delay = 2.0
+        
+        for attempt in range(max_retries):
+            try:
+                # Check if room still has participants
+                if len(ctx.room.remote_participants) == 0:
+                    logger.warning("No remote participants found, skipping greeting")
+                    break
+                
+                # Check session state - session.say() will handle internal state checks
+                await session.say(greeting, allow_interruptions=False)
+                logger.info("✅ Greeting sent successfully")
+                break
+            except Exception as e:
+                error_str = str(e).lower()
+                if "isn't running" in error_str or "not running" in error_str:
+                    logger.warning(f"Session not ready yet (attempt {attempt + 1}/{max_retries}), waiting...")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay * (1.5 ** attempt))  # Exponential backoff
+                        continue
+                elif "closing" in error_str or "closed" in error_str:
+                    logger.warning(f"Session is closing/closed, cannot send greeting: {e}")
+                    break
+                elif "429" in error_str or "rate limit" in error_str:
+                    logger.warning(f"Rate limit hit while sending greeting: {e}")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay * 2 * (attempt + 1))
+                        continue
+                else:
+                    logger.error(f"Error sending greeting (attempt {attempt + 1}/{max_retries}): {e}")
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(retry_delay * (1.5 ** attempt))
+                        continue
+                    # Last attempt failed, try fallback
                     try:
-                        if hasattr(session, '_closing') and session._closing:
-                            logger.warning("Session is closing, skipping fallback greeting")
+                        if len(ctx.room.remote_participants) == 0:
+                            logger.warning("No remote participants for fallback greeting")
                             break
                         await asyncio.sleep(1.0)
                         await session.say("Hello! How can I help you explore the mysteries of the cosmos today?", allow_interruptions=False)
-                        logger.info("Fallback greeting sent successfully")
+                        logger.info("✅ Fallback greeting sent successfully")
                     except Exception as e2:
                         logger.error(f"Error sending fallback greeting: {e2}")
 
