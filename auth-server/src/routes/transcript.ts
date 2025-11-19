@@ -4,7 +4,7 @@ import { promisify } from 'util';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
 
 const execAsync = promisify(exec);
 const router = Router();
@@ -64,7 +64,7 @@ const TRANSCRIBE_SCRIPT = getTranscribeScriptPath();
  *     error?: string
  *   }
  */
-router.post('/audio', requireAuth, async (req, res) => {
+router.post('/audio', requireAuth, async (req: AuthedRequest, res) => {
   try {
     const { audio_url, chunk_duration = 300, language = 'hi', async: asyncMode = false } = req.body;
 
