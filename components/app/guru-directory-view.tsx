@@ -93,9 +93,9 @@ export function GuruDirectoryView({ onGuruSelect }: GuruDirectoryViewProps) {
       {/* Empty State */}
       {filteredGurus.length === 0 && (
         <div className="text-muted-foreground py-12 text-center">
-          <p className="text-lg">No gurus found for this tradition.</p>
+          <p className="text-lg">{t('welcome.noGurusFound')}</p>
           <Button variant="link" onClick={() => setSelectedTradition('All')} className="mt-4">
-            Show all gurus
+            {t('welcome.showAllGurus')}
           </Button>
         </div>
       )}

@@ -548,12 +548,43 @@ async def entrypoint(ctx: JobContext):
         if ctx.proc.userdata.get("vad") is None:
             logger.info("VAD not preloaded - will use default VAD behavior")
         
-        tts_voice_id = os.getenv("TTS_VOICE_ID")
-        if not tts_voice_id:
-            logger.warning("TTS_VOICE_ID not set in .env.local - using default voice")
-            tts_voice_id = "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
-        else:
-            logger.info(f"Using TTS_VOICE_ID from .env.local: {tts_voice_id}")
+        # Text-to-speech voice selection
+        # We support separate voices per language for the Osho agent:
+        #   - OSHO_TTS_VOICE_HI : Hindi voice ID
+        #   - OSHO_TTS_VOICE_EN : English voice ID
+        # Fallbacks (shared/global):
+        #   - TTS_VOICE_HI, TTS_VOICE_EN
+        #   - legacy TTS_VOICE_ID
+        def _select_tts_voice_for_osho(lang: str) -> str:
+            if lang == "hi":
+                specific = os.getenv("OSHO_TTS_VOICE_HI")
+                global_lang = os.getenv("TTS_VOICE_HI")
+            else:
+                specific = os.getenv("OSHO_TTS_VOICE_EN")
+                global_lang = os.getenv("TTS_VOICE_EN")
+            
+            if specific:
+                logger.info(f"Using Osho TTS voice for language '{lang}' from env: {specific}")
+                return specific
+            if global_lang:
+                logger.info(f"Using global TTS voice for language '{lang}': {global_lang}")
+                return global_lang
+            
+            legacy = os.getenv("TTS_VOICE_ID")
+            if legacy:
+                logger.info(
+                    f"Using legacy TTS_VOICE_ID for Osho agent (language '{lang}'): {legacy}"
+                )
+                return legacy
+            
+            logger.warning(
+                "No Osho-specific TTS voice configured "
+                "(OSHO_TTS_VOICE_HI/OSHO_TTS_VOICE_EN or TTS_VOICE_HI/TTS_VOICE_EN). "
+                "Using hardcoded fallback Cartesia voice."
+            )
+            return "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
+
+        tts_voice_id = _select_tts_voice_for_osho(user_language)
         
         session = AgentSession(
             stt=stt,

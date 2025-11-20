@@ -11,6 +11,7 @@ export const translations = {
       freeTrial: 'Free Trial',
       remaining: 'remaining',
       redirecting: 'Redirecting to login...',
+      siteTitle: 'RRAASI Satsang',
     },
     auth: {
       welcome: 'Welcome to Satsang',
@@ -38,6 +39,12 @@ export const translations = {
       mute: 'Mute',
       unmute: 'Unmute',
       volume: 'Volume',
+      openChat: 'Open chat',
+      closeChat: 'Close chat',
+      endConversation: 'End conversation',
+      agentListening: 'Agent is listening, ask it a question',
+      agentSleeping: 'Guruji is in rest mode',
+      agentSleepingDesc: 'Bhajan or vani is playing — will start listening again when finished or paused.',
     },
     welcome: {
       title: 'Find Your Guru. Many Paths, One Satsang Home.',
@@ -53,6 +60,8 @@ export const translations = {
         'Have a unique spiritual teacher in mind? Create your own custom guru agent with our easy-to-use generator.',
       allTraditions: 'All Traditions',
       featuredGurus: 'Featured Gurus',
+      noGurusFound: 'No gurus found for this tradition.',
+      showAllGurus: 'Show all gurus',
       talkToGuru: 'Talk to {name}',
       findYourGuru: 'Find Your Guru',
       findYourGuruDesc:
@@ -262,6 +271,7 @@ export const translations = {
       freeTrial: 'Free Trial',
       remaining: 'शेष',
       redirecting: 'लॉगिन पर रीडायरेक्ट हो रहा है...',
+      siteTitle: 'RRAASI सत्संग',
     },
     auth: {
       welcome: 'सत्संग में आपका स्वागत है',
@@ -290,6 +300,12 @@ export const translations = {
       mute: 'Mute',
       unmute: 'Unmute',
       volume: 'Volume',
+      openChat: '💬 चैट खोलें',
+      closeChat: 'चैट बंद करें',
+      endConversation: '❌ बातचीत समाप्त करें',
+      agentListening: 'एजेंट सुन रहा है, इसे एक प्रश्न पूछें',
+      agentSleeping: 'गुरुजी विश्राम मोड में हैं',
+      agentSleepingDesc: 'भजन या वाणी चल रही है — समाप्त या pausa होने पर फिर से सुनना शुरू करेंगे।',
     },
     welcome: {
       title: 'अपने गुरु को खोजें। कई रास्ते, एक सत्संग घर।',
@@ -305,6 +321,8 @@ export const translations = {
         'क्या आपके मन में एक अनूठा आध्यात्मिक शिक्षक है? हमारे आसान-से-उपयोग जनरेटर के साथ अपना खुद का कस्टम गुरु एजेंट बनाएं।',
       allTraditions: 'सभी परंपराएं',
       featuredGurus: 'विशेष गुरु',
+      noGurusFound: 'इस परंपरा के लिए कोई गुरु नहीं मिले।',
+      showAllGurus: 'सभी गुरु दिखाएं',
       talkToGuru: '{name} से बात करें',
       findYourGuru: 'अपने गुरु को खोजें',
       findYourGuruDesc:

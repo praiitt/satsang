@@ -13,7 +13,7 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
           <span className="text-xl">🕉️</span>
-          <span className="text-foreground text-base sm:text-lg">RRAASI सत्संग</span>
+          <span className="text-foreground text-base sm:text-lg">{t('common.siteTitle')}</span>
         </Link>
         <nav className="flex items-center gap-2 sm:gap-4">
           <Link

@@ -6,6 +6,7 @@ import { useChat, useRoomContext } from '@livekit/components-react';
 import { Button } from '@/components/livekit/button';
 import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { type DailySatsangConfig, HostPanel } from './host-panel';
+import { useLanguage } from '@/contexts/language-context';
 
 type PhaseName = 'intro' | 'bhajan' | 'pravachan' | 'qa' | 'closing';
 
@@ -74,6 +75,7 @@ export const DailySatsangOrchestrator = {
     room: Room | null;
     onStart?: () => void;
   }) {
+    const { t } = useLanguage();
     const [config, setConfig] = useState<DailySatsangConfig>({ topic: 'भक्ति और आध्यात्मिकता' });
     const { pause } = useYouTubePlayer();
     const { send } = useChat();
@@ -476,7 +478,7 @@ export const DailySatsangOrchestrator = {
             onClick={onLeave}
             className="mx-auto block w-full max-w-2xl"
           >
-            ❌ बातचीत समाप्त करें
+            {t('session.endConversation')}
           </Button>
         </div>
       </>

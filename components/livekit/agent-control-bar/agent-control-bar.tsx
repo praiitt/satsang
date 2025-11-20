@@ -16,6 +16,7 @@ import { ChatInput } from './chat-input';
 import { UseInputControlsProps, useInputControls } from './hooks/use-input-controls';
 import { usePublishPermissions } from './hooks/use-publish-permissions';
 import { TrackSelector } from './track-selector';
+import { useLanguage } from '@/contexts/language-context';
 
 export interface ControlBarControls {
   leave?: boolean;
@@ -50,6 +51,7 @@ export function AgentControlBar({
   const publishPermissions = usePublishPermissions();
   const { isSessionActive, endSession } = useSession();
   const { sleep, wake, agentIsSleeping } = useAgentControl();
+  const { t } = useLanguage();
 
   const {
     micTrackRef,
@@ -128,10 +130,10 @@ export function AgentControlBar({
             </div>
             <div className="flex flex-col">
               <span className="font-semibold text-[11px] tracking-wide">
-                गुरुजी विश्राम मोड में हैं
+                {t('session.agentSleeping')}
               </span>
               <span className="text-[10px] opacity-80">
-                भजन या वाणी चल रही है — समाप्त या pausa होने पर फिर से सुनना शुरू करेंगे।
+                {t('session.agentSleepingDesc')}
               </span>
             </div>
           </div>
@@ -146,7 +148,7 @@ export function AgentControlBar({
             aria-label={chatOpen ? 'Close chat' : 'Open chat'}
           >
             <ChatTextIcon weight="bold" className="h-5 w-5" />
-            <span>{chatOpen ? 'चैट बंद करें' : '💬 चैट खोलें'}</span>
+            <span>{chatOpen ? t('session.closeChat') : t('session.openChat')}</span>
           </Button>
         )}
 
@@ -228,7 +230,7 @@ export function AgentControlBar({
             aria-label="End call"
           >
             <PhoneDisconnectIcon weight="bold" className="h-6 w-6" />
-            <span className="whitespace-nowrap">❌ बातचीत समाप्त करें</span>
+            <span className="whitespace-nowrap">{t('session.endConversation')}</span>
           </Button>
         )}
       </div>

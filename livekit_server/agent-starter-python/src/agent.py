@@ -525,88 +525,134 @@ async def entrypoint(ctx: JobContext):
     if stt_model == "sarvam" and not sarvam_key:
         logger.warning("⚠️  SARVAM_API_KEY is missing but STT_MODEL=sarvam. Will fall back to AssemblyAI.")
     
+    # Detect language preference from participant metadata
+    # Default to Hindi ('hi') for Guruji agent
+    user_language = "hi"
+    try:
+        # Give participants a moment to connect so metadata is available
+        await asyncio.sleep(1.0)
+        for participant in ctx.room.remote_participants.values():
+            if participant.metadata:
+                try:
+                    import json
+
+                    metadata = json.loads(participant.metadata)
+                    if isinstance(metadata, dict) and "language" in metadata:
+                        user_language = metadata["language"]
+                        logger.info(
+                            f"📝 Detected language preference from participant metadata: {user_language}"
+                        )
+                        break
+                except (json.JSONDecodeError, TypeError) as e:
+                    logger.debug(f"Could not parse participant metadata: {e}")
+    except Exception as e:
+        logger.warning(
+            f"Could not read language preference from participant metadata: {e}, defaulting to Hindi"
+        )
+    
+    if user_language not in {"hi", "en"}:
+        logger.warning(f"Unsupported language '{user_language}' detected, defaulting to 'hi'")
+        user_language = "hi"
+    
+    logger.info(f"🌐 Using language: {user_language} (default: Hindi)")
+    
     # Set up a voice AI pipeline using OpenAI, Cartesia, AssemblyAI, and the LiveKit turn detector
     
     # Speech-to-text (STT) is your agent's ears, turning the user's speech into text that the LLM can understand
-    # STT Model Options for Better Hindi Accuracy (Romanized output):
-    # 
-    # 1. "sarvam" - BEST for Hindi/Indian languages, designed specifically for Indian accents
-    #    - Requires: pip install "livekit-agents[sarvam]~=1.2" and SARVAM_API_KEY
-    #    - Excellent Hindi recognition, supports streaming
-    #    - RECOMMENDED for Hindi speakers
-    # 
-    # 2. "deepgram/nova-2" - Good accuracy for Hindi, supports streaming
-    #    - Set DEEPGRAM_API_KEY in .env.local (if required by LiveKit)
-    #    - Better recognition than AssemblyAI
-    # 
-    # 3. "google/cloud" - Excellent Hindi accuracy, requires GOOGLE_APPLICATION_CREDENTIALS
-    #    - May need additional setup
-    # 
-    # 4. "assemblyai/universal-streaming" - Baseline, guaranteed streaming
-    #    - Works out of the box but may have lower accuracy for Hindi
-    #
-    # Configuration: Set STT_MODEL env variable in .env.local to override
-    # Example: STT_MODEL=sarvam (RECOMMENDED for Hindi)
-    #
-    # See all available models at https://docs.livekit.io/agents/models/stt/
-    logger.info(f"Initializing STT with model: {stt_model} for Hindi language recognition")
+    # For Hindi we prefer Sarvam/Deepgram; for English we use the configured STT model with language='en'
+    logger.info(f"Initializing STT with model: {stt_model} for language={user_language}")
     
-    # Configure STT with Hindi language and optimized settings for better accuracy
-    # Priority: Sarvam (best for Hindi) > Deepgram > AssemblyAI
-    
-    if stt_model == "sarvam" or stt_model.startswith("sarvam"):
-        # Sarvam is specifically designed for Indian languages - BEST choice for Hindi
-        logger.info("Attempting to initialize Sarvam STT...")
-        try:
-            # Try using Sarvam STT plugin if installed
-            from livekit.plugins import sarvam as sarvam_plugin
-            logger.info("Sarvam plugin imported successfully")
-            
-            if not sarvam_key:
-                logger.warning("SARVAM_API_KEY not set - Sarvam STT may fail. Falling back to AssemblyAI.")
-                raise ValueError("SARVAM_API_KEY not set")
-            
-            logger.info("Creating Sarvam STT instance...")
-            stt = sarvam_plugin.STT(
-                language="hi",
-            )
-            logger.info("✅ Using Sarvam STT - BEST for Hindi/Indian languages!")
-        except ImportError as e:
-            logger.error(f"❌ Sarvam plugin not installed: {e}")
-            logger.warning("Install with: pip install 'livekit-agents[sarvam]~=1.2'")
-            logger.warning("Falling back to AssemblyAI. For better Hindi accuracy, install Sarvam!")
+    if user_language == "hi":
+        # Configure STT with Hindi language and optimized settings for better accuracy
+        # Priority: Sarvam (best for Hindi) > Deepgram > AssemblyAI
+        if stt_model == "sarvam" or stt_model.startswith("sarvam"):
+            # Sarvam is specifically designed for Indian languages - BEST choice for Hindi
+            logger.info("Attempting to initialize Sarvam STT for Hindi...")
+            try:
+                # Try using Sarvam STT plugin if installed
+                from livekit.plugins import sarvam as sarvam_plugin
+
+                logger.info("Sarvam plugin imported successfully")
+                
+                if not sarvam_key:
+                    logger.warning(
+                        "SARVAM_API_KEY not set - Sarvam STT may fail. Falling back to AssemblyAI."
+                    )
+                    raise ValueError("SARVAM_API_KEY not set")
+                
+                logger.info("Creating Sarvam STT instance...")
+                stt = sarvam_plugin.STT(
+                    language="hi",
+                )
+                logger.info("✅ Using Sarvam STT - BEST for Hindi/Indian languages!")
+            except ImportError as e:
+                logger.error(f"❌ Sarvam plugin not installed: {e}")
+                logger.warning('Install with: pip install "livekit-agents[sarvam]~=1.2"')
+                logger.warning(
+                    "Falling back to AssemblyAI. For better Hindi accuracy, install Sarvam!"
+                )
+                stt = inference.STT(
+                    model="assemblyai/universal-streaming",
+                    language="hi",
+                )
+            except Exception as e:
+                logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
+                logger.warning(
+                    "Falling back to AssemblyAI due to Sarvam initialization error"
+                )
+                stt = inference.STT(
+                    model="assemblyai/universal-streaming",
+                    language="hi",
+                )
+        elif stt_model == "deepgram/nova-2" or stt_model.startswith("deepgram"):
+            try:
+                stt = inference.STT(
+                    model="deepgram/nova-2",
+                    language="hi",
+                )
+                logger.info("Using Deepgram Nova-2 for improved Hindi STT accuracy")
+            except Exception as e:
+                logger.warning(
+                    f"Failed to initialize Deepgram STT: {e}. Falling back to AssemblyAI."
+                )
+                stt = inference.STT(
+                    model="assemblyai/universal-streaming",
+                    language="hi",
+                )
+                logger.info("Using AssemblyAI as fallback STT")
+        else:
+            # AssemblyAI (or other) with Hindi language (default/fallback)
             stt = inference.STT(
-                model="assemblyai/universal-streaming",
-                language="hi",
+                model=stt_model,
+                language="hi",  # Hindi language code
             )
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
-            logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
-            stt = inference.STT(
-                model="assemblyai/universal-streaming",
-                language="hi",
+            logger.warning(
+                f"Using {stt_model} for Hindi - for better Hindi accuracy, try: "
+                "STT_MODEL=sarvam or STT_MODEL=deepgram/nova-2"
             )
-    elif stt_model == "deepgram/nova-2" or stt_model.startswith("deepgram"):
-        try:
-            stt = inference.STT(
-                model="deepgram/nova-2",
-                language="hi",
-            )
-            logger.info("Using Deepgram Nova-2 for improved Hindi STT accuracy")
-        except Exception as e:
-            logger.warning(f"Failed to initialize Deepgram STT: {e}. Falling back to AssemblyAI.")
-            stt = inference.STT(
-                model="assemblyai/universal-streaming",
-                language="hi",
-            )
-            logger.info("Using AssemblyAI as fallback STT")
     else:
-        # AssemblyAI with Hindi language (default/fallback)
-        stt = inference.STT(
-            model=stt_model,
-            language="hi",  # Hindi language code
-        )
-        logger.warning(f"Using {stt_model} - For BETTER Hindi accuracy, try: STT_MODEL=sarvam or STT_MODEL=deepgram/nova-2")
+        # English (or non-Hindi) path – configure STT with language='en'
+        logger.info("Configuring STT for English language recognition")
+        effective_model = stt_model
+        if stt_model == "sarvam" or stt_model.startswith("sarvam"):
+            logger.warning(
+                "STT_MODEL is set to sarvam but language is English. "
+                "Sarvam is optimized for Indian languages, so falling back to AssemblyAI."
+            )
+            effective_model = "assemblyai/universal-streaming"
+        try:
+            stt = inference.STT(
+                model=effective_model,
+                language="en",
+            )
+            logger.info(f"Using STT model '{effective_model}' for English")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize STT for English: {e}")
+            logger.warning("Falling back to AssemblyAI universal-streaming (en)")
+            stt = inference.STT(
+                model="assemblyai/universal-streaming",
+                language="en",
+            )
     
     # Initialize turn detector with error handling and timeout protection
     # Lazy import to avoid blocking during module import
@@ -697,17 +743,44 @@ async def entrypoint(ctx: JobContext):
         
         # Text-to-speech (TTS) is your agent's voice, turning the LLM's text into speech that the user can hear
         # See all available models as well as voice selections at https://docs.livekit.io/agents/models/tts/
-        # IMPORTANT: Set TTS_VOICE_ID in .env.local to a MALE voice ID for Cartesia Sonic
-        # The previous default (9626c31c-bec5-4cca-baa8-f8ba9e84c8bc) was a female voice
-        # To find male voice IDs for Cartesia Sonic, check: https://docs.livekit.io/agents/models/tts/
-        # Look for Cartesia Sonic voices and select a male voice ID that supports Hindi
-        tts_voice_id = os.getenv("TTS_VOICE_ID")
-        if not tts_voice_id:
-            logger.warning("TTS_VOICE_ID not set in .env.local - using temporary placeholder. Please set a male voice ID!")
-            tts_voice_id = "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"  # This was female - MUST be changed to male voice ID
-            logger.warning(f"Using FALLBACK voice ID (female): {tts_voice_id}")
-        else:
-            logger.info(f"Using TTS_VOICE_ID from .env.local: {tts_voice_id}")
+        #
+        # We support separate voices per language for the Guruji agent:
+        #   - GURUJI_TTS_VOICE_HI : Hindi voice ID
+        #   - GURUJI_TTS_VOICE_EN : English voice ID
+        # Fallbacks (shared/global):
+        #   - TTS_VOICE_HI, TTS_VOICE_EN
+        #   - legacy TTS_VOICE_ID
+        def _select_tts_voice_for_guruji(lang: str) -> str:
+            if lang == "hi":
+                specific = os.getenv("GURUJI_TTS_VOICE_HI")
+                global_lang = os.getenv("TTS_VOICE_HI")
+            else:
+                specific = os.getenv("GURUJI_TTS_VOICE_EN")
+                global_lang = os.getenv("TTS_VOICE_EN")
+            
+            if specific:
+                logger.info(f"Using Guruji TTS voice for language '{lang}' from env: {specific}")
+                return specific
+            if global_lang:
+                logger.info(f"Using global TTS voice for language '{lang}': {global_lang}")
+                return global_lang
+            
+            legacy = os.getenv("TTS_VOICE_ID")
+            if legacy:
+                logger.info(
+                    f"Using legacy TTS_VOICE_ID for Guruji agent (language '{lang}'): {legacy}"
+                )
+                return legacy
+            
+            logger.warning(
+                "No Guruji-specific TTS voice configured "
+                "(GURUJI_TTS_VOICE_HI/GURUJI_TTS_VOICE_EN or TTS_VOICE_HI/TTS_VOICE_EN). "
+                "Using hardcoded fallback Cartesia voice."
+            )
+            # This is the previous default Cartesia Sonic voice ID
+            return "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
+
+        tts_voice_id = _select_tts_voice_for_guruji(user_language)
         
         session = AgentSession(
             # Speech-to-text configured above
@@ -718,10 +791,12 @@ async def entrypoint(ctx: JobContext):
             tts=inference.TTS(
                 model="cartesia/sonic-3",
                 voice=tts_voice_id,
-                language="hi",
+                language=user_language,
                 extra_kwargs={
                     # Cartesia supports speed: "slow" | "normal" | "fast"
-                    "speed": (os.getenv("TTS_SPEED") or "slow") if (os.getenv("TTS_SPEED") or "slow") in {"slow", "normal", "fast"} else "normal",
+                    "speed": (os.getenv("TTS_SPEED") or "slow")
+                    if (os.getenv("TTS_SPEED") or "slow") in {"slow", "normal", "fast"}
+                    else "normal",
                 },
             ),
             # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
