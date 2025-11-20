@@ -82,10 +82,10 @@ export const SessionView = ({
   useDebugMode({ enabled: IN_DEVELOPMENT });
   useWakeLock(true);
 
-  // Idle timeout: disconnect after 5 minutes of inactivity (configurable via env)
+  // Idle timeout: disconnect after 15 minutes of inactivity (configurable via env)
   const idleTimeoutMs = process.env.NEXT_PUBLIC_IDLE_TIMEOUT_MS
     ? parseInt(process.env.NEXT_PUBLIC_IDLE_TIMEOUT_MS, 10)
-    : 5 * 60 * 1000; // Default: 5 minutes
+    : 15 * 60 * 1000; // Default: 15 minutes
   useIdleTimeout(idleTimeoutMs, true);
 
   const { isSessionActive } = useSession();

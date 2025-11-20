@@ -11,11 +11,11 @@ import { useChatMessages } from './useChatMessages';
  * - Chat messages sent by user
  * - User interactions (clicks, keyboard, touch)
  *
- * @param idleTimeoutMs - Time in milliseconds before disconnecting (default: 5 minutes)
+ * @param idleTimeoutMs - Time in milliseconds before disconnecting (default: 15 minutes)
  * @param enabled - Whether idle timeout is enabled (default: true)
  */
 export function useIdleTimeout(
-  idleTimeoutMs: number = 5 * 60 * 1000, // 5 minutes default
+  idleTimeoutMs: number = 15 * 60 * 1000, // 15 minutes default
   enabled: boolean = true
 ) {
   const room = useRoomContext();
