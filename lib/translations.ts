@@ -44,7 +44,8 @@ export const translations = {
       endConversation: 'End conversation',
       agentListening: 'Agent is listening, ask it a question',
       agentSleeping: 'Guruji is in rest mode',
-      agentSleepingDesc: 'Bhajan or vani is playing — will start listening again when finished or paused.',
+      agentSleepingDesc:
+        'Bhajan or vani is playing — will start listening again when finished or paused.',
     },
     welcome: {
       title: 'Find Your Guru. Many Paths, One Satsang Home.',
@@ -305,7 +306,8 @@ export const translations = {
       endConversation: '❌ बातचीत समाप्त करें',
       agentListening: 'एजेंट सुन रहा है, इसे एक प्रश्न पूछें',
       agentSleeping: 'गुरुजी विश्राम मोड में हैं',
-      agentSleepingDesc: 'भजन या वाणी चल रही है — समाप्त या pausa होने पर फिर से सुनना शुरू करेंगे।',
+      agentSleepingDesc:
+        'भजन या वाणी चल रही है — समाप्त या pausa होने पर फिर से सुनना शुरू करेंगे।',
     },
     welcome: {
       title: 'अपने गुरु को खोजें। कई रास्ते, एक सत्संग घर।',

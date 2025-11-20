@@ -3,8 +3,8 @@
 import { AnimatePresence, type Variants, motion } from 'motion/react';
 import { type ReceivedChatMessage } from '@livekit/components-react';
 import { ShimmerText } from '@/components/livekit/shimmer-text';
-import { cn } from '@/lib/utils';
 import { useLanguage } from '@/contexts/language-context';
+import { cn } from '@/lib/utils';
 
 const MotionMessage = motion.create('p');
 
@@ -49,9 +49,7 @@ export function PreConnectMessage({ className, messages = [] }: PreConnectMessag
           aria-hidden={messages.length > 0}
           className={cn('pointer-events-none text-center', className)}
         >
-          <ShimmerText className="text-sm font-semibold">
-            {t('session.agentListening')}
-          </ShimmerText>
+          <ShimmerText className="text-sm font-semibold">{t('session.agentListening')}</ShimmerText>
         </MotionMessage>
       )}
     </AnimatePresence>

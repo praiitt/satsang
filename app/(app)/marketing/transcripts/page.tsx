@@ -3,8 +3,7 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
-
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/livekit/button';
 
 interface AudioFile {
@@ -49,13 +48,14 @@ export default function TranscriptsPage() {
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [audioUrls, setAudioUrls] = useState<Record<string, string>>({});
   const [audioElements, setAudioElements] = useState<Record<string, HTMLAudioElement>>({});
-  const [audioProgress, setAudioProgress] = useState<Record<string, { current: number; duration: number }>>({});
+  const [audioProgress, setAudioProgress] = useState<
+    Record<string, { current: number; duration: number }>
+  >({});
   const [isPaused, setIsPaused] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadAudioFiles();
   }, []);
-
 
   const loadAudioFiles = async () => {
     try {
@@ -63,10 +63,10 @@ export default function TranscriptsPage() {
       setError(null);
       const response = await fetch(`${API_BASE}/audio-files?limit=20`);
       const data = await response.json();
-      
+
       if (data.success && data.files) {
         setAudioFiles(data.files);
-        
+
         // Load stored transcriptions for these files
         await loadStoredTranscriptionsForFiles(data.files);
       } else {
@@ -86,17 +86,17 @@ export default function TranscriptsPage() {
         // Encode the path properly - handle slashes and special characters
         const encodedPath = encodeURIComponent(file.path);
         const response = await fetch(`${API_BASE}/${encodedPath}`);
-        
+
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
             console.log(`✅ Loaded transcription from Firestore for: ${file.name}`);
-            return { 
-              path: file.path, 
+            return {
+              path: file.path,
               transcription: {
                 transcription: data.transcription,
                 conversation: data.conversation || [],
-              } as TranscriptionResponse
+              } as TranscriptionResponse,
             };
           }
         } else if (response.status === 404) {
@@ -112,7 +112,7 @@ export default function TranscriptsPage() {
 
     const results = await Promise.all(transcriptionPromises);
     const loadedTranscriptions: Record<string, TranscriptionResponse> = {};
-    
+
     results.forEach((result) => {
       if (result) {
         loadedTranscriptions[result.path] = result.transcription;
@@ -120,7 +120,9 @@ export default function TranscriptsPage() {
     });
 
     if (Object.keys(loadedTranscriptions).length > 0) {
-      console.log(`✅ Loaded ${Object.keys(loadedTranscriptions).length} stored transcriptions from Firestore`);
+      console.log(
+        `✅ Loaded ${Object.keys(loadedTranscriptions).length} stored transcriptions from Firestore`
+      );
       setTranscriptions((prev) => ({
         ...prev,
         ...loadedTranscriptions,
@@ -139,7 +141,7 @@ export default function TranscriptsPage() {
       const encodedPath = encodeURIComponent(gcsPath);
       const response = await fetch(`${API_BASE}/signed-url?gcsPath=${encodedPath}`);
       const data = await response.json();
-      
+
       if (data.success && data.signedUrl) {
         setAudioUrls((prev) => ({ ...prev, [gcsPath]: data.signedUrl }));
         return data.signedUrl;
@@ -154,14 +156,22 @@ export default function TranscriptsPage() {
   const handlePlayAudio = async (file: AudioFile) => {
     try {
       // If already playing, pause it
-      if (playingAudio === file.path && audioElements[file.path] && !audioElements[file.path].paused) {
+      if (
+        playingAudio === file.path &&
+        audioElements[file.path] &&
+        !audioElements[file.path].paused
+      ) {
         audioElements[file.path].pause();
         setIsPaused((prev) => ({ ...prev, [file.path]: true }));
         return;
       }
 
       // If paused, resume
-      if (playingAudio === file.path && audioElements[file.path] && audioElements[file.path].paused) {
+      if (
+        playingAudio === file.path &&
+        audioElements[file.path] &&
+        audioElements[file.path].paused
+      ) {
         await audioElements[file.path].play();
         setIsPaused((prev) => ({ ...prev, [file.path]: false }));
         return;
@@ -176,10 +186,10 @@ export default function TranscriptsPage() {
 
       const url = await getSignedUrl(file.path);
       setPlayingAudio(file.path);
-      
+
       // Create audio element and play
       const audio = new Audio(url);
-      
+
       // Set up event listeners
       audio.onloadedmetadata = () => {
         setAudioProgress((prev) => ({
@@ -221,7 +231,7 @@ export default function TranscriptsPage() {
       // Store audio element
       setAudioElements((prev) => ({ ...prev, [file.path]: audio }));
       setIsPaused((prev) => ({ ...prev, [file.path]: false }));
-      
+
       await audio.play();
     } catch (err: any) {
       setError(err.message || 'Failed to play audio');
@@ -248,7 +258,9 @@ export default function TranscriptsPage() {
       // Show file size info
       const fileSizeMB = file.size / (1024 * 1024);
       if (fileSizeMB > 20) {
-        console.log(`Large file detected (${fileSizeMB.toFixed(2)} MB) - will be split into chunks`);
+        console.log(
+          `Large file detected (${fileSizeMB.toFixed(2)} MB) - will be split into chunks`
+        );
       }
 
       const response = await fetch(`${API_BASE}/transcribe`, {
@@ -267,12 +279,12 @@ export default function TranscriptsPage() {
           transcription: data.transcription,
           conversation: data.conversation || [],
         };
-        
+
         setTranscriptions((prev) => ({
           ...prev,
           [file.path]: transcriptionData,
         }));
-        
+
         console.log(`✅ Transcription saved with ID: ${data.transcriptId || 'unknown'}`);
       } else {
         // Show detailed error message
@@ -312,16 +324,16 @@ export default function TranscriptsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="container mx-auto max-w-6xl p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Audio Transcripts</h1>
+        <h1 className="mb-2 text-3xl font-bold">Audio Transcripts</h1>
         <p className="text-muted-foreground">
           View and transcribe MP3 recordings from Google Cloud Storage
         </p>
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md text-red-800">
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-4 text-red-800">
           {error}
         </div>
       )}
@@ -333,9 +345,9 @@ export default function TranscriptsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-8">Loading audio files...</div>
+        <div className="py-8 text-center">Loading audio files...</div>
       ) : audioFiles.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-muted-foreground py-8 text-center">
           No MP3 files found in the bucket
         </div>
       ) : (
@@ -349,26 +361,29 @@ export default function TranscriptsPage() {
             return (
               <div
                 key={file.path}
-                className="border rounded-lg p-4 space-y-4 bg-white dark:bg-gray-800"
+                className="space-y-4 rounded-lg border bg-white p-4 dark:bg-gray-800"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-lg mb-1">{file.name}</h3>
+                      <h3 className="mb-1 text-lg font-semibold">{file.name}</h3>
                       {hasTranscription && (
-                        <span className="text-xs bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full">
+                        <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800 dark:bg-green-900 dark:text-green-200">
                           ✅ Transcribed
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-muted-foreground space-y-1">
+                    <div className="text-muted-foreground space-y-1 text-sm">
                       <div>📅 {formatDate(file.created)}</div>
-                      <div>📦 {formatFileSize(file.size)} 
+                      <div>
+                        📦 {formatFileSize(file.size)}
                         {(() => {
                           const fileSizeMB = file.size / (1024 * 1024);
-                          return fileSizeMB > 10 
-                            ? <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">(Will be chunked)</span>
-                            : null;
+                          return fileSizeMB > 10 ? (
+                            <span className="ml-2 text-xs text-amber-600 dark:text-amber-400">
+                              (Will be chunked)
+                            </span>
+                          ) : null;
                         })()}
                       </div>
                       <div className="font-mono text-xs">{file.path}</div>
@@ -376,35 +391,33 @@ export default function TranscriptsPage() {
                         <div className="text-xs">
                           🌐 Language: {transcription.transcription.language}
                           {transcription.transcription.segments && (
-                            <span className="ml-2">• {transcription.transcription.segments.length} segments</span>
+                            <span className="ml-2">
+                              • {transcription.transcription.segments.length} segments
+                            </span>
                           )}
                         </div>
                       )}
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      onClick={() => handlePlayAudio(file)}
-                      variant="outline"
-                      size="sm"
-                    >
+                    <Button onClick={() => handlePlayAudio(file)} variant="outline" size="sm">
                       {isPlaying && !isPaused[file.path]
                         ? '⏸️ Pause'
                         : isPlaying && isPaused[file.path]
-                        ? '▶️ Resume'
-                        : '▶️ Play'}
+                          ? '▶️ Resume'
+                          : '▶️ Play'}
                     </Button>
                     <Button
                       onClick={() => handleTranscribe(file)}
                       disabled={isTranscribing || hasTranscription}
-                      variant={hasTranscription ? "secondary" : "default"}
+                      variant={hasTranscription ? 'secondary' : 'default'}
                       size="sm"
                     >
                       {isTranscribing
                         ? (() => {
                             const fileSizeMB = file.size / (1024 * 1024);
-                            return fileSizeMB > 10 
-                              ? '⏳ Processing chunks...' 
+                            return fileSizeMB > 10
+                              ? '⏳ Processing chunks...'
                               : '⏳ Transcribing...';
                           })()
                         : hasTranscription
@@ -416,7 +429,7 @@ export default function TranscriptsPage() {
 
                 {/* Audio Player with Progress Bar */}
                 {isPlaying && (
-                  <div className="mt-4 pt-4 border-t">
+                  <div className="mt-4 border-t pt-4">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <input
@@ -425,7 +438,7 @@ export default function TranscriptsPage() {
                           max={audioProgress[file.path]?.duration || 100}
                           value={audioProgress[file.path]?.current || 0}
                           onChange={(e) => handleSeek(file, parseFloat(e.target.value))}
-                          className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+                          className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
                           style={{
                             background: `linear-gradient(to right, #3b82f6 0%, #3b82f6 ${
                               ((audioProgress[file.path]?.current || 0) /
@@ -438,12 +451,12 @@ export default function TranscriptsPage() {
                             }%, #e5e7eb 100%)`,
                           }}
                         />
-                        <span className="text-xs text-muted-foreground min-w-[80px] text-right">
+                        <span className="text-muted-foreground min-w-[80px] text-right text-xs">
                           {formatTime(audioProgress[file.path]?.current || 0)} /{' '}
                           {formatTime(audioProgress[file.path]?.duration || 0)}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
                         <Button
                           onClick={() => {
                             const audio = audioElements[file.path];
@@ -461,10 +474,7 @@ export default function TranscriptsPage() {
                           onClick={() => {
                             const audio = audioElements[file.path];
                             if (audio) {
-                              audio.currentTime = Math.min(
-                                audio.duration,
-                                audio.currentTime + 10
-                              );
+                              audio.currentTime = Math.min(audio.duration, audio.currentTime + 10);
                             }
                           }}
                           variant="outline"
@@ -477,7 +487,12 @@ export default function TranscriptsPage() {
                           onClick={() => {
                             const audio = audioElements[file.path];
                             if (audio) {
-                              audio.playbackRate = audio.playbackRate === 1 ? 1.5 : audio.playbackRate === 1.5 ? 2 : 0.75;
+                              audio.playbackRate =
+                                audio.playbackRate === 1
+                                  ? 1.5
+                                  : audio.playbackRate === 1.5
+                                    ? 2
+                                    : 0.75;
                             }
                           }}
                           variant="outline"
@@ -487,7 +502,13 @@ export default function TranscriptsPage() {
                           {(() => {
                             const audio = audioElements[file.path];
                             const rate = audio?.playbackRate || 1;
-                            return rate === 1 ? '1x' : rate === 1.5 ? '1.5x' : rate === 2 ? '2x' : '0.75x';
+                            return rate === 1
+                              ? '1x'
+                              : rate === 1.5
+                                ? '1.5x'
+                                : rate === 2
+                                  ? '2x'
+                                  : '0.75x';
                           })()}
                         </Button>
                       </div>
@@ -496,8 +517,8 @@ export default function TranscriptsPage() {
                 )}
 
                 {isTranscribing && (
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <div className="mt-4 border-t pt-4">
+                    <div className="text-muted-foreground flex items-center gap-2 text-sm">
                       <div className="animate-spin">⏳</div>
                       <span>
                         {(() => {
@@ -513,23 +534,30 @@ export default function TranscriptsPage() {
                 )}
 
                 {hasTranscription && (
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex items-center justify-between mb-3">
+                  <div className="mt-4 border-t pt-4">
+                    <div className="mb-3 flex items-center justify-between">
                       <h4 className="font-semibold">Conversation Transcript</h4>
-                      <span className="text-xs text-muted-foreground bg-blue-50 dark:bg-blue-900 px-2 py-1 rounded">
+                      <span className="text-muted-foreground rounded bg-blue-50 px-2 py-1 text-xs dark:bg-blue-900">
                         📄 Loaded from Firestore
                       </span>
                     </div>
-                    
+
                     {/* Full transcription text */}
-                    <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-900 rounded-md">
-                      <p className="text-sm text-muted-foreground mb-1">Full Text:</p>
-                      <p className="text-sm whitespace-pre-wrap">{transcription.transcription.text}</p>
+                    <div className="mb-4 rounded-md bg-gray-50 p-3 dark:bg-gray-900">
+                      <p className="text-muted-foreground mb-1 text-sm">Full Text:</p>
+                      <p className="text-sm whitespace-pre-wrap">
+                        {transcription.transcription.text}
+                      </p>
                       {transcription.transcription.language && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          🌐 Language: <span className="font-semibold">{transcription.transcription.language}</span>
+                        <p className="text-muted-foreground mt-2 text-xs">
+                          🌐 Language:{' '}
+                          <span className="font-semibold">
+                            {transcription.transcription.language}
+                          </span>
                           {transcription.transcription.segments && (
-                            <span className="ml-2">• {transcription.transcription.segments.length} segments</span>
+                            <span className="ml-2">
+                              • {transcription.transcription.segments.length} segments
+                            </span>
                           )}
                         </p>
                       )}
@@ -538,17 +566,17 @@ export default function TranscriptsPage() {
                     {/* Conversation turns */}
                     {transcription.conversation.length > 0 && (
                       <div className="space-y-2">
-                        <p className="text-sm font-semibold mb-2">Conversation Turns:</p>
+                        <p className="mb-2 text-sm font-semibold">Conversation Turns:</p>
                         {transcription.conversation.map((turn, index) => (
                           <div
                             key={index}
-                            className={`p-3 rounded-md ${
+                            className={`rounded-md p-3 ${
                               turn.speaker === 'user'
-                                ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500'
-                                : 'bg-green-50 dark:bg-green-900/20 border-l-4 border-green-500'
+                                ? 'border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                                : 'border-l-4 border-green-500 bg-green-50 dark:bg-green-900/20'
                             }`}
                           >
-                            <div className="flex items-start justify-between mb-1">
+                            <div className="mb-1 flex items-start justify-between">
                               <span
                                 className={`text-xs font-semibold uppercase ${
                                   turn.speaker === 'user'
@@ -558,11 +586,11 @@ export default function TranscriptsPage() {
                               >
                                 {turn.speaker === 'user' ? '👤 User' : '🤖 Agent'}
                               </span>
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-muted-foreground text-xs">
                                 {formatTime(turn.start)} - {formatTime(turn.end)}
                               </span>
                             </div>
-                            <p className="text-sm mt-1">{turn.text}</p>
+                            <p className="mt-1 text-sm">{turn.text}</p>
                           </div>
                         ))}
                       </div>
@@ -577,4 +605,3 @@ export default function TranscriptsPage() {
     </div>
   );
 }
-

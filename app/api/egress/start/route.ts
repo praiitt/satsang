@@ -75,7 +75,10 @@ export async function POST(req: Request) {
     console.log('[egress/start] File path:', filePath);
     console.log('[egress/start] File type:', fileType);
     console.log('[egress/start] GCP bucket:', gcp.bucket);
-    console.log('[egress/start] EncodedFileOutput output:', JSON.stringify((fileOutput as any).output, null, 2));
+    console.log(
+      '[egress/start] EncodedFileOutput output:',
+      JSON.stringify((fileOutput as any).output, null, 2)
+    );
 
     // Start egress - pass EncodedFileOutput directly with options
     // The method signature is: startRoomCompositeEgress(roomName, output, opts)
