@@ -37,7 +37,14 @@ export function useAgentControl() {
         console.log('[useAgentControl] ✅ Successfully sent agent.control', { action, reason });
 
         // Update local UI state
-        setAgentIsSleeping(action === 'sleep');
+        const sleeping = action === 'sleep';
+        setAgentIsSleeping(sleeping);
+        // Also expose sleep state on window so other hooks (like idle timeout)
+        // can avoid disconnecting while the agent is intentionally sleeping
+        if (typeof window !== 'undefined') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (window as any).__agentIsSleeping = sleeping;
+        }
       } catch (e) {
         console.error('[useAgentControl] ❌ Failed to publish agent.control', e);
         throw e; // Re-throw so caller knows it failed

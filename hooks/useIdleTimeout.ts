@@ -28,6 +28,14 @@ export function useIdleTimeout(
   const animationFrameRef = useRef<number | null>(null);
   const previousMessageCountRef = useRef<number>(0);
 
+  // Helper: check if agent is in explicit "sleep" mode (e.g., while bhajans are playing)
+  // We store this flag on window in useAgentControl so all hooks can read it.
+  const isAgentSleeping = () => {
+    if (typeof window === 'undefined') return false;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (window as any).__agentIsSleeping === true;
+  };
+
   // Reset idle timer
   const resetIdleTimer = useCallback(() => {
     if (!enabled || room.state === 'disconnected') {
@@ -43,6 +51,17 @@ export function useIdleTimeout(
 
     // Set new timeout
     timeoutRef.current = setTimeout(() => {
+      // If the agent is intentionally sleeping (e.g., while YouTube bhajan is playing),
+      // do NOT disconnect the room. Instead, quietly reset the idle timer so that
+      // long bhajan/vani playback sessions don't get cut off.
+      if (isAgentSleeping()) {
+        console.log(
+          '[IdleTimeout] Agent is sleeping (bhajan/vani playing); skipping disconnect and resetting timer'
+        );
+        resetIdleTimer();
+        return;
+      }
+
       if (room.state !== 'disconnected') {
         console.log(
           `[IdleTimeout] Disconnecting due to ${idleTimeoutMs / 1000 / 60} minutes of inactivity`
