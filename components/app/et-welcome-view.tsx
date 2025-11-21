@@ -137,6 +137,25 @@ export const ETWelcomeView = ({
         </div>
       </section>
 
+      {/* Featured Gaia Video Section */}
+      <section className="mx-auto mt-12 max-w-4xl px-4 sm:mt-16">
+        <h2 className="text-foreground mb-4 text-center text-2xl font-bold sm:text-3xl">
+          {t('etAgent.gaiaVideoTitle')}
+        </h2>
+        <p className="text-muted-foreground mx-auto mb-6 max-w-2xl text-sm leading-6 sm:text-base">
+          {t('etAgent.gaiaVideoDesc')}
+        </p>
+        <div className="aspect-video w-full overflow-hidden rounded-2xl border bg-black">
+          <iframe
+            src="https://www.gaia.com/share/video/incoming-3iatlas-draco-mothership?type=video&contentId=245534&rfd=SwwRYn&uuid=2e8376c7-8d11-4472-8eae-1d7d01b78f79&source=SHARE"
+            title={t('etAgent.gaiaVideoTitle')}
+            className="h-full w-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            loading="lazy"
+          />
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="mx-auto mt-8 max-w-4xl px-4">
         <div className="bg-primary text-primary-foreground flex flex-col items-center gap-3 rounded-2xl p-6 text-center shadow-sm sm:flex-row sm:justify-between">
