@@ -157,9 +157,6 @@ export const translations = {
         'Connect with an AI guide specializing in extraterrestrial civilizations, the Fermi Paradox, and the connection between sound frequencies and universal consciousness. Discover cosmic wisdom through healing frequencies and ET spiritual teachings.',
       freeTrial: '🎁 Free 15-minute trial • No credit card required',
       features: 'What You Can Explore',
-      gaiaVideoTitle: 'Incoming 3I/ATLAS: Draco Mothership?',
-      gaiaVideoDesc:
-        'Featured Gaia episode exploring the possibility that 3I/ATLAS is not just a comet, but a massive Draco mothership approaching Earth.',
       etCivilizations: 'Extraterrestrial Civilizations',
       etCivilizationsDesc:
         'Learn about Pleiadians, Sirians, Arcturians, Andromedans, and other civilizations. Explore their characteristics, teachings, and reported encounters.',
@@ -423,9 +420,6 @@ export const translations = {
         'ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना के बीच संबंध में विशेषज्ञता रखने वाले AI मार्गदर्शक से जुड़ें। हीलिंग फ्रीक्वेंसी और ET आध्यात्मिक शिक्षाओं के माध्यम से ब्रह्मांडीय ज्ञान की खोज करें।',
       freeTrial: '🎁 15 मिनट का निःशुल्क परीक्षण • कोई क्रेडिट कार्ड की आवश्यकता नहीं',
       features: 'आप क्या अन्वेषण कर सकते हैं',
-      gaiaVideoTitle: 'Incoming 3I/ATLAS: Draco Mothership?',
-      gaiaVideoDesc:
-        'Gaia पर एक विशेष वीडियो जो 3I/ATLAS को सिर्फ एक धूमकेतु नहीं, बल्कि पृथ्वी की ओर आती हुई एक विशाल Draco mothership के रूप में देखने की संभावना की खोज करता है।',
       etCivilizations: 'ब्रह्मांडीय सभ्यताएं',
       etCivilizationsDesc:
         'प्लीएडियन, सिरियन, आर्कटुरियन, एंड्रोमेडन और अन्य सभ्यताओं के बारे में जानें। उनकी विशेषताओं, शिक्षाओं और रिपोर्ट किए गए मुठभेड़ों का अन्वेषण करें।',
