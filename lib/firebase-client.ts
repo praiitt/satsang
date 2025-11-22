@@ -4,6 +4,9 @@ import { getApps, initializeApp } from 'firebase/app';
 import type { Auth } from 'firebase/auth';
 // eslint-disable-next-line import/named
 import { getAuth } from 'firebase/auth';
+import type { Firestore } from 'firebase/firestore';
+// eslint-disable-next-line import/named
+import { getFirestore } from 'firebase/firestore';
 
 // Firebase config - complete web app configuration
 const firebaseConfig = {
@@ -19,6 +22,7 @@ const firebaseConfig = {
 
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
+let db: Firestore | undefined;
 
 export function getFirebaseApp(): FirebaseApp {
   if (!app) {
@@ -38,6 +42,14 @@ export function getFirebaseAuth(): Auth {
     auth = getAuth(app);
   }
   return auth;
+}
+
+export function getFirebaseFirestore(): Firestore {
+  if (!db) {
+    const app = getFirebaseApp();
+    db = getFirestore(app);
+  }
+  return db;
 }
 
 export async function getRecaptchaVerifier(

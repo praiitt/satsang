@@ -4,5 +4,8 @@
     "frameworksBackend": {
       "region": "asia-south1"
     }
+  },
+  "firestore": {
+    "rules": "firestore.rules"
   }
 }

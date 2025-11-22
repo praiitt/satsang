@@ -151,6 +151,38 @@ export const translations = {
       faq8Answer:
         'This feature is developed and presented by RRAASI. Our goal is to make the spiritual experience smooth, accessible, and meaningful through technology, so that every seeker can easily connect and benefit.',
     },
+    customGuru: {
+      title: 'Create Your Own Guru (Early Access)',
+      subtitle: 'Tell us about your ideal spiritual guide',
+      description:
+        'Describe your ideal guru in your own words. How should they talk, feel, guide you? We may create or match a guru for you based on your preferences.',
+      idealGuruLabel: 'Describe your ideal guru',
+      idealGuruPlaceholder:
+        'E.g., "A gentle, modern teacher who blends psychology with ancient wisdom, speaks casually, and helps with daily life challenges..."',
+      currentNeedsLabel: 'What are you seeking right now? (Optional)',
+      currentNeedsPlaceholder: 'E.g., peace, discipline, cosmic exploration, healing...',
+      styleTagsLabel: 'Quick preferences (Optional)',
+      styleTags: {
+        traditional: 'Very traditional',
+        modern: 'Modern & casual',
+        nonReligious: 'Non-religious',
+        mystical: 'Mystical / cosmic',
+        psychology: 'Psychology-focused',
+      },
+      contactEmailLabel: 'Email (Optional)',
+      contactEmailPlaceholder: 'your@email.com',
+      contactEmailHint: 'We may reach out when custom gurus are ready',
+      canContactLabel: 'I want to be notified when custom gurus are available',
+      submitButton: 'Share my ideal guru',
+      submitting: 'Submitting...',
+      loginRequired: 'Login Required',
+      loginRequiredMessage: 'Please login to share your ideal guru preferences with us.',
+      loginButton: 'Login to Continue',
+      successTitle: 'Thank you!',
+      successMessage:
+        "We received your preferences. We'll use this to shape new gurus and may reach out when custom gurus are ready.",
+      errorMessage: 'Failed to submit. Please try again.',
+    },
     etAgent: {
       title: 'Explore Extraterrestrial Civilizations',
       description:
@@ -419,6 +451,38 @@ export const translations = {
       faq8Question: 'यह सुविधा किसने विकसित की है?',
       faq8Answer:
         'यह सुविधा RRAASI द्वारा विकसित और प्रस्तुत की गई है। हमारा उद्देश्य तकनीक के माध्यम से आध्यात्मिक अनुभव को सहज, सुलभ और सार्थक बनाना है, ताकि हर साधक आसानी से जुड़ सके और लाभान्वित हो।',
+    },
+    customGuru: {
+      title: 'अपना गुरु बनाएं (अर्ली एक्सेस)',
+      subtitle: 'अपने आदर्श आध्यात्मिक मार्गदर्शक के बारे में बताएं',
+      description:
+        'अपने शब्दों में अपने आदर्श गुरु का वर्णन करें। वे कैसे बोलें, महसूस करें, आपका मार्गदर्शन करें? हम आपकी प्राथमिकताओं के आधार पर आपके लिए एक गुरु बना या मैच कर सकते हैं।',
+      idealGuruLabel: 'अपने आदर्श गुरु का वर्णन करें',
+      idealGuruPlaceholder:
+        'उदाहरण: "एक कोमल, आधुनिक शिक्षक जो मनोविज्ञान को प्राचीन ज्ञान के साथ मिलाता है, आकस्मिक बोलता है, और दैनिक जीवन की चुनौतियों में मदद करता है..."',
+      currentNeedsLabel: 'आप अभी क्या खोज रहे हैं? (वैकल्पिक)',
+      currentNeedsPlaceholder: 'उदाहरण: शांति, अनुशासन, ब्रह्मांडीय अन्वेषण, उपचार...',
+      styleTagsLabel: 'त्वरित प्राथमिकताएं (वैकल्पिक)',
+      styleTags: {
+        traditional: 'बहुत पारंपरिक',
+        modern: 'आधुनिक और आकस्मिक',
+        nonReligious: 'गैर-धार्मिक',
+        mystical: 'रहस्यमय / ब्रह्मांडीय',
+        psychology: 'मनोविज्ञान-केंद्रित',
+      },
+      contactEmailLabel: 'ईमेल (वैकल्पिक)',
+      contactEmailPlaceholder: 'your@email.com',
+      contactEmailHint: 'जब कस्टम गुरु तैयार हों तो हम संपर्क कर सकते हैं',
+      canContactLabel: 'जब कस्टम गुरु उपलब्ध हों तो मुझे सूचित करना चाहते हैं',
+      submitButton: 'मेरा आदर्श गुरु साझा करें',
+      submitting: 'सबमिट कर रहे हैं...',
+      loginRequired: 'लॉगिन आवश्यक',
+      loginRequiredMessage: 'कृपया अपनी आदर्श गुरु प्राथमिकताएं साझा करने के लिए लॉगिन करें।',
+      loginButton: 'जारी रखने के लिए लॉगिन करें',
+      successTitle: 'धन्यवाद!',
+      successMessage:
+        'हमें आपकी प्राथमिकताएं मिल गई हैं। हम इसे नए गुरुओं को आकार देने के लिए उपयोग करेंगे और जब कस्टम गुरु तैयार हों तो संपर्क कर सकते हैं।',
+      errorMessage: 'सबमिट करने में विफल। कृपया पुनः प्रयास करें।',
     },
     etAgent: {
       title: 'ब्रह्मांडीय सभ्यताओं का अन्वेषण करें',

@@ -3,8 +3,9 @@
 /* eslint-disable prettier/prettier */
 import { useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { HeroVideoPlayer } from '@/components/app/hero-video-player';
+import { CustomGuruInterestForm } from '@/components/app/custom-guru-interest-form';
 import { GuruDirectoryView } from '@/components/app/guru-directory-view';
+import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import type { GuruDefinition } from '@/lib/gurus';
@@ -137,6 +138,9 @@ export const WelcomeView = ({
       <div id="guru-directory">
         <GuruDirectoryView onGuruSelect={handleGuruSelect} />
       </div>
+
+      {/* Custom Guru Interest Form */}
+      <CustomGuruInterestForm />
 
       {/* Key Features Section */}
       <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-16">

@@ -1,15 +1,20 @@
 'use client';
 
 /* eslint-disable prettier/prettier */
-
 import React, { useEffect, useRef, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
 import { toastAlert } from '@/components/livekit/alert-toast';
 import { Button } from '@/components/livekit/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/livekit/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/livekit/select';
 import { useLanguage } from '@/contexts/language-context';
+import { type Country, DEFAULT_COUNTRY, countries } from '@/lib/countries';
 import { cn } from '@/lib/utils';
-import { DEFAULT_COUNTRY, countries, type Country } from '@/lib/countries';
 import { useAuth } from './auth-provider';
 
 interface PhoneAuthFormProps {
@@ -164,7 +169,7 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
 
   return (
     <div className={cn('mx-auto w-full max-w-md px-4', className)}>
-      <div className="bg-card border-border rounded-2xl border p-6 shadow-xl">
+      <div className="bg-card border-border rounded-2xl border p-4 shadow-xl sm:p-6">
         <div className="mb-6 text-center">
           <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
             <svg
@@ -205,10 +210,12 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
               <Select value={selectedCountry.code} onValueChange={handleCountryChange}>
                 <SelectTrigger className="h-12 w-full rounded-lg">
                   <SelectValue>
-                    <div className="flex items-center gap-2">
-                      <span>{selectedCountry.flag}</span>
-                      <span>{language === 'hi' ? selectedCountry.nameHindi : selectedCountry.name}</span>
-                      <span className="text-muted-foreground">({selectedCountry.dialCode})</span>
+                    <div className="flex min-w-0 items-center gap-2">
+                      <span className="shrink-0">{selectedCountry.flag}</span>
+                      <span className="min-w-0 truncate">
+                        {language === 'hi' ? selectedCountry.nameHindi : selectedCountry.name}
+                      </span>
+                      <span className="text-muted-foreground shrink-0">({selectedCountry.dialCode})</span>
                     </div>
                   </SelectValue>
                 </SelectTrigger>
@@ -229,8 +236,8 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
               <label htmlFor="phone" className="text-foreground mb-2 block text-sm font-medium">
                 {t('auth.phoneNumber')}
               </label>
-              <div className="relative flex">
-                <div className="border-input bg-muted text-foreground flex items-center rounded-l-lg border border-r-0 px-4 text-base">
+              <div className="relative flex min-w-0">
+                <div className="border-input bg-muted text-foreground flex shrink-0 items-center rounded-l-lg border border-r-0 px-3 text-sm sm:px-4 sm:text-base">
                   {selectedCountry.dialCode}
                 </div>
                 <input
@@ -239,7 +246,7 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
                   value={phoneNumber}
                   onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
                   placeholder={language === 'hi' ? '9876543210' : '9876543210'}
-                  className="border-input bg-background text-foreground focus:ring-ring h-12 flex-1 rounded-r-lg border px-4 text-base focus:ring-2 focus:outline-none"
+                  className="border-input bg-background text-foreground focus:ring-ring h-12 min-w-0 flex-1 rounded-r-lg border px-3 text-sm focus:ring-2 focus:outline-none sm:px-4 sm:text-base"
                   required
                   disabled={loading}
                   autoComplete="tel-national"
@@ -283,7 +290,8 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
                 </p>
               )}
               <p className="text-muted-foreground mt-2 text-center text-xs">
-                {t('auth.codeSentTo')} {selectedCountry.dialCode}{phoneNumber.replace(/(\d{2})\d+(\d{4})/, '$1****$2')}
+                {t('auth.codeSentTo')} {selectedCountry.dialCode}
+                {phoneNumber.replace(/(\d{2})\d+(\d{4})/, '$1****$2')}
               </p>
             </div>
             <div className="flex gap-3">
