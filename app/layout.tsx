@@ -84,6 +84,19 @@ export default async function RootLayout({ children }: RootLayoutProps) {
             <ThemeToggle className="translate-y-20 transition-transform delay-150 duration-300 group-hover:translate-y-0" />
           </div>
         </RootProvider>
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-2BGMVHDT07"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-2BGMVHDT07');
+          `}
+        </Script>
         {/* Register Service Worker for PWA */}
         <Script id="register-sw" strategy="afterInteractive">
           {`
