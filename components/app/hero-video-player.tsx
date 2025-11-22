@@ -19,6 +19,7 @@ interface HeroVideoPlayerProps {
   autoPlay?: boolean;
   loop?: boolean;
   className?: string;
+  hideProgressBar?: boolean;
 }
 
 export function HeroVideoPlayer({
@@ -27,6 +28,7 @@ export function HeroVideoPlayer({
   autoPlay = true,
   loop = true,
   className,
+  hideProgressBar = false,
 }: HeroVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -242,20 +244,22 @@ export function HeroVideoPlayer({
       >
         <div className="pointer-events-auto rounded-xl bg-gradient-to-t from-black/50 to-transparent p-3">
           {/* Timeline */}
-          <div className="mb-2 flex items-center gap-2">
-            <input
-              type="range"
-              min={0}
-              max={100}
-              value={progressPercent}
-              onChange={(e) => handleSeek(Number(e.target.value))}
-              className="w-full"
-              aria-label="Seek"
-            />
-            <div className="text-xs text-white/90 tabular-nums">
-              {formatTime(currentTime)} / {formatTime(duration)}
+          {!hideProgressBar && (
+            <div className="mb-2 flex items-center gap-2">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={progressPercent}
+                onChange={(e) => handleSeek(Number(e.target.value))}
+                className="w-full"
+                aria-label="Seek"
+              />
+              <div className="text-xs text-white/90 tabular-nums">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">

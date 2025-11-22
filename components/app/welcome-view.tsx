@@ -31,18 +31,21 @@ function WelcomeImage() {
 function VideoSection() {
   const { t } = useLanguage();
   return (
-    <section className="mt-6 w-full max-w-5xl sm:mt-8">
-      <div className="w-full py-4">
-        <h2 className="text-foreground mx-auto mb-3 px-4 text-center text-lg font-bold sm:px-6 sm:text-xl">
+    <section className="mx-auto mt-8 w-full max-w-5xl px-4 sm:mt-12 md:mt-16">
+      <div className="w-full">
+        <h2 className="text-foreground mb-4 text-center text-xl font-bold sm:mb-6 sm:text-2xl md:text-3xl">
           {t('welcome.videoTitle')}
         </h2>
-        <HeroVideoPlayer
-          src="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro_wide.mp4"
-          poster="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro_wide.mp4#t=0.1"
-          autoPlay
-          loop
-          className="w-full"
-        />
+        <div className="overflow-hidden rounded-2xl shadow-2xl">
+          <HeroVideoPlayer
+            src="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4"
+            poster="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4#t=0.1"
+            autoPlay
+            loop
+            className="w-full"
+            hideProgressBar
+          />
+        </div>
       </div>
     </section>
   );
@@ -89,21 +92,6 @@ export const WelcomeView = ({
           {t('welcome.description')}
         </p>
 
-        {/* Vision Statement */}
-        {t('welcome.vision') && (
-          <div className="bg-primary/10 border-primary/20 mx-auto mt-6 max-w-3xl rounded-xl border p-6 text-center">
-            <h2 className="text-foreground mb-2 text-xl font-bold sm:text-2xl">
-              {t('welcome.vision')}
-            </h2>
-            <p className="text-muted-foreground text-sm leading-6 sm:text-base">
-              {t('welcome.visionDesc')}
-            </p>
-          </div>
-        )}
-
-        {/* Product Description Video - Full Width */}
-        <VideoSection />
-
         {/* Action Buttons - Prominently displayed */}
         <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
           <Button
@@ -133,6 +121,9 @@ export const WelcomeView = ({
         </div>
         <p className="text-muted-foreground mt-3 text-sm">{t('welcome.freeTrial')}</p>
       </section>
+
+      {/* Video Introduction Section */}
+      <VideoSection />
 
       {/* Guru Directory Section */}
       <div id="guru-directory">
