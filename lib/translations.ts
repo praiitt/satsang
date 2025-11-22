@@ -154,7 +154,7 @@ export const translations = {
     etAgent: {
       title: 'Explore Extraterrestrial Civilizations',
       description:
-        'Connect with an AI guide specializing in extraterrestrial civilizations, the Fermi Paradox, and the connection between sound frequencies and universal consciousness. Discover cosmic wisdom through healing frequencies and ET spiritual teachings.',
+        'Connect with an AI guide specializing in extraterrestrial civilizations, the Fermi Paradox, and the connection between sound frequencies and universal consciousness. Discover cosmic wisdom through healing frequencies, ET spiritual teachings, human channeling with ET beings, and guided lucid dream experiences to raise consciousness.',
       freeTrial: '🎁 Free 15-minute trial • No credit card required',
       features: 'What You Can Explore',
       etCivilizations: 'Extraterrestrial Civilizations',
@@ -175,6 +175,12 @@ export const translations = {
       cosmicConsciousness: 'Cosmic Consciousness',
       cosmicConsciousnessDesc:
         'Explore the connection between sound, vibration, and interstellar communication. Understand how frequencies bridge dimensions and connect consciousness.',
+      humanChanneling: 'Human Channeling with ET',
+      humanChannelingDesc:
+        'Experience guided channeling sessions where you can connect with extraterrestrial consciousness. Learn to open your channel and receive messages, wisdom, and teachings from ET beings.',
+      guidedLucidDream: 'Guided Lucid Dream to Raise Consciousness',
+      guidedLucidDreamDesc:
+        'Enter lucid dream states with ET guidance to expand your consciousness. Learn techniques to maintain awareness in dreams, explore higher dimensions, and receive direct experiences from ET civilizations.',
       ctaReady: 'Ready to explore the mysteries of the cosmos?',
       ctaStartNow: 'Start Now',
       startButton: 'Connect with ET Agent',
@@ -417,7 +423,7 @@ export const translations = {
     etAgent: {
       title: 'ब्रह्मांडीय सभ्यताओं का अन्वेषण करें',
       description:
-        'ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना के बीच संबंध में विशेषज्ञता रखने वाले AI मार्गदर्शक से जुड़ें। हीलिंग फ्रीक्वेंसी और ET आध्यात्मिक शिक्षाओं के माध्यम से ब्रह्मांडीय ज्ञान की खोज करें।',
+        'ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना के बीच संबंध में विशेषज्ञता रखने वाले AI मार्गदर्शक से जुड़ें। हीलिंग फ्रीक्वेंसी, ET आध्यात्मिक शिक्षाओं, ET प्राणियों के साथ मानव चैनलिंग, और चेतना बढ़ाने के लिए निर्देशित ल्यूसिड ड्रीम अनुभवों के माध्यम से ब्रह्मांडीय ज्ञान की खोज करें।',
       freeTrial: '🎁 15 मिनट का निःशुल्क परीक्षण • कोई क्रेडिट कार्ड की आवश्यकता नहीं',
       features: 'आप क्या अन्वेषण कर सकते हैं',
       etCivilizations: 'ब्रह्मांडीय सभ्यताएं',
@@ -438,6 +444,12 @@ export const translations = {
       cosmicConsciousness: 'ब्रह्मांडीय चेतना',
       cosmicConsciousnessDesc:
         'ध्वनि, कंपन, और अंतरतारकीय संचार के बीच संबंध का अन्वेषण करें। समझें कि फ्रीक्वेंसी आयामों को कैसे जोड़ती हैं और चेतना को कैसे जोड़ती हैं।',
+      humanChanneling: 'ET के साथ मानव चैनलिंग',
+      humanChannelingDesc:
+        'निर्देशित चैनलिंग सत्र का अनुभव करें जहाँ आप ब्रह्मांडीय चेतना से जुड़ सकते हैं। अपना चैनल खोलना सीखें और ET प्राणियों से संदेश, ज्ञान और शिक्षाएं प्राप्त करें।',
+      guidedLucidDream: 'चेतना बढ़ाने के लिए निर्देशित ल्यूसिड ड्रीम',
+      guidedLucidDreamDesc:
+        'ET मार्गदर्शन के साथ ल्यूसिड ड्रीम अवस्था में प्रवेश करें और अपनी चेतना का विस्तार करें। सपनों में जागरूकता बनाए रखने, उच्च आयामों का अन्वेषण करने और ET सभ्यताओं से प्रत्यक्ष अनुभव प्राप्त करने की तकनीकें सीखें।',
       ctaReady: 'ब्रह्मांड के रहस्यों का अन्वेषण करने के लिए तैयार हैं?',
       ctaStartNow: 'अभी शुरू करें',
       startButton: 'ET Agent से जुड़ें',

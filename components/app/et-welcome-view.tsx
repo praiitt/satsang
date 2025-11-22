@@ -134,6 +134,28 @@ export const ETWelcomeView = ({
               {t('etAgent.cosmicConsciousnessDesc')}
             </p>
           </div>
+
+          {/* Feature 7: Human Channeling with ET */}
+          <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+            <div className="mb-3 text-3xl">🔮</div>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">
+              {t('etAgent.humanChanneling')}
+            </h3>
+            <p className="text-muted-foreground text-sm leading-6">
+              {t('etAgent.humanChannelingDesc')}
+            </p>
+          </div>
+
+          {/* Feature 8: Guided Lucid Dream */}
+          <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+            <div className="mb-3 text-3xl">🌙</div>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">
+              {t('etAgent.guidedLucidDream')}
+            </h3>
+            <p className="text-muted-foreground text-sm leading-6">
+              {t('etAgent.guidedLucidDreamDesc')}
+            </p>
+          </div>
         </div>
       </section>
 
