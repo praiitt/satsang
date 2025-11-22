@@ -12,6 +12,7 @@ pip install -r requirements.txt
 ```
 
 Or install directly:
+
 ```bash
 pip install openai-whisper requests
 ```
@@ -19,11 +20,13 @@ pip install openai-whisper requests
 ### 2. Install FFmpeg (Required for Audio Processing)
 
 **macOS:**
+
 ```bash
 brew install ffmpeg
 ```
 
 **Ubuntu/Debian:**
+
 ```bash
 sudo apt-get update
 sudo apt-get install ffmpeg
@@ -48,6 +51,7 @@ Transcribe audio from URL using Whisper.
 **Authentication:** Required (uses `requireAuth` middleware)
 
 **Request Body:**
+
 ```json
 {
   "audio_url": "https://storage.googleapis.com/bucket/audio.ogg",
@@ -58,12 +62,14 @@ Transcribe audio from URL using Whisper.
 ```
 
 **Parameters:**
+
 - `audio_url` (required): URL of audio file (MP3/OGG/WAV/MP4)
 - `chunk_duration` (optional, default: 300): Duration in seconds for chunking long audio files
 - `language` (optional, default: "hi"): Language code for transcription (e.g., "hi" for Hindi, "en" for English)
 - `async` (optional, default: false): If true, returns immediately and processes in background
 
 **Response (Success):**
+
 ```json
 {
   "success": true,
@@ -89,6 +95,7 @@ Transcribe audio from URL using Whisper.
 ```
 
 **Response (Error):**
+
 ```json
 {
   "success": false,
@@ -97,6 +104,7 @@ Transcribe audio from URL using Whisper.
 ```
 
 **Async Response (when async=true):**
+
 ```json
 {
   "success": true,
@@ -153,6 +161,7 @@ curl -X POST http://localhost:4000/transcript/audio \
 ## Language Support
 
 Whisper supports many languages. Common codes:
+
 - `hi` - Hindi
 - `en` - English
 - `es` - Spanish
@@ -168,6 +177,7 @@ See [Whisper documentation](https://github.com/openai/whisper) for full list.
 - **Large files (> 15 minutes)**: 5-15 minutes (chunked processing)
 
 Processing time depends on:
+
 - Audio duration
 - Hardware (CPU/GPU)
 - Whisper model size (currently using "base" model)
@@ -175,18 +185,23 @@ Processing time depends on:
 ## Troubleshooting
 
 ### Error: "Python 3 not found"
+
 Install Python 3.8+ and ensure `python3` is in PATH.
 
 ### Error: "Transcription script not found"
+
 Ensure `auth-server/scripts/transcribe_audio.py` exists and is executable.
 
 ### Error: "FFmpeg not found"
+
 Install FFmpeg (see Setup step 2).
 
 ### Error: "Whisper not installed"
+
 Install Whisper: `pip install openai-whisper`
 
 ### Slow Processing
+
 - Use async mode for long files
 - Consider using GPU-accelerated Whisper (requires CUDA)
 - Reduce chunk_duration for faster processing

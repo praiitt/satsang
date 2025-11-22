@@ -3,12 +3,11 @@
  * Bypasses auth for direct testing
  * Usage: tsx scripts/test-video-creation-direct.ts
  */
-
 import 'dotenv/config';
-import https from 'node:https';
-import { Storage } from '@google-cloud/storage';
 import fs from 'node:fs';
+import https from 'node:https';
 import path from 'node:path';
+import { Storage } from '@google-cloud/storage';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY || '';
 const HEYGEN_BASE_URL = process.env.HEYGEN_BASE_URL || 'https://api.heygen.com';
@@ -85,7 +84,9 @@ function httpRequestJson<T>(options: {
               error.details = json;
               return reject(error);
             } catch {
-              const error = new Error(`HTTP ${res.statusCode}: ${data.substring(0, 200)}`) as Error & {
+              const error = new Error(
+                `HTTP ${res.statusCode}: ${data.substring(0, 200)}`
+              ) as Error & {
                 statusCode?: number;
               };
               error.statusCode = res.statusCode;
@@ -193,17 +194,17 @@ async function checkVideoStatus(videoId: string): Promise<string | null> {
     } catch (error: any) {
       // Status endpoint might not exist or return 404, try alternative
       console.log(`⚠️  Status check failed (attempt ${attempts + 1}), trying alternative...`);
-      
+
       // Try alternative endpoint format
       try {
         const altResponse: any = await httpRequestJson<any>({
           method: 'GET',
           path: `/v2/video/status?video_id=${videoId}`,
         });
-        
+
         const status = altResponse?.data?.status || altResponse?.status;
         const videoUrl = altResponse?.data?.video_url || altResponse?.video_url;
-        
+
         if (status === 'completed' && videoUrl) {
           console.log(`✅ Video ready! URL: ${videoUrl}`);
           return videoUrl;
@@ -267,7 +268,9 @@ async function downloadAndSaveToBucket(videoUrl: string, bucketPath: string): Pr
     const [exists] = await file.exists();
     if (exists) {
       const [metadata] = await file.getMetadata();
-      console.log(`✅ Verified: File exists (${(Number(metadata.size) / 1024 / 1024).toFixed(2)} MB)`);
+      console.log(
+        `✅ Verified: File exists (${(Number(metadata.size) / 1024 / 1024).toFixed(2)} MB)`
+      );
     } else {
       throw new Error('File not found in bucket after upload');
     }
@@ -332,7 +335,9 @@ async function main() {
     console.log('🏁 All Tests Complete!');
     console.log('='.repeat(60));
     console.log(`✅ Both videos created and saved to GCS bucket`);
-    console.log(`📁 Location: gs://${process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings'}/marketing_avatars/test/`);
+    console.log(
+      `📁 Location: gs://${process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings'}/marketing_avatars/test/`
+    );
   } catch (error: any) {
     console.error('\n❌ Test failed:', error.message);
     process.exit(1);
@@ -343,4 +348,3 @@ main().catch((error) => {
   console.error('\n❌ Fatal error:', error);
   process.exit(1);
 });
-

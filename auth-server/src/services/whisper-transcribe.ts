@@ -1,8 +1,8 @@
 import FormData from 'form-data';
-import https from 'https';
 import * as fs from 'fs/promises';
+import https from 'https';
 import * as path from 'path';
-import { splitAudioIntoChunks, cleanupChunks } from './audio-splitter.js';
+import { cleanupChunks, splitAudioIntoChunks } from './audio-splitter.js';
 
 interface TranscriptionSegment {
   id: number;
@@ -48,7 +48,9 @@ export async function transcribeAudio(
 
   // If file is large, split into chunks
   if (fileSizeMB > maxFileSizeMB) {
-    console.log(`[whisper-transcribe] File is large (${fileSizeMB.toFixed(2)} MB > ${maxFileSizeMB} MB), splitting into chunks...`);
+    console.log(
+      `[whisper-transcribe] File is large (${fileSizeMB.toFixed(2)} MB > ${maxFileSizeMB} MB), splitting into chunks...`
+    );
     return await transcribeAudioInChunks(audioFilePath, language, chunkDuration);
   }
 
@@ -68,7 +70,7 @@ async function transcribeSingleAudio(
   try {
     // Read the audio file
     const audioBuffer = await fs.readFile(audioFilePath);
-    
+
     // Detect file format from extension
     const ext = path.extname(audioFilePath).toLowerCase();
     const contentTypeMap: Record<string, string> = {
@@ -80,9 +82,9 @@ async function transcribeSingleAudio(
       '.flac': 'audio/flac',
     };
     const contentType = contentTypeMap[ext] || 'audio/mpeg'; // Default to MP3
-    
+
     console.log(`[whisper-transcribe] Transcribing ${ext} file with content type: ${contentType}`);
-    
+
     // Create form data
     const formData = new FormData();
     formData.append('file', audioBuffer, {
@@ -127,7 +129,7 @@ async function transcribeSingleAudio(
           res.on('end', () => {
             console.log(`[whisper-transcribe] Response status: ${res.statusCode}`);
             console.log(`[whisper-transcribe] Response headers:`, res.headers);
-            
+
             if (res.statusCode && res.statusCode >= 400) {
               console.error(`[whisper-transcribe] ❌ Error response:`, data);
               try {
@@ -144,7 +146,9 @@ async function transcribeSingleAudio(
 
             try {
               const result = JSON.parse(data);
-              console.log(`[whisper-transcribe] ✅ Success! Text length: ${result.text?.length || 0}`);
+              console.log(
+                `[whisper-transcribe] ✅ Success! Text length: ${result.text?.length || 0}`
+              );
               resolve(result);
             } catch (error: any) {
               console.error(`[whisper-transcribe] ❌ JSON parse error:`, error.message);
@@ -159,7 +163,7 @@ async function transcribeSingleAudio(
         clearTimeout(timeoutId);
         reject(error);
       });
-      
+
       req.on('timeout', () => {
         req.destroy();
         clearTimeout(timeoutId);
@@ -191,13 +195,13 @@ export function parseConversation(transcription: TranscriptionResponse): Array<{
   // Simple heuristic: alternate segments between user and agent
   // In a real implementation, you'd use speaker diarization or timestamps
   const turns: Array<{ speaker: 'user' | 'agent'; text: string; start: number; end: number }> = [];
-  
+
   for (let i = 0; i < transcription.segments.length; i++) {
     const segment = transcription.segments[i];
     // Alternate: even indices = user, odd = agent (or vice versa)
     // You might need to adjust this based on your actual recording pattern
     const speaker = i % 2 === 0 ? 'user' : 'agent';
-    
+
     turns.push({
       speaker,
       text: segment.text.trim(),
@@ -247,7 +251,7 @@ async function transcribeAudioInChunks(
         }
 
         chunkResults.push(chunkResult);
-        
+
         // Update cumulative offset based on actual last segment end time
         if (chunkResult.segments && chunkResult.segments.length > 0) {
           const lastSegment = chunkResult.segments[chunkResult.segments.length - 1];
@@ -282,7 +286,9 @@ async function transcribeAudioInChunks(
       seg.id = index;
     });
 
-    console.log(`[whisper-transcribe] ✅ Combined ${chunkResults.length} chunks into single transcript`);
+    console.log(
+      `[whisper-transcribe] ✅ Combined ${chunkResults.length} chunks into single transcript`
+    );
 
     return {
       text: combinedText,
@@ -294,4 +300,3 @@ async function transcribeAudioInChunks(
     await cleanupChunks(chunkFiles);
   }
 }
-

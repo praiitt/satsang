@@ -11,10 +11,7 @@ export async function PATCH(
   const { jobId, turnIndex } = params;
 
   if (!jobId || !turnIndex) {
-    return NextResponse.json(
-      { error: 'jobId and turnIndex are required' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'jobId and turnIndex are required' }, { status: 400 });
   }
 
   const url = `${AUTH_SERVER_URL}/podcast/${encodeURIComponent(jobId)}/turns/${encodeURIComponent(turnIndex)}`;
@@ -50,10 +47,6 @@ export async function PATCH(
     return nextResponse;
   } catch (error) {
     console.error('[marketing-podcast] PATCH proxy error', error);
-    return NextResponse.json(
-      { error: 'Podcast server unavailable' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Podcast server unavailable' }, { status: 503 });
   }
 }
-

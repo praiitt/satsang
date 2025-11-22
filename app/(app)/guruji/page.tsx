@@ -16,5 +16,3 @@ export default async function GurujiPage() {
 
   return <App appConfig={appConfig} />;
 }
-
-

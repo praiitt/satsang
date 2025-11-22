@@ -2,13 +2,12 @@
  * Test script to test the podcast API end-to-end
  * Usage: tsx scripts/test-podcast-api.ts
  */
-
 import 'dotenv/config';
-import https from 'node:https';
-import http from 'node:http';
-import { Storage } from '@google-cloud/storage';
 import fs from 'node:fs';
+import http from 'node:http';
+import https from 'node:https';
 import path from 'node:path';
+import { Storage } from '@google-cloud/storage';
 
 const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL || 'http://localhost:4000';
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY || '';
@@ -40,7 +39,10 @@ function getGcsBucket() {
   return storage.bucket(bucketName);
 }
 
-async function httpRequestJson<T>(url: string, options?: { method?: string; body?: unknown }): Promise<T> {
+async function httpRequestJson<T>(
+  url: string,
+  options?: { method?: string; body?: unknown }
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url);
     const bodyString = options?.body ? JSON.stringify(options.body) : undefined;
@@ -68,13 +70,17 @@ async function httpRequestJson<T>(url: string, options?: { method?: string; body
           if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
             try {
               const json = JSON.parse(data);
-              const error = new Error(json.error || json.message || `HTTP ${res.statusCode}`) as Error & {
+              const error = new Error(
+                json.error || json.message || `HTTP ${res.statusCode}`
+              ) as Error & {
                 statusCode?: number;
               };
               error.statusCode = res.statusCode;
               return reject(error);
             } catch {
-              const error = new Error(`HTTP ${res.statusCode}: ${data.substring(0, 200)}`) as Error & {
+              const error = new Error(
+                `HTTP ${res.statusCode}: ${data.substring(0, 200)}`
+              ) as Error & {
                 statusCode?: number;
               };
               error.statusCode = res.statusCode;
@@ -217,7 +223,7 @@ async function downloadVideo(videoUrl: string, bucketPath: string): Promise<void
     });
 
     console.log(`✅ Saved to GCS: gs://${bucket.name}/${bucketPath}`);
-    
+
     // Generate signed URL
     const [signedUrl] = await file.getSignedUrl({
       action: 'read',
@@ -258,7 +264,7 @@ async function main() {
       for (const [index, turn] of jobStatus.turns.entries()) {
         if (turn.status === 'completed' && turn.videoUrl) {
           const bucketPath = `marketing_avatars/test/podcast-${jobId}-turn-${index + 1}-${timestamp}.mp4`;
-          
+
           try {
             await downloadVideo(turn.videoUrl, bucketPath);
             savedCount++;
@@ -271,7 +277,9 @@ async function main() {
         }
       }
 
-      console.log(`\n✅ Successfully saved ${savedCount} out of ${jobStatus.turns.length} video(s)`);
+      console.log(
+        `\n✅ Successfully saved ${savedCount} out of ${jobStatus.turns.length} video(s)`
+      );
     } else {
       console.log('\n⚠️  Job not completed. Status:', jobStatus.status);
     }
@@ -289,4 +297,3 @@ main().catch((error) => {
   console.error('\n❌ Fatal error:', error);
   process.exit(1);
 });
-

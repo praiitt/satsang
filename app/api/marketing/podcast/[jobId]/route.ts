@@ -3,10 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL || 'http://localhost:4000';
 
-export async function GET(
-  request: NextRequest,
-  context: { params: Promise<{ jobId: string }> }
-) {
+export async function GET(request: NextRequest, context: { params: Promise<{ jobId: string }> }) {
   const params = await context.params;
   const { jobId } = params;
 
@@ -44,11 +41,6 @@ export async function GET(
     return nextResponse;
   } catch (error) {
     console.error('[marketing-podcast] GET proxy error', error);
-    return NextResponse.json(
-      { error: 'Podcast server unavailable' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Podcast server unavailable' }, { status: 503 });
   }
 }
-
-

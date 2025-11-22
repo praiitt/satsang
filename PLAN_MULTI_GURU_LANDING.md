@@ -1,8 +1,9 @@
 ## Multi-Guru Dynamic Landing Page Plan
 
 ### 1. UX & Content Direction (RRAASI Vision)
+
 - **Goal**: Make the home experience clearly about “one place for all spiritual belief systems,” where:
-  - A short hero clearly explains the vision: *“Find your guru. Any tradition. Or create your own.”*
+  - A short hero clearly explains the vision: _“Find your guru. Any tradition. Or create your own.”_
   - Users immediately see multiple guru options (Guruji, ET Agent, Osho, future gurus).
   - There is a clear **“Create your own spiritual guru”** entrypoint.
 - **Key Sections**:
@@ -12,6 +13,7 @@
   - **Why RRAASI**: Brief bullets on “All traditions in one place”, “Voice-first satsang”, “Hindi & English”, etc.
 
 ### 2. Data Model for Gurus (Config-Driven)
+
 - **New file**: `lib/gurus.ts`
   - **Type**:
     - `id`: string (e.g. `"guruji"`, `"et"`, `"osho"`)
@@ -31,6 +33,7 @@
       - Potential future guru selector menus / headers.
 
 ### 3. Landing Page UI Components
+
 - **3.1 New `GuruDirectory` view**
   - **File**: `components/app/guru-directory-view.tsx`
   - **Responsibilities**:
@@ -74,6 +77,7 @@
     - For home page, primary interaction should be clicking a guru card (route navigation), not directly starting a session in the base room.
 
 ### 4. Routing & Navigation
+
 - **Existing guru routes**:
   - `"/"` → main Guruji experience (via `App` & `ViewController`).
   - `"/et-agent"` → ET agent.
@@ -89,6 +93,7 @@
     - Landing auto-updates to show the new guru.
 
 ### 5. “Create Your Own Spiritual Guru” Flow (v1)
+
 - **Short-term (static guidance)**:
   - Add a route `/create-guru` (Next.js page).
   - Describe in Hindi/English:
@@ -104,6 +109,7 @@
   - This UI can eventually call a backend API that invokes your `generate-agent.py` logic server-side.
 
 ### 6. Translations & Content
+
 - **New translation keys** in `lib/translations.ts`:
   - Under `en.home` (or `en.welcome` if you re-use the namespace):
     - `title`: “Find your guru. Many paths, one home.”
@@ -120,6 +126,7 @@
     - Emphasize “choose your guru or start with Guruji”.
 
 ### 7. Implementation Steps (Technical)
+
 - **Step 1: Guru config**
   - Create `lib/gurus.ts` with `GuruDefinition` type and `GURUS` array (initial entries: Guruji, ET Agent, Osho).
 - **Step 2: Translations**
@@ -143,6 +150,7 @@
     - Existing routes (`/et-agent`, `/osho`, main Guruji flow) still work as before.
 
 ### 8. Future Enhancements
+
 - **Personalization**:
   - Remember recently used or “favourite” guru in localStorage; highlight that card first.
 - **Search bar**:
@@ -151,5 +159,3 @@
   - Mark new or beta gurus (e.g., “NEW”, “BETA” badge on cards).
 - **Analytics**:
   - Track which gurus users pick most to inform future agents.
-
-

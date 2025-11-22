@@ -37,10 +37,6 @@ export async function POST(request: NextRequest) {
     return nextResponse;
   } catch (error) {
     console.error('[video-stitch] POST proxy error', error);
-    return NextResponse.json(
-      { error: 'Video stitching server unavailable' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Video stitching server unavailable' }, { status: 503 });
   }
 }
-

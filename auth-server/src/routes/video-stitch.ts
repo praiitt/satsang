@@ -1,13 +1,13 @@
 import { Router } from 'express';
+import path from 'node:path';
 import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 import { stitchVideos } from '../services/video-stitcher.js';
-import path from 'node:path';
 
 const router = Router();
 
 /**
  * POST /video-stitch
- * 
+ *
  * Standalone video stitching endpoint - doesn't require a podcast job
  * Body: { videoUrls: string[] }
  */
@@ -24,7 +24,9 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
     }
 
     // Filter out empty URLs
-    const validUrls = videoUrls.filter((url) => url && typeof url === 'string' && url.trim().length > 0);
+    const validUrls = videoUrls.filter(
+      (url) => url && typeof url === 'string' && url.trim().length > 0
+    );
 
     if (validUrls.length < 2) {
       return res.status(400).json({ error: 'At least 2 valid video URLs are required' });
@@ -37,7 +39,7 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
     const outputDir = path.resolve(process.cwd(), 'outputs', 'stitched');
     const timestamp = Date.now();
     const outputFileName = `stitched_${timestamp}.mp4`;
-    
+
     const result = await stitchVideos({
       videoUrls: validUrls,
       outputFileName,
@@ -73,4 +75,3 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
 });
 
 export default router;
-

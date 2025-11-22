@@ -1,10 +1,10 @@
 import { exec } from 'child_process';
-import { promisify } from 'util';
-import * as fs from 'fs/promises';
-import * as path from 'path';
-import https from 'https';
-import http from 'http';
 import { createWriteStream, unlink } from 'fs';
+import * as fs from 'fs/promises';
+import http from 'http';
+import https from 'https';
+import * as path from 'path';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
@@ -37,7 +37,7 @@ async function resolveHeyGenVideoId(videoId: string): Promise<string | null> {
   try {
     const { getAvatarClipStatus } = await import('./heygen.js');
     const statusResult = await getAvatarClipStatus(videoId);
-    
+
     if (statusResult.success && statusResult.videoUrl) {
       return statusResult.videoUrl;
     }
@@ -56,7 +56,7 @@ async function resolveHeyGenVideoId(videoId: string): Promise<string | null> {
   for (const apiPath of candidatePaths) {
     try {
       const response = await httpRequestJson<any>('GET', apiPath);
-      
+
       // Try to extract video URL from various response formats
       const videoUrl =
         response?.data?.video_url ||
@@ -179,17 +179,17 @@ function httpRequestJson<T>(method: 'GET' | 'POST', path: string, body?: any): P
 async function downloadVideo(url: string, outputPath: string): Promise<void> {
   // Check if it's a local file path (starts with /uploads/ or is an absolute path)
   // Also check if it contains 'uploads' or 'outputs' in the path
-  const isLocalPath = 
-    url.startsWith('/uploads/') || 
-    url.startsWith('/outputs/') || 
+  const isLocalPath =
+    url.startsWith('/uploads/') ||
+    url.startsWith('/outputs/') ||
     path.isAbsolute(url) ||
     url.includes('uploads/') ||
     url.includes('outputs/');
-  
+
   if (isLocalPath) {
     // It's a local file, copy it instead of downloading
     let sourcePath: string;
-    
+
     if (path.isAbsolute(url)) {
       // Already an absolute path, use as-is
       sourcePath = url;
@@ -206,12 +206,12 @@ async function downloadVideo(url: string, outputPath: string): Promise<void> {
       // Relative path - resolve from current working directory
       sourcePath = path.resolve(process.cwd(), url);
     }
-    
+
     console.log(`[video-stitcher] Copying local file`);
     console.log(`[video-stitcher]   Source: ${sourcePath}`);
     console.log(`[video-stitcher]   Target: ${outputPath}`);
     console.log(`[video-stitcher]   CWD: ${process.cwd()}`);
-    
+
     // Check if source file exists
     try {
       await fs.access(sourcePath);
@@ -228,7 +228,7 @@ async function downloadVideo(url: string, outputPath: string): Promise<void> {
         throw new Error(`Source file does not exist at ${sourcePath} or ${altPath}`);
       }
     }
-    
+
     try {
       await fs.copyFile(sourcePath, outputPath);
       console.log(`[video-stitcher] ✅ Successfully copied file`);
@@ -298,13 +298,13 @@ async function resolveVideoUrls(urls: string[]): Promise<{ urls: string[]; error
       }
     } else {
       // Check if it's a local file path (absolute path or contains uploads/outputs)
-      const isLocalPath = 
+      const isLocalPath =
         path.isAbsolute(url) ||
         url.startsWith('/uploads/') ||
         url.startsWith('/outputs/') ||
         url.includes('uploads/') ||
         url.includes('outputs/');
-      
+
       if (isLocalPath) {
         // It's a local file path, use it as-is
         console.log(`[video-stitcher] ✅ Using local file path: ${url}`);
@@ -327,9 +327,7 @@ async function resolveVideoUrls(urls: string[]): Promise<{ urls: string[]; error
 /**
  * Stitch multiple videos together into a single video
  */
-export async function stitchVideos(
-  params: StitchVideosParams
-): Promise<StitchVideosResult> {
+export async function stitchVideos(params: StitchVideosParams): Promise<StitchVideosResult> {
   const { videoUrls, outputFileName, outputDir } = params;
 
   if (!videoUrls || videoUrls.length === 0) {
@@ -342,14 +340,14 @@ export async function stitchVideos(
   // Resolve HeyGen video IDs to direct URLs
   console.log(`[video-stitcher] Resolving ${videoUrls.length} video URL(s)...`);
   const { urls: resolvedUrls, errors } = await resolveVideoUrls(videoUrls);
-  
+
   if (errors.length > 0) {
     return {
       success: false,
       error: `Failed to resolve video URLs:\n${errors.join('\n')}\n\nPlease provide direct video download URLs instead of HeyGen video IDs.`,
     };
   }
-  
+
   if (resolvedUrls.length === 0) {
     return {
       success: false,
@@ -387,7 +385,7 @@ export async function stitchVideos(
     console.log(`[video-stitcher] Downloading ${resolvedUrls.length} videos...`);
     for (let i = 0; i < resolvedUrls.length; i++) {
       const url = resolvedUrls[i];
-      
+
       // Determine file extension
       let ext = '.mp4';
       try {
@@ -402,16 +400,21 @@ export async function stitchVideos(
         // If URL parsing fails, try path.extname
         ext = path.extname(url) || '.mp4';
       }
-      
+
       const tempFile = path.join(tempDir, `video_${i}${ext}`);
-      
-      console.log(`[video-stitcher] Downloading/copying video ${i + 1}/${resolvedUrls.length} from ${url}`);
+
+      console.log(
+        `[video-stitcher] Downloading/copying video ${i + 1}/${resolvedUrls.length} from ${url}`
+      );
       try {
         await downloadVideo(url, tempFile);
         downloadedFiles.push(tempFile);
         cleanupFiles.push(tempFile);
       } catch (downloadError: any) {
-        console.error(`[video-stitcher] Failed to download/copy video ${i + 1}:`, downloadError.message);
+        console.error(
+          `[video-stitcher] Failed to download/copy video ${i + 1}:`,
+          downloadError.message
+        );
         throw new Error(`Failed to process video ${i + 1}: ${downloadError.message}`);
       }
     }
@@ -421,14 +424,14 @@ export async function stitchVideos(
     const concatContent = downloadedFiles
       .map((file) => `file '${file.replace(/'/g, "'\\''")}'`)
       .join('\n');
-    
+
     await fs.writeFile(concatFile, concatContent);
     cleanupFiles.push(concatFile);
 
     // Use ffmpeg to concatenate videos
     // Method 1: Using concat demuxer (works for same codec/format)
     console.log('[video-stitcher] Stitching videos with ffmpeg...');
-    
+
     try {
       // Try concat demuxer first (faster, but requires same codec)
       const ffmpegCmd = `ffmpeg -f concat -safe 0 -i "${concatFile}" -c copy "${outputPath}"`;
@@ -436,7 +439,7 @@ export async function stitchVideos(
       console.log('[video-stitcher] ✅ Videos stitched successfully using concat demuxer');
     } catch (concatError) {
       console.log('[video-stitcher] Concat demuxer failed, trying re-encoding...');
-      
+
       // Fallback: Re-encode all videos to ensure compatibility
       // This is slower but more reliable
       const reencodeCmd = `ffmpeg -f concat -safe 0 -i "${concatFile}" -c:v libx264 -c:a aac -preset medium -crf 23 "${outputPath}"`;
@@ -453,7 +456,7 @@ export async function stitchVideos(
         // Ignore cleanup errors
       }
     }
-    
+
     // Remove temp directory
     try {
       await fs.rmdir(tempDir);
@@ -470,7 +473,7 @@ export async function stitchVideos(
     // Clean up on error
     console.error('[video-stitcher] Error:', error);
     console.error('[video-stitcher] Error stack:', error?.stack);
-    
+
     for (const file of cleanupFiles) {
       try {
         await fs.unlink(file);
@@ -478,7 +481,7 @@ export async function stitchVideos(
         // Ignore cleanup errors
       }
     }
-    
+
     try {
       await fs.rmdir(tempDir);
     } catch {
@@ -486,7 +489,8 @@ export async function stitchVideos(
     }
 
     // Provide more detailed error message
-    const errorMessage = error?.message || error?.toString() || 'Unknown error occurred while stitching videos';
+    const errorMessage =
+      error?.message || error?.toString() || 'Unknown error occurred while stitching videos';
     console.error('[video-stitcher] Final error message:', errorMessage);
 
     return {
@@ -509,4 +513,3 @@ export async function getVideoInfo(videoPath: string): Promise<any> {
     throw new Error(`Failed to get video info: ${error.message}`);
   }
 }
-

@@ -1,10 +1,17 @@
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import { config } from 'dotenv';
-import * as path from 'path';
-import * as fs from 'fs';
-import { fileURLToPath } from 'url';
 import express from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+import { initFirebaseAdmin } from './firebase.js';
+import adsRoutes from './routes/ads.js';
+import authRoutes from './routes/auth.js';
+import podcastRoutes from './routes/podcast.js';
+import transcriptRoutes from './routes/transcript.js';
+import transcriptsRoutes from './routes/transcripts.js';
+import videoStitchRoutes from './routes/video-stitch.js';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -44,13 +51,6 @@ if (!process.env.OPENAI_API_KEY) {
 } else {
   console.log('[auth-server] ✅ OPENAI_API_KEY is set');
 }
-import { initFirebaseAdmin } from './firebase.js';
-import adsRoutes from './routes/ads.js';
-import authRoutes from './routes/auth.js';
-import transcriptRoutes from './routes/transcript.js';
-import transcriptsRoutes from './routes/transcripts.js';
-import podcastRoutes from './routes/podcast.js';
-import videoStitchRoutes from './routes/video-stitch.js';
 
 const app = express();
 
@@ -86,7 +86,9 @@ const server = app.listen(PORT, () => {
 server.on('error', (err: NodeJS.ErrnoException) => {
   if (err.code === 'EADDRINUSE') {
     // eslint-disable-next-line no-console
-    console.error(`[auth-server] Port ${PORT} is already in use. Please stop the existing server first.`);
+    console.error(
+      `[auth-server] Port ${PORT} is already in use. Please stop the existing server first.`
+    );
     process.exit(1);
   } else {
     // eslint-disable-next-line no-console

@@ -2,11 +2,10 @@
  * Fallback: If SARVAM REST API doesn't work, we can use this to call SARVAM via Python script
  * This is a temporary workaround until we find the correct REST API endpoint
  */
-
 import { exec } from 'child_process';
-import { promisify } from 'util';
-import * as path from 'path';
 import * as fs from 'fs/promises';
+import * as path from 'path';
+import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
@@ -59,23 +58,23 @@ except Exception as e:
 `;
 
   const scriptPath = path.join(path.dirname(audioFilePath), `sarvam_transcribe_${Date.now()}.py`);
-  
+
   try {
     // Write Python script
     await fs.writeFile(scriptPath, scriptContent);
-    
+
     // Execute Python script
     const { stdout, stderr } = await execAsync(`python3 "${scriptPath}"`);
-    
+
     if (stderr) {
       throw new Error(`SARVAM Python error: ${stderr}`);
     }
-    
+
     const transcript = stdout.trim();
     if (transcript.startsWith('ERROR:')) {
       throw new Error(transcript);
     }
-    
+
     return {
       text: transcript,
       language: language,
@@ -89,4 +88,3 @@ except Exception as e:
     }
   }
 }
-

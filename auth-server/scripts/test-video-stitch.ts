@@ -1,10 +1,9 @@
 /**
  * Test script for video stitching with HeyGen video URLs
- * 
+ *
  * Usage:
  *   HEYGEN_API_KEY=sk_xxx tsx scripts/test-video-stitch.ts
  */
-
 import 'dotenv/config';
 import https from 'node:https';
 
@@ -85,7 +84,7 @@ function httpRequest<T = any>(method: 'GET' | 'POST', path: string, body?: any):
 
 async function getVideoUrl(videoId: string): Promise<string | null> {
   console.log(`\n🔍 Fetching video URL for: ${videoId}`);
-  
+
   // Try multiple endpoints to get video URL
   const candidatePaths = [
     `/v2/video/${videoId}`,
@@ -97,7 +96,7 @@ async function getVideoUrl(videoId: string): Promise<string | null> {
     try {
       console.log(`📡 Trying GET ${path}...`);
       const response = await httpRequest<any>('GET', path);
-      
+
       // Try to extract video URL from various response formats
       const videoUrl =
         response?.data?.video_url ||
@@ -111,7 +110,7 @@ async function getVideoUrl(videoId: string): Promise<string | null> {
         console.log(`✅ Found video URL: ${videoUrl}`);
         return videoUrl;
       }
-      
+
       console.log(`⚠️  No video URL found in response from ${path}`);
       console.log(`Response structure:`, JSON.stringify(response, null, 2).substring(0, 500));
     } catch (error: any) {
@@ -128,10 +127,7 @@ async function getVideoUrl(videoId: string): Promise<string | null> {
 }
 
 async function testStitching() {
-  const videoIds = [
-    '3f3f16f230b14e0bb5b90d6da6046fce',
-    '536ec550dc92454395fba6d831dd2cd4',
-  ];
+  const videoIds = ['3f3f16f230b14e0bb5b90d6da6046fce', '536ec550dc92454395fba6d831dd2cd4'];
 
   console.log('🎬 Testing Video Stitching with HeyGen Videos\n');
   console.log(`🔑 API Key: ${HEYGEN_API_KEY.slice(0, 10)}...`);
@@ -139,14 +135,16 @@ async function testStitching() {
 
   // Get video URLs
   const videoUrls: string[] = [];
-  
+
   for (const videoId of videoIds) {
     const url = await getVideoUrl(videoId);
     if (url) {
       videoUrls.push(url);
     } else {
       console.error(`❌ Could not get video URL for ${videoId}`);
-      console.error(`💡 You may need to get the direct video download URL from the HeyGen dashboard.`);
+      console.error(
+        `💡 You may need to get the direct video download URL from the HeyGen dashboard.`
+      );
       console.error(`   Dashboard URL: https://app.heygen.com/videos/${videoId}`);
     }
   }
@@ -175,7 +173,7 @@ async function testStitching() {
   console.log('   2. Scroll to "Video Stitching Tool" section');
   console.log('   3. Paste these URLs one by one');
   console.log('   4. Click "🎬 Stitch Videos"');
-  
+
   console.log('\n📋 URLs to copy:');
   videoUrls.forEach((url) => {
     console.log(`   ${url}`);
@@ -186,4 +184,3 @@ testStitching().catch((error) => {
   console.error('\n❌ Script failed:', error.message);
   process.exit(1);
 });
-

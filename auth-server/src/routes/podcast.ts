@@ -1,11 +1,11 @@
 import { Router } from 'express';
+import fs from 'node:fs';
+import https from 'node:https';
+import path from 'node:path';
 import { getDb } from '../firebase.js';
 import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 import { createAvatarClip, getAvatarClipStatus, healthCheck } from '../services/heygen.js';
 import { stitchVideos } from '../services/video-stitcher.js';
-import https from 'node:https';
-import fs from 'node:fs';
-import path from 'node:path';
 
 const router = Router();
 
@@ -39,9 +39,13 @@ const COLLECTION = 'marketing_podcasts';
 /**
  * Save video locally to disk (skip GCS for now)
  */
-async function saveVideoLocally(videoUrl: string, jobId: string, turnIndex: number): Promise<string> {
+async function saveVideoLocally(
+  videoUrl: string,
+  jobId: string,
+  turnIndex: number
+): Promise<string> {
   const outputDir = path.resolve(process.cwd(), 'outputs', 'podcasts', jobId);
-  
+
   // Create directory if it doesn't exist
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir, { recursive: true });
@@ -52,26 +56,28 @@ async function saveVideoLocally(videoUrl: string, jobId: string, turnIndex: numb
 
   // Download video
   return new Promise((resolve, reject) => {
-    https.get(videoUrl, (res) => {
-      if (res.statusCode !== 200) {
-        return reject(new Error(`HTTP ${res.statusCode}: Failed to download video`));
-      }
+    https
+      .get(videoUrl, (res) => {
+        if (res.statusCode !== 200) {
+          return reject(new Error(`HTTP ${res.statusCode}: Failed to download video`));
+        }
 
-      const fileStream = fs.createWriteStream(filePath);
-      res.pipe(fileStream);
+        const fileStream = fs.createWriteStream(filePath);
+        res.pipe(fileStream);
 
-      fileStream.on('finish', () => {
-        fileStream.close();
-        // eslint-disable-next-line no-console
-        console.log(`[podcast] ✅ Video saved locally: ${filePath}`);
-        resolve(filePath);
-      });
+        fileStream.on('finish', () => {
+          fileStream.close();
+          // eslint-disable-next-line no-console
+          console.log(`[podcast] ✅ Video saved locally: ${filePath}`);
+          resolve(filePath);
+        });
 
-      fileStream.on('error', (err) => {
-        fs.unlink(filePath, () => {}); // Delete partial file on error
-        reject(err);
-      });
-    }).on('error', reject);
+        fileStream.on('error', (err) => {
+          fs.unlink(filePath, () => {}); // Delete partial file on error
+          reject(err);
+        });
+      })
+      .on('error', reject);
   });
 }
 
@@ -193,7 +199,7 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
     const voiceIdHost = options?.voiceIdHost;
     const voiceIdGuest = options?.voiceIdGuest;
 
-      const createdTurns: TurnRecord[] = [];
+    const createdTurns: TurnRecord[] = [];
     for (const turn of normalizedTurns) {
       const avatarId = mapSpeakerToAvatar(turn.speaker, hostAvatarId, guestAvatarId);
       const voiceId = turn.speaker === 'host' ? voiceIdHost : voiceIdGuest;
@@ -211,7 +217,7 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
         ...turn,
         status: result.success ? 'queued' : 'failed',
       };
-      
+
       if (result.videoId) {
         turnRecord.heygenVideoId = result.videoId;
       }
@@ -272,7 +278,7 @@ router.get('/:jobId', requireAuth, async (req: AuthedRequest, res) => {
 
     // Poll HeyGen for any turns that are not ready/failed yet
     // Note: HeyGen doesn't have a status endpoint, so we can't actually check status
-    // Videos take 3-5 minutes to process. We'll just keep them as 'processing' 
+    // Videos take 3-5 minutes to process. We'll just keep them as 'processing'
     // until they're manually checked or we implement webhooks
     const updatedTurns: TurnRecord[] = [];
     const now = new Date();
@@ -331,13 +337,16 @@ router.get('/:jobId', requireAuth, async (req: AuthedRequest, res) => {
       };
       if (videoUrl) {
         updatedTurn.videoUrl = videoUrl;
-        
+
         // Save video locally (skip GCS for now)
         try {
           await saveVideoLocally(videoUrl, jobId, turn.index);
         } catch (saveError: any) {
           // eslint-disable-next-line no-console
-          console.warn(`[podcast] Failed to save video locally for turn ${turn.index}:`, saveError.message);
+          console.warn(
+            `[podcast] Failed to save video locally for turn ${turn.index}:`,
+            saveError.message
+          );
           // Continue even if local save fails
         }
       }
@@ -378,9 +387,9 @@ router.get('/:jobId', requireAuth, async (req: AuthedRequest, res) => {
 
 /**
  * Manually update a turn's video URL (for when videos are ready in HeyGen dashboard)
- * 
+ *
  * PATCH /podcast/:jobId/turns/:turnIndex
- * 
+ *
  * Body: { videoUrl: string }
  */
 router.patch('/:jobId/turns/:turnIndex', requireAuth, async (req: AuthedRequest, res) => {
@@ -455,7 +464,7 @@ router.patch('/:jobId/turns/:turnIndex', requireAuth, async (req: AuthedRequest,
 
 /**
  * POST /podcast/:jobId/stitch
- * 
+ *
  * Stitch all ready video turns into a single video
  * Body: { videoUrls?: string[] } - Optional, if not provided, uses all ready turns from job
  */
@@ -479,7 +488,7 @@ router.post('/:jobId/stitch', requireAuth, async (req: AuthedRequest, res) => {
 
     // Get video URLs - either from request body or from ready turns
     let urlsToStitch: string[] = [];
-    
+
     if (videoUrls && Array.isArray(videoUrls) && videoUrls.length > 0) {
       urlsToStitch = videoUrls;
     } else {
@@ -501,7 +510,7 @@ router.post('/:jobId/stitch', requireAuth, async (req: AuthedRequest, res) => {
     // Stitch videos
     const outputDir = path.resolve(process.cwd(), 'outputs', 'podcasts', jobId);
     const outputFileName = `stitched_${jobId}_${Date.now()}.mp4`;
-    
+
     const result = await stitchVideos({
       videoUrls: urlsToStitch,
       outputFileName,
@@ -517,7 +526,7 @@ router.post('/:jobId/stitch', requireAuth, async (req: AuthedRequest, res) => {
 
     // Update job with stitched video URL
     const stitchedVideoUrl = result.outputUrl || `/outputs/podcasts/${jobId}/${outputFileName}`;
-    
+
     await docRef.set(
       {
         stitchedVideoUrl,
@@ -544,5 +553,3 @@ router.post('/:jobId/stitch', requireAuth, async (req: AuthedRequest, res) => {
 });
 
 export default router;
-
-

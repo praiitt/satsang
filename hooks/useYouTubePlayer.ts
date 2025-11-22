@@ -141,7 +141,7 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
               state,
               playing ? 'PLAYING' : state === 2 ? 'PAUSED' : state === 0 ? 'ENDED' : 'OTHER'
             );
-            
+
             // Notify components when video ends or pauses (for agent wake)
             // Components listening to isPlaying will handle agent.control messages
             if (state === 0) {

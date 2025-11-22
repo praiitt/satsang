@@ -6,7 +6,9 @@ const HEYGEN_BASE_URL = process.env.HEYGEN_BASE_URL || 'https://api.heygen.com';
 
 if (!HEYGEN_API_KEY) {
   // eslint-disable-next-line no-console
-  console.warn('[heygen] HEYGEN_API_KEY is not set. HeyGen integration will not work until configured.');
+  console.warn(
+    '[heygen] HEYGEN_API_KEY is not set. HeyGen integration will not work until configured.'
+  );
 }
 
 interface HttpRequestOptions {
@@ -45,15 +47,14 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
     // Otherwise, check if we need to prepend /v2/ based on API key version
     let fullPath = options.path;
     const isV2Key = HEYGEN_API_KEY?.startsWith('sk_V2_');
-    
+
     // If using v2 API key and path doesn't start with /v2/, prepend it
     if (isV2Key && !fullPath.startsWith('/v2/') && !fullPath.startsWith('/v1/')) {
       fullPath = '/v2' + fullPath;
     }
-    
+
     const url = new URL(HEYGEN_BASE_URL);
-    const bodyString =
-      options.body !== undefined ? JSON.stringify(options.body) : undefined;
+    const bodyString = options.body !== undefined ? JSON.stringify(options.body) : undefined;
 
     const req = https.request(
       {
@@ -78,14 +79,14 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
           if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
             let errorMessage = `HTTP ${res.statusCode}`;
             let errorDetails: any = null;
-            
+
             // Don't log 404 errors for status endpoints - HeyGen doesn't have that endpoint (expected)
             // Only log non-404 errors or errors for non-status endpoints
             if (!(isStatusEndpoint && res.statusCode === 404)) {
               // eslint-disable-next-line no-console
               console.warn(`[heygen] HTTP ${res.statusCode} for ${options.method} ${options.path}`);
             }
-            
+
             // Try to parse error response as JSON
             if (data) {
               try {
@@ -101,18 +102,21 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
                 // Don't log 404 errors for status endpoints to reduce log spam
                 if (!isStatusEndpoint || res.statusCode !== 404) {
                   // eslint-disable-next-line no-console
-                  console.error(`[heygen] API Error ${res.statusCode}. Raw response:`, data.substring(0, 500));
+                  console.error(
+                    `[heygen] API Error ${res.statusCode}. Raw response:`,
+                    data.substring(0, 500)
+                  );
                 }
                 errorMessage = `${errorMessage}: ${data.substring(0, 200)}`;
               }
             }
-            
+
             const error = new Error(errorMessage) as Error & { statusCode?: number; details?: any };
             error.statusCode = res.statusCode;
             error.details = errorDetails || data;
             return reject(error);
           }
-          
+
           if (!data) {
             // @ts-expect-error - allow void responses
             return resolve(undefined);
@@ -123,10 +127,17 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
           } catch (err) {
             // If JSON parsing fails, log the raw response for debugging
             // eslint-disable-next-line no-console
-            console.error(`[heygen] Failed to parse JSON response. Status: ${res.statusCode}, Headers:`, res.headers);
+            console.error(
+              `[heygen] Failed to parse JSON response. Status: ${res.statusCode}, Headers:`,
+              res.headers
+            );
             // eslint-disable-next-line no-console
             console.error(`[heygen] Raw response (first 500 chars):`, data.substring(0, 500));
-            reject(new Error(`Invalid JSON response: ${String(err)}. Raw response: ${data.substring(0, 200)}`));
+            reject(
+              new Error(
+                `Invalid JSON response: ${String(err)}. Raw response: ${data.substring(0, 200)}`
+              )
+            );
           }
         });
       }
@@ -167,7 +178,7 @@ export async function createAvatarClip(
     // Parse resolution to width/height (e.g., "720p" -> 1280x720, "1080p" -> 1920x1080)
     let width = 1280;
     let height = 720; // Default to 720p for free plan
-    
+
     if (params.resolution) {
       const res = params.resolution.toLowerCase();
       if (res === '1080p' || res === '1080') {
@@ -178,7 +189,7 @@ export async function createAvatarClip(
         height = 720;
       }
     }
-    
+
     // Use talking_photo format (matches working test script)
     const payload = {
       video_inputs: [
@@ -190,7 +201,8 @@ export async function createAvatarClip(
           voice: {
             type: 'text',
             input_text: params.text,
-            voice_id: params.voiceId || process.env.TTS_VOICE_ID || 'dc5370c68baa4905be87f702758df4b0',
+            voice_id:
+              params.voiceId || process.env.TTS_VOICE_ID || 'dc5370c68baa4905be87f702758df4b0',
           },
         },
       ],
@@ -203,13 +215,13 @@ export async function createAvatarClip(
 
     // eslint-disable-next-line no-console
     console.log(`[heygen] Creating talking photo clip for avatar ${params.avatarId}`);
-    
+
     const json = await httpRequestJson<any>({
       method: 'POST',
       path: '/v2/video/generate', // Use exact working endpoint
       body: payload,
     });
-    
+
     // eslint-disable-next-line no-console
     console.log(`[heygen] ✅ Video creation request successful`);
 
@@ -219,19 +231,18 @@ export async function createAvatarClip(
 
     // Try to normalize response shape - HeyGen v2 returns data.video_id for photo avatars
     const videoId =
-      json?.data?.video_id ||  // Photo avatars return video_id directly
-      json?.data?.task?.id ||  // Some formats return task.id
+      json?.data?.video_id || // Photo avatars return video_id directly
+      json?.data?.task?.id || // Some formats return task.id
       json?.data?.id ||
       json?.task?.id ||
       json?.video_id ||
       json?.id ||
       json?.data?.task_id ||
       json?.task_id;
-    
+
     // Check if video URL is already in the response
     const videoUrl = json?.data?.video_url || json?.data?.videoUrl || json?.video_url;
-    const status =
-      json?.data?.status || json?.status || (videoId ? 'queued' : 'unknown');
+    const status = json?.data?.status || json?.status || (videoId ? 'queued' : 'unknown');
 
     // If video URL is already available in response, use it
     if (videoUrl) {
@@ -257,9 +268,7 @@ export async function createAvatarClip(
  * Get status for a HeyGen video.
  * Tries multiple endpoint formats to find the correct one.
  */
-export async function getAvatarClipStatus(
-  videoId: string
-): Promise<HeyGenVideoStatusResponse> {
+export async function getAvatarClipStatus(videoId: string): Promise<HeyGenVideoStatusResponse> {
   // Try the most likely status endpoints (matching test script)
   // Note: HeyGen status endpoint may not exist, but we try the RESTful pattern
   const statusEndpoints = [
@@ -274,15 +283,13 @@ export async function getAvatarClipStatus(
   for (const endpoint of statusEndpoints) {
     try {
       // Add timeout to fail fast (1 second per endpoint - HeyGen status endpoint likely doesn't exist)
-      const json: any = await Promise.race([
+      const json: any = (await Promise.race([
         httpRequestJson<any>({
           method: 'GET',
           path: endpoint,
         }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout')), 1000)
-        ),
-      ]) as any;
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000)),
+      ])) as any;
 
       // Normalize status
       const rawStatus = json?.data?.status || json?.status || 'unknown';
@@ -291,15 +298,12 @@ export async function getAvatarClipStatus(
         const s = rawStatus.toLowerCase();
         if (s === 'pending' || s === 'queued') status = 'queued';
         else if (s === 'processing' || s === 'rendering') status = 'processing';
-        else if (s === 'completed' || s === 'ready' || s === 'done')
-          status = 'ready';
+        else if (s === 'completed' || s === 'ready' || s === 'done') status = 'ready';
         else if (s === 'failed' || s === 'error') status = 'failed';
       }
 
-      const videoUrl =
-        json?.data?.video_url || json?.data?.videoUrl || json?.video_url;
-      const thumbnailUrl =
-        json?.data?.cover_url || json?.data?.thumbnail_url || undefined;
+      const videoUrl = json?.data?.video_url || json?.data?.videoUrl || json?.video_url;
+      const thumbnailUrl = json?.data?.cover_url || json?.data?.thumbnail_url || undefined;
 
       // Only log if we actually got a successful response
       // eslint-disable-next-line no-console
@@ -365,12 +369,7 @@ export async function healthCheck(): Promise<{
   try {
     // Try to list avatars - common endpoints: /v1/avatar.list, /v1/avatars, /v2/avatars
     // We'll try multiple endpoints to see which one works
-    const avatarEndpoints = [
-      '/v1/avatar.list',
-      '/v1/avatars',
-      '/v2/avatars',
-      '/v1/avatar',
-    ];
+    const avatarEndpoints = ['/v1/avatar.list', '/v1/avatars', '/v2/avatars', '/v1/avatar'];
 
     let lastError: Error | null = null;
     for (const endpoint of avatarEndpoints) {
@@ -400,14 +399,18 @@ export async function healthCheck(): Promise<{
           }));
           result.success = true;
           // eslint-disable-next-line no-console
-          console.log(`[heygen-health] ✅ Success! Found ${result.avatars.length} avatars via ${endpoint}`);
+          console.log(
+            `[heygen-health] ✅ Success! Found ${result.avatars.length} avatars via ${endpoint}`
+          );
           return result;
         } else if (json && typeof json === 'object') {
           // Even if no avatars, getting a valid JSON response means API is working
           result.success = true;
           result.error = `API connected but no avatars found in response from ${endpoint}`;
           // eslint-disable-next-line no-console
-          console.log(`[heygen-health] ✅ API connected but no avatars in response from ${endpoint}`);
+          console.log(
+            `[heygen-health] ✅ API connected but no avatars in response from ${endpoint}`
+          );
           return result;
         }
       } catch (err) {
@@ -429,5 +432,3 @@ export async function healthCheck(): Promise<{
     return result;
   }
 }
-
-

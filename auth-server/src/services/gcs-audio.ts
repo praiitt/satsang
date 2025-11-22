@@ -1,6 +1,6 @@
-import { Storage } from '@google-cloud/storage';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Storage } from '@google-cloud/storage';
 
 const GCS_BUCKET_NAME = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings';
 
@@ -13,7 +13,7 @@ function getGcsBucket() {
 
   // Check if credentials are base64 encoded
   const isBase64 = process.env.LIVEKIT_EGRESS_GCP_CREDENTIALS_BASE64 === 'true';
-  
+
   if (!credentialsJson) {
     // Try file path
     const filePath = path.resolve(process.cwd(), '../satsangServiceAccount.json');
@@ -30,8 +30,13 @@ function getGcsBucket() {
   }
 
   let credentials: any;
-  
-  if (isBase64 && typeof credentialsJson === 'string' && !credentialsJson.startsWith('{') && !fs.existsSync(credentialsJson)) {
+
+  if (
+    isBase64 &&
+    typeof credentialsJson === 'string' &&
+    !credentialsJson.startsWith('{') &&
+    !fs.existsSync(credentialsJson)
+  ) {
     // It's a base64 encoded JSON string
     try {
       const decoded = Buffer.from(credentialsJson, 'base64').toString('utf8');
@@ -81,7 +86,7 @@ export interface AudioFile {
 export async function listRecentMP3Files(limit: number = 20): Promise<AudioFile[]> {
   try {
     const bucket = getGcsBucket();
-    
+
     // List all files recursively - search in recordings/ subfolder where LiveKit egress stores files
     // Use prefix 'recordings/' to search in that folder and all subfolders
     const [files] = await bucket.getFiles({
@@ -89,7 +94,9 @@ export async function listRecentMP3Files(limit: number = 20): Promise<AudioFile[
       // Note: getFiles() already lists recursively by default when using a prefix
     });
 
-    console.log(`[gcs-audio] Found ${files.length} total files in bucket (with prefix 'recordings/')`);
+    console.log(
+      `[gcs-audio] Found ${files.length} total files in bucket (with prefix 'recordings/')`
+    );
 
     // Filter MP3 files and sort by creation time
     const mp3Files = files
@@ -104,9 +111,11 @@ export async function listRecentMP3Files(limit: number = 20): Promise<AudioFile[
           name: file.name.split('/').pop() || file.name,
           path: file.name,
           size: metadata?.size != null ? Number(metadata.size) : 0,
-          created: metadata?.timeCreated 
-            ? new Date(metadata.timeCreated) 
-            : (metadata?.updated ? new Date(metadata.updated) : new Date()),
+          created: metadata?.timeCreated
+            ? new Date(metadata.timeCreated)
+            : metadata?.updated
+              ? new Date(metadata.updated)
+              : new Date(),
           url: `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${file.name}`,
         };
       })
@@ -130,7 +139,7 @@ export async function downloadMP3FromGCS(gcsPath: string, localPath: string): Pr
   try {
     const bucket = getGcsBucket();
     const file = bucket.file(gcsPath);
-    
+
     await file.download({ destination: localPath });
   } catch (error: any) {
     console.error('[gcs-audio] Error downloading MP3:', error);
@@ -141,20 +150,22 @@ export async function downloadMP3FromGCS(gcsPath: string, localPath: string): Pr
 /**
  * Get a signed URL for an MP3 file (temporary access)
  */
-export async function getMP3SignedUrl(gcsPath: string, expiresInMinutes: number = 60): Promise<string> {
+export async function getMP3SignedUrl(
+  gcsPath: string,
+  expiresInMinutes: number = 60
+): Promise<string> {
   try {
     const bucket = getGcsBucket();
     const file = bucket.file(gcsPath);
-    
+
     const [url] = await file.getSignedUrl({
       action: 'read',
       expires: Date.now() + expiresInMinutes * 60 * 1000,
     });
-    
+
     return url;
   } catch (error: any) {
     console.error('[gcs-audio] Error getting signed URL:', error);
     throw new Error(`Failed to get signed URL: ${error.message}`);
   }
 }
-

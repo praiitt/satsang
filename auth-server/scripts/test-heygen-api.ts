@@ -2,12 +2,11 @@
  * Test script to directly test HeyGen API with photo avatars
  * Usage: tsx scripts/test-heygen-api.ts
  */
-
 import 'dotenv/config';
-import https from 'node:https';
-import { Storage } from '@google-cloud/storage';
 import fs from 'node:fs';
+import https from 'node:https';
 import path from 'node:path';
+import { Storage } from '@google-cloud/storage';
 
 const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY || '';
 const HEYGEN_BASE_URL = process.env.HEYGEN_BASE_URL || 'https://api.heygen.com';
@@ -28,11 +27,11 @@ function httpRequestJson<T>(options: {
   return new Promise((resolve, reject) => {
     const isV2Key = HEYGEN_API_KEY?.startsWith('sk_V2_');
     let fullPath = options.path;
-    
+
     if (isV2Key && !fullPath.startsWith('/v2/') && !fullPath.startsWith('/v1/')) {
       fullPath = '/v2' + fullPath;
     }
-    
+
     const url = new URL(HEYGEN_BASE_URL);
     const bodyString = options.body !== undefined ? JSON.stringify(options.body) : undefined;
 
@@ -61,11 +60,11 @@ function httpRequestJson<T>(options: {
         res.on('end', () => {
           console.log(`📥 Response status: ${res.statusCode}`);
           console.log(`📥 Response headers:`, res.headers);
-          
+
           if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
             let errorMessage = `HTTP ${res.statusCode}`;
             let errorDetails: any = null;
-            
+
             if (data) {
               try {
                 errorDetails = JSON.parse(data);
@@ -76,17 +75,17 @@ function httpRequestJson<T>(options: {
                 errorMessage = `${errorMessage}: ${data.substring(0, 200)}`;
               }
             }
-            
+
             const error = new Error(errorMessage) as Error & { statusCode?: number; details?: any };
             error.statusCode = res.statusCode;
             error.details = errorDetails || data;
             return reject(error);
           }
-          
+
           if (!data) {
             return resolve(undefined as T);
           }
-          
+
           try {
             const json = JSON.parse(data);
             console.log(`✅ Response JSON:`, JSON.stringify(json, null, 2));
@@ -114,7 +113,7 @@ function httpRequestJson<T>(options: {
 async function testCreateVideo(avatarId: string, text: string): Promise<TestResult> {
   console.log(`\n🧪 Testing video creation for avatar: ${avatarId}`);
   console.log(`📝 Text: "${text}"`);
-  
+
   const endpoints = [
     '/video/generate',
     '/v2/video/generate',
@@ -126,7 +125,7 @@ async function testCreateVideo(avatarId: string, text: string): Promise<TestResu
   for (const endpoint of endpoints) {
     try {
       console.log(`\n🔄 Trying endpoint: ${endpoint}`);
-      
+
       // Try different payload formats - HeyGen v2 requires video_inputs with voice_id
       const payloads = [
         {
@@ -189,8 +188,11 @@ async function testCreateVideo(avatarId: string, text: string): Promise<TestResu
 
       for (const payload of payloads) {
         try {
-          console.log(`\n   Trying payload format:`, JSON.stringify(payload, null, 2).substring(0, 200));
-          
+          console.log(
+            `\n   Trying payload format:`,
+            JSON.stringify(payload, null, 2).substring(0, 200)
+          );
+
           const response: any = await httpRequestJson<any>({
             method: 'POST',
             path: endpoint,
@@ -248,7 +250,7 @@ async function testCreateVideo(avatarId: string, text: string): Promise<TestResu
 
 async function testGetVideoStatus(videoId: string): Promise<TestResult> {
   console.log(`\n🧪 Testing video status for: ${videoId}`);
-  
+
   const endpoints = [
     `/video/status?video_id=${videoId}`,
     `/v2/video/status?video_id=${videoId}`,
@@ -260,7 +262,7 @@ async function testGetVideoStatus(videoId: string): Promise<TestResult> {
   for (const endpoint of endpoints) {
     try {
       console.log(`\n🔄 Trying endpoint: ${endpoint}`);
-      
+
       const response: any = await httpRequestJson<any>({
         method: 'GET',
         path: endpoint,
@@ -293,11 +295,11 @@ async function testGetVideoStatus(videoId: string): Promise<TestResult> {
 
 function getGcsBucket() {
   // Read GCP credentials from env or file
-  const credentialsJson = 
+  const credentialsJson =
     process.env.LIVEKIT_EGRESS_GCP_CREDENTIALS ||
     process.env.GOOGLE_APPLICATION_CREDENTIALS ||
     path.resolve(process.cwd(), '../satsangServiceAccount.json');
-  
+
   let credentials: any;
   if (typeof credentialsJson === 'string' && credentialsJson.startsWith('{')) {
     credentials = JSON.parse(credentialsJson);
@@ -352,12 +354,12 @@ async function downloadAndSaveToBucket(videoUrl: string, bucketPath: string): Pr
 async function main() {
   console.log('🚀 HeyGen API Test Script');
   console.log('='.repeat(50));
-  
+
   if (!HEYGEN_API_KEY) {
     console.error('❌ HEYGEN_API_KEY not set!');
     process.exit(1);
   }
-  
+
   console.log(`🔑 API Key: ${HEYGEN_API_KEY.substring(0, 10)}...`);
   console.log(`🌐 Base URL: ${HEYGEN_BASE_URL}`);
 
@@ -376,11 +378,11 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const statusResult = await testGetVideoStatus(hostResult.videoId);
-    
+
     if (statusResult.success && statusResult.videoUrl) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const bucketPath = `marketing_avatars/test/host-${timestamp}.mp4`;
-      
+
       try {
         await downloadAndSaveToBucket(statusResult.videoUrl, bucketPath);
         console.log(`\n✅ HOST AVATAR TEST COMPLETE!`);
@@ -405,11 +407,11 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
     const statusResult = await testGetVideoStatus(guestResult.videoId);
-    
+
     if (statusResult.success && statusResult.videoUrl) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const bucketPath = `marketing_avatars/test/guest-${timestamp}.mp4`;
-      
+
       try {
         await downloadAndSaveToBucket(statusResult.videoUrl, bucketPath);
         console.log(`\n✅ GUEST AVATAR TEST COMPLETE!`);
@@ -432,4 +434,3 @@ main().catch((error) => {
   console.error('\n❌ Fatal error:', error);
   process.exit(1);
 });
-

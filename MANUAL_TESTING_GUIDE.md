@@ -33,12 +33,14 @@ pnpm dev
 ```
 
 Verify servers are running:
+
 - Auth Server: http://localhost:4000 (should show `{"name":"satsang-auth-server","ok":true}`)
 - Frontend: http://localhost:3000
 
 ### Step 2: Open the Podcast Page
 
 1. Open your browser and navigate to:
+
    ```
    http://localhost:3000/marketing/podcast
    ```
@@ -52,6 +54,7 @@ Verify servers are running:
 In the podcast page form:
 
 1. **Host Avatar ID**: Enter a valid HeyGen avatar ID
+
    ```
    Example: avatar_abc123
    ```
@@ -66,6 +69,7 @@ In the podcast page form:
 The page should show default turns (host and guest). You can:
 
 1. **Edit existing turns**: Click on the text and modify
+
    ```
    Turn 1 (Host): नमस्ते! आज के satsang podcast में आपका स्वागत है।
    Turn 2 (Guest): धन्यवाद! यहाँ आकर बहुत अच्छा लग रहा है।
@@ -156,31 +160,37 @@ If auto-polling isn't working:
 ## Troubleshooting
 
 ### Error: "Not authenticated" or 401
+
 - **Solution**: Make sure you're logged in
 - Check if session cookie is set in browser
 - Try logging in again
 
 ### Error: "HeyGen API key not set"
+
 - **Solution**: Add `HEYGEN_API_KEY=your_key` to `auth-server/.env`
 - Restart auth-server
 
 ### Error: "Invalid avatar ID"
+
 - **Solution**: Verify avatar IDs are correct
 - Check HeyGen dashboard for valid avatar IDs
 - Avatar IDs should be strings like `avatar_abc123`
 
 ### Status stuck on "processing"
+
 - **Solution**: Check HeyGen API status
 - Check auth-server logs for errors
 - HeyGen videos can take 1-5 minutes to generate
 - Try refreshing status manually
 
 ### No video URLs appear
+
 - **Solution**: Check if HeyGen API returned video URLs
 - Look at browser network tab (F12) to see API responses
 - Check auth-server logs for HeyGen API responses
 
 ### Videos don't play
+
 - **Solution**: Check if video URLs are accessible
 - HeyGen videos might require authentication
 - Copy video URL and try opening directly in browser
@@ -214,9 +224,9 @@ curl -X GET http://localhost:4000/podcast/JOB_ID \
 ## Next Steps
 
 Once basic testing works:
+
 - Try with longer conversations (5+ turns)
 - Test error handling (invalid avatar IDs, network errors)
 - Test with different languages (if HeyGen supports them)
 - Test concurrent jobs (create multiple podcasts)
 - Test edge cases (very long text, empty turns, etc.)
-

@@ -1,13 +1,16 @@
 import { Router } from 'express';
-import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
-import { getDb } from '../firebase.js';
-import { listRecentMP3Files, downloadMP3FromGCS, getMP3SignedUrl } from '../services/gcs-audio.js';
-import { transcribeAudio, parseConversation } from '../services/whisper-transcribe.js';
-import { transcribeAudioWithSarvam, parseConversation as parseConversationSarvam } from '../services/sarvam-transcribe.js';
-import * as fs from 'fs/promises';
 import { type Stats } from 'fs';
-import * as path from 'path';
+import * as fs from 'fs/promises';
 import * as os from 'os';
+import * as path from 'path';
+import { getDb } from '../firebase.js';
+import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
+import { downloadMP3FromGCS, getMP3SignedUrl, listRecentMP3Files } from '../services/gcs-audio.js';
+import {
+  parseConversation as parseConversationSarvam,
+  transcribeAudioWithSarvam,
+} from '../services/sarvam-transcribe.js';
+import { parseConversation, transcribeAudio } from '../services/whisper-transcribe.js';
 
 const router = Router();
 const COLLECTION = 'audio_transcripts';
@@ -20,7 +23,7 @@ router.get('/audio-files', requireAuth, async (_req: AuthedRequest, res) => {
   try {
     const limit = parseInt((_req.query.limit as string) || '20', 10);
     const files = await listRecentMP3Files(limit);
-    
+
     return res.json({
       success: true,
       files,
@@ -29,17 +32,18 @@ router.get('/audio-files', requireAuth, async (_req: AuthedRequest, res) => {
   } catch (error: any) {
     console.error('[transcripts] Error listing audio files:', error);
     console.error('[transcripts] Error stack:', error.stack);
-    
+
     // Provide more helpful error messages
     let errorMessage = error?.message || String(error);
     const GCS_BUCKET_NAME = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings';
-    
+
     if (errorMessage.includes('credentials') || errorMessage.includes('Credential')) {
-      errorMessage = 'GCP credentials not configured. Please set GCP_CREDENTIALS, LIVEKIT_EGRESS_GCP_CREDENTIALS, or GOOGLE_APPLICATION_CREDENTIALS in your environment variables.';
+      errorMessage =
+        'GCP credentials not configured. Please set GCP_CREDENTIALS, LIVEKIT_EGRESS_GCP_CREDENTIALS, or GOOGLE_APPLICATION_CREDENTIALS in your environment variables.';
     } else if (errorMessage.includes('bucket') || errorMessage.includes('Bucket')) {
       errorMessage = `Failed to access bucket "${GCS_BUCKET_NAME}". Check your credentials and bucket name.`;
     }
-    
+
     return res.status(500).json({
       error: 'Failed to list audio files',
       details: errorMessage,
@@ -57,8 +61,8 @@ router.get('/audio-files', requireAuth, async (_req: AuthedRequest, res) => {
  */
 router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
   try {
-    const { gcsPath, language } = req.body as { 
-      gcsPath?: string; 
+    const { gcsPath, language } = req.body as {
+      gcsPath?: string;
       language?: string;
     };
 
@@ -71,9 +75,11 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
     // - English (en) or other → Whisper (general purpose)
     const normalizedLanguage = language?.toLowerCase() || 'auto';
     const shouldUseSarvam = normalizedLanguage === 'hi' && !!process.env.SARVAM_API_KEY;
-    
+
     if (normalizedLanguage === 'hi' && !process.env.SARVAM_API_KEY) {
-      console.warn('[transcripts] ⚠️  Hindi language detected but SARVAM_API_KEY not set. Falling back to Whisper.');
+      console.warn(
+        '[transcripts] ⚠️  Hindi language detected but SARVAM_API_KEY not set. Falling back to Whisper.'
+      );
     }
 
     // Create a temporary file to download the MP3
@@ -85,7 +91,7 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
       // Download MP3 from GCS to temp file
       console.log(`[transcripts] Downloading ${gcsPath} to ${tempFilePath}`);
       console.log(`[transcripts] Temp file path: ${tempFilePath}`);
-      
+
       await downloadMP3FromGCS(gcsPath, tempFilePath);
       console.log(`[transcripts] ✅ Download completed`);
 
@@ -101,16 +107,22 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
       // Transcribe using selected service
       const transcriptionLanguage = language || (shouldUseSarvam ? 'hi' : undefined);
       console.log(`[transcripts] Starting transcription...`);
-      console.log(`[transcripts] Service: ${shouldUseSarvam ? 'SARVAM (optimized for Hindi)' : 'OpenAI Whisper'}`);
+      console.log(
+        `[transcripts] Service: ${shouldUseSarvam ? 'SARVAM (optimized for Hindi)' : 'OpenAI Whisper'}`
+      );
       console.log(`[transcripts] Language: ${transcriptionLanguage || 'auto'}`);
-      
+
       if (shouldUseSarvam) {
-        console.log(`[transcripts] SARVAM_API_KEY: ${process.env.SARVAM_API_KEY ? 'SET' : 'NOT SET'}`);
+        console.log(
+          `[transcripts] SARVAM_API_KEY: ${process.env.SARVAM_API_KEY ? 'SET' : 'NOT SET'}`
+        );
       } else {
-        console.log(`[transcripts] OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'}`);
+        console.log(
+          `[transcripts] OPENAI_API_KEY: ${process.env.OPENAI_API_KEY ? 'SET' : 'NOT SET'}`
+        );
       }
       console.log(`[transcripts] ⏱️  This may take several minutes for large files...`);
-      
+
       const startTime = Date.now();
       // Note: transcribeAudioWithSarvam and transcribeAudio return slightly different
       // TranscriptionResponse types. For our usage (text + basic segments), they are
@@ -122,8 +134,13 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
           : await transcribeAudio(tempFilePath, transcriptionLanguage);
       } catch (sarvamError: any) {
         // If SARVAM fails (e.g., 404 endpoint error), fall back to Whisper
-        if ((shouldUseSarvam && sarvamError.message?.includes('404')) || sarvamError.message?.includes('endpoint')) {
-          console.warn(`[transcripts] ⚠️  SARVAM failed, falling back to Whisper: ${sarvamError.message}`);
+        if (
+          (shouldUseSarvam && sarvamError.message?.includes('404')) ||
+          sarvamError.message?.includes('endpoint')
+        ) {
+          console.warn(
+            `[transcripts] ⚠️  SARVAM failed, falling back to Whisper: ${sarvamError.message}`
+          );
           console.log('[transcripts] Using Whisper instead for this transcription');
           transcription = await transcribeAudio(tempFilePath, transcriptionLanguage);
         } else {
@@ -195,11 +212,12 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
   } catch (error: any) {
     console.error('[transcripts] Error transcribing:', error);
     console.error('[transcripts] Error stack:', error.stack);
-    
+
     // Provide more helpful error messages
     let errorMessage = error?.message || String(error);
     if (errorMessage.includes('OPENAI_API_KEY')) {
-      errorMessage = 'OPENAI_API_KEY is not set. Please configure it in your environment variables.';
+      errorMessage =
+        'OPENAI_API_KEY is not set. Please configure it in your environment variables.';
     } else if (errorMessage.includes('HTTP 401') || errorMessage.includes('Unauthorized')) {
       errorMessage = 'Invalid OpenAI API key. Please check your OPENAI_API_KEY.';
     } else if (errorMessage.includes('HTTP 429')) {
@@ -207,7 +225,7 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
     } else if (errorMessage.includes('file') || errorMessage.includes('download')) {
       errorMessage = `Failed to download or process audio file: ${errorMessage}`;
     }
-    
+
     return res.status(500).json({
       error: 'Failed to transcribe audio',
       details: errorMessage,
@@ -223,13 +241,13 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
 router.get('/signed-url', requireAuth, async (req: AuthedRequest, res) => {
   try {
     const gcsPath = req.query.gcsPath as string;
-    
+
     if (!gcsPath) {
       return res.status(400).json({ error: 'gcsPath query parameter is required' });
     }
 
     const signedUrl = await getMP3SignedUrl(gcsPath, 60); // 60 minutes expiry
-    
+
     return res.json({
       success: true,
       signedUrl,
@@ -251,7 +269,7 @@ router.get('/signed-url', requireAuth, async (req: AuthedRequest, res) => {
 router.get('/:gcsPath(*)', requireAuth, async (req: AuthedRequest, res) => {
   try {
     const gcsPath = decodeURIComponent(req.params.gcsPath);
-    
+
     if (!gcsPath) {
       return res.status(400).json({ error: 'gcsPath is required' });
     }
@@ -292,4 +310,3 @@ router.get('/:gcsPath(*)', requireAuth, async (req: AuthedRequest, res) => {
 });
 
 export default router;
-

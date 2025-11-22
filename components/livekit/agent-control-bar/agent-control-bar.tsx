@@ -1,22 +1,21 @@
 'use client';
 
 /* eslint-disable prettier/prettier */
-
 import { type HTMLAttributes, useCallback, useState } from 'react';
 import { Track } from 'livekit-client';
 import { useChat, useRemoteParticipants } from '@livekit/components-react';
-import { ChatTextIcon, PhoneDisconnectIcon, Moon, Sun } from '@phosphor-icons/react/dist/ssr';
+import { ChatTextIcon, Moon, PhoneDisconnectIcon, Sun } from '@phosphor-icons/react/dist/ssr';
 import { useSession } from '@/components/app/session-provider';
 import { TrackToggle } from '@/components/livekit/agent-control-bar/track-toggle';
 import { Button } from '@/components/livekit/button';
 import { Toggle } from '@/components/livekit/toggle';
-import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/language-context';
 import { useAgentControl } from '@/hooks/useAgentControl';
+import { cn } from '@/lib/utils';
 import { ChatInput } from './chat-input';
 import { UseInputControlsProps, useInputControls } from './hooks/use-input-controls';
 import { usePublishPermissions } from './hooks/use-publish-permissions';
 import { TrackSelector } from './track-selector';
-import { useLanguage } from '@/contexts/language-context';
 
 export interface ControlBarControls {
   leave?: boolean;
@@ -124,17 +123,15 @@ export function AgentControlBar({
       <div className="flex flex-col gap-2">
         {/* Agent sleep/wake status banner */}
         {agentIsSleeping && (
-          <div className="bg-amber-500/10 border-amber-400/40 text-amber-800 dark:text-amber-200 flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs animate-pulse">
+          <div className="flex animate-pulse items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-400/70 shadow-sm">
               <Moon weight="fill" className="h-4 w-4 text-amber-900" />
             </div>
             <div className="flex flex-col">
-              <span className="font-semibold text-[11px] tracking-wide">
+              <span className="text-[11px] font-semibold tracking-wide">
                 {t('session.agentSleeping')}
               </span>
-              <span className="text-[10px] opacity-80">
-                {t('session.agentSleepingDesc')}
-              </span>
+              <span className="text-[10px] opacity-80">{t('session.agentSleepingDesc')}</span>
             </div>
           </div>
         )}
@@ -207,7 +204,9 @@ export function AgentControlBar({
                 'transition-colors',
                 agentIsSleeping && 'bg-yellow-500/20 hover:bg-yellow-500/30'
               )}
-              title={agentIsSleeping ? 'Wake Agent (Agent is sleeping)' : 'Sleep Agent (Agent is awake)'}
+              title={
+                agentIsSleeping ? 'Wake Agent (Agent is sleeping)' : 'Sleep Agent (Agent is awake)'
+              }
               aria-label={agentIsSleeping ? 'Wake agent' : 'Sleep agent'}
             >
               {agentIsSleeping ? (

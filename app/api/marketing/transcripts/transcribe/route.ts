@@ -35,10 +35,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error('[marketing-transcripts] POST error', error);
-    return NextResponse.json(
-      { error: 'Auth server unavailable' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Auth server unavailable' }, { status: 503 });
   }
 }
-

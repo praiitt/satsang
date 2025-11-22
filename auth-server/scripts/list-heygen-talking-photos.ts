@@ -2,11 +2,10 @@
 
 /**
  * Script to list all HeyGen talking photos (photo avatars) for the user's account.
- * 
+ *
  * Usage:
  *   HEYGEN_API_KEY=sk_xxx tsx scripts/list-heygen-talking-photos.ts
  */
-
 import 'dotenv/config';
 import https from 'node:https';
 
@@ -104,10 +103,10 @@ async function listTalkingPhotos() {
     try {
       console.log(`📡 Trying GET ${path}...`);
       const response = await httpRequest<any>('GET', path);
-      
+
       // Try to extract talking photos from various response formats
       let talkingPhotos: any[] = [];
-      
+
       if (response?.data?.talking_photos) {
         talkingPhotos = response.data.talking_photos;
       } else if (response?.data?.photo_avatars) {
@@ -115,10 +114,11 @@ async function listTalkingPhotos() {
       } else if (response?.data?.avatars) {
         // Filter for talking photos if type field exists
         talkingPhotos = Array.isArray(response.data.avatars)
-          ? response.data.avatars.filter((a: any) => 
-              a.type === 'talking_photo' || 
-              a.avatar_type === 'talking_photo' ||
-              a.talking_photo_id
+          ? response.data.avatars.filter(
+              (a: any) =>
+                a.type === 'talking_photo' ||
+                a.avatar_type === 'talking_photo' ||
+                a.talking_photo_id
             )
           : [];
       } else if (response?.talking_photos) {
@@ -134,13 +134,13 @@ async function listTalkingPhotos() {
       if (talkingPhotos.length > 0) {
         console.log(`\n✅ Found ${talkingPhotos.length} talking photo(s) via ${path}\n`);
         console.log('📋 Your Talking Photos:\n');
-        
+
         talkingPhotos.forEach((photo, index) => {
           const id = photo.talking_photo_id || photo.id || photo.avatar_id || photo.photo_avatar_id;
           const name = photo.name || photo.avatar_name || photo.talking_photo_name || 'Unnamed';
           const status = photo.status || photo.avatar_status || '';
           const createdAt = photo.created_at || photo.createdAt || '';
-          
+
           console.log(`${index + 1}. ${name}`);
           console.log(`   ID: ${id}`);
           if (status) console.log(`   Status: ${status}`);
@@ -157,7 +157,7 @@ async function listTalkingPhotos() {
           created_at: photo.created_at || photo.createdAt,
         }));
         console.log(JSON.stringify(jsonOutput, null, 2));
-        
+
         return talkingPhotos;
       } else if (response && typeof response === 'object') {
         console.log(`⚠️  Got response from ${path} but no talking photos found`);
@@ -188,4 +188,3 @@ async function main() {
 }
 
 main();
-

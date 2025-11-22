@@ -1,10 +1,10 @@
-import { Router } from 'express';
 import { exec } from 'child_process';
-import { promisify } from 'util';
-import path from 'path';
+import { Router } from 'express';
 import fs from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
-import { requireAuth, type AuthedRequest } from '../middleware/auth.js';
+import { promisify } from 'util';
+import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 
 const execAsync = promisify(exec);
 const router = Router();
@@ -24,7 +24,7 @@ const getTranscribeScriptPath = () => {
     path.resolve(process.cwd(), 'scripts/transcribe_audio.py'),
     path.join(__dirname, '../../scripts/transcribe_audio.py'),
   ];
-  
+
   for (const scriptPath of possiblePaths) {
     try {
       if (fs.existsSync(scriptPath)) {
@@ -34,7 +34,7 @@ const getTranscribeScriptPath = () => {
       // Continue to next path
     }
   }
-  
+
   // Default fallback
   return path.resolve(__dirname, '../../scripts/transcribe_audio.py');
 };
@@ -43,16 +43,16 @@ const TRANSCRIBE_SCRIPT = getTranscribeScriptPath();
 
 /**
  * POST /api/transcript/audio
- * 
+ *
  * Extract transcript from audio URL (MP3/OGG/WAV) using Whisper.
  * Returns formatted conversation transcript.
- * 
+ *
  * Body:
  *   - audio_url: string (required) - URL of audio file
  *   - chunk_duration?: number (optional, default: 300) - Chunk duration in seconds
  *   - language?: string (optional, default: 'hi') - Language code for transcription
  *   - async?: boolean (optional, default: false) - If true, return immediately and process in background
- * 
+ *
  * Response:
  *   {
  *     success: boolean,
@@ -176,7 +176,7 @@ async function processAudioTranscription(
     return result;
   } catch (error: any) {
     console.error('[transcript] Processing error:', error);
-    
+
     // Try to parse error from stderr
     if (error.stderr) {
       try {
@@ -205,13 +205,13 @@ async function processAudioTranscriptionAsync(
 ): Promise<void> {
   try {
     const result = await processAudioTranscription(audioUrl, chunkDuration, language);
-    
+
     // Optionally save to Firestore or database
     if (result.success && userId) {
       try {
         const { getDb } = await import('../firebase.js');
         const db = getDb();
-        
+
         await db.collection('transcripts').add({
           userId,
           audioUrl,
@@ -224,7 +224,7 @@ async function processAudioTranscriptionAsync(
           processedAt: new Date(),
           createdAt: new Date(),
         });
-        
+
         console.log(`[transcript] ✅ Saved transcript to Firestore for user: ${userId}`);
       } catch (firestoreError: any) {
         console.error('[transcript] Failed to save to Firestore:', firestoreError);

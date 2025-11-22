@@ -1,8 +1,9 @@
 import FormData from 'form-data';
-import https from 'https';
 import * as fs from 'fs/promises';
+import https from 'https';
 import * as path from 'path';
-import { splitAudioIntoChunks, cleanupChunks } from './audio-splitter.js';
+import { cleanupChunks, splitAudioIntoChunks } from './audio-splitter.js';
+
 // Note: Python SDK fallback available but requires Python and sarvamai package
 // import { transcribeAudioWithSarvamPython } from './sarvam-transcribe-fallback.js';
 
@@ -32,7 +33,9 @@ export async function transcribeAudioWithSarvam(
   options?: { chunkDuration?: number; maxFileSizeMB?: number }
 ): Promise<TranscriptionResponse> {
   if (!SARVAM_API_KEY) {
-    throw new Error('SARVAM_API_KEY is not set. Please configure it in your environment variables.');
+    throw new Error(
+      'SARVAM_API_KEY is not set. Please configure it in your environment variables.'
+    );
   }
 
   const maxFileSizeMB = options?.maxFileSizeMB || 10; // Default 10MB
@@ -46,7 +49,9 @@ export async function transcribeAudioWithSarvam(
 
   // If file is large, split into chunks
   if (fileSizeMB > maxFileSizeMB) {
-    console.log(`[sarvam-transcribe] File is large (${fileSizeMB.toFixed(2)} MB > ${maxFileSizeMB} MB), splitting into chunks...`);
+    console.log(
+      `[sarvam-transcribe] File is large (${fileSizeMB.toFixed(2)} MB > ${maxFileSizeMB} MB), splitting into chunks...`
+    );
     return await transcribeAudioInChunks(audioFilePath, language, chunkDuration);
   }
 
@@ -64,7 +69,7 @@ async function transcribeSingleAudio(
   try {
     // Read the audio file
     const audioBuffer = await fs.readFile(audioFilePath);
-    
+
     // Detect file format from extension
     const ext = path.extname(audioFilePath).toLowerCase();
     const contentTypeMap: Record<string, string> = {
@@ -76,10 +81,10 @@ async function transcribeSingleAudio(
       '.flac': 'audio/flac',
     };
     const contentType = contentTypeMap[ext] || 'audio/mpeg';
-    
+
     console.log(`[sarvam-transcribe] Transcribing ${ext} file with content type: ${contentType}`);
     console.log(`[sarvam-transcribe] Language: ${language}`);
-    
+
     // Create form data
     // SARVAM API may use different field names - try common patterns
     const formData = new FormData();
@@ -111,10 +116,10 @@ async function transcribeSingleAudio(
       // Common patterns: /v1/asr, /api/v1/asr, /v1/speech-to-text
       // Note: SARVAM Python SDK uses different approach, REST API may differ
       const apiPath = '/v1/asr'; // Try base ASR endpoint
-      
+
       console.log(`[sarvam-transcribe] Attempting API call to: https://api.sarvam.ai${apiPath}`);
       console.log(`[sarvam-transcribe] Using API key: ${SARVAM_API_KEY.substring(0, 10)}...`);
-      
+
       req = https.request(
         {
           hostname: 'api.sarvam.ai',
@@ -124,7 +129,7 @@ async function transcribeSingleAudio(
             ...formData.getHeaders(),
             // Try multiple authentication header formats
             'api-subscription-key': SARVAM_API_KEY, // Primary header format for SARVAM
-            'Authorization': `Bearer ${SARVAM_API_KEY}`, // Alternative format
+            Authorization: `Bearer ${SARVAM_API_KEY}`, // Alternative format
             'X-API-Key': SARVAM_API_KEY, // Another alternative
           },
           timeout: timeout,
@@ -135,27 +140,37 @@ async function transcribeSingleAudio(
           res.on('data', (chunk) => (data += chunk));
           res.on('end', () => {
             console.log(`[sarvam-transcribe] Response status: ${res.statusCode}`);
-            
+
             if (res.statusCode && res.statusCode >= 400) {
               console.error(`[sarvam-transcribe] ❌ Error response (${res.statusCode}):`, data);
               console.error(`[sarvam-transcribe] Request path: ${apiPath}`);
               console.error(`[sarvam-transcribe] Response headers:`, res.headers);
-              
+
               // If 404, the endpoint is incorrect
               if (res.statusCode === 404) {
-                console.error(`[sarvam-transcribe] ⚠️  404 Not Found - The REST API endpoint is incorrect.`);
+                console.error(
+                  `[sarvam-transcribe] ⚠️  404 Not Found - The REST API endpoint is incorrect.`
+                );
                 console.error(`[sarvam-transcribe] Current endpoint: ${apiPath}`);
-                console.error(`[sarvam-transcribe] Please check SARVAM API documentation at https://docs.sarvam.ai/`);
+                console.error(
+                  `[sarvam-transcribe] Please check SARVAM API documentation at https://docs.sarvam.ai/`
+                );
                 console.error(`[sarvam-transcribe] Common endpoints to try:`);
                 console.error(`[sarvam-transcribe]   - /v1/asr`);
                 console.error(`[sarvam-transcribe]   - /api/v1/asr`);
                 console.error(`[sarvam-transcribe]   - /v1/speech-to-text`);
                 console.error(`[sarvam-transcribe]   - /api/v1/speech-to-text`);
-                console.error(`[sarvam-transcribe] Falling back to Whisper for this transcription.`);
-                reject(new Error(`SARVAM API endpoint not found (404). Please check SARVAM API documentation for the correct REST endpoint. The endpoint '${apiPath}' is incorrect.`));
+                console.error(
+                  `[sarvam-transcribe] Falling back to Whisper for this transcription.`
+                );
+                reject(
+                  new Error(
+                    `SARVAM API endpoint not found (404). Please check SARVAM API documentation for the correct REST endpoint. The endpoint '${apiPath}' is incorrect.`
+                  )
+                );
                 return;
               }
-              
+
               try {
                 const error = JSON.parse(data);
                 const errorMsg = error.error?.message || error.message || `HTTP ${res.statusCode}`;
@@ -170,36 +185,35 @@ async function transcribeSingleAudio(
 
             try {
               const result = JSON.parse(data);
-              
+
               // Parse SARVAM response format
               // SARVAM typically returns: { text: "...", segments: [...] } or { transcription: "...", ... }
               // Some formats: { output: { text: "..." } } or { data: { text: "..." } }
               let transcriptionText = '';
               let segments: any[] = [];
-              
+
               // Try different response formats
               if (result.text) {
                 transcriptionText = result.text;
                 segments = result.segments || [];
               } else if (result.transcription) {
-                transcriptionText = typeof result.transcription === 'string' 
-                  ? result.transcription 
-                  : result.transcription.text || '';
+                transcriptionText =
+                  typeof result.transcription === 'string'
+                    ? result.transcription
+                    : result.transcription.text || '';
                 segments = result.transcription.segments || [];
               } else if (result.output) {
-                transcriptionText = typeof result.output === 'string'
-                  ? result.output
-                  : result.output.text || '';
+                transcriptionText =
+                  typeof result.output === 'string' ? result.output : result.output.text || '';
                 segments = result.output.segments || [];
               } else if (result.data) {
-                transcriptionText = typeof result.data === 'string'
-                  ? result.data
-                  : result.data.text || '';
+                transcriptionText =
+                  typeof result.data === 'string' ? result.data : result.data.text || '';
                 segments = result.data.segments || [];
               } else if (typeof result === 'string') {
                 transcriptionText = result;
               }
-              
+
               // Convert SARVAM segments to our format if needed
               const formattedSegments = segments.map((seg: any, index: number) => ({
                 id: index,
@@ -208,8 +222,10 @@ async function transcribeSingleAudio(
                 text: seg.text || seg.transcript || seg.transcription || '',
               }));
 
-              console.log(`[sarvam-transcribe] ✅ Success! Text length: ${transcriptionText.length}`);
-              
+              console.log(
+                `[sarvam-transcribe] ✅ Success! Text length: ${transcriptionText.length}`
+              );
+
               resolve({
                 text: transcriptionText,
                 segments: formattedSegments.length > 0 ? formattedSegments : undefined,
@@ -228,7 +244,7 @@ async function transcribeSingleAudio(
         if (timeoutId) clearTimeout(timeoutId);
         reject(error);
       });
-      
+
       req.on('timeout', () => {
         if (req) req.destroy();
         if (timeoutId) clearTimeout(timeoutId);
@@ -279,7 +295,7 @@ async function transcribeAudioInChunks(
         }
 
         chunkResults.push(chunkResult);
-        
+
         // Update cumulative offset
         if (chunkResult.segments && chunkResult.segments.length > 0) {
           const lastSegment = chunkResult.segments[chunkResult.segments.length - 1];
@@ -314,7 +330,9 @@ async function transcribeAudioInChunks(
       seg.id = index;
     });
 
-    console.log(`[sarvam-transcribe] ✅ Combined ${chunkResults.length} chunks into single transcript`);
+    console.log(
+      `[sarvam-transcribe] ✅ Combined ${chunkResults.length} chunks into single transcript`
+    );
 
     return {
       text: combinedText,
@@ -343,12 +361,12 @@ export function parseConversation(transcription: TranscriptionResponse): Array<{
 
   // Simple heuristic: alternate segments between user and agent
   const turns: Array<{ speaker: 'user' | 'agent'; text: string; start: number; end: number }> = [];
-  
+
   for (let i = 0; i < transcription.segments.length; i++) {
     const segment = transcription.segments[i];
     // Alternate: even indices = user, odd = agent
     const speaker = i % 2 === 0 ? 'user' : 'agent';
-    
+
     turns.push({
       speaker,
       text: segment.text.trim(),
@@ -359,4 +377,3 @@ export function parseConversation(transcription: TranscriptionResponse): Array<{
 
   return turns;
 }
-

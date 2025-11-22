@@ -17,7 +17,6 @@
  *   2. Polls status until the video is ready (default timeout ≈6 minutes)
  *   3. Prints the video download URL (does not upload to GCS)
  */
-
 import 'dotenv/config';
 import https from 'node:https';
 
@@ -228,9 +227,13 @@ async function createVideo(opts: CliOptions): Promise<string> {
     };
     console.log(`\n📡 POST ${path} (Talking Photo format)`);
   }
-  
+
   try {
-    const response = await httpRequest<HeygenResponse<{ video_id?: string }>>('POST', path, payload);
+    const response = await httpRequest<HeygenResponse<{ video_id?: string }>>(
+      'POST',
+      path,
+      payload
+    );
     const videoId =
       response?.data?.video_id || (response as any)?.video_id || (response as any)?.id;
     if (!videoId) {
@@ -264,9 +267,14 @@ async function pollStatus(videoId: string, opts: CliOptions): Promise<string> {
           path
         );
         const status = response?.data?.status || (response as any)?.status;
-        const videoUrl = response?.data?.video_url || (response as any)?.video_url || (response as any)?.data?.video_url;
-        
-        console.log(`🔁 [${attempt}/${opts.maxPollAttempts}] ${path} → status: ${status || 'unknown'}`);
+        const videoUrl =
+          response?.data?.video_url ||
+          (response as any)?.video_url ||
+          (response as any)?.data?.video_url;
+
+        console.log(
+          `🔁 [${attempt}/${opts.maxPollAttempts}] ${path} → status: ${status || 'unknown'}`
+        );
 
         if (status === 'completed') {
           if (videoUrl) {
@@ -322,5 +330,3 @@ main().catch((err) => {
   console.error('\n❌ Script failed:', err.message);
   process.exit(1);
 });
-
-

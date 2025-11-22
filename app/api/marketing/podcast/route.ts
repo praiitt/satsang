@@ -37,11 +37,6 @@ export async function POST(request: NextRequest) {
     return nextResponse;
   } catch (error) {
     console.error('[marketing-podcast] POST proxy error', error);
-    return NextResponse.json(
-      { error: 'Podcast server unavailable' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Podcast server unavailable' }, { status: 503 });
   }
 }
-
-

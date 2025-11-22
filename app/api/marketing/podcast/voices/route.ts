@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
 
     try {
       const response = await httpRequest<any>('GET', path);
-      
+
       console.log('[voices] Raw response structure:', {
         hasData: !!response?.data,
         hasVoices: !!response?.data?.voices,
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
         isArray: Array.isArray(response),
         keys: Object.keys(response?.data || {}),
       });
-      
+
       // HeyGen v2/voices returns { data: { voices: [...] } }
       if (response?.data?.voices && Array.isArray(response.data.voices)) {
         voices = response.data.voices;
@@ -106,7 +106,10 @@ export async function GET(request: NextRequest) {
         voices = response;
         console.log(`[voices] Found ${voices.length} voices in root array`);
       } else {
-        console.warn('[voices] Unexpected response structure:', JSON.stringify(response).substring(0, 500));
+        console.warn(
+          '[voices] Unexpected response structure:',
+          JSON.stringify(response).substring(0, 500)
+        );
       }
     } catch (error: any) {
       console.error(`[voices] Error with ${path}:`, error.message, error.statusCode);
@@ -114,14 +117,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Format for frontend
-    const formatted = voices.map((voice) => ({
-      id: voice.voice_id || voice.id || voice.voiceId,
-      name: voice.name || voice.voice_name || voice.display_name || 'Unnamed Voice',
-      language: voice.language || voice.lang || '',
-      gender: voice.gender || '',
-      accent: voice.accent || '',
-      previewAudio: voice.preview_audio || voice.previewAudio || '', // For instant preview
-    })).filter((v) => v.id); // Only include items with valid IDs
+    const formatted = voices
+      .map((voice) => ({
+        id: voice.voice_id || voice.id || voice.voiceId,
+        name: voice.name || voice.voice_name || voice.display_name || 'Unnamed Voice',
+        language: voice.language || voice.lang || '',
+        gender: voice.gender || '',
+        accent: voice.accent || '',
+        previewAudio: voice.preview_audio || voice.previewAudio || '', // For instant preview
+      }))
+      .filter((v) => v.id); // Only include items with valid IDs
 
     console.log(`[voices] Returning ${formatted.length} formatted voices`);
     return NextResponse.json({ voices: formatted });
@@ -133,4 +138,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

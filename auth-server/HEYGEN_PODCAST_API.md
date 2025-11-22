@@ -26,7 +26,7 @@ Authenticated (uses `requireAuth`), so you must include a valid auth cookie/sess
   "hostAvatarId": "avatar_id_for_host",
   "guestAvatarId": "avatar_id_for_guest",
   "turns": [
-    { "speaker": "host",  "text": "Welcome to our satsang podcast..." },
+    { "speaker": "host", "text": "Welcome to our satsang podcast..." },
     { "speaker": "guest", "text": "Thank you for inviting me..." }
   ],
   "options": {
@@ -138,5 +138,3 @@ On each GET:
   - Update `auth-server/src/services/heygen.ts` to match your docs:
     - `path` for creation and status
     - how to read `video_id`, `status`, and `video_url` from `json.data`
-
-

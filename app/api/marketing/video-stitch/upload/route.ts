@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const files: Array<{ name: string; buffer: Buffer; size: number }> = [];
-    
+
     // Extract all files from form data
     for (const [key, value] of formData.entries()) {
       // Check if value is a File-like object (Blob)
@@ -24,10 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (files.length === 0) {
-      return NextResponse.json(
-        { error: 'No files uploaded' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'No files uploaded' }, { status: 400 });
     }
 
     // Create upload directory
@@ -36,16 +33,16 @@ export async function POST(request: NextRequest) {
 
     // Save files and get their URLs
     const urls: string[] = [];
-    
+
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const timestamp = Date.now();
       const fileName = `${timestamp}_${i}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
       const filePath = join(uploadDir, fileName);
-      
+
       // Save the buffer directly
       await writeFile(filePath, file.buffer);
-      
+
       // Generate absolute path for the uploaded file
       // The auth-server will access this file directly
       const fileUrl = filePath; // Use absolute path so auth-server can access it
@@ -65,4 +62,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

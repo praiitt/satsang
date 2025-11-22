@@ -39,10 +39,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error('[marketing-transcripts] GET signed-url error', error);
-    return NextResponse.json(
-      { error: 'Auth server unavailable' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Auth server unavailable' }, { status: 503 });
   }
 }
-

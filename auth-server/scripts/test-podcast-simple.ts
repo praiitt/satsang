@@ -2,7 +2,6 @@
  * Simple test script to test podcast API with specific avatars
  * Usage: tsx scripts/test-podcast-simple.ts
  */
-
 import 'dotenv/config';
 import http from 'node:http';
 
@@ -15,7 +14,10 @@ const GUEST_AVATAR = 'f31ce977d65e47caa3e92a46703d6b1f';
 // Hindi female voice
 const HINDI_FEMALE_VOICE = '9799f1ba6acd4b2b993fe813a18f9a91';
 
-async function httpRequestJson<T>(url: string, options?: { method?: string; body?: unknown; cookie?: string }): Promise<T> {
+async function httpRequestJson<T>(
+  url: string,
+  options?: { method?: string; body?: unknown; cookie?: string }
+): Promise<T> {
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url);
     const bodyString = options?.body ? JSON.stringify(options.body) : undefined;
@@ -41,13 +43,17 @@ async function httpRequestJson<T>(url: string, options?: { method?: string; body
           if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
             try {
               const json = JSON.parse(data);
-              const error = new Error(json.error || json.message || `HTTP ${res.statusCode}`) as Error & {
+              const error = new Error(
+                json.error || json.message || `HTTP ${res.statusCode}`
+              ) as Error & {
                 statusCode?: number;
               };
               error.statusCode = res.statusCode;
               return reject(error);
             } catch {
-              const error = new Error(`HTTP ${res.statusCode}: ${data.substring(0, 200)}`) as Error & {
+              const error = new Error(
+                `HTTP ${res.statusCode}: ${data.substring(0, 200)}`
+              ) as Error & {
                 statusCode?: number;
               };
               error.statusCode = res.statusCode;
@@ -144,7 +150,7 @@ async function checkJobStatus(jobId: string) {
       });
 
       console.log(`\n[Attempt ${attempts + 1}/${maxAttempts}] Status: ${response.status}`);
-      
+
       if (response.turns) {
         response.turns.forEach((turn: any, idx: number) => {
           console.log(`  Turn ${idx + 1} (${turn.speaker}): ${turn.status}`);
@@ -194,7 +200,7 @@ async function main() {
     console.log('\n' + '='.repeat(60));
     console.log('🏁 Test Complete!');
     console.log('='.repeat(60));
-    
+
     if (jobStatus.status === 'ready') {
       console.log('✅ All videos created successfully!');
       console.log(`📁 Check local files in: auth-server/outputs/podcasts/${jobId}/`);
@@ -214,4 +220,3 @@ main().catch((error) => {
   console.error('\n❌ Fatal error:', error);
   process.exit(1);
 });
-

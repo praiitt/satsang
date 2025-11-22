@@ -2,7 +2,6 @@
  * Direct API test to check HeyGen video creation and status
  * Usage: tsx scripts/test-heygen-direct.ts
  */
-
 import 'dotenv/config';
 import https from 'node:https';
 
@@ -14,10 +13,7 @@ const GUEST_AVATAR = 'f31ce977d65e47caa3e92a46703d6b1f';
 const VOICE_ID = '9799f1ba6acd4b2b993fe813a18f9a91';
 
 // Video IDs from logs
-const EXISTING_VIDEO_IDS = [
-  '11e1f42278b7434880070611fe43fbe3',
-  '228a75babed74ab594a2d9d3cf188cb5',
-];
+const EXISTING_VIDEO_IDS = ['11e1f42278b7434880070611fe43fbe3', '228a75babed74ab594a2d9d3cf188cb5'];
 
 function httpRequestJson<T>(options: {
   method: 'GET' | 'POST';
@@ -56,11 +52,11 @@ function httpRequestJson<T>(options: {
         });
         res.on('end', () => {
           console.log(`📥 Status: ${res.statusCode}`);
-          
+
           if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
             let errorMessage = `HTTP ${res.statusCode}`;
             let errorDetails: any = null;
-            
+
             if (data) {
               try {
                 errorDetails = JSON.parse(data);
@@ -69,17 +65,17 @@ function httpRequestJson<T>(options: {
                 errorMessage = `${errorMessage}: ${data.substring(0, 200)}`;
               }
             }
-            
+
             const error = new Error(errorMessage) as Error & { statusCode?: number; details?: any };
             error.statusCode = res.statusCode;
             error.details = errorDetails || data;
             return reject(error);
           }
-          
+
           if (!data) {
             return resolve(undefined as T);
           }
-          
+
           try {
             const json = JSON.parse(data);
             console.log(`✅ Response:`, JSON.stringify(json, null, 2));
@@ -185,9 +181,12 @@ async function testStatusEndpoints(videoId: string) {
 
       console.log(`✅ SUCCESS with: ${endpoint}`);
       console.log('  - Status:', response?.data?.status || response?.status);
-      console.log('  - Video URL:', response?.data?.video_url || response?.data?.videoUrl || response?.video_url);
+      console.log(
+        '  - Video URL:',
+        response?.data?.video_url || response?.data?.videoUrl || response?.video_url
+      );
       console.log('  - Full response keys:', Object.keys(response?.data || response || {}));
-      
+
       return {
         endpoint,
         status: response?.data?.status || response?.status,
@@ -228,11 +227,13 @@ async function testVideoUrlDirect(videoId: string) {
     try {
       console.log(`\n🔄 Trying: ${url}`);
       const response = await new Promise<{ statusCode?: number }>((resolve, reject) => {
-        https.get(url, (res) => {
-          resolve({ statusCode: res.statusCode });
-          res.on('data', () => {}); // Drain data
-          res.on('end', () => {});
-        }).on('error', reject);
+        https
+          .get(url, (res) => {
+            resolve({ statusCode: res.statusCode });
+            res.on('data', () => {}); // Drain data
+            res.on('end', () => {});
+          })
+          .on('error', reject);
       });
 
       if (response.statusCode === 200) {
@@ -260,17 +261,17 @@ async function main() {
   try {
     // Test 1: Create a new video
     const createResult = await testCreateVideo();
-    
+
     if (createResult.videoId) {
       console.log(`\n✅ Video created! Video ID: ${createResult.videoId}`);
-      
+
       // Wait a bit for video to start processing
       console.log('\n⏳ Waiting 5 seconds before checking status...');
       await new Promise((resolve) => setTimeout(resolve, 5000));
 
       // Test 2: Check status
       await testStatusEndpoints(createResult.videoId);
-      
+
       // Test 3: Try direct URL access
       await testVideoUrlDirect(createResult.videoId);
     }
@@ -283,15 +284,15 @@ async function main() {
 
       for (const videoId of EXISTING_VIDEO_IDS) {
         console.log(`\n📋 Testing existing video: ${videoId}`);
-        
+
         // Try status endpoints
         const statusResult = await testStatusEndpoints(videoId);
-        
+
         if (!statusResult) {
           // Try direct URL
           await testVideoUrlDirect(videoId);
         }
-        
+
         // Wait before next video
         await new Promise((resolve) => setTimeout(resolve, 2000));
       }
@@ -310,4 +311,3 @@ main().catch((error) => {
   console.error('\n❌ Fatal error:', error);
   process.exit(1);
 });
-

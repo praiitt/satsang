@@ -7,6 +7,7 @@ This script automates the creation of new spiritual leader agents for both backe
 ### Option 1: Using a Configuration File (Recommended)
 
 1. Copy the example configuration file:
+
    ```bash
    cp scripts/agent-config.example.json scripts/my-agent-config.json
    ```
@@ -49,14 +50,17 @@ python scripts/generate-agent.py --config scripts/my-agent-config.json --overwri
 The script generates the following files:
 
 ### Backend
+
 - `livekit_server/agent-starter-python/src/{agent_name}agent.py` - Python agent file
 
 ### Frontend
+
 - `app/(app)/{route_path}/page.tsx` - Route page component
 - `components/app/{agent_name}-welcome-view.tsx` - Welcome view component
 - `components/app/{agent_name}-app.tsx` - Main app component
 
 ### Translations
+
 - `lib/translations.ts` - Updated with new agent translations (English and Hindi)
 
 ## Configuration File Format
@@ -106,4 +110,3 @@ The script generates the following files:
 - Agent names must be lowercase and contain only letters and numbers
 - Route paths must start with `/` and contain only lowercase letters, numbers, and hyphens
 - All greeting types (hi, hi_group, en, en_group) are required
-

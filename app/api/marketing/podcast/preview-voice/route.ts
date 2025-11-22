@@ -69,10 +69,7 @@ function httpRequest<T = any>(method: 'GET' | 'POST', path: string, body?: any):
 
 export async function POST(request: NextRequest) {
   if (!HEYGEN_API_KEY) {
-    return NextResponse.json(
-      { error: 'HEYGEN_API_KEY not configured' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'HEYGEN_API_KEY not configured' }, { status: 500 });
   }
 
   try {
@@ -80,10 +77,7 @@ export async function POST(request: NextRequest) {
     const { voiceId, text } = body as { voiceId?: string; text?: string };
 
     if (!voiceId) {
-      return NextResponse.json(
-        { error: 'voiceId is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'voiceId is required' }, { status: 400 });
     }
 
     const previewText = text || 'Hello, this is a voice preview.';
@@ -113,14 +107,12 @@ export async function POST(request: NextRequest) {
     };
 
     const response = await httpRequest<any>('POST', '/v2/video/generate', payload);
-    
-    const videoId = response?.data?.video_id || response?.data?.id || response?.video_id || response?.id;
+
+    const videoId =
+      response?.data?.video_id || response?.data?.id || response?.video_id || response?.id;
 
     if (!videoId) {
-      return NextResponse.json(
-        { error: 'Failed to create preview video' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to create preview video' }, { status: 500 });
     }
 
     // Return the video ID - frontend can poll for status or we can return a direct URL if available
@@ -137,4 +129,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

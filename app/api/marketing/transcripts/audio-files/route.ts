@@ -5,7 +5,7 @@ const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL || 'http://localhost:4000';
 
 export async function GET(request: NextRequest) {
   const url = new URL(`${AUTH_SERVER_URL}/transcripts/audio-files`);
-  
+
   // Forward query params
   const searchParams = request.nextUrl.searchParams;
   searchParams.forEach((value, key) => {
@@ -38,10 +38,6 @@ export async function GET(request: NextRequest) {
     );
   } catch (error) {
     console.error('[marketing-transcripts] GET error', error);
-    return NextResponse.json(
-      { error: 'Auth server unavailable' },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: 'Auth server unavailable' }, { status: 503 });
   }
 }
-
