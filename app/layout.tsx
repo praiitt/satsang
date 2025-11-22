@@ -67,10 +67,12 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
         <meta name="theme-color" content="#f97316" />
+        {/* Primary favicon: Om-in-purple-circle RRAASI icon */}
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="सत्संग" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/apple-icon.png" />
         <link rel="manifest" href="/manifest.json" />
         <ApplyThemeScript />
       </head>
