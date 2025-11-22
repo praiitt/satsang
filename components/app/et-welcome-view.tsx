@@ -1,5 +1,6 @@
 'use client';
 
+import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 
@@ -61,6 +62,29 @@ export const ETWelcomeView = ({
           </Button>
         </div>
         <p className="text-muted-foreground mt-3 text-sm">{t('etAgent.freeTrial')}</p>
+      </section>
+
+      {/* Video Introduction Section */}
+      <section className="mx-auto mt-8 w-full max-w-5xl px-4 sm:mt-12 md:mt-16">
+        <div className="w-full">
+          <h2 className="text-foreground mb-4 text-center text-xl font-bold sm:mb-6 sm:text-2xl md:text-3xl">
+            {t('etAgent.videoTitle') || 'Discover the ET Agent Experience'}
+          </h2>
+          <div className="overflow-hidden rounded-2xl shadow-2xl">
+            <HeroVideoPlayer
+              src="https://storage.googleapis.com/satsangpublicurls/ETAgent_Intro.mp4"
+              poster="https://storage.googleapis.com/satsangpublicurls/ETAgent_Intro.mp4#t=0.1"
+              autoPlay
+              loop
+              className="w-full"
+            />
+          </div>
+          {t('etAgent.videoDescription') && (
+            <p className="text-muted-foreground mt-4 text-center text-sm leading-6 sm:text-base">
+              {t('etAgent.videoDescription')}
+            </p>
+          )}
+        </div>
       </section>
 
       {/* Key Features Section */}

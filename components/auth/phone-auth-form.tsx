@@ -215,7 +215,9 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
                       <span className="min-w-0 truncate">
                         {language === 'hi' ? selectedCountry.nameHindi : selectedCountry.name}
                       </span>
-                      <span className="text-muted-foreground shrink-0">({selectedCountry.dialCode})</span>
+                      <span className="text-muted-foreground shrink-0">
+                        ({selectedCountry.dialCode})
+                      </span>
                     </div>
                   </SelectValue>
                 </SelectTrigger>

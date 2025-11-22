@@ -188,6 +188,9 @@ export const translations = {
       description:
         'Connect with an AI guide specializing in extraterrestrial civilizations, the Fermi Paradox, and the connection between sound frequencies and universal consciousness. Discover cosmic wisdom through healing frequencies, ET spiritual teachings, human channeling with ET beings, and guided lucid dream experiences to raise consciousness.',
       freeTrial: '🎁 Free 15-minute trial • No credit card required',
+      videoTitle: 'Experience the ET Agent',
+      videoDescription:
+        'Watch this introduction to discover how the ET Agent can guide you through cosmic consciousness, healing frequencies, and extraterrestrial wisdom.',
       features: 'What You Can Explore',
       etCivilizations: 'Extraterrestrial Civilizations',
       etCivilizationsDesc:
@@ -489,6 +492,9 @@ export const translations = {
       description:
         'ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना के बीच संबंध में विशेषज्ञता रखने वाले AI मार्गदर्शक से जुड़ें। हीलिंग फ्रीक्वेंसी, ET आध्यात्मिक शिक्षाओं, ET प्राणियों के साथ मानव चैनलिंग, और चेतना बढ़ाने के लिए निर्देशित ल्यूसिड ड्रीम अनुभवों के माध्यम से ब्रह्मांडीय ज्ञान की खोज करें।',
       freeTrial: '🎁 15 मिनट का निःशुल्क परीक्षण • कोई क्रेडिट कार्ड की आवश्यकता नहीं',
+      videoTitle: 'ET Agent का अनुभव करें',
+      videoDescription:
+        'ब्रह्मांडीय चेतना, हीलिंग फ्रीक्वेंसी, और ब्रह्मांडीय ज्ञान के माध्यम से ET Agent आपका मार्गदर्शन कैसे कर सकता है, यह जानने के लिए इस परिचय को देखें।',
       features: 'आप क्या अन्वेषण कर सकते हैं',
       etCivilizations: 'ब्रह्मांडीय सभ्यताएं',
       etCivilizationsDesc:
