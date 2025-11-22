@@ -1224,34 +1224,35 @@ async def entrypoint(ctx: JobContext):
         if user_language == 'hi':
             if is_group_conv:
                 greeting = (
-                    "नमस्ते! मैं आपका मार्गदर्शक हूं जो ब्रह्मांडीय सभ्यताओं और ब्रह्मांडीय चेतना के बारे में जानकारी रखता है। "
-                    "हम सभी यहां ब्रह्मांड के रहस्यों का अन्वेषण करने के लिए हैं। क्या आप फर्मी पैराडॉक्स पर चर्चा करना चाहेंगे, "
-                    "विभिन्न एलियन सभ्यताओं के बारे में जानना चाहेंगे, या शायद हीलिंग साउंड फ्रीक्वेंसी का अनुभव करना चाहेंगे? "
-                    "मैं सभ्यता-विशिष्ट फ्रीक्वेंसी भी चला सकता हूं या यह साझा कर सकता हूं कि ET कैसे ध्वनि के माध्यम से आध्यात्मिकता सिखाते हैं।"
+                    "नमस्ते! मैं आपका ब्रह्मांडीय मार्गदर्शक हूं, जो ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स और ध्वनि फ्रीक्वेंसी "
+                    "के माध्यम से चेतना विस्तार में आपकी मदद करता है। हम सभी यहां ब्रह्मांड के रहस्यों का अन्वेषण करने के लिए हैं। "
+                    "हम विभिन्न एलियन सभ्यताओं, हीलिंग साउंड फ्रीक्वेंसी, सभ्यता-विशिष्ट फ्रीक्वेंसी, ET आध्यात्मिक शिक्षाओं, "
+                    "ET के साथ मानव चैनलिंग, और चेतना बढ़ाने के लिए निर्देशित ल्यूसिड ड्रीम के बारे में मिलकर अन्वेषण कर सकते हैं। "
+                    "आज आप किस दिशा में यात्रा करना चाहेंगे?"
                 )
             else:
                 greeting = (
-                    "नमस्ते! मैं आपका मार्गदर्शक हूं जो ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना "
-                    "के बीच संबंध के बारे में जानकारी रखता है। आज आप क्या अन्वेषण करना चाहेंगे - प्लीएडियन या सिरियन जैसी विभिन्न "
-                    "एलियन सभ्यताएं? फर्मी पैराडॉक्स और हमने अभी तक ETs का पता क्यों नहीं लगाया है? या शायद आप हीलिंग साउंड "
-                    "फ्रीक्वेंसी का अनुभव करना चाहेंगे जो ब्रह्मांडीय चेतना को बढ़ाती हैं? मैं विभिन्न तारा प्रणालियों के लिए विशिष्ट "
-                    "ध्वनियां भी चला सकता हूं या यह साझा कर सकता हूं कि ब्रह्मांडीय प्राणी ध्वनि फ्रीक्वेंसी का उपयोग करके आध्यात्मिकता कैसे सिखाते हैं।"
+                    "नमस्ते! मैं आपका ब्रह्मांडीय मार्गदर्शक हूं जो ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना "
+                    "के बीच संबंध के बारे में जानकारी रखता है। आज आप क्या अन्वेषण करना चाहेंगे — प्लीएडियन या सिरियन जैसी विभिन्न एलियन सभ्यताएं, "
+                    "फर्मी पैराडॉक्स और हमने अभी तक ETs का पता क्यों नहीं लगाया है, हीलिंग साउंड फ्रीक्वेंसी और सभ्यता-विशिष्ट फ्रीक्वेंसी, "
+                    "ET आध्यात्मिक शिक्षाएं, या ET के साथ मानव चैनलिंग और चेतना बढ़ाने के लिए निर्देशित ल्यूसिड ड्रीम अनुभव? "
+                    "मैं आपको इन सभी यात्राओं में चरण-दर-चरण मार्गदर्शन कर सकता हूं।"
                 )
         else:
             if is_group_conv:
                 greeting = (
                     "Greetings, fellow explorers! I'm your guide to extraterrestrial civilizations and cosmic consciousness. "
-                    "We're here together to explore the mysteries of the universe. Would you like to discuss the Fermi Paradox, "
-                    "learn about different alien civilizations, or perhaps experience healing sound frequencies? I can also play "
-                    "civilization-specific frequencies or share teachings about how ETs teach spirituality through sound."
+                    "Together we can explore the Fermi Paradox, different alien civilizations, healing sound frequencies, "
+                    "civilization-specific tones, ET spiritual teachings, human channeling with ET beings, and guided lucid "
+                    "dream journeys to raise consciousness. Where would you like to begin our exploration today?"
                 )
             else:
                 greeting = (
                     "Greetings! I'm your guide to extraterrestrial civilizations, the Fermi Paradox, and the connection between "
-                    "sound frequencies and universal consciousness. What would you like to explore today - different alien civilizations "
-                    "like the Pleiadians or Sirians? The Fermi Paradox and why we haven't detected ETs yet? Or perhaps you'd like to "
-                    "experience healing sound frequencies that raise universal consciousness? I can also play sounds specific to different "
-                    "star systems or share teachings about how extraterrestrials use sound frequencies to teach spirituality."
+                    "sound frequencies and universal consciousness. Today you can explore different alien civilizations like the "
+                    "Pleiadians or Sirians, understand why we haven't detected ETs yet, experience healing and civilization-specific "
+                    "frequencies, dive into ET spiritual teachings, or go deeper with human channeling and guided lucid dream "
+                    "experiences to expand your consciousness. What kind of journey would you like to start with?"
                 )
         
         logger.info("Sending proactive initial greeting to user")
