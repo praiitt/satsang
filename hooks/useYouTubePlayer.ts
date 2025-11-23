@@ -78,6 +78,7 @@ interface UseYouTubePlayerReturn {
   stop: () => Promise<void>;
   seekTo: (seconds: number) => Promise<void>;
   setVolume: (volume: number) => void;
+  retry: () => void;
 }
 
 export function useYouTubePlayer(): UseYouTubePlayerReturn {
@@ -92,6 +93,9 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
   const playerIdRef = useRef(`youtube-player-${Date.now()}`);
   const pendingVideoRef = useRef<{ videoId: string; startSeconds: number } | null>(null);
   const apiLoadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const retryCountRef = useRef(0);
+  const maxRetries = 2;
+  const API_LOAD_TIMEOUT = 20000; // 20 seconds
 
   // Validate YouTube API structure
   const validateYouTubeAPI = useCallback((): { valid: boolean; error?: string } => {
@@ -336,10 +340,32 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
         apiLoadTimeoutRef.current = setTimeout(() => {
           if (!scriptLoadedRef.current) {
             console.error('[YouTubePlayer] ⏱️ API load timeout - script exists but callback not fired');
-            setError('YouTube API failed to load (timeout). Please refresh the page.');
-            pendingVideoRef.current = null;
+            // Check if we can retry
+            if (retryCountRef.current < maxRetries) {
+              retryCountRef.current++;
+              console.log(`[YouTubePlayer] Retrying API load (attempt ${retryCountRef.current}/${maxRetries})...`);
+              // Remove the existing script and retry
+              existingScript.remove();
+              scriptLoadedRef.current = false;
+              // Retry loading
+              setTimeout(() => {
+                const newScript = document.createElement('script');
+                newScript.src = 'https://www.youtube.com/iframe_api';
+                newScript.async = true;
+                newScript.onerror = () => {
+                  console.error('[YouTubePlayer] ❌ Retry failed to load YouTube IFrame API script');
+                  if (retryCountRef.current >= maxRetries) {
+                    setError('Failed to load YouTube API after multiple attempts. Please check your internet connection and refresh the page.');
+                  }
+                };
+                document.body.appendChild(newScript);
+              }, 1000);
+            } else {
+              setError('YouTube API failed to load (timeout). Please check your internet connection and refresh the page.');
+              pendingVideoRef.current = null;
+            }
           }
-        }, 10000); // 10 second timeout
+        }, API_LOAD_TIMEOUT);
       }
       return;
     }
@@ -353,26 +379,79 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
     apiLoadTimeoutRef.current = setTimeout(() => {
       if (!scriptLoadedRef.current) {
         console.error('[YouTubePlayer] ⏱️ API load timeout - script failed to load');
-        setError('YouTube API failed to load (timeout). Please check your internet connection and refresh the page.');
-        pendingVideoRef.current = null;
+        console.error('[YouTubePlayer] Diagnostic info:', {
+          scriptExists: !!document.querySelector('script[src="https://www.youtube.com/iframe_api"]'),
+          ytExists: typeof window.YT,
+          ytPlayerExists: typeof window.YT?.Player,
+          callbackExists: typeof window.onYouTubeIframeAPIReady,
+          retryCount: retryCountRef.current,
+        });
+        // Check if we can retry
+        if (retryCountRef.current < maxRetries) {
+          retryCountRef.current++;
+          console.log(`[YouTubePlayer] Retrying API load (attempt ${retryCountRef.current}/${maxRetries})...`);
+          // Remove the script and retry
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+          scriptLoadedRef.current = false;
+          // Retry loading after a delay
+          setTimeout(() => {
+            const newScript = document.createElement('script');
+            newScript.src = 'https://www.youtube.com/iframe_api';
+            newScript.async = true;
+            newScript.onerror = () => {
+              console.error('[YouTubePlayer] ❌ Retry failed to load YouTube IFrame API script');
+              if (retryCountRef.current >= maxRetries) {
+                setError('Failed to load YouTube API after multiple attempts. Please check your internet connection and refresh the page.');
+                pendingVideoRef.current = null;
+              }
+            };
+            document.body.appendChild(newScript);
+          }, 1000);
+        } else {
+          setError('YouTube API failed to load (timeout). Please check your internet connection and refresh the page.');
+          pendingVideoRef.current = null;
+        }
       }
-    }, 10000); // 10 second timeout
+    }, API_LOAD_TIMEOUT);
 
     script.onerror = () => {
       console.error('[YouTubePlayer] ❌ Failed to load YouTube IFrame API script');
-      setError('Failed to load YouTube API. Please check your internet connection.');
-      // Clear any pending video since API failed to load
-      pendingVideoRef.current = null;
       // Clear timeout
       if (apiLoadTimeoutRef.current) {
         clearTimeout(apiLoadTimeoutRef.current);
         apiLoadTimeoutRef.current = null;
       }
+      // Check if we can retry
+      if (retryCountRef.current < maxRetries) {
+        retryCountRef.current++;
+        console.log(`[YouTubePlayer] Retrying API load after error (attempt ${retryCountRef.current}/${maxRetries})...`);
+        // Retry loading after a delay
+        setTimeout(() => {
+          const newScript = document.createElement('script');
+          newScript.src = 'https://www.youtube.com/iframe_api';
+          newScript.async = true;
+          newScript.onerror = () => {
+            console.error('[YouTubePlayer] ❌ Retry failed to load YouTube IFrame API script');
+            if (retryCountRef.current >= maxRetries) {
+              setError('Failed to load YouTube API after multiple attempts. Please check your internet connection and refresh the page.');
+              pendingVideoRef.current = null;
+            }
+          };
+          document.body.appendChild(newScript);
+        }, 2000);
+      } else {
+        setError('Failed to load YouTube API. Please check your internet connection.');
+        // Clear any pending video since API failed to load
+        pendingVideoRef.current = null;
+      }
     };
 
     script.onload = () => {
       // Script loaded, but we still need to wait for onYouTubeIframeAPIReady
-      console.log('[YouTubePlayer] Script element loaded, waiting for API ready callback...');
+      console.log('[YouTubePlayer] ✅ Script element loaded successfully, waiting for API ready callback...');
+      console.log('[YouTubePlayer] Checking if YT object exists:', typeof window.YT);
     };
 
     document.body.appendChild(script);
@@ -476,6 +555,95 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
     }
   }, []);
 
+  const retry = useCallback(() => {
+    console.log('[YouTubePlayer] Retrying YouTube API load...');
+    
+    // Clear any existing timeouts
+    if (apiLoadTimeoutRef.current) {
+      clearTimeout(apiLoadTimeoutRef.current);
+      apiLoadTimeoutRef.current = null;
+    }
+
+    // Reset state
+    setError(null);
+    scriptLoadedRef.current = false;
+    retryCountRef.current = 0;
+    setIsReady(false);
+    setPlayer(null);
+    
+    // Destroy existing player if any
+    if (playerRef.current) {
+      try {
+        playerRef.current.destroy();
+      } catch (e) {
+        // Ignore
+      }
+      playerRef.current = null;
+    }
+
+    // Remove existing script if any
+    const existingScript = document.querySelector(
+      'script[src="https://www.youtube.com/iframe_api"]'
+    );
+    if (existingScript) {
+      existingScript.remove();
+    }
+
+    // Clear the global callback
+    if (window.onYouTubeIframeAPIReady) {
+      delete window.onYouTubeIframeAPIReady;
+    }
+
+    // Reload the script
+    const script = document.createElement('script');
+    script.src = 'https://www.youtube.com/iframe_api';
+    script.async = true;
+
+    // Set up ready callback
+    window.onYouTubeIframeAPIReady = () => {
+      scriptLoadedRef.current = true;
+      console.log('[YouTubePlayer] ✅ YouTube IFrame API script loaded (retry)');
+      
+      // Clear timeout
+      if (apiLoadTimeoutRef.current) {
+        clearTimeout(apiLoadTimeoutRef.current);
+        apiLoadTimeoutRef.current = null;
+      }
+
+      // Validate API
+      const validation = validateYouTubeAPI();
+      if (!validation.valid) {
+        console.error('[YouTubePlayer] ❌ API loaded but validation failed:', validation.error);
+        setError(validation.error || 'YouTube API validation failed');
+        return;
+      }
+
+      console.log('[YouTubePlayer] ✅ YouTube IFrame API ready and validated (retry)');
+      setTimeout(() => {
+        initializePlayer();
+      }, 100);
+    };
+
+    // Set timeout
+    apiLoadTimeoutRef.current = setTimeout(() => {
+      if (!scriptLoadedRef.current) {
+        console.error('[YouTubePlayer] ⏱️ API load timeout (retry)');
+        setError('YouTube API failed to load. Please check your internet connection.');
+      }
+    }, API_LOAD_TIMEOUT);
+
+    script.onerror = () => {
+      console.error('[YouTubePlayer] ❌ Failed to load YouTube IFrame API script (retry)');
+      setError('Failed to load YouTube API. Please check your internet connection.');
+      if (apiLoadTimeoutRef.current) {
+        clearTimeout(apiLoadTimeoutRef.current);
+        apiLoadTimeoutRef.current = null;
+      }
+    };
+
+    document.body.appendChild(script);
+  }, [validateYouTubeAPI, initializePlayer]);
+
   return {
     player,
     isReady,
@@ -488,5 +656,6 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
     stop,
     seekTo,
     setVolume,
+    retry,
   };
 }

@@ -39,6 +39,7 @@ export function YouTubeBhajanPlayer() {
     stop,
     setVolume,
     player,
+    retry,
   } = useYouTubePlayer();
   const [showControls, setShowControls] = useState(false);
   const [currentTrackName, setCurrentTrackName] = useState<string | null>(null);
@@ -660,6 +661,8 @@ export function YouTubeBhajanPlayer() {
   }
 
   if (error) {
+    const isApiError = error.includes('API') || error.includes('timeout') || error.includes('load');
+    
     return (
       <div className="bg-destructive/10 text-destructive border-destructive/20 mx-3 mb-2 rounded-lg border p-3">
         <div className="flex items-center justify-between gap-2">
@@ -672,23 +675,43 @@ export function YouTubeBhajanPlayer() {
                 a different one.
               </div>
             )}
+            {isApiError && (
+              <div className="text-destructive/70 mt-2 text-xs">
+                The YouTube API failed to load. Click Retry to try again.
+              </div>
+            )}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={async () => {
-              // Clear error and notify agent that video failed
-              await setAgentAudioMuted(false);
-              await publishAgentControl('wake', 'video_failed');
-              setShowControls(false);
-              setCurrentTrackName(null);
-              // Reset error by stopping the player
-              await stop();
-            }}
-            className="text-destructive hover:text-destructive/80 h-8 px-2 text-xs"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {isApiError && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  console.log('[YouTubeBhajanPlayer] Retrying YouTube API...');
+                  retry();
+                }}
+                className="h-8 px-3 text-xs"
+              >
+                Retry
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={async () => {
+                // Clear error and notify agent that video failed
+                await setAgentAudioMuted(false);
+                await publishAgentControl('wake', 'video_failed');
+                setShowControls(false);
+                setCurrentTrackName(null);
+                // Reset error by stopping the player
+                await stop();
+              }}
+              className="text-destructive hover:text-destructive/80 h-8 px-2 text-xs"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     );
