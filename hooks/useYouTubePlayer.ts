@@ -589,9 +589,10 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
       existingScript.remove();
     }
 
-    // Clear the global callback
-    if (window.onYouTubeIframeAPIReady) {
-      delete window.onYouTubeIframeAPIReady;
+    // Clear the global callback (we can't delete because it's non-optional in the type)
+    if (typeof window.onYouTubeIframeAPIReady === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).onYouTubeIframeAPIReady = undefined;
     }
 
     // Reload the script

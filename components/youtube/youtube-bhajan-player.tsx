@@ -662,7 +662,7 @@ export function YouTubeBhajanPlayer() {
 
   if (error) {
     const isApiError = error.includes('API') || error.includes('timeout') || error.includes('load');
-    
+
     return (
       <div className="bg-destructive/10 text-destructive border-destructive/20 mx-3 mb-2 rounded-lg border p-3">
         <div className="flex items-center justify-between gap-2">
