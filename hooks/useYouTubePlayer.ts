@@ -90,11 +90,64 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const scriptLoadedRef = useRef(false);
   const playerIdRef = useRef(`youtube-player-${Date.now()}`);
+  const pendingVideoRef = useRef<{ videoId: string; startSeconds: number } | null>(null);
+  const apiLoadTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Validate YouTube API structure
+  const validateYouTubeAPI = useCallback((): { valid: boolean; error?: string } => {
+    try {
+      // Check if YT object exists
+      if (!window.YT) {
+        return { valid: false, error: 'YouTube API (YT) object not found' };
+      }
+
+      // Check if Player constructor exists
+      if (!window.YT.Player) {
+        return { valid: false, error: 'YouTube API Player constructor not found' };
+      }
+
+      // Check if PlayerState exists
+      if (!window.YT.PlayerState) {
+        return { valid: false, error: 'YouTube API PlayerState not found' };
+      }
+
+      // Validate PlayerState constants
+      const requiredStates = ['UNSTARTED', 'ENDED', 'PLAYING', 'PAUSED', 'BUFFERING', 'CUED'];
+      for (const state of requiredStates) {
+        if (typeof window.YT.PlayerState[state as keyof typeof window.YT.PlayerState] !== 'number') {
+          return { valid: false, error: `YouTube API PlayerState.${state} is invalid` };
+        }
+      }
+
+      // Try to verify Player is a constructor
+      if (typeof window.YT.Player !== 'function') {
+        return { valid: false, error: 'YouTube API Player is not a constructor function' };
+      }
+
+      console.log('[YouTubePlayer] ✅ API validation passed');
+      return { valid: true };
+    } catch (err) {
+      return { valid: false, error: `API validation error: ${err instanceof Error ? err.message : String(err)}` };
+    }
+  }, []);
 
   // Initialize player function
   const initializePlayer = useCallback(() => {
-    if (!window.YT || !window.YT.Player) {
-      console.log('[YouTubePlayer] API not ready yet');
+    // Validate API first
+    const validation = validateYouTubeAPI();
+    if (!validation.valid) {
+      console.error('[YouTubePlayer] API validation failed:', validation.error);
+      setError(validation.error || 'YouTube API is not valid');
+      pendingVideoRef.current = null;
+      return;
+    }
+
+    if (!containerRef.current) {
+      console.log('[YouTubePlayer] Container not ready yet');
+      return;
+    }
+    if (playerRef.current) {
+      console.log('[YouTubePlayer] Player already initialized');
       return;
     }
     if (!containerRef.current) {
@@ -130,6 +183,26 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
             playerRef.current = event.target;
             setIsReady(true);
             setError(null);
+            
+            // Play any pending video that was queued before player was ready
+            if (pendingVideoRef.current) {
+              const { videoId, startSeconds } = pendingVideoRef.current;
+              pendingVideoRef.current = null;
+              console.log('[YouTubePlayer] Playing queued video:', videoId);
+              try {
+                event.target.loadVideoById(videoId, startSeconds);
+                setTimeout(() => {
+                  try {
+                    event.target.playVideo();
+                  } catch (err) {
+                    console.log('[YouTubePlayer] Autoplay may require user gesture');
+                  }
+                }, 500);
+              } catch (err) {
+                console.error('[YouTubePlayer] Failed to play queued video:', err);
+                setError('Failed to play video');
+              }
+            }
           },
           onStateChange: (event) => {
             const state = event.data;
@@ -182,9 +255,12 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
       });
     } catch (err) {
       console.error('[YouTubePlayer] Failed to initialize:', err);
-      setError('Failed to initialize YouTube player');
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      setError(`Failed to initialize YouTube player: ${errorMessage}`);
+      // Clear any pending video since initialization failed
+      pendingVideoRef.current = null;
     }
-  }, []);
+  }, [validateYouTubeAPI]);
 
   // Load YouTube IFrame API script
   useEffect(() => {
@@ -201,24 +277,47 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
       containerRef.current = container;
     }
 
-    // Check if API is already loaded
+    // Check if API is already loaded and validate it
     if (window.YT && window.YT.Player) {
-      if (!scriptLoadedRef.current) {
-        scriptLoadedRef.current = true;
-        console.log('YouTube IFrame API already loaded');
+      const validation = validateYouTubeAPI();
+      if (validation.valid) {
+        if (!scriptLoadedRef.current) {
+          scriptLoadedRef.current = true;
+          console.log('[YouTubePlayer] ✅ YouTube IFrame API already loaded and validated');
+        }
+        // Initialize player after a short delay to ensure container is ready
+        setTimeout(() => {
+          initializePlayer();
+        }, 100);
+        return;
+      } else {
+        console.warn('[YouTubePlayer] ⚠️ API exists but validation failed:', validation.error);
+        // Continue to load/reload the API
       }
-      // Initialize player after a short delay to ensure container is ready
-      setTimeout(() => {
-        initializePlayer();
-      }, 100);
-      return;
     }
 
     // Set up ready callback (only once)
     if (!window.onYouTubeIframeAPIReady) {
       window.onYouTubeIframeAPIReady = () => {
         scriptLoadedRef.current = true;
-        console.log('YouTube IFrame API ready');
+        console.log('[YouTubePlayer] YouTube IFrame API script loaded');
+        
+        // Clear timeout since API loaded successfully
+        if (apiLoadTimeoutRef.current) {
+          clearTimeout(apiLoadTimeoutRef.current);
+          apiLoadTimeoutRef.current = null;
+        }
+
+        // Validate API after it loads
+        const validation = validateYouTubeAPI();
+        if (!validation.valid) {
+          console.error('[YouTubePlayer] ❌ API loaded but validation failed:', validation.error);
+          setError(validation.error || 'YouTube API validation failed');
+          pendingVideoRef.current = null;
+          return;
+        }
+
+        console.log('[YouTubePlayer] ✅ YouTube IFrame API ready and validated');
         // Wait a bit to ensure container is in DOM
         setTimeout(() => {
           initializePlayer();
@@ -232,6 +331,16 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
     );
     if (existingScript) {
       // Script is loading, wait for onYouTubeIframeAPIReady callback
+      // Set a timeout to detect if API fails to load
+      if (!apiLoadTimeoutRef.current) {
+        apiLoadTimeoutRef.current = setTimeout(() => {
+          if (!scriptLoadedRef.current) {
+            console.error('[YouTubePlayer] ⏱️ API load timeout - script exists but callback not fired');
+            setError('YouTube API failed to load (timeout). Please refresh the page.');
+            pendingVideoRef.current = null;
+          }
+        }, 10000); // 10 second timeout
+      }
       return;
     }
 
@@ -240,14 +349,40 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
     script.src = 'https://www.youtube.com/iframe_api';
     script.async = true;
 
+    // Set timeout to detect if API fails to load
+    apiLoadTimeoutRef.current = setTimeout(() => {
+      if (!scriptLoadedRef.current) {
+        console.error('[YouTubePlayer] ⏱️ API load timeout - script failed to load');
+        setError('YouTube API failed to load (timeout). Please check your internet connection and refresh the page.');
+        pendingVideoRef.current = null;
+      }
+    }, 10000); // 10 second timeout
+
     script.onerror = () => {
-      console.error('Failed to load YouTube IFrame API');
-      setError('Failed to load YouTube API');
+      console.error('[YouTubePlayer] ❌ Failed to load YouTube IFrame API script');
+      setError('Failed to load YouTube API. Please check your internet connection.');
+      // Clear any pending video since API failed to load
+      pendingVideoRef.current = null;
+      // Clear timeout
+      if (apiLoadTimeoutRef.current) {
+        clearTimeout(apiLoadTimeoutRef.current);
+        apiLoadTimeoutRef.current = null;
+      }
+    };
+
+    script.onload = () => {
+      // Script loaded, but we still need to wait for onYouTubeIframeAPIReady
+      console.log('[YouTubePlayer] Script element loaded, waiting for API ready callback...');
     };
 
     document.body.appendChild(script);
 
     return () => {
+      // Clear timeout if component unmounts
+      if (apiLoadTimeoutRef.current) {
+        clearTimeout(apiLoadTimeoutRef.current);
+        apiLoadTimeoutRef.current = null;
+      }
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
@@ -261,11 +396,15 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
         containerRef.current = null;
       }
     };
-  }, [initializePlayer]);
+  }, [initializePlayer, validateYouTubeAPI]);
 
   const playVideo = useCallback(async (videoId: string, startSeconds = 0) => {
-    if (!playerRef.current) {
-      setError('YouTube player not ready');
+    // If player is not ready yet, queue the video to play once ready
+    if (!playerRef.current || !isReady) {
+      console.log('[YouTubePlayer] Player not ready yet, queueing video:', videoId);
+      pendingVideoRef.current = { videoId, startSeconds };
+      setCurrentVideoId(videoId);
+      // Don't set error - just wait for player to be ready
       return;
     }
 
@@ -288,7 +427,7 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
       console.error('Failed to play video:', err);
       setError('Failed to play video');
     }
-  }, []);
+  }, [isReady]);
 
   const pause = useCallback(async () => {
     if (!playerRef.current) return;

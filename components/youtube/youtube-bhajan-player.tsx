@@ -45,6 +45,9 @@ export function YouTubeBhajanPlayer() {
   const [volume, setVolumeState] = useState(50); // Default volume 50%
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
+  const [mp3Url, setMp3Url] = useState<string | null>(null);
+  const [isMp3Playing, setIsMp3Playing] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   // --- Agent sleep/wake + audio mute helpers ---
   const { publishAgentControl, agentIsSleeping } = useAgentControl();
@@ -130,6 +133,8 @@ export function YouTubeBhajanPlayer() {
           action?: string; // For daily_satsang commands
           startSeconds?: number;
           message?: string;
+          mp3Url?: string; // For Osho discourse MP3 files
+          seriesName?: string;
         };
 
         console.log('[YouTubeBhajanPlayer] 🔵 Parsed JSON:', parsed);
@@ -284,6 +289,44 @@ export function YouTubeBhajanPlayer() {
           }
         }
 
+        // Check for MP3 URL (Osho discourse) - handle this before YouTube
+        if (parsed.mp3Url && parsed.name) {
+          console.log('[YouTubeBhajanPlayer] 🎵 Found MP3 URL for discourse:', {
+            mp3Url: parsed.mp3Url,
+            name: parsed.name,
+            artist: parsed.artist || parsed.seriesName,
+          });
+
+          // Stop any YouTube video that might be playing
+          stop().catch(() => {});
+
+          // Set MP3 URL and track name
+          setMp3Url(parsed.mp3Url);
+          setCurrentTrackName(parsed.name);
+          setShowControls(true);
+
+          // Play MP3 using HTML5 audio
+          if (audioRef.current) {
+            audioRef.current.src = parsed.mp3Url;
+            audioRef.current.volume = volume / 100;
+            audioRef.current
+              .play()
+              .then(async () => {
+                console.log('[YouTubeBhajanPlayer] ✅ MP3 playback started');
+                await setAgentAudioMuted(true);
+                if (!agentIsSleeping) {
+                  await publishAgentControl('sleep', 'discourse_playing');
+                }
+              })
+              .catch(async (err) => {
+                console.error('[YouTubeBhajanPlayer] ❌ MP3 play error:', err);
+                await setAgentAudioMuted(false);
+                await publishAgentControl('wake', 'discourse_playback_failed');
+              });
+          }
+          return;
+        }
+
         // Guard: ensure we have a valid YouTube video ID
         if (!extractedVideoId) {
           console.log('[YouTubeBhajanPlayer] ⚠️ Rejected - no valid YouTube video ID found', {
@@ -291,6 +334,7 @@ export function YouTubeBhajanPlayer() {
             hasYoutubeUrl: !!parsed.youtube_url,
             hasVideoId: !!parsed.videoId,
             hasUrl: !!parsed.url,
+            hasMp3Url: !!parsed.mp3Url,
             youtubeIdValue: youtubeId,
             parsedKeys: Object.keys(parsed),
           });
@@ -410,20 +454,22 @@ export function YouTubeBhajanPlayer() {
     }
   }, [messages, playVideo, agentIsSleeping, publishAgentControl]);
 
-  // Update showControls based on playing state
+  // Update showControls based on playing state (YouTube or MP3)
+  const isCurrentlyPlaying = isPlaying || isMp3Playing;
+
   useEffect(() => {
-    if (isPlaying) {
+    if (isCurrentlyPlaying) {
       setShowControls(true);
     }
-  }, [isPlaying]);
+  }, [isCurrentlyPlaying]);
 
   // Hide controls if video stopped and not playing
   useEffect(() => {
-    if (!currentVideoId && !isPlaying) {
+    if (!currentVideoId && !mp3Url && !isCurrentlyPlaying) {
       setShowControls(false);
       setCurrentTrackName(null);
     }
-  }, [currentVideoId, isPlaying]);
+  }, [currentVideoId, mp3Url, isCurrentlyPlaying]);
 
   // Listen for room disconnect to stop bhajan playback and clear all data
   useEffect(() => {
@@ -434,7 +480,13 @@ export function YouTubeBhajanPlayer() {
       try {
         // Stop the video player
         await stop();
+        // Stop MP3 if playing
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current.src = '';
+        }
         // Clear all UI state
+        setMp3Url(null);
         setShowControls(false);
         setCurrentTrackName(null);
         // Reset volume and mute state
@@ -539,11 +591,57 @@ export function YouTubeBhajanPlayer() {
   // Handle close/stop
   const handleClose = async () => {
     await stop();
+    // Stop MP3 if playing
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = '';
+    }
+    setMp3Url(null);
     setShowControls(false);
     setCurrentTrackName(null);
     await setAgentAudioMuted(false);
     await publishAgentControl('wake', 'player_closed');
   };
+
+  // Handle MP3 playback state
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !mp3Url) return;
+
+    const handlePlay = () => setIsMp3Playing(true);
+    const handlePause = () => setIsMp3Playing(false);
+    const handleEnded = async () => {
+      console.log('[YouTubeBhajanPlayer] MP3 playback ended');
+      setIsMp3Playing(false);
+      await setAgentAudioMuted(false);
+      await publishAgentControl('wake', 'discourse_ended');
+    };
+    const handleError = async (e: ErrorEvent) => {
+      console.error('[YouTubeBhajanPlayer] MP3 playback error:', e);
+      setIsMp3Playing(false);
+      await setAgentAudioMuted(false);
+      await publishAgentControl('wake', 'discourse_error');
+    };
+
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+    audio.addEventListener('error', handleError);
+
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+      audio.removeEventListener('error', handleError);
+    };
+  }, [mp3Url, setAgentAudioMuted, publishAgentControl]);
+
+  // Update audio volume when volume state changes
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = (isMuted ? 0 : volume) / 100;
+    }
+  }, [volume, isMuted]);
 
   const enableMandalaVisualizer = useMemo(() => {
     if (typeof window === 'undefined') return true;
@@ -603,9 +701,12 @@ export function YouTubeBhajanPlayer() {
 
   return (
     <div className="mb-3">
+      {/* Hidden audio element for MP3 playback */}
+      <audio ref={audioRef} preload="auto" />
+
       {showMandala && (
         <MeditationMandalaVisualizer
-          isActive={isPlaying}
+          isActive={isCurrentlyPlaying}
           className="via-background/70 to-background mt-4 mb-4 h-64 w-full overflow-hidden rounded-3xl bg-gradient-to-b from-transparent"
         />
       )}
@@ -615,7 +716,7 @@ export function YouTubeBhajanPlayer() {
             <div className="text-foreground truncate text-sm font-semibold">{currentTrackName}</div>
           )}
           <div className="text-muted-foreground text-xs">
-            {isPlaying ? '▶️ Playing...' : '⏸️ Paused'}
+            {isCurrentlyPlaying ? '▶️ Playing...' : '⏸️ Paused'}
           </div>
         </div>
 
@@ -665,19 +766,27 @@ export function YouTubeBhajanPlayer() {
 
         {/* Play/Pause Button */}
         <div className="flex items-center gap-2">
-          {isPlaying ? (
+          {isCurrentlyPlaying ? (
             <Button
               variant="default"
               size="lg"
               onClick={() => {
-                pause()
-                  .then(async () => {
-                    await setAgentAudioMuted(false);
-                    await publishAgentControl('wake', 'bhajan_paused');
-                  })
-                  .catch((err) => {
-                    console.error('[YouTubeBhajanPlayer] Pause error:', err);
-                  });
+                if (mp3Url && audioRef.current) {
+                  // Handle MP3 pause
+                  audioRef.current.pause();
+                  setAgentAudioMuted(false);
+                  publishAgentControl('wake', 'discourse_paused');
+                } else {
+                  // Handle YouTube pause
+                  pause()
+                    .then(async () => {
+                      await setAgentAudioMuted(false);
+                      await publishAgentControl('wake', 'bhajan_paused');
+                    })
+                    .catch((err) => {
+                      console.error('[YouTubeBhajanPlayer] Pause error:', err);
+                    });
+                }
               }}
               className="h-12 w-12 p-0 shadow-lg transition-transform hover:scale-105"
               title="Pause"
@@ -689,21 +798,37 @@ export function YouTubeBhajanPlayer() {
               variant="default"
               size="lg"
               onClick={() => {
-                resume()
-                  .then(async () => {
-                    await setAgentAudioMuted(true);
-                    // Only sleep agent if not already sleeping (don't override manual sleep)
-                    if (!agentIsSleeping) {
-                      await publishAgentControl('sleep', 'bhajan_resumed');
-                    }
-                  })
-                  .catch((err) => {
-                    console.error('[YouTubeBhajanPlayer] Resume error:', err);
-                  });
+                if (mp3Url && audioRef.current) {
+                  // Handle MP3 play
+                  audioRef.current
+                    .play()
+                    .then(async () => {
+                      await setAgentAudioMuted(true);
+                      if (!agentIsSleeping) {
+                        await publishAgentControl('sleep', 'discourse_resumed');
+                      }
+                    })
+                    .catch((err) => {
+                      console.error('[YouTubeBhajanPlayer] MP3 play error:', err);
+                    });
+                } else {
+                  // Handle YouTube resume
+                  resume()
+                    .then(async () => {
+                      await setAgentAudioMuted(true);
+                      // Only sleep agent if not already sleeping (don't override manual sleep)
+                      if (!agentIsSleeping) {
+                        await publishAgentControl('sleep', 'bhajan_resumed');
+                      }
+                    })
+                    .catch((err) => {
+                      console.error('[YouTubeBhajanPlayer] Resume error:', err);
+                    });
+                }
               }}
               className="h-12 w-12 p-0 shadow-lg transition-transform hover:scale-105"
               title="Resume"
-              disabled={!currentVideoId}
+              disabled={!currentVideoId && !mp3Url}
             >
               <PlayIcon className="h-6 w-6" weight="fill" />
             </Button>
