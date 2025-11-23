@@ -230,100 +230,127 @@ RESPONSE STYLE:
         topic: str,
         max_results: int = 5,
     ) -> str:
-        """Search for Osho discourses, talks, or teachings on YouTube.
+        """Search for Osho discourses, talks, or teachings from the discourse library.
 
         Use this when the user asks for Osho discourses, talks, teachings, or wants to listen to Osho speak on any topic.
+        This searches through Osho's discourse library and returns MP3 audio files.
 
         Args:
-            topic: The topic to search for Osho discourse (e.g., "Osho on meditation", "Osho discourse on love", "Osho talk", "Osho ki vani").
+            topic: The topic to search for Osho discourse (e.g., "meditation", "love", "consciousness", "zen", "Osho ki vani").
             max_results: Number of results to return (1-10).
 
         Returns:
             A short confirmation telling the user results were found and the first one is playing.
         """
         import json
+        
+        logger.info(f"User requested Osho discourse on topic: '{topic}'")
+        
         try:
+            # Import discourse search module
             try:
                 # Prefer package-relative import
-                from .youtube_search import find_vani_videos_async  # type: ignore
+                from .osho_discourse_search import search_osho_discourse_async  # type: ignore
             except ImportError:
                 import sys
                 from pathlib import Path
                 src_path = Path(__file__).resolve().parent
                 if str(src_path) not in sys.path:
                     sys.path.insert(0, str(src_path))
-                from youtube_search import find_vani_videos_async  # type: ignore
+                from osho_discourse_search import search_osho_discourse_async  # type: ignore
 
             max_results = max(1, min(int(max_results), 10))
             
-            # Enhance search query for Osho content
-            enhanced_topic = topic
-            if "osho" not in topic.lower() and "rajnish" not in topic.lower() and "rajneesh" not in topic.lower():
-                enhanced_topic = f"Osho {topic}"
-            elif "discourse" not in topic.lower() and "talk" not in topic.lower() and "vani" not in topic.lower():
-                enhanced_topic = f"{topic} Osho discourse"
+            # Clean up the topic - remove "osho" if present since we're searching Osho discourses
+            clean_topic = topic.lower()
+            if clean_topic.startswith("osho "):
+                clean_topic = clean_topic[5:].strip()
+            if clean_topic.startswith("osho's "):
+                clean_topic = clean_topic[7:].strip()
+            # Remove common discourse-related words
+            for word in ["discourse", "talk", "vani", "pravachan", "on", "about"]:
+                clean_topic = clean_topic.replace(word, "").strip()
             
-            results = await find_vani_videos_async(enhanced_topic, max_results)
+            if not clean_topic:
+                clean_topic = topic  # Fallback to original if cleaning removed everything
+            
+            logger.info(f"Searching Osho discourse library for: '{clean_topic}'")
+            results = await search_osho_discourse_async(clean_topic, max_results)
         except Exception as e:
             logger.error(f"Osho discourse search failed for topic='{topic}': {e}", exc_info=True)
             results = []
 
-        # Build payload for frontend (list of lectures)
-        payload = {
-            "type": "vani.results",
-            "topic": topic,
-            "results": [
-                {
-                    "videoId": r.get("video_id"),
-                    "title": r.get("title"),
-                    "channelTitle": r.get("channel_title"),
-                    "thumbnail": r.get("thumbnail"),
-                    "url": r.get("url"),
-                }
-                for r in results
-            ],
-        }
+        if not results:
+            return (
+                f"I'm sorry, I couldn't find suitable Osho discourses on '{topic}' in the discourse library. "
+                "Would you like to try a different topic?"
+            )
 
-        # Publish with appropriate topic (handled by publisher)
+        # Get the first (best) result
+        first_result = results[0]
+        first_title = first_result.get("title", topic)
+        first_mp3_url = first_result.get("mp3Url")
+        first_topic = first_result.get("topic", "")
+        series_name = first_result.get("seriesName", "Osho")
+        
+        if not first_mp3_url:
+            logger.error(f"Discourse found but no MP3 URL: {first_title}")
+            return (
+                f"I found '{first_title}' but it doesn't have an audio file available. "
+                "Would you like to try a different discourse?"
+            )
+
+        logger.info(f"✅ Found Osho discourse: '{first_title}' - MP3 URL: {first_mp3_url[:80]}...")
+
+        # Publish the first result for automatic playback
+        # Use a format compatible with the frontend player (similar to bhajan.track but with mp3Url)
         try:
             publish_fn = getattr(self, "_publish_data_fn", None)
             if callable(publish_fn):
-                data_bytes = json.dumps(payload).encode("utf-8")
-                await publish_fn(data_bytes)  # publisher decides topic
+                # Publish in a format the frontend can handle
+                # The frontend should check for mp3Url and use HTML5 audio player
+                play_payload = {
+                    "name": first_title,
+                    "artist": series_name,
+                    "mp3Url": first_mp3_url,  # Direct MP3 URL for HTML5 audio playback
+                    "topic": first_topic,
+                    "seriesName": series_name,
+                    "message": f"Osho discourse '{first_title}' is now playing.",
+                }
+                play_data_bytes = json.dumps(play_payload).encode("utf-8")
+                await publish_fn(play_data_bytes)
+                logger.info(f"✅ Published Osho discourse for playback: {first_title}")
+            else:
+                logger.warning("⚠️ No publish_data_fn configured; frontend will not receive discourse playback")
         except Exception as e:
-            logger.error(f"Failed to publish Osho discourse results: {e}", exc_info=True)
+            logger.error(f"Failed to publish Osho discourse for playback: {e}", exc_info=True)
 
-        if results:
-            first_result = results[0]
-            first_title = first_result.get("title", topic)
-            first_video_id = first_result.get("video_id")
-            
-            # Also publish the first result in bhajan.track format for automatic playback
-            if first_video_id:
-                try:
-                    publish_fn = getattr(self, "_publish_data_fn", None)
-                    if callable(publish_fn):
-                        # Publish in bhajan.track format for automatic playback
-                        play_payload = {
-                            "name": first_title,
-                            "artist": first_result.get("channel_title", "Osho"),
-                            "youtube_id": first_video_id,
-                            "youtube_url": first_result.get("url", f"https://www.youtube.com/watch?v={first_video_id}"),
-                            "message": f"Osho discourse '{first_title}' is now playing.",
-                        }
-                        play_data_bytes = json.dumps(play_payload).encode("utf-8")
-                        await publish_fn(play_data_bytes)
-                        logger.info(f"✅ Published first Osho discourse for playback: {first_title} ({first_video_id})")
-                except Exception as e:
-                    logger.error(f"Failed to publish Osho discourse for playback: {e}", exc_info=True)
-            
-            return (
-                f"I found Osho discourses on '{topic}'. I'm playing '{first_title}' for you now. Enjoy the wisdom!"
-            )
-        else:
-            return (
-                f"I'm sorry, I couldn't find suitable Osho discourses on '{topic}' at the moment. Would you like to try a different topic?"
-            )
+        # Build payload for frontend with all results (optional - for showing list)
+        if len(results) > 1:
+            try:
+                publish_fn = getattr(self, "_publish_data_fn", None)
+                if callable(publish_fn):
+                    payload = {
+                        "type": "osho.discourse.results",
+                        "topic": topic,
+                        "results": [
+                            {
+                                "title": r.get("title", ""),
+                                "mp3Url": r.get("mp3Url"),
+                                "topic": r.get("topic", ""),
+                                "seriesName": r.get("seriesName", ""),
+                            }
+                            for r in results
+                        ],
+                    }
+                    data_bytes = json.dumps(payload).encode("utf-8")
+                    await publish_fn(data_bytes)
+            except Exception as e:
+                logger.error(f"Failed to publish discourse results list: {e}", exc_info=True)
+
+        return (
+            f"I found Osho discourses on '{topic}'. I'm playing '{first_title}' for you now. Enjoy the wisdom!"
+        )
 
 
 def prewarm(proc: JobProcess):
