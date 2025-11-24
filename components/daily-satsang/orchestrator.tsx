@@ -5,7 +5,6 @@ import { Room, RoomEvent } from 'livekit-client';
 import { useChat, useRoomContext } from '@livekit/components-react';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
-import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
 import { type DailySatsangConfig, HostPanel } from './host-panel';
 
 type PhaseName = 'intro' | 'bhajan' | 'pravachan' | 'qa' | 'closing';
@@ -77,7 +76,6 @@ export const DailySatsangOrchestrator = {
   }) {
     const { t } = useLanguage();
     const [config, setConfig] = useState<DailySatsangConfig>({ topic: 'भक्ति और आध्यात्मिकता' });
-    const { pause } = useYouTubePlayer();
     const { send } = useChat();
 
     // Always call useRoomContext (hooks must be called unconditionally)
@@ -210,15 +208,11 @@ export const DailySatsangOrchestrator = {
         }
         // Ensure any current music pauses when leaving music phases
         if (phase !== 'bhajan' && phase !== 'closing') {
-          try {
-            await pause();
-            publishToAgent({ type: 'bhajan', action: 'pause' });
-          } catch {
-            // ignore
-          }
+          // Ask agent + YouTubeBhajanPlayer to pause any current music
+          publishToAgent({ type: 'bhajan', action: 'pause' });
         }
       },
-      [config.topic, durations, pause, publishToAgent, send]
+      [config.topic, durations, publishToAgent, send]
     );
 
     useEffect(() => {
@@ -276,7 +270,7 @@ export const DailySatsangOrchestrator = {
       return () => {
         roomContext?.off(RoomEvent.DataReceived, onData);
       };
-    }, [roomContext, phases, pause]);
+    }, [roomContext, phases]);
 
     // Timer effect - runs when isRunning or currentIndex changes
     useEffect(() => {
