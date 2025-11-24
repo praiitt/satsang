@@ -15,6 +15,7 @@ import {
 } from '@/components/livekit/agent-control-bar/agent-control-bar';
 import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player';
 import { useLanguage } from '@/contexts/language-context';
+import { useAgentControl } from '@/hooks/useAgentControl';
 import { useChatMessages } from '@/hooks/useChatMessages';
 import { useConnectionTimeout } from '@/hooks/useConnectionTimout';
 import { useDebugMode } from '@/hooks/useDebug';
@@ -93,6 +94,7 @@ export const SessionView = ({
   const { t } = useLanguage();
   const { minutesRemaining, secondsRemaining, isTrialExpired } = useSessionTimer(isSessionActive);
   const messages = useChatMessages();
+  const { agentIsSleeping } = useAgentControl();
   const [chatOpen, setChatOpen] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const bottomSectionRef = useRef<HTMLDivElement>(null);
@@ -159,6 +161,19 @@ export const SessionView = ({
   return (
     <SessionAuthGuard isSessionActive={isSessionActive}>
       <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
+        {/* Agent Sleep Indicator - Blinking dot in top corner */}
+        {agentIsSleeping && (
+          <div className="fixed left-4 top-4 z-50 flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-500/20 px-3 py-1.5 shadow-lg backdrop-blur-sm">
+            <div className="relative h-3 w-3">
+              <div className="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-75" />
+              <div className="relative h-3 w-3 rounded-full bg-amber-500" />
+            </div>
+            <span className="text-amber-800 dark:text-amber-200 text-xs font-semibold animate-pulse">
+              {t('session.agentSleeping')}
+            </span>
+          </div>
+        )}
+
         {/* Free Trial Timer Indicator - Only show if user is not authenticated */}
         {!isAuthenticated && !isTrialExpired && (
           <div className="bg-muted/80 text-muted-foreground fixed top-20 right-4 z-50 rounded-lg border px-3 py-2 text-sm shadow-lg md:top-4">
@@ -209,7 +224,7 @@ export const SessionView = ({
             <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
             {/* YouTube Bhajan Player with controls */}
             <div className="mb-2 px-3">
-              <YouTubeBhajanPlayer />
+              <YouTubeBhajanPlayer agentName={appConfig.agentName} />
             </div>
             <AgentControlBar controls={controls} onChatOpenChange={setChatOpen} />
           </div>

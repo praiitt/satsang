@@ -23,10 +23,28 @@ import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
  * Uses YouTube IFrame Player API to play bhajan videos from LiveKit data channel messages.
  * Compatible with the same data format as Spotify player for seamless integration.
  */
-export function YouTubeBhajanPlayer() {
+interface YouTubeBhajanPlayerProps {
+  agentName?: string;
+}
+
+export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
   const messages = useChatMessages();
   const room = useRoomContext();
   const lastProcessedMessageRef = useRef<string>('');
+
+  // Get agent-specific name in Hindi for help text
+  const getAgentNameForHelp = () => {
+    switch (agentName) {
+      case 'guruji':
+        return 'गुरुजी';
+      case 'etagent':
+        return 'ET Agent';
+      case 'osho':
+        return 'Osho';
+      default:
+        return 'गुरुजी';
+    }
+  };
 
   const {
     isReady,
@@ -50,6 +68,21 @@ export function YouTubeBhajanPlayer() {
   const [isMp3Playing, setIsMp3Playing] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
+  // --- Lightweight YouTube search (shared across Guruji / ET / Osho) ---
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<
+    Array<{
+      videoId: string;
+      title: string;
+      description: string;
+      thumbnail?: string;
+      channelTitle: string;
+      publishedAt: string;
+    }>
+  >([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(true);
+
   // --- Agent sleep/wake + audio mute helpers ---
   const { publishAgentControl, agentIsSleeping } = useAgentControl();
 
@@ -63,9 +96,12 @@ export function YouTubeBhajanPlayer() {
     const participants = Array.from(room.remoteParticipants.values());
     const agent = participants.find((participant): participant is AgentParticipant => {
       const candidate = participant as AgentParticipant;
-      return candidate.isAgent === true || /guruji|agent/i.test(String(candidate.identity ?? ''));
+      return candidate.isAgent === true || /guruji|agent|osho|etagent/i.test(String(candidate.identity ?? ''));
     });
-    if (!agent) return;
+    if (!agent) {
+      console.log('[YouTubeBhajanPlayer] ⚠️ No agent participant found for audio mute');
+      return;
+    }
     try {
       const pubs = Array.from(agent.audioTracks?.values?.() ?? []) as RemoteTrackPublication[];
       for (const pub of pubs) {
@@ -95,19 +131,35 @@ export function YouTubeBhajanPlayer() {
     if (!room) return;
 
     const onData = (payload: Uint8Array, participant: unknown, kind: unknown, topic?: string) => {
-      // Accept 'bhajan.track', 'bhajan.video', 'daily_satsang', and 'vani.search' topics
+      // Accept 'bhajan.track', 'bhajan.video', 'daily_satsang', 'vani.search', and Osho-specific topics
+      // Also accept undefined topic (for backward compatibility)
       if (
         topic !== undefined &&
         topic !== 'bhajan.track' &&
         topic !== 'bhajan.video' &&
         topic !== 'daily_satsang' &&
-        topic !== 'vani.search'
+        topic !== 'vani.search' &&
+        topic !== 'osho.discourse' &&
+        topic !== 'discourse' &&
+        topic !== 'osho.youtube'
       ) {
+        // Log rejected topics for debugging (especially for Osho)
+        if (agentName === 'osho') {
+          console.log('[YouTubeBhajanPlayer] ⚠️ Osho: Rejected topic:', topic);
+        }
         return;
+      }
+      
+      // Log accepted topics for Osho debugging
+      if (agentName === 'osho') {
+        console.log('[YouTubeBhajanPlayer] ✅ Osho: Accepted data with topic:', topic || '(no topic)');
       }
 
       try {
         const text = new TextDecoder().decode(payload);
+        if (agentName === 'osho') {
+          console.log('[YouTubeBhajanPlayer] 🔵 Osho: Received data with topic:', topic || '(no topic)');
+        }
         console.log(
           '[YouTubeBhajanPlayer] 🔵 Decoded data (first 300 chars):',
           text.substring(0, 300)
@@ -656,9 +708,53 @@ export function YouTubeBhajanPlayer() {
 
   const showMandala = enableMandalaVisualizer && isPlaying;
 
-  if (!isReady && !error) {
-    return null; // Loading
-  }
+  // Basic search handler using the same backend endpoint as test-youtube
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsSearching(true);
+    try {
+      // Scope search to the current agent context
+      let scopedQuery = searchQuery.trim();
+      if (agentName === 'guruji') {
+        scopedQuery = `${scopedQuery} bhajan satsang`;
+      } else if (agentName === 'etagent') {
+        scopedQuery = `${scopedQuery} meditation frequency cosmic`;
+      } else if (agentName === 'osho') {
+        scopedQuery = `${scopedQuery} Osho discourse hindi satsang`;
+      } else {
+        scopedQuery = `${scopedQuery} bhajan`;
+      }
+
+      const response = await fetch(
+        `/api/youtube/search?q=${encodeURIComponent(scopedQuery)}&maxResults=6`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.videos || []);
+      } else {
+        console.error('[YouTubeBhajanPlayer] Search failed');
+      }
+    } catch (err) {
+      console.error('[YouTubeBhajanPlayer] Search error:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handlePlayFromSearch = async (videoId: string, title?: string) => {
+    // Let the hook queue if still not ready; this also gives more time
+    try {
+      setCurrentTrackName(title || 'Bhajan');
+      setShowControls(true);
+      await playVideo(videoId, 0);
+      await setAgentAudioMuted(true);
+      if (!agentIsSleeping) {
+        await publishAgentControl('sleep', 'bhajan_playing_manual');
+      }
+    } catch (err) {
+      console.error('[YouTubeBhajanPlayer] Manual play error:', err);
+    }
+  };
 
   if (error) {
     const isApiError = error.includes('API') || error.includes('timeout') || error.includes('load');
@@ -719,13 +815,200 @@ export function YouTubeBhajanPlayer() {
 
   // Show controls when music is playing or when we have a current video
   if (!showControls && !currentVideoId) {
-    return null;
+    // Even if no current video, we may still show the search UI for manual play
+    return (
+      <div className="mb-3">
+        {/* Search bar for manual selection (collapsible) */}
+        {searchOpen ? (
+          <div className="mx-3 mb-2 rounded-lg border border-border bg-card p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="text-foreground text-sm font-semibold">खोजें</div>
+              <div className="flex items-center gap-2">
+                <div className="text-muted-foreground text-xs">
+                  {isReady ? 'Player ready' : 'Player loading…'}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 p-0 text-xs"
+                  onClick={() => setSearchOpen(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) handleSearch();
+                }}
+                placeholder="भजन / मंत्र / कीर्तन खोजें…"
+                className="border-input bg-background text-foreground flex-1 rounded-lg border px-3 py-2 text-xs sm:text-sm"
+              />
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSearch}
+                disabled={!searchQuery.trim() || isSearching}
+                className="text-xs sm:text-sm"
+              >
+                {isSearching ? 'खोज रहे…' : 'खोजें'}
+              </Button>
+            </div>
+            {searchResults.length > 0 && (
+              <div className="mt-3 max-h-60 space-y-2 overflow-y-auto">
+                {searchResults.map((video) => (
+                  <div
+                    key={video.videoId}
+                    className="bg-background hover:bg-background/80 flex items-center gap-2 rounded-md border p-2 text-xs sm:text-sm transition-colors"
+                  >
+                    {video.thumbnail && (
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="h-12 w-20 flex-shrink-0 rounded object-cover"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="line-clamp-2 font-semibold">{video.title}</div>
+                      <div className="text-muted-foreground mt-0.5 text-[10px] sm:text-xs">
+                        {video.channelTitle}
+                      </div>
+                    </div>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      disabled={!isReady}
+                      onClick={() => handlePlayFromSearch(video.videoId, video.title)}
+                      className="text-[10px] sm:text-xs"
+                    >
+                      Play
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="text-muted-foreground mt-2 text-[10px] sm:text-xs">
+              पहले यहाँ से भजन चुन सकते हैं – इससे YouTube प्लेयर को लोड होने का समय मिल जाता है। बाद
+              में {getAgentNameForHelp()} भी अपने आप भजन चला पाएंगे।
+            </div>
+          </div>
+        ) : (
+          <div className="mx-3 mb-2 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearchOpen(true)}
+              className="text-xs"
+            >
+              🔍 खोजें
+            </Button>
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (
     <div className="mb-3">
       {/* Hidden audio element for MP3 playback */}
       <audio ref={audioRef} preload="auto" />
+
+      {/* Search bar for manual selection (collapsible) */}
+      <div className="mb-3">
+        {searchOpen ? (
+          <div className="mx-3 mb-2 rounded-lg border border-border bg-card p-3">
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <div className="text-foreground text-sm font-semibold">खोजें</div>
+              <div className="flex items-center gap-2">
+                <div className="text-muted-foreground text-xs">
+                  {isReady ? 'Player ready' : 'Player loading…'}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6 p-0 text-xs"
+                  onClick={() => setSearchOpen(false)}
+                >
+                  ✕
+                </Button>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim()) handleSearch();
+                }}
+                placeholder="भजन / मंत्र / कीर्तन खोजें…"
+                className="border-input bg-background text-foreground flex-1 rounded-lg border px-3 py-2 text-xs sm:text-sm"
+              />
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleSearch}
+                disabled={!searchQuery.trim() || isSearching}
+                className="text-xs sm:text-sm"
+              >
+                {isSearching ? 'खोज रहे…' : 'खोजें'}
+              </Button>
+            </div>
+            {searchResults.length > 0 && (
+              <div className="mt-3 max-h-60 space-y-2 overflow-y-auto">
+                {searchResults.map((video) => (
+                  <div
+                    key={video.videoId}
+                    className="bg-background hover:bg-background/80 flex items-center gap-2 rounded-md border p-2 text-xs sm:text-sm transition-colors"
+                  >
+                    {video.thumbnail && (
+                      <img
+                        src={video.thumbnail}
+                        alt={video.title}
+                        className="h-12 w-20 flex-shrink-0 rounded object-cover"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="line-clamp-2 font-semibold">{video.title}</div>
+                      <div className="text-muted-foreground mt-0.5 text-[10px] sm:text-xs">
+                        {video.channelTitle}
+                      </div>
+                    </div>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      disabled={!isReady}
+                      onClick={() => handlePlayFromSearch(video.videoId, video.title)}
+                      className="text-[10px] sm:text-xs"
+                    >
+                      Play
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="text-muted-foreground mt-2 text-[10px] sm:text-xs">
+              पहले यहाँ से भजन चुन सकते हैं – इससे YouTube प्लेयर को लोड होने का समय मिल जाता है। बाद
+              में {getAgentNameForHelp()} भी अपने आप भजन चला पाएंगे।
+            </div>
+          </div>
+        ) : (
+          <div className="mx-3 mb-2 flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSearchOpen(true)}
+              className="text-xs"
+            >
+              🔍 खोजें
+            </Button>
+          </div>
+        )}
+      </div>
 
       {showMandala && (
         <MeditationMandalaVisualizer

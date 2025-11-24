@@ -123,12 +123,14 @@ export function AgentControlBar({
       <div className="flex flex-col gap-2">
         {/* Agent sleep/wake status banner */}
         {agentIsSleeping && (
-          <div className="flex animate-pulse items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
-            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-400/70 shadow-sm">
+          <div className="flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
+            <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-amber-400/70 shadow-sm">
               <Moon weight="fill" className="h-4 w-4 text-amber-900" />
+              {/* Blinking pulse ring */}
+              <div className="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-75" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[11px] font-semibold tracking-wide">
+              <span className="text-[11px] font-semibold tracking-wide animate-pulse">
                 {t('session.agentSleeping')}
               </span>
               <span className="text-[10px] opacity-80">{t('session.agentSleepingDesc')}</span>

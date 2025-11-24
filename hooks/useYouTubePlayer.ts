@@ -96,6 +96,8 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
   const retryCountRef = useRef(0);
   const maxRetries = 2;
   const API_LOAD_TIMEOUT = 20000; // 20 seconds
+  const wasPlayingBeforeHiddenRef = useRef(false); // Track if video was playing before tab hidden
+  const backgroundResumeIntervalRef = useRef<NodeJS.Timeout | null>(null); // Interval for background resume checks
 
   // Validate YouTube API structure
   const validateYouTubeAPI = useCallback((): { valid: boolean; error?: string } => {
@@ -179,6 +181,8 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
           playsinline: 1,
           rel: 0,
           showinfo: 0,
+          // Try to keep playing in background
+          origin: typeof window !== 'undefined' ? window.location.origin : '',
         },
         events: {
           onReady: (event) => {
@@ -216,17 +220,46 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
             console.log(
               '[YouTubePlayer] State changed:',
               state,
-              playing ? 'PLAYING' : state === 2 ? 'PAUSED' : state === 0 ? 'ENDED' : 'OTHER'
+              playing ? 'PLAYING' : state === 2 ? 'PAUSED' : state === 0 ? 'ENDED' : 'OTHER',
+              'Tab hidden:',
+              document.hidden
             );
+
+            // Track playing state for visibility handling
+            if (playing) {
+              wasPlayingBeforeHiddenRef.current = true;
+            }
+
+            // If tab is hidden and video got paused, try to resume immediately
+            if (state === 2 && document.hidden && wasPlayingBeforeHiddenRef.current) {
+              console.log('[YouTubePlayer] ⚠️ Video paused while tab hidden - attempting immediate resume...');
+              setTimeout(() => {
+                try {
+                  if (playerRef.current && document.hidden) {
+                    const currentState = playerRef.current.getPlayerState();
+                    if (currentState === 2) { // Still paused
+                      playerRef.current.playVideo();
+                      console.log('[YouTubePlayer] ✅ Resumed playback after pause detected while hidden');
+                    }
+                  }
+                } catch (err) {
+                  console.warn('[YouTubePlayer] Failed to resume after pause while hidden:', err);
+                }
+              }, 100);
+            }
 
             // Notify components when video ends or pauses (for agent wake)
             // Components listening to isPlaying will handle agent.control messages
             if (state === 0) {
               // Video ended - notify via custom event
+              wasPlayingBeforeHiddenRef.current = false;
               window.dispatchEvent(new CustomEvent('youtube-video-ended'));
             } else if (state === 2) {
-              // Video paused - notify via custom event
-              window.dispatchEvent(new CustomEvent('youtube-video-paused'));
+              // Video paused - only notify if tab is visible (not paused due to tab hidden)
+              // We'll handle tab visibility separately
+              if (document.visibilityState === 'visible') {
+                window.dispatchEvent(new CustomEvent('youtube-video-paused'));
+              }
             }
           },
           onError: (event) => {
@@ -272,6 +305,7 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
     if (!containerRef.current) {
       const container = document.createElement('div');
       container.id = playerIdRef.current;
+      // Start hidden (audio-only)
       container.style.display = 'none';
       container.style.width = '0';
       container.style.height = '0';
@@ -339,11 +373,41 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
       if (!apiLoadTimeoutRef.current) {
         apiLoadTimeoutRef.current = setTimeout(() => {
           if (!scriptLoadedRef.current) {
-            console.error('[YouTubePlayer] ⏱️ API load timeout - script exists but callback not fired');
+            console.error(
+              '[YouTubePlayer] ⏱️ API load timeout - script exists but callback not fired'
+            );
+
+            // Fallback: if YT is actually present, try to validate and init manually
+            if (window.YT && window.YT.Player) {
+              console.warn(
+                '[YouTubePlayer] ⚠️ Timeout, but YT object exists - attempting manual init'
+              );
+              const validation = validateYouTubeAPI();
+              if (validation.valid) {
+                scriptLoadedRef.current = true;
+                setError(null);
+                // Initialize player after a short delay to ensure container is ready
+                setTimeout(() => {
+                  initializePlayer();
+                }, 100);
+                return;
+              } else {
+                console.error(
+                  '[YouTubePlayer] ❌ Manual init failed after timeout - API invalid:',
+                  validation.error
+                );
+                setError(validation.error || 'YouTube API validation failed');
+                pendingVideoRef.current = null;
+                return;
+              }
+            }
+
             // Check if we can retry
             if (retryCountRef.current < maxRetries) {
               retryCountRef.current++;
-              console.log(`[YouTubePlayer] Retrying API load (attempt ${retryCountRef.current}/${maxRetries})...`);
+              console.log(
+                `[YouTubePlayer] Retrying API load (attempt ${retryCountRef.current}/${maxRetries})...`
+              );
               // Remove the existing script and retry
               existingScript.remove();
               scriptLoadedRef.current = false;
@@ -456,12 +520,104 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
 
     document.body.appendChild(script);
 
+    // Handle page visibility changes to keep playback going in background
+    const handleVisibilityChange = () => {
+      if (!playerRef.current || !isReady) return;
+
+      if (document.hidden) {
+        // Tab is hidden - remember if we were playing
+        try {
+          const state = playerRef.current.getPlayerState();
+          wasPlayingBeforeHiddenRef.current = state === 1; // PLAYING = 1
+          console.log('[YouTubePlayer] Tab hidden, was playing:', wasPlayingBeforeHiddenRef.current);
+          
+          // Set up periodic check to resume if browser/YouTube paused it
+          if (wasPlayingBeforeHiddenRef.current) {
+            // Clear any existing interval first
+            if (backgroundResumeIntervalRef.current) {
+              clearInterval(backgroundResumeIntervalRef.current);
+            }
+            
+            // More aggressive checking - every 500ms
+            backgroundResumeIntervalRef.current = setInterval(() => {
+              if (!playerRef.current || !document.hidden) {
+                if (backgroundResumeIntervalRef.current) {
+                  clearInterval(backgroundResumeIntervalRef.current);
+                  backgroundResumeIntervalRef.current = null;
+                }
+                return;
+              }
+              
+              try {
+                const currentState = playerRef.current.getPlayerState();
+                // If it got paused (but we want it playing), try to resume
+                if (currentState === 2 && wasPlayingBeforeHiddenRef.current) { // PAUSED = 2
+                  console.log('[YouTubePlayer] 🔄 Detected pause while tab hidden, attempting to resume...');
+                  playerRef.current.playVideo();
+                  // Also try again after a short delay in case it doesn't work immediately
+                  setTimeout(() => {
+                    if (playerRef.current && document.hidden) {
+                      try {
+                        const checkState = playerRef.current.getPlayerState();
+                        if (checkState === 2) {
+                          playerRef.current.playVideo();
+                          console.log('[YouTubePlayer] 🔄 Retry resume after pause');
+                        }
+                      } catch (e) {
+                        // Ignore
+                      }
+                    }
+                  }, 200);
+                }
+              } catch (err) {
+                // Ignore errors - player might not be ready
+              }
+            }, 500); // Check every 500ms (more aggressive)
+          }
+        } catch (err) {
+          console.warn('[YouTubePlayer] Could not check player state on hide:', err);
+        }
+      } else {
+        // Tab is visible again - clear background resume interval
+        if (backgroundResumeIntervalRef.current) {
+          clearInterval(backgroundResumeIntervalRef.current);
+          backgroundResumeIntervalRef.current = null;
+        }
+        
+        // Resume if we were playing before
+        if (wasPlayingBeforeHiddenRef.current) {
+          console.log('[YouTubePlayer] Tab visible again, resuming playback...');
+          setTimeout(() => {
+            try {
+              if (playerRef.current) {
+                const currentState = playerRef.current.getPlayerState();
+                // Only resume if currently paused (not ended)
+                if (currentState === 2) { // PAUSED = 2
+                  playerRef.current.playVideo();
+                  console.log('[YouTubePlayer] ✅ Resumed playback after tab became visible');
+                }
+              }
+            } catch (err) {
+              console.warn('[YouTubePlayer] Failed to resume after tab visible:', err);
+            }
+          }, 300);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
     return () => {
       // Clear timeout if component unmounts
       if (apiLoadTimeoutRef.current) {
         clearTimeout(apiLoadTimeoutRef.current);
         apiLoadTimeoutRef.current = null;
       }
+      if (backgroundResumeIntervalRef.current) {
+        clearInterval(backgroundResumeIntervalRef.current);
+        backgroundResumeIntervalRef.current = null;
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       if (playerRef.current) {
         try {
           playerRef.current.destroy();
@@ -475,7 +631,7 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
         containerRef.current = null;
       }
     };
-  }, [initializePlayer, validateYouTubeAPI]);
+  }, [initializePlayer, validateYouTubeAPI, isReady]);
 
   const playVideo = useCallback(async (videoId: string, startSeconds = 0) => {
     // If player is not ready yet, queue the video to play once ready
@@ -492,6 +648,8 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
       setError(null);
       setCurrentVideoId(videoId);
       playerRef.current.loadVideoById(videoId, startSeconds);
+      // Mark that we want this playing (for background resume)
+      wasPlayingBeforeHiddenRef.current = true;
       // Try to play immediately (may require user gesture for autoplay)
       // If autoplay is blocked, user will need to interact first
       setTimeout(() => {
