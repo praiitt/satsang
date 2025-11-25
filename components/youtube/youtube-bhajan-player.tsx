@@ -96,7 +96,10 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
     const participants = Array.from(room.remoteParticipants.values());
     const agent = participants.find((participant): participant is AgentParticipant => {
       const candidate = participant as AgentParticipant;
-      return candidate.isAgent === true || /guruji|agent|osho|etagent/i.test(String(candidate.identity ?? ''));
+      return (
+        candidate.isAgent === true ||
+        /guruji|agent|osho|etagent/i.test(String(candidate.identity ?? ''))
+      );
     });
     if (!agent) {
       console.log('[YouTubeBhajanPlayer] ⚠️ No agent participant found for audio mute');
@@ -149,16 +152,22 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
         }
         return;
       }
-      
+
       // Log accepted topics for Osho debugging
       if (agentName === 'osho') {
-        console.log('[YouTubeBhajanPlayer] ✅ Osho: Accepted data with topic:', topic || '(no topic)');
+        console.log(
+          '[YouTubeBhajanPlayer] ✅ Osho: Accepted data with topic:',
+          topic || '(no topic)'
+        );
       }
 
       try {
         const text = new TextDecoder().decode(payload);
         if (agentName === 'osho') {
-          console.log('[YouTubeBhajanPlayer] 🔵 Osho: Received data with topic:', topic || '(no topic)');
+          console.log(
+            '[YouTubeBhajanPlayer] 🔵 Osho: Received data with topic:',
+            topic || '(no topic)'
+          );
         }
         console.log(
           '[YouTubeBhajanPlayer] 🔵 Decoded data (first 300 chars):',
@@ -820,7 +829,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
       <div className="mb-3">
         {/* Search bar for manual selection (collapsible) */}
         {searchOpen ? (
-          <div className="mx-3 mb-2 rounded-lg border border-border bg-card p-3">
+          <div className="border-border bg-card mx-3 mb-2 rounded-lg border p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div className="text-foreground text-sm font-semibold">खोजें</div>
               <div className="flex items-center gap-2">
@@ -853,7 +862,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
                 size="sm"
                 onClick={handleSearch}
                 disabled={!searchQuery.trim() || isSearching}
-                className="text-xs sm:text-sm"
+                className="text-xs transition-colors sm:text-sm"
               >
                 {isSearching ? 'खोज रहे…' : 'खोजें'}
               </Button>
@@ -863,7 +872,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
                 {searchResults.map((video) => (
                   <div
                     key={video.videoId}
-                    className="bg-background hover:bg-background/80 flex items-center gap-2 rounded-md border p-2 text-xs sm:text-sm transition-colors"
+                    className="bg-background hover:bg-background/80 flex items-center gap-2 rounded-md border p-2 text-xs transition-colors sm:text-sm"
                   >
                     {video.thumbnail && (
                       <img
@@ -879,7 +888,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
                       </div>
                     </div>
                     <Button
-                      size="xs"
+                      size="sm"
                       variant="outline"
                       disabled={!isReady}
                       onClick={() => handlePlayFromSearch(video.videoId, video.title)}
@@ -892,8 +901,8 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
               </div>
             )}
             <div className="text-muted-foreground mt-2 text-[10px] sm:text-xs">
-              पहले यहाँ से भजन चुन सकते हैं – इससे YouTube प्लेयर को लोड होने का समय मिल जाता है। बाद
-              में {getAgentNameForHelp()} भी अपने आप भजन चला पाएंगे।
+              पहले यहाँ से भजन चुन सकते हैं – इससे YouTube प्लेयर को लोड होने का समय मिल जाता है।
+              बाद में {getAgentNameForHelp()} भी अपने आप भजन चला पाएंगे।
             </div>
           </div>
         ) : (
@@ -920,7 +929,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
       {/* Search bar for manual selection (collapsible) */}
       <div className="mb-3">
         {searchOpen ? (
-          <div className="mx-3 mb-2 rounded-lg border border-border bg-card p-3">
+          <div className="border-border bg-card mx-3 mb-2 rounded-lg border p-3">
             <div className="mb-2 flex items-center justify-between gap-2">
               <div className="text-foreground text-sm font-semibold">खोजें</div>
               <div className="flex items-center gap-2">
@@ -953,7 +962,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
                 size="sm"
                 onClick={handleSearch}
                 disabled={!searchQuery.trim() || isSearching}
-                className="text-xs sm:text-sm"
+                className="text-xs transition-colors sm:text-sm"
               >
                 {isSearching ? 'खोज रहे…' : 'खोजें'}
               </Button>
@@ -963,7 +972,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
                 {searchResults.map((video) => (
                   <div
                     key={video.videoId}
-                    className="bg-background hover:bg-background/80 flex items-center gap-2 rounded-md border p-2 text-xs sm:text-sm transition-colors"
+                    className="bg-background hover:bg-background/80 flex items-center gap-2 rounded-md border p-2 text-xs transition-colors sm:text-sm"
                   >
                     {video.thumbnail && (
                       <img
@@ -979,7 +988,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
                       </div>
                     </div>
                     <Button
-                      size="xs"
+                      size="sm"
                       variant="outline"
                       disabled={!isReady}
                       onClick={() => handlePlayFromSearch(video.videoId, video.title)}
@@ -992,8 +1001,8 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
               </div>
             )}
             <div className="text-muted-foreground mt-2 text-[10px] sm:text-xs">
-              पहले यहाँ से भजन चुन सकते हैं – इससे YouTube प्लेयर को लोड होने का समय मिल जाता है। बाद
-              में {getAgentNameForHelp()} भी अपने आप भजन चला पाएंगे।
+              पहले यहाँ से भजन चुन सकते हैं – इससे YouTube प्लेयर को लोड होने का समय मिल जाता है।
+              बाद में {getAgentNameForHelp()} भी अपने आप भजन चला पाएंगे।
             </div>
           </div>
         ) : (

@@ -163,12 +163,12 @@ export const SessionView = ({
       <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
         {/* Agent Sleep Indicator - Blinking dot in top corner */}
         {agentIsSleeping && (
-          <div className="fixed left-4 top-4 z-50 flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-500/20 px-3 py-1.5 shadow-lg backdrop-blur-sm">
+          <div className="fixed top-4 left-4 z-50 flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-500/20 px-3 py-1.5 shadow-lg backdrop-blur-sm">
             <div className="relative h-3 w-3">
               <div className="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-75" />
               <div className="relative h-3 w-3 rounded-full bg-amber-500" />
             </div>
-            <span className="text-amber-800 dark:text-amber-200 text-xs font-semibold animate-pulse">
+            <span className="animate-pulse text-xs font-semibold text-amber-800 dark:text-amber-200">
               {t('session.agentSleeping')}
             </span>
           </div>

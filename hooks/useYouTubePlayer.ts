@@ -181,8 +181,6 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
           playsinline: 1,
           rel: 0,
           showinfo: 0,
-          // Try to keep playing in background
-          origin: typeof window !== 'undefined' ? window.location.origin : '',
         },
         events: {
           onReady: (event) => {
