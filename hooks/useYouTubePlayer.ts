@@ -371,7 +371,11 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
       if (!apiLoadTimeoutRef.current) {
         apiLoadTimeoutRef.current = setTimeout(() => {
           if (!scriptLoadedRef.current) {
-            console.error(
+            // Use console.warn instead of console.error so this does not surface
+            // as a hard error overlay in Next.js dev/prod logs. This condition
+            // often happens when extensions or network policies block YouTube,
+            // and we already have a manual recovery path below.
+            console.warn(
               '[YouTubePlayer] ⏱️ API load timeout - script exists but callback not fired'
             );
 
