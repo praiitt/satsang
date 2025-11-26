@@ -836,6 +836,20 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
                 <div className="text-muted-foreground text-xs">
                   {isReady ? 'Player ready' : 'Player loading…'}
                 </div>
+                {!isReady && !error && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 p-0"
+                    title="Reconnect YouTube player"
+                    onClick={() => {
+                      console.log('[YouTubeBhajanPlayer] Manual YouTube retry clicked');
+                      retry();
+                    }}
+                  >
+                    ↻
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -936,6 +950,20 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
                 <div className="text-muted-foreground text-xs">
                   {isReady ? 'Player ready' : 'Player loading…'}
                 </div>
+                {!isReady && !error && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 p-0"
+                    title="Reconnect YouTube player"
+                    onClick={() => {
+                      console.log('[YouTubeBhajanPlayer] Manual YouTube retry clicked');
+                      retry();
+                    }}
+                  >
+                    ↻
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
