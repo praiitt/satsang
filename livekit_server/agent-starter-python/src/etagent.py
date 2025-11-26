@@ -678,13 +678,26 @@ async def entrypoint(ctx: JobContext):
                     import json
                     metadata = json.loads(participant.metadata)
                     if isinstance(metadata, dict) and 'language' in metadata:
-                        user_language = metadata['language']
-                        logger.info(f"📝 Detected language preference from participant metadata: {user_language}")
+                        # Robust language parsing
+                        raw_lang = str(metadata.get("language", "")).strip().lower()
+                        if raw_lang in ["hi", "hindi", "hin"]:
+                            user_language = "hi"
+                        elif raw_lang in ["en", "english", "eng"]:
+                            user_language = "en"
+                        else:
+                            user_language = raw_lang
+                            
+                        logger.info(f"📝 Detected language preference from participant metadata: {user_language} (raw: {metadata.get('language')})")
                         break
                 except (json.JSONDecodeError, TypeError) as e:
                     logger.debug(f"Could not parse participant metadata: {e}")
     except Exception as e:
         logger.warning(f"Could not read language preference from participant metadata: {e}, defaulting to Hindi")
+
+    # Final validation
+    if user_language not in {'hi', 'en'}:
+        logger.warning(f"Unsupported language '{user_language}' detected, defaulting to 'hi'")
+        user_language = 'hi'
     
     logger.info(f"🌐 Using language: {user_language} (default: Hindi)")
     
