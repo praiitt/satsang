@@ -432,45 +432,7 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
       clearInterval(pollInterval);
     };
 
-    script.onerror = () => {
-      console.error('[YouTubePlayer] ❌ Failed to load YouTube IFrame API script');
-      // Clear timeout
-      if (apiLoadTimeoutRef.current) {
-        clearTimeout(apiLoadTimeoutRef.current);
-        apiLoadTimeoutRef.current = null;
-      }
-      // Check if we can retry
-      if (retryCountRef.current < maxRetries) {
-        retryCountRef.current++;
-        console.log(`[YouTubePlayer] Retrying API load after error (attempt ${retryCountRef.current}/${maxRetries})...`);
-        // Retry loading after a delay
-        setTimeout(() => {
-          const newScript = document.createElement('script');
-          newScript.src = 'https://www.youtube.com/iframe_api';
-          newScript.async = true;
-          newScript.onerror = () => {
-            console.error('[YouTubePlayer] ❌ Retry failed to load YouTube IFrame API script');
-            if (retryCountRef.current >= maxRetries) {
-              setError('Failed to load YouTube API after multiple attempts. Please check your internet connection and refresh the page.');
-              pendingVideoRef.current = null;
-            }
-          };
-          document.body.appendChild(newScript);
-        }, 2000);
-      } else {
-        setError('Failed to load YouTube API. Please check your internet connection.');
-        // Clear any pending video since API failed to load
-        pendingVideoRef.current = null;
-      }
-    };
 
-    script.onload = () => {
-      // Script loaded, but we still need to wait for onYouTubeIframeAPIReady
-      console.log('[YouTubePlayer] ✅ Script element loaded successfully, waiting for API ready callback...');
-      console.log('[YouTubePlayer] Checking if YT object exists:', typeof window.YT);
-    };
-
-    document.body.appendChild(script);
 
     // Handle page visibility changes to keep playback going in background
     const handleVisibilityChange = () => {
