@@ -17,6 +17,7 @@ export interface AppConfig {
   // for LiveKit Cloud Sandbox
   sandboxId?: string;
   agentName?: string;
+  tokenEndpoint?: string; // Custom token endpoint for this agent
   // experimental: enable HeyGen avatar video sidecar
   enableHeygenAvatar?: boolean;
 }

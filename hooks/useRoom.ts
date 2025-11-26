@@ -45,10 +45,8 @@ export function useRoom(appConfig: AppConfig) {
   const tokenSource = useMemo(
     () =>
       TokenSource.custom(async () => {
-        const url = new URL(
-          process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details',
-          window.location.origin
-        );
+        const endpoint = appConfig.tokenEndpoint ?? process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
+        const url = new URL(endpoint, window.location.origin);
 
         try {
           const res = await fetch(url.toString(), {
@@ -61,8 +59,8 @@ export function useRoom(appConfig: AppConfig) {
             body: JSON.stringify({
               room_config: appConfig.agentName
                 ? {
-                    agents: [{ agent_name: appConfig.agentName }],
-                  }
+                  agents: [{ agent_name: appConfig.agentName }],
+                }
                 : undefined,
               language: language, // Also send in body for compatibility
             }),
