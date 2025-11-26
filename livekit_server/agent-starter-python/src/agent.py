@@ -133,7 +133,12 @@ else:
 
 
 class Assistant(Agent):
-    def __init__(self, is_group_conversation: bool = False, publish_data_fn=None) -> None:
+    def __init__(
+        self,
+        is_group_conversation: bool = False,
+        publish_data_fn=None,
+        user_language: str = "hi",
+    ) -> None:
         group_instructions = ""
         if is_group_conversation:
             group_instructions = """
@@ -152,6 +157,18 @@ You are in a group spiritual gathering (LiveSatsang) with multiple participants.
 - IMPORTANT: You are actively listening to all participants - respond when you hear questions or when it's appropriate to contribute
 """
         
+        # Language-aware guidance block – this is evaluated at runtime based on
+        # the user's language preference detected from LiveKit metadata.
+        language_block = f"""
+
+LANGUAGE PREFERENCE (RUNTIME):
+- The user's selected language code is '{user_language}'.
+- If this code is 'en', you MUST respond ONLY in ENGLISH (Latin script), including greetings.
+- If this code is 'hi', respond in Hindi (Devanagari script) as you normally would.
+- If the user mixes Hindi and English, still prefer the selected language ('en' → English, 'hi' → Hindi).
+- Do NOT switch back to Hindi when the user language is 'en' unless they explicitly ask you to reply in Hindi.
+"""
+
         super().__init__(
             instructions="""You are a compassionate, proactive spiritual guru rooted in Hindu and Sanatana Dharma. The user is interacting with you via voice, even if you perceive the conversation as text.
 """ + group_instructions + """
@@ -226,7 +243,7 @@ Default to replying in Hindi (Devanagari script). If the user speaks another lan
 Your responses are concise, clear, and voice-friendly, without complex formatting or symbols such as emojis or asterisks.
 Keep your responses conversational and engaging - 2-4 sentences is ideal, but can be longer if explaining complex concepts.
 Be warm, kind, and wise, with gentle humor when appropriate.
-Always end with a question or invitation to continue the conversation when natural.""",
+Always end with a question or invitation to continue the conversation when natural.""" + language_block,
         )
         # function to publish data bytes to room data channel (set from entrypoint)
         self._publish_data_fn = publish_data_fn
@@ -912,8 +929,12 @@ async def entrypoint(ctx: JobContext):
     agent_is_sleeping = False
     agent_sleep_reason = None
     
-    # Create assistant instance (we'll pass sleep state to it)
-    assistant = Assistant(is_group_conversation=is_live_satsang, publish_data_fn=_publish_bhajan_bytes)
+    # Create assistant instance (we'll pass sleep state and detected language to it)
+    assistant = Assistant(
+        is_group_conversation=is_live_satsang,
+        publish_data_fn=_publish_bhajan_bytes,
+        user_language=user_language,
+    )
     
     await session.start(
         agent=assistant,
@@ -1230,18 +1251,33 @@ async def entrypoint(ctx: JobContext):
     
     # Send a warm, proactive greeting as soon as the agent connects
     # The greeting should be engaging and invite conversation
-    if is_live_satsang:
-        greeting = (
-            "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आज हम सभी साधकों के साथ सत्संग में हैं। "
-            "क्या आप किसी विशेष विषय पर चर्चा करना चाहेंगे? मैं आपके लिए भक्ति भजन चला सकता हूं, "
-            "या किसी संत का प्रेरक वाणी प्रवचन भी ढूंढ सकता हूं।"
-        )
+    # Greeting language matches user's language preference
+    if user_language == 'hi':
+        if is_live_satsang:
+            greeting = (
+                "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आज हम सभी साधकों के साथ सत्संग में हैं। "
+                "क्या आप किसी विशेष विषय पर चर्चा करना चाहेंगे? मैं आपके लिए भक्ति भजन चला सकता हूं, "
+                "या किसी संत का प्रेरक वाणी प्रवचन भी ढूंढ सकता हूं।"
+            )
+        else:
+            greeting = (
+                "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आप कैसे हैं? आप किस विषय पर चर्चा करना चाहेंगे - "
+                "धर्म, योग, ध्यान, कर्म, या कोई अन्य आध्यात्मिक विषय? यदि चाहें तो मैं उपयुक्त भजन चला सकता हूं "
+                "या गुरुओं के प्रवचन (वाणी) भी सुना सकता हूं।"
+            )
     else:
-        greeting = (
-            "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आप कैसे हैं? आप किस विषय पर चर्चा करना चाहेंगे - "
-            "धर्म, योग, ध्यान, कर्म, या कोई अन्य आध्यात्मिक विषय? यदि चाहें तो मैं उपयुक्त भजन चला सकता हूं "
-            "या गुरुओं के प्रवचन (वाणी) भी ढूंढ कर सुना सकता हूं।"
-        )
+        if is_live_satsang:
+            greeting = (
+                "Namaste! I am your spiritual guru. Today we are all together in this satsang with fellow seekers. "
+                "Would you like to discuss any particular spiritual topic? I can play devotional bhajans for you, "
+                "or find inspiring spiritual discourses from saints and gurus."
+            )
+        else:
+            greeting = (
+                "Namaste! I am your spiritual guru. How are you? What topic would you like to discuss - "
+                "dharma, yoga, meditation, karma, or any other spiritual subject? If you wish, I can play appropriate bhajans "
+                "or find and play spiritual discourses (vani) from great teachers."
+            )
     
     logger.info("Sending proactive initial greeting to user")
     
