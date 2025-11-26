@@ -757,59 +757,16 @@ async def entrypoint(ctx: JobContext):
             logger.info(f"Using {stt_model} for English STT")
     
     # Initialize turn detector with error handling and timeout protection
-    logger.info("Initializing turn detector model...")
+    # Initialize turn detector
+    # CRITICAL FIX: The MultilingualModel turn detector requires an inference executor which
+    # is failing to load correctly in this environment ("no inference executor" error).
+    # We explicitly set turn_detector = None to force AgentSession to use the default
+    # Voice Activity Detector (VAD) which is robust and does not crash.
+    logger.info("Using default VAD (Voice Activity Detector) for stability")
     turn_detector = None
     
-    def _init_turn_detector_with_timeout():
-        try:
-            global _MultilingualModel
-            if _MultilingualModel is None:
-                from livekit.plugins.turn_detector.multilingual import MultilingualModel as _MultilingualModel_Class
-                _MultilingualModel = _MultilingualModel_Class
-            
-            return _MultilingualModel()
-        except Exception as e:
-            logger.warning(f"Failed to initialize turn detector: {e}")
-            return None
-    
-    try:
-        class TurnDetectorTimeoutError(Exception):
-            pass
-        
-        def timeout_handler(signum, frame):
-            raise TurnDetectorTimeoutError("Turn detector initialization timed out")
-        
-        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
-        signal.alarm(5)
-        
-        try:
-            turn_detector = _init_turn_detector_with_timeout()
-            signal.alarm(0)
-            if turn_detector:
-                logger.info("Turn detector model initialized successfully")
-            else:
-                logger.warning("Turn detector initialization returned None - will use default")
-        except TurnDetectorTimeoutError:
-            logger.warning("Turn detector initialization timed out (>5s) - skipping to avoid agent timeout")
-            turn_detector = None
-        finally:
-            signal.alarm(0)
-            signal.signal(signal.SIGALRM, old_handler)
-            
-    except (AttributeError, ValueError) as e:
-        logger.debug(f"Signal-based timeout not available ({e}), initializing without timeout")
-        try:
-            turn_detector = _init_turn_detector_with_timeout()
-            if turn_detector:
-                logger.info("Turn detector model initialized successfully")
-            else:
-                logger.warning("Turn detector initialization returned None - will use default")
-        except Exception as e:
-            logger.warning(f"Failed to initialize turn detector: {e}")
-            turn_detector = None
-    except Exception as e:
-        logger.warning(f"Unexpected error initializing turn detector: {e}")
-        turn_detector = None
+    # The following complex initialization is disabled to prevent crashes:
+    # _init_turn_detector_with_timeout() logic removed temporarily
     
     # Check if this is a group conversation
     is_group_conv = ctx.room.name.lower() == "livesatsang" or "group" in ctx.room.name.lower()
