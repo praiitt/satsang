@@ -1,0 +1,11 @@
+livekit-agents[silero,turn-detector]~=1.2
+livekit-plugins-noise-cancellation~=0.2
+livekit-plugins-sarvam~=1.2
+python-dotenv
+torch>=2.0.0
+firebase-admin
+livekit-plugins-rag>=1.0.13
+pinecone>=7.3.0
+openai>=2.6.1
+setuptools>=61.0
+wheel
