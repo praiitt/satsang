@@ -44,14 +44,13 @@ export async function POST(req: Request) {
       fileTypeMap[FILE_TYPE_ENV] ?? (AUDIO_ONLY ? EncodedFileType.OGG : EncodedFileType.MP4);
 
     // Map file type to extension
-    const extMap: Record<EncodedFileType, string> = {
+    // Use Record<number, string> to avoid exhaustiveness check for missing enum members in different SDK versions
+    const extMap: Record<number, string> = {
       [EncodedFileType.DEFAULT_FILETYPE]: AUDIO_ONLY ? 'ogg' : 'mp4',
       [EncodedFileType.MP4]: 'mp4',
       [EncodedFileType.OGG]: 'ogg',
-      // @ts-ignore - MP3 exists in the version installed on the build server
-      [(EncodedFileType as any).MP3]: 'mp3',
     };
-    const ext = extMap[fileType];
+    const ext = extMap[fileType] || 'mp4';
     const fileName = `${FILE_BASENAME}.${ext}`;
     const filePath = `${basePath}/${fileName}`;
 
