@@ -7,24 +7,43 @@ let initialized = false;
 export function initFirebaseAdmin() {
   if (initialized) return;
 
-  const explicitPath =
-    process.env.FIREBASE_SERVICE_ACCOUNT_PATH ||
-    // default to repo root service account file if present
-    path.resolve(process.cwd(), '..', 'satsangServiceAccount.json');
-
-  if (!fs.existsSync(explicitPath)) {
-    throw new Error(
-      `Service account file not found at ${explicitPath}. Set FIREBASE_SERVICE_ACCOUNT_PATH env var to the JSON key path.`
-    );
+  // Try loading from environment variables first (preferred for production/cloud)
+  if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: privateKey,
+      }),
+    });
+    initialized = true;
+    console.log('[auth-server] ✅ Initialized Firebase Admin from environment variables');
+    return;
   }
 
-  const serviceAccount = JSON.parse(fs.readFileSync(explicitPath, 'utf8'));
+  // Fallback to file-based auth
+  const explicitPath =
+    process.env.FIREBASE_SERVICE_ACCOUNT_PATH ||
+    path.resolve(process.cwd(), '..', 'satsangServiceAccount.json');
 
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
-  });
+  if (fs.existsSync(explicitPath)) {
+    try {
+      const serviceAccount = JSON.parse(fs.readFileSync(explicitPath, 'utf8'));
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+      initialized = true;
+      console.log(`[auth-server] ✅ Initialized Firebase Admin from file: ${explicitPath}`);
+      return;
+    } catch (error) {
+      console.error('[auth-server] Failed to parse service account file:', error);
+    }
+  }
 
-  initialized = true;
+  throw new Error(
+    'Firebase credentials not found. Set FIREBASE_SERVICE_ACCOUNT_PATH to a valid file path OR set FIREBASE_PRIVATE_KEY, FIREBASE_CLIENT_EMAIL, and FIREBASE_PROJECT_ID environment variables.'
+  );
 }
 
 export function getAuth() {
