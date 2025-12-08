@@ -48,6 +48,8 @@ export async function POST(req: Request) {
       [EncodedFileType.DEFAULT_FILETYPE]: AUDIO_ONLY ? 'ogg' : 'mp4',
       [EncodedFileType.MP4]: 'mp4',
       [EncodedFileType.OGG]: 'ogg',
+      // @ts-ignore - MP3 exists in the version installed on the build server
+      [(EncodedFileType as any).MP3]: 'mp3',
     };
     const ext = extMap[fileType];
     const fileName = `${FILE_BASENAME}.${ext}`;
