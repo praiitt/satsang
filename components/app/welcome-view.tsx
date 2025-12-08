@@ -9,6 +9,7 @@ import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import type { GuruDefinition } from '@/lib/gurus';
+import { FindYourGuruQuiz } from '@/components/find-your-guru-quiz';
 
 function WelcomeImage() {
   return (
@@ -110,6 +111,19 @@ export const WelcomeView = ({
           >
             {t('welcome.discoverGurus')}
           </Button>
+          <div className="flex justify-center">
+            <FindYourGuruQuiz
+              trigger={
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  className="h-14 w-full text-lg font-semibold sm:w-auto sm:min-w-[240px] gap-2"
+                >
+                  {t('quiz.triggerButton')}
+                </Button>
+              }
+            />
+          </div>
           <Button
             variant="secondary"
             size="lg"

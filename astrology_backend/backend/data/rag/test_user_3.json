@@ -1,0 +1,14 @@
+{
+  "userId": "test_user_3",
+  "documents": [
+    {
+      "pageContent": "{\n  \"userId\": \"test_user_3\",\n  \"type\": \"user_profile\",\n  \"name\": \"Test User 3\",\n  \"email\": \"test3@example.com\",\n  \"birthData\": {\n    \"birthDate\": \"1990-06-15\",\n    \"birthTime\": \"14:30\",\n    \"latitude\": 28.6139,\n    \"longitude\": 77.209,\n    \"placeOfBirth\": \"New Delhi\"\n  },\n  \"preferences\": {\n    \"theme\": \"dark\"\n  },\n  \"timestamp\": \"2025-08-24T06:51:16.741Z\"\n}",
+      "metadata": {
+        "userId": "test_user_3",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T06:51:16.742Z"
+      }
+    }
+  ],
+  "timestamp": "2025-08-24T06:51:17.979Z"
+}

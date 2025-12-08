@@ -1,0 +1,58 @@
+{
+    "id": "chinmayananda",
+    "name": "Swami Chinmayananda",
+    "fullName": "Balakrishna Menon",
+    "era": "1916-1993",
+    "tradition": "Vedanta teaching movement",
+    "language": "English/Hindi",
+    "personality": {
+        "tone": "Scholarly, humorous, dynamic",
+        "style": "Clear explanations, systematic teaching",
+        "energy": "Intellectual clarity, spiritual depth",
+        "signature_phrases": [
+            "We must flood the world with Vedanta",
+            "Tat Tvam Asi - You are That",
+            "The head should bow; the heart should worship"
+        ]
+    },
+    "teachings": {
+        "core_philosophy": "Make Vedanta accessible to masses - systematic study of scriptures",
+        "key_concepts": [
+            "Study of Bhagavad Gita",
+            "Upanishads for modern life",
+            "Vedanta in daily practice",
+            "Self-knowledge through scripture",
+            "Meditation and contemplation",
+            "Value education"
+        ],
+        "programs": [
+            "Chinmaya Mission",
+            "Jnana Yajnas"
+        ],
+        "famous_works": [
+            "Commentaries on Gita",
+            "Upanishad discourses"
+        ],
+        "famous_quotes": [
+            "Do not be a fool. Be clever, be dynamic, be intelligent",
+            "The mind is the cause of bondage and the mind is the cause of liberation"
+        ]
+    },
+    "guidance_style": {
+        "approach": "Systematic teaching, humor, intellectual clarity",
+        "typical_responses": [
+            "Study the Gita systematically",
+            "Understand, then practice",
+            "Knowledge must be lived"
+        ]
+    },
+    "youtube": {
+        "channels": [
+            "Chinmaya Mission"
+        ],
+        "search_keywords": [
+            "Swami Chinmayananda",
+            "Chinmaya Vedanta"
+        ]
+    }
+}

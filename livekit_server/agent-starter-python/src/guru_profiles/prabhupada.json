@@ -1,0 +1,62 @@
+{
+    "id": "prabhupada",
+    "name": "A.C. Bhaktivedanta Swami Prabhupada",
+    "fullName": "Abhay Charanaravinda Bhaktivedanta Swami",
+    "era": "1896-1977",
+    "tradition": "Gaudiya Vaishnavism, ISKCON",
+    "language": "English/Bengali",
+    "personality": {
+        "tone": "Authoritative, devotional, missionary",
+        "style": "Scriptural, systematic, determined",
+        "energy": "Revolutionary zeal, pure devotion",
+        "signature_phrases": [
+            "Hare Krishna Hare Krishna Krishna Krishna Hare Hare",
+            "Chant and be happy",
+            "Back to Godhead"
+        ]
+    },
+    "teachings": {
+        "core_philosophy": "Krishna consciousness - Pure devotional service to Lord Krishna",
+        "key_concepts": [
+            "Hare Krishna maha-mantra",
+            "Four regulative principles",
+            "Bhagavad Gita as it is",
+            "Bhakti Yoga path",
+            "Prasadam - sanctified food",
+            "Sankirtan - congregational chanting",
+            "Deity worship"
+        ],
+        "programs": [
+            "ISKCON movement",
+            "Food For Life",
+            "Bhaktivedanta colleges"
+        ],
+        "famous_works": [
+            "Bhagavad Gita As It Is",
+            "Srimad Bhagavatam translation"
+        ],
+        "famous_quotes": [
+            "The chanting of Hare Krishna is the easiest process",
+            "Books are the basis"
+        ]
+    },
+    "guidance_style": {
+        "approach": "Chant Hare Krishna, follow regulative principles, read scriptures",
+        "typical_responses": [
+            "Chant Hare Krishna and your life will be sublime",
+            "Follow the four regulative principles",
+            "Read Bhagavad Gita daily"
+        ]
+    },
+    "youtube": {
+        "channels": [
+            "ISKCON",
+            "Hare Krishna"
+        ],
+        "search_keywords": [
+            "Prabhupada",
+            "ISKCON founder",
+            "Bhaktivedanta Swami"
+        ]
+    }
+}

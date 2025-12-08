@@ -1,0 +1,142 @@
+{
+  "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+  "documents": [
+    {
+      "pageContent": "Astrological Details for User:\n            Sun Sign: Unknown\n            Moon Sign: Unknown\n            Ascendant: Virgo\n            Birth Date: Unknown\n            Birth Time: Unknown\n            Birth Place: Unknown\n            Details: No additional details available",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-31T08:09:23.036Z",
+        "source": "astrology_api",
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 8
+          }
+        }
+      }
+    },
+    {
+      "pageContent": "KalSarpa Dosha Analysis:\n            Type: N/A\n            Present: No\n            ",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-08-30T13:22:56.052Z"
+      }
+    },
+    {
+      "pageContent": "Astrological Details:\n          Sign: Taurus\n          Ascendant: Virgo\n          Ascendant Lord: Mercury\n          Nakshatra: Mrigshira\n          Nakshatra Lord: Mars\n          Charan: 1\n          Yog: Vriddhi\n          Karan: Taitil\n          Tithi: Krishna Dwadashi\n          Tatva: Earth\n          Varna: Vaishya\n          Vashya: Chatuspad\n          Yoni: Sarp\n          Gan: Dev\n          Nadi: Madhya\n          Sign Lord: Venus\n          Name Alphabet: Ve\n          Paya: Iron",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-30T13:22:56.042Z",
+        "sign": "Taurus",
+        "ascendant": "Virgo",
+        "nakshatra": "Mrigshira"
+      }
+    },
+    {
+      "pageContent": "Current Vimshottari Dasha:\n            Period: Unknown\n            Sub-period: Unknown\n            Start Date: Unknown\n            End Date: Unknown",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "current_vdasha",
+        "timestamp": "2025-08-31T08:09:27.042Z",
+        "source": "astrology_api",
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 5
+          }
+        }
+      }
+    },
+    {
+      "pageContent": "Kalsarpa Dosha Analysis:\n            Has Kalsarpa: No\n            Type: None\n            Remedies: No remedies needed",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-08-31T08:09:30.220Z",
+        "source": "astrology_api",
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 4
+          }
+        }
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T08:11:10.998Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T08:11:10.999Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-30T13:26:58.903Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-30T13:26:58.903Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-30T13:26:58.728Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-30T13:26:58.728Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-30T13:23:00.500Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-30T13:23:00.500Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T08:11:11.177Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T08:11:11.177Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-30T13:26:58.731Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-30T13:26:58.731Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-30T13:23:00.232Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-30T13:23:00.232Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T08:11:11.004Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T08:11:11.004Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"qIl95JrPu3e7ZqZLZrdCgq2j9Lg2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh.new1@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mukesh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"10:01\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-30T13:23:00.234Z\"\n}",
+      "metadata": {
+        "userId": "qIl95JrPu3e7ZqZLZrdCgq2j9Lg2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-30T13:23:00.234Z"
+      }
+    }
+  ],
+  "timestamp": "2025-08-31T08:11:13.042Z"
+}

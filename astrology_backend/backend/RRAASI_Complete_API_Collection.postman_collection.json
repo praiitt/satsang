@@ -1,0 +1,1217 @@
+{
+  "info": {
+    "name": "RRAASI Complete API Collection",
+    "description": "Comprehensive API collection for RRAASI astrology platform backend with all endpoints",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "2.0.0"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"name\": \"John Doe\",\n  \"birthData\": {\n    \"birthDate\": \"1990-01-01\",\n    \"birthTime\": \"12:00\",\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/signup",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "signup"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/signin",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "signin"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"birthData\": {\n    \"birthDate\": \"1990-01-01\",\n    \"birthTime\": \"12:00\",\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "profile"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Sign Out",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/signout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "signout"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{auth_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify-token",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify-token"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "item": [
+        {
+          "name": "Basic Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Tell me about my personality based on my birth chart\",\n  \"conversationId\": \"conv_12345\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chat",
+              "host": ["{{base_url}}"],
+              "path": ["chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Birth Chart Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"birthData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  },\n  \"query\": \"Tell me about my personality\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chat/birth-chart",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "birth-chart"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Reading",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"birthData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  },\n  \"readingType\": \"comprehensive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chat/get-reading",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "get-reading"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Current Transits",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"birthData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chat/current-transits",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "current-transits"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "New Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"My Astrology Chat\",\n  \"type\": \"general\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chat/new-conversation",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "new-conversation"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Conversation",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/conversation/conv_12345",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "conversation", "conv_12345"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get All Conversations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/conversations?limit=20&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "conversations"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/history?limit=50&conversationId=conv_12345",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "history"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "conversationId",
+                  "value": "conv_12345"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Conversation",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/conversation/conv_12345",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "conversation", "conv_12345"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chat/health",
+              "host": ["{{base_url}}"],
+              "path": ["chat", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Matchmaking",
+      "item": [
+        {
+          "name": "Comprehensive Analysis",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maleData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  },\n  \"femaleData\": {\n    \"name\": \"Jane Smith\",\n    \"day\": 20,\n    \"month\": 8,\n    \"year\": 1992,\n    \"hour\": 10,\n    \"minute\": 15,\n    \"latitude\": 19.0760,\n    \"longitude\": 72.8777,\n    \"placeOfBirth\": \"Mumbai\"\n  },\n  \"matchType\": \"marriage\",\n  \"focusAreas\": [\"emotional\", \"intellectual\", \"communication\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matchmaking/comprehensive-analysis",
+              "host": ["{{base_url}}"],
+              "path": ["matchmaking", "comprehensive-analysis"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Partner Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"query\": \"What is our compatibility percentage?\",\n  \"perspective\": \"male\",\n  \"conversationId\": \"match_conv_12345\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matchmaking/partner-chat",
+              "host": ["{{base_url}}"],
+              "path": ["matchmaking", "partner-chat"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Import Specific Chart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maleData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090\n  },\n  \"femaleData\": {\n    \"name\": \"Jane Smith\",\n    \"day\": 20,\n    \"month\": 8,\n    \"year\": 1992,\n    \"hour\": 10,\n    \"minute\": 15,\n    \"latitude\": 19.0760,\n    \"longitude\": 72.8777\n  },\n  \"chartType\": \"match_making_report\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matchmaking/import-chart",
+              "host": ["{{base_url}}"],
+              "path": ["matchmaking", "import-chart"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Import All Charts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"maleData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090\n  },\n  \"femaleData\": {\n    \"name\": \"Jane Smith\",\n    \"day\": 20,\n    \"month\": 8,\n    \"year\": 1992,\n    \"hour\": 10,\n    \"minute\": 15,\n    \"latitude\": 19.0760,\n    \"longitude\": 72.8777\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/matchmaking/import-all-charts",
+              "host": ["{{base_url}}"],
+              "path": ["matchmaking", "import-all-charts"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Matchmaking History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matchmaking/history/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["matchmaking", "history", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/matchmaking/health",
+              "host": ["{{base_url}}"],
+              "path": ["matchmaking", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Compatibility",
+      "item": [
+        {
+          "name": "Group Analysis",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"groupMembers\": [\n    {\n      \"name\": \"Alice\",\n      \"birthDate\": \"1990-05-15\",\n      \"birthTime\": \"14:30\",\n      \"latitude\": 28.6139,\n      \"longitude\": 77.2090,\n      \"role\": \"Leader\"\n    },\n    {\n      \"name\": \"Bob\",\n      \"birthDate\": \"1988-12-03\",\n      \"birthTime\": \"09:15\",\n      \"latitude\": 19.0760,\n      \"longitude\": 72.8777,\n      \"role\": \"Creative\"\n    }\n  ],\n  \"groupType\": \"work\",\n  \"analysisFocus\": \"dynamics\",\n  \"userId\": \"{{user_id}}\",\n  \"conversationId\": \"group_conv_12345\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/compatibility/group-analysis",
+              "host": ["{{base_url}}"],
+              "path": ["compatibility", "group-analysis"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Analyze Compatibility",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"person1\": {\n    \"name\": \"John Doe\",\n    \"birthDate\": \"1990-05-15\",\n    \"birthTime\": \"14:30\",\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  },\n  \"person2\": {\n    \"name\": \"Jane Smith\",\n    \"birthDate\": \"1988-12-03\",\n    \"birthTime\": \"09:15\",\n    \"latitude\": 19.0760,\n    \"longitude\": 72.8777,\n    \"placeOfBirth\": \"Mumbai\"\n  },\n  \"analysisType\": \"comprehensive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/compatibility/analyze",
+              "host": ["{{base_url}}"],
+              "path": ["compatibility", "analyze"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/compatibility/health",
+              "host": ["{{base_url}}"],
+              "path": ["compatibility", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Coins",
+      "item": [
+        {
+          "name": "Get Coin Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/coins/balance",
+              "host": ["{{base_url}}"],
+              "path": ["coins", "balance"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/coins/transactions?limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["coins", "transactions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Feature Costs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/coins/features",
+              "host": ["{{base_url}}"],
+              "path": ["coins", "features"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Check Feature Access",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"featureId\": \"basic_chat\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/coins/check-access",
+              "host": ["{{base_url}}"],
+              "path": ["coins", "check-access"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Bonus Coins",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"amount\": 100,\n  \"reason\": \"Welcome bonus\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/coins/bonus",
+              "host": ["{{base_url}}"],
+              "path": ["coins", "bonus"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Coin System Stats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/coins/stats",
+              "host": ["{{base_url}}"],
+              "path": ["coins", "stats"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "Create Order",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"planId\": \"premium_monthly\",\n  \"userEmail\": \"user@example.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/create-order",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "create-order"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Verify Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"razorpay_order_id\": \"order_12345\",\n  \"razorpay_payment_id\": \"pay_12345\",\n  \"razorpay_signature\": \"signature_12345\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/verify",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "verify"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Subscription Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/payments/subscription-status?userId={{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "subscription-status"],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{user_id}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Subscription",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"subscriptionId\": \"sub_12345\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/payments/cancel-subscription",
+              "host": ["{{base_url}}"],
+              "path": ["payments", "cancel-subscription"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Astrology",
+      "item": [
+        {
+          "name": "Comprehensive Analysis",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"birthData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"place_of_birth\": \"New Delhi\"\n  },\n  \"analysisType\": \"comprehensive\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/astrology/comprehensive-analysis",
+              "host": ["{{base_url}}"],
+              "path": ["astrology", "comprehensive-analysis"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Import Charts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"birthData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"place_of_birth\": \"New Delhi\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/astrology/import-charts",
+              "host": ["{{base_url}}"],
+              "path": ["astrology", "import-charts"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Comprehensive Astrology",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comprehensive-astrology/health",
+              "host": ["{{base_url}}"],
+              "path": ["comprehensive-astrology", "health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Available Systems",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/comprehensive-astrology/systems",
+              "host": ["{{base_url}}"],
+              "path": ["comprehensive-astrology", "systems"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Birth Chart (Vedic)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"birthData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  },\n  \"options\": {\n    \"includeAspects\": true,\n    \"includeHouses\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/comprehensive-astrology/vedic/birth-chart",
+              "host": ["{{base_url}}"],
+              "path": ["comprehensive-astrology", "vedic", "birth-chart"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Predictions (Vedic)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"birthData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  },\n  \"options\": {\n    \"predictionType\": \"yearly\",\n    \"duration\": 1\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/comprehensive-astrology/vedic/predictions",
+              "host": ["{{base_url}}"],
+              "path": ["comprehensive-astrology", "vedic", "predictions"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Dasha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"birthData\": {\n    \"name\": \"John Doe\",\n    \"day\": 15,\n    \"month\": 5,\n    \"year\": 1990,\n    \"hour\": 14,\n    \"minute\": 30,\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  },\n  \"options\": {\n    \"dashaType\": \"major\",\n    \"duration\": 5\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/comprehensive-astrology/vedic/dasha",
+              "host": ["{{base_url}}"],
+              "path": ["comprehensive-astrology", "vedic", "dasha"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Chart Management",
+      "item": [
+        {
+          "name": "Login Init",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chart-management/login-init",
+              "host": ["{{base_url}}"],
+              "path": ["chart-management", "login-init"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Charts",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"birthData\": {\n    \"birthDate\": \"1990-01-01\",\n    \"birthTime\": \"12:00\",\n    \"latitude\": 28.6139,\n    \"longitude\": 77.2090,\n    \"placeOfBirth\": \"New Delhi\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/chart-management/generate-charts",
+              "host": ["{{base_url}}"],
+              "path": ["chart-management", "generate-charts"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Chart Summary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chart-management/summary/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["chart-management", "summary", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get System Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/chart-management/system-status",
+              "host": ["{{base_url}}"],
+              "path": ["chart-management", "system-status"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "RAG",
+      "item": [
+        {
+          "name": "Search Charts by Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"query\": \"Tell me about my personality\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/rag/search",
+              "host": ["{{base_url}}"],
+              "path": ["rag", "search"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Chat History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/rag/chat-history/{{user_id}}?limit=50&conversationId=conv_12345",
+              "host": ["{{base_url}}"],
+              "path": ["rag", "chat-history", "{{user_id}}"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "conversationId",
+                  "value": "conv_12345"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Enhanced Chat",
+      "item": [
+        {
+          "name": "Enhanced Chat Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"Tell me about my career prospects\",\n  \"conversationId\": \"enhanced_conv_12345\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/enhanced-chat",
+              "host": ["{{base_url}}"],
+              "path": ["enhanced-chat"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Hybrid RAG",
+      "item": [
+        {
+          "name": "Hybrid RAG Query",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{user_id}}\",\n  \"query\": \"What are my lucky colors?\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/hybrid-rag",
+              "host": ["{{base_url}}"],
+              "path": ["hybrid-rag"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Waitlist",
+      "item": [
+        {
+          "name": "Join Waitlist",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"name\": \"John Doe\",\n  \"interest\": \"astrology\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/waitlist",
+              "host": ["{{base_url}}"],
+              "path": ["waitlist"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Waitlist Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/waitlist/status?email=user@example.com",
+              "host": ["{{base_url}}"],
+              "path": ["waitlist", "status"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "user@example.com"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get All Users",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "{{user_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get System Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/system/health",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "system", "health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-set user_id from auth response",
+          "if (pm.response && pm.response.json() && pm.response.json().user && pm.response.json().user.uid) {",
+          "    pm.collectionVariables.set('user_id', pm.response.json().user.uid);",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Auto-extract auth token from signin response",
+          "if (pm.response && pm.response.json() && pm.response.json().token) {",
+          "    pm.collectionVariables.set('auth_token', pm.response.json().token);",
+          "    console.log('Auth token set:', pm.response.json().token);",
+          "}",
+          "",
+          "// Auto-extract user_id from auth response",
+          "if (pm.response && pm.response.json() && pm.response.json().user && pm.response.json().user.uid) {",
+          "    pm.collectionVariables.set('user_id', pm.response.json().user.uid);",
+          "    console.log('User ID set:', pm.response.json().user.uid);",
+          "}"
+        ]
+      }
+    }
+  ]
+}

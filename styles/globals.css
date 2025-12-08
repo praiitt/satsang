@@ -184,4 +184,33 @@
       background-position: 250% 0;
     }
   }
+
+  /* Float animation for cards */
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Glow effect for primary elements */
+  .glow-primary {
+    box-shadow: 0 0 20px rgba(255, 122, 0, 0.3);
+  }
+
+  /* Spiritual gradient backgrounds */
+  .gradient-spiritual {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  }
+
+  .gradient-spiritual-radial {
+    background: radial-gradient(circle at center, var(--primary) 0%, var(--background) 100%);
+  }
 }

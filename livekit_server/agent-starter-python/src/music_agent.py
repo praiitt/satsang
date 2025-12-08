@@ -40,7 +40,7 @@ for _env_path in _ENV_PATHS:
         break
 
 class MusicAssistant(Agent):
-    def __init__(self, publish_data_fn=None):
+    def __init__(self, publish_data_fn=None, user_id=None):
         super().__init__(
             instructions="""You are RRAASI Music Creator, a specialized AI agent for creating healing, spiritual, and meditative music.
 Your goal is to create the PERFECT music track for the user.
@@ -63,6 +63,9 @@ Because music generation is a premium service, you must NOT generate music immed
 3.  **Generate (Only after confirmation):**
     Call the `generate_music` tool ONLY after the user says "Yes", "Go ahead", or confirms the plan.
 
+**RETRIEVING PAST TRACKS:**
+- If the user asks for "last music created", "my tracks", or "previous songs", use the `list_tracks` tool.
+
 **PROMPT ENGINEERING TIPS:**
 -   Be extremely descriptive in the `prompt` argument.
 -   Include keywords for atmosphere: "Reverb", "Ethereal", "Spacious", "Warm".
@@ -76,6 +79,7 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
         )
         self._publish_data_fn = publish_data_fn
         self.suno_client = SunoClient()
+        self.user_id = user_id or "default_user"
 
     @function_tool
     async def generate_music(
@@ -98,6 +102,10 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
         logger.info(f"Generating music: {title} ({style}) - Instrumental: {is_instrumental}")
         
         try:
+            # Get auth server URL from environment
+            auth_server_url = os.getenv("AUTH_SERVER_URL", "http://localhost:4000")
+            callback_url = f"{auth_server_url}/suno/callback?userId={self.user_id}"
+            
             # Call Suno API
             result = await self.suno_client.generate_music(
                 prompt=prompt,
@@ -105,7 +113,8 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
                 custom_mode=True,
                 style=style,
                 title=title,
-                model="V3_5"
+                model="V3_5",
+                callback_url=callback_url
             )
             
             logger.info(f"Suno API Result: {result}")
@@ -129,6 +138,42 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
             logger.error(f"Music generation failed: {e}")
             return "I apologize, but I encountered an error while trying to generate the music. Please try again."
 
+    @function_tool
+    async def list_tracks(self, context: RunContext) -> str:
+        """
+        List the music tracks created by the user, ordered by most recent first.
+        Use this when the user asks for "last track", "recent music", or "my songs".
+        """
+        try:
+            import aiohttp
+            
+            # Get auth server URL
+            auth_server_url = os.getenv("AUTH_SERVER_URL", "http://localhost:4000")
+            url = f"{auth_server_url}/suno/tracks?userId={self.user_id}&limit=5"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        logger.error(f"Failed to fetch tracks: {response.status}")
+                        return "I'm sorry, I couldn't retrieve your tracks right now."
+                    
+                    data = await response.json()
+                    tracks = data.get("tracks", [])
+            
+            if not tracks:
+                return "You haven't created any music tracks yet."
+            
+            response_text = "Here are your recent tracks (most recent first):\n"
+            for i, track in enumerate(tracks, 1):
+                title = track.get("title", "Untitled")
+                url = track.get("audioUrl", "No URL")
+                response_text += f"{i}. {title} - [Listen]({url})\n"
+            
+            return response_text
+        except Exception as e:
+            logger.error(f"Failed to list tracks: {e}")
+            return "I'm sorry, I couldn't retrieve your tracks right now."
+
     async def _poll_and_play(self, task_id: str, title: str):
         """Poll status and play when ready."""
         logger.info(f"Polling for task: {task_id}")
@@ -146,7 +191,8 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
                     status = data.get("status")
                     logger.info(f"Task {task_id} status: {status}")
                     
-                    if status == "SUCCESS":
+                    # Handle both SUCCESS and FIRST_SUCCESS (which means one clip is ready)
+                    if status in ["SUCCESS", "FIRST_SUCCESS", "TEXT_SUCCESS"]:
                         clips = data.get("clips", [])
                         # Usually generates 2 clips
                         # We'll play the first one
@@ -154,7 +200,8 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
                             audio_url = clip.get("audio_url")
                             if audio_url:
                                 logger.info(f"Music ready! Playing: {audio_url}")
-                                
+                                logger.info(f"Track will be saved via callback to auth server")
+
                                 # Send to frontend
                                 if self._publish_data_fn:
                                     payload = {
@@ -184,12 +231,26 @@ def prewarm(proc: JobProcess):
 async def entrypoint(ctx: JobContext):
     logger.info(f"Starting Music Agent for room: {ctx.room.name}")
     
+    # Wait for participant to join and extract userId from metadata
+    user_id = "default_user"
+    try:
+        # Get the first participant (the user who joined)
+        participants = list(ctx.room.remote_participants.values())
+        if participants:
+            participant = participants[0]
+            if participant.metadata:
+                metadata = json.loads(participant.metadata)
+                user_id = metadata.get("userId", "default_user")
+                logger.info(f"Extracted userId from participant metadata: {user_id}")
+    except Exception as e:
+        logger.warning(f"Could not extract userId from participant metadata: {e}")
+    
     # Initialize STT/TTS
     stt = inference.STT(model="assemblyai/universal-streaming", language="en")
     tts = inference.TTS(model="cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc", language="en")
     
-    # Create assistant first (without publish_data_fn)
-    assistant = MusicAssistant()
+    # Create assistant with userId
+    assistant = MusicAssistant(user_id=user_id)
     
     # Create session
     session = AgentSession(
@@ -203,10 +264,37 @@ async def entrypoint(ctx: JobContext):
     session.agent = assistant
     
     # Start the session (this connects to the room)
-    await session.start(ctx.room)
+    await session.start(assistant, room=ctx.room)
     
     # Now that we're connected, set the publish function
     assistant._publish_data_fn = ctx.room.local_participant.publish_data
+    
+    # Handle chat messages
+    @ctx.room.on("data_received")
+    def on_data_received(data_packet):
+        """Handle incoming chat messages from the frontend."""
+        try:
+            # Decode the message
+            message = data_packet.data.decode('utf-8')
+            logger.info(f"📩 Received chat message: {message}")
+            
+            # Parse JSON if it's structured data
+            try:
+                data = json.loads(message)
+                # Extract the actual message text
+                if isinstance(data, dict) and 'message' in data:
+                    message = data['message']
+                elif isinstance(data, dict) and 'text' in data:
+                    message = data['text']
+            except json.JSONDecodeError:
+                # It's plain text, use as-is
+                pass
+            
+            # Send the message to the agent session for processing
+            asyncio.create_task(session.chat(message))
+            
+        except Exception as e:
+            logger.error(f"Error handling chat message: {e}")
     
     # Send welcome message
     await session.say(
@@ -215,4 +303,12 @@ async def entrypoint(ctx: JobContext):
     )
 
 if __name__ == "__main__":
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
+    # Get agent name from environment or use default
+    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "music-agent")
+    logger.info(f"Starting agent with name: {agent_name}")
+    
+    cli.run_app(WorkerOptions(
+        entrypoint_fnc=entrypoint,
+        prewarm_fnc=prewarm,
+        agent_name=agent_name
+    ))

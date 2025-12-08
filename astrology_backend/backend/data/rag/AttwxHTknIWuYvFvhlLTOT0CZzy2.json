@@ -1,0 +1,158 @@
+{
+  "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+  "documents": [
+    {
+      "pageContent": "Astrological Details for User:\n            Sun Sign: Unknown\n            Moon Sign: Unknown\n            Ascendant: Leo\n            Birth Date: Unknown\n            Birth Time: Unknown\n            Birth Place: Unknown\n            Details: No additional details available",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "astro_details",
+        "timestamp": "2025-09-01T12:50:42.819Z",
+        "source": "astrology_api",
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 8
+          }
+        }
+      }
+    },
+    {
+      "pageContent": "KalSarpa Dosha Analysis:\n            Type: N/A\n            Present: No\n            ",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-08-31T10:02:01.458Z"
+      }
+    },
+    {
+      "pageContent": "Astrological Details:\n          Sign: Libra\n          Ascendant: Leo\n          Ascendant Lord: Sun\n          Nakshatra: Swati\n          Nakshatra Lord: Rahu\n          Charan: 3\n          Yog: Sadhya\n          Karan: Kaulav\n          Tithi: Shukla-Navami\n          Tatva: Air\n          Varna: Shoodra\n          Vashya: Maanav\n          Yoni: Mahisha\n          Gan: Dev\n          Nadi: Ant\n          Sign Lord: Venus\n          Name Alphabet: Ro\n          Paya: Silver",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-31T10:02:01.455Z",
+        "sign": "Libra",
+        "ascendant": "Leo",
+        "nakshatra": "Swati"
+      }
+    },
+    {
+      "pageContent": "Current Vimshottari Dasha:\n            Period: Unknown\n            Sub-period: Unknown\n            Start Date: Unknown\n            End Date: Unknown",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "current_vdasha",
+        "timestamp": "2025-09-01T12:50:43.780Z",
+        "source": "astrology_api",
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 5
+          }
+        }
+      }
+    },
+    {
+      "pageContent": "Kalsarpa Dosha Analysis:\n            Has Kalsarpa: No\n            Type: None\n            Remedies: No remedies needed",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-09-01T12:50:45.553Z",
+        "source": "astrology_api",
+        "loc": {
+          "lines": {
+            "from": 1,
+            "to": 4
+          }
+        }
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T10:02:06.913Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T10:02:06.914Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T10:02:06.398Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T10:02:06.398Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T18:43:13.333Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T18:43:16.231Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T10:33:20.057Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T10:33:22.432Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T10:02:06.126Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T10:02:06.126Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T13:18:28.208Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T13:18:34.489Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T10:02:06.131Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T10:02:06.131Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-09-01T12:50:10.855Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-09-01T12:50:14.617Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T10:23:08.518Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T10:23:10.071Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-31T12:55:05.096Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-31T12:55:07.231Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"AttwxHTknIWuYvFvhlLTOT0CZzy2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash Kumar\",\n  \"email\": \"prakash.moon@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash Kumar\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:08\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-09-01T06:45:21.978Z\"\n}",
+      "metadata": {
+        "userId": "AttwxHTknIWuYvFvhlLTOT0CZzy2",
+        "chartType": "user_profile",
+        "timestamp": "2025-09-01T06:45:24.232Z"
+      }
+    }
+  ],
+  "timestamp": "2025-09-01T12:50:46.820Z"
+}

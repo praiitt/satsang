@@ -21,7 +21,8 @@ class SunoClient:
         custom_mode: bool = False,
         style: Optional[str] = None,
         title: Optional[str] = None,
-        model: str = "V3_5"
+        model: str = "V3_5",
+        callback_url: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Generate music using Suno API.
@@ -40,8 +41,11 @@ class SunoClient:
             "customMode": custom_mode,
             "instrumental": is_instrumental,
             "model": model,
-            "callBackUrl": "https://api.example.com/callback" # Optional but good practice
         }
+        
+        # Add callback URL if provided
+        if callback_url:
+            body["callBackUrl"] = callback_url
 
         if custom_mode:
             if not style or not title:
@@ -75,7 +79,7 @@ class SunoClient:
         if not self.api_key:
             raise ValueError("SUNO_API_KEY is not set")
 
-        url = f"{self.base_url}/get_music_generation_details"
+        url = f"{self.base_url}/generate/record-info"
         headers = {
             "Authorization": f"Bearer {self.api_key}"
         }

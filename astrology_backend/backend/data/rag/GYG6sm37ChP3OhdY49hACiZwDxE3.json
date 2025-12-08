@@ -1,0 +1,41 @@
+{
+  "userId": "GYG6sm37ChP3OhdY49hACiZwDxE3",
+  "documents": [
+    {
+      "pageContent": "KalSarpa Dosha Analysis:\n            Type: N/A\n            Present: No\n            ",
+      "metadata": {
+        "userId": "GYG6sm37ChP3OhdY49hACiZwDxE3",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-08-24T06:53:35.321Z"
+      }
+    },
+    {
+      "pageContent": "Astrological Details:\n          Sign: Taurus\n          Ascendant: Leo\n          Ascendant Lord: Sun\n          Nakshatra: Mrigshira\n          Nakshatra Lord: Mars\n          Charan: 1\n          Yog: Vriddhi\n          Karan: Taitil\n          Tithi: Krishna Dwadashi\n          Tatva: Earth\n          Varna: Vaishya\n          Vashya: Chatuspad\n          Yoni: Sarp\n          Gan: Dev\n          Nadi: Madhya\n          Sign Lord: Venus\n          Name Alphabet: Ve\n          Paya: Iron",
+      "metadata": {
+        "userId": "GYG6sm37ChP3OhdY49hACiZwDxE3",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-24T06:53:35.293Z",
+        "sign": "Taurus",
+        "ascendant": "Leo",
+        "nakshatra": "Mrigshira"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"GYG6sm37ChP3OhdY49hACiZwDxE3\",\n  \"type\": \"user_profile\",\n  \"name\": \"Naresh\",\n  \"email\": \"naresh@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Naresh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"09:22\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T06:53:41.720Z\"\n}",
+      "metadata": {
+        "userId": "GYG6sm37ChP3OhdY49hACiZwDxE3",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T06:53:41.720Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"GYG6sm37ChP3OhdY49hACiZwDxE3\",\n  \"type\": \"user_profile\",\n  \"name\": \"Naresh\",\n  \"email\": \"naresh@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Naresh\",\n    \"birthDate\": \"1982-07-18\",\n    \"birthTime\": \"09:22\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T06:53:41.710Z\"\n}",
+      "metadata": {
+        "userId": "GYG6sm37ChP3OhdY49hACiZwDxE3",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T06:53:41.710Z"
+      }
+    }
+  ],
+  "timestamp": "2025-08-24T06:53:42.577Z"
+}

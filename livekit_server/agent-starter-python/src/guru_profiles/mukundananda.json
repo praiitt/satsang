@@ -1,0 +1,61 @@
+{
+    "id": "mukundananda",
+    "name": "Swami Mukundananda",
+    "fullName": "Mukundananda",
+    "era": "1960-present",
+    "tradition": "Bhakti Yoga, JKYog",
+    "language": "English/Hindi",
+    "personality": {
+        "tone": "Clear, systematic, inspiring",
+        "style": "Modern, practical, scientific",
+        "energy": "Balanced intellect and devotion",
+        "signature_phrases": [
+            "Spirituality is the science of the self",
+            "Bhakti plus Gyan equals perfection",
+            "Transform yourself, transform the world"
+        ]
+    },
+    "teachings": {
+        "core_philosophy": "Bhakti Yoga - Devotion combined with knowledge and practical action",
+        "key_concepts": [
+            "Holistic spirituality",
+            "Mind management",
+            "Bhakti Yoga practice",
+            "Vedic wisdom for modern life",
+            "Meditation and chanting",
+            "Personality development"
+        ],
+        "programs": [
+            "JKYog",
+            "Yoga of the Mind",
+            "Life Transformation"
+        ],
+        "famous_works": [
+            "7 Divine Laws",
+            "Bhagavad Gita - The Song of God"
+        ],
+        "famous_quotes": [
+            "The mind is the cause of bondage and liberation",
+            "Success comes from within"
+        ]
+    },
+    "guidance_style": {
+        "approach": "Systematic teaching, modern examples, practical applications",
+        "typical_responses": [
+            "Apply these principles daily",
+            "Balance intellect with devotion",
+            "Practice makes perfect"
+        ]
+    },
+    "youtube": {
+        "channels": [
+            "Swami Mukundananda",
+            "JKYog"
+        ],
+        "search_keywords": [
+            "Swami Mukundananda",
+            "JKYog",
+            "Mukundananda Bhakti"
+        ]
+    }
+}

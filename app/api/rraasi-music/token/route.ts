@@ -6,6 +6,7 @@ type RRaaSiMusicTokenRequest = {
     participantName: string;
     role?: 'host' | 'participant';
     agentName?: string;
+    userId?: string;
 };
 
 type RRaaSiMusicTokenResponse = {
@@ -35,13 +36,14 @@ export async function POST(req: Request) {
         const participantName = body.participantName || `User_${Math.floor(Math.random() * 10_000)}`;
         const role = body.role || 'participant';
         const agentName = (body.agentName || DEFAULT_AGENT_NAME).trim();
+        const userId = body.userId || 'default_user';
 
         if (!agentName) {
             throw new Error('Agent name is required for RRAASI Music');
         }
 
         console.log(
-            `[RRAASI Music Token] Generating token for ${participantName} (${role}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
+            `[RRAASI Music Token] Generating token for ${participantName} (${role}, userId: ${userId}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
         );
 
         const participantIdentity = `rraasi_music_${role}_${Math.floor(Math.random() * 10_000)}_${Date.now()}`;
@@ -50,7 +52,8 @@ export async function POST(req: Request) {
             { identity: participantIdentity, name: participantName },
             RRAASI_MUSIC_ROOM_NAME,
             role,
-            agentName
+            agentName,
+            userId
         );
 
         const data: RRaaSiMusicTokenResponse = {
@@ -80,13 +83,15 @@ function createParticipantToken(
     userInfo: AccessTokenOptions,
     roomName: string,
     role: 'host' | 'participant',
-    agentName: string
+    agentName: string,
+    userId: string
 ): Promise<string> {
-    console.log(`[Token Creation] Creating token for room: "${roomName}"`);
+    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}`);
 
     const at = new AccessToken(API_KEY!, API_SECRET!, {
         ...userInfo,
         ttl: '2h',
+        metadata: JSON.stringify({ userId }), // Include userId in metadata
     });
 
     const grant: VideoGrant = {
@@ -104,7 +109,7 @@ function createParticipantToken(
 
     const token = at.toJwt();
     console.log(
-        `[Token Creation] Token created for room: "${roomName}", Identity: ${userInfo.identity}, Agent: ${agentName}`
+        `[Token Creation] Token created for room: "${roomName}", Identity: ${userInfo.identity}, Agent: ${agentName}, UserId: ${userId}`
     );
     return Promise.resolve(token);
 }

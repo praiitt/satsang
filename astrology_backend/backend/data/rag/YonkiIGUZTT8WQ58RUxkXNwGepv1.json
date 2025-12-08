@@ -1,0 +1,57 @@
+{
+  "userId": "YonkiIGUZTT8WQ58RUxkXNwGepv1",
+  "documents": [
+    {
+      "pageContent": "KalSarpa Dosha Analysis:\n            Type: N/A\n            Present: No\n            ",
+      "metadata": {
+        "userId": "YonkiIGUZTT8WQ58RUxkXNwGepv1",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-08-24T10:26:46.764Z"
+      }
+    },
+    {
+      "pageContent": "Astrological Details:\n          Sign: Aries\n          Ascendant: Scorpio\n          Ascendant Lord: Mars\n          Nakshatra: Bharni\n          Nakshatra Lord: Venus\n          Charan: 4\n          Yog: Shukla\n          Karan: Bava\n          Tithi: Shukla-Ashtami\n          Tatva: Fire\n          Varna: Kshatriya\n          Vashya: Chatuspad\n          Yoni: Gaj\n          Gan: Manushya\n          Nadi: Madhya\n          Sign Lord: Mars\n          Name Alphabet: Lo\n          Paya: Gold",
+      "metadata": {
+        "userId": "YonkiIGUZTT8WQ58RUxkXNwGepv1",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-24T10:26:46.749Z",
+        "sign": "Aries",
+        "ascendant": "Scorpio",
+        "nakshatra": "Bharni"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"YonkiIGUZTT8WQ58RUxkXNwGepv1\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mithun\",\n  \"email\": \"mithun@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mithun\",\n    \"birthDate\": \"1987-02-06\",\n    \"birthTime\": \"01:05\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T10:26:50.606Z\"\n}",
+      "metadata": {
+        "userId": "YonkiIGUZTT8WQ58RUxkXNwGepv1",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T10:26:50.607Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"YonkiIGUZTT8WQ58RUxkXNwGepv1\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mithun\",\n  \"email\": \"mithun@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mithun\",\n    \"birthDate\": \"1987-02-06\",\n    \"birthTime\": \"01:05\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T10:26:50.878Z\"\n}",
+      "metadata": {
+        "userId": "YonkiIGUZTT8WQ58RUxkXNwGepv1",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T10:26:50.878Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"YonkiIGUZTT8WQ58RUxkXNwGepv1\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mithun\",\n  \"email\": \"mithun@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mithun\",\n    \"birthDate\": \"1987-02-06\",\n    \"birthTime\": \"01:05\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T10:26:51.128Z\"\n}",
+      "metadata": {
+        "userId": "YonkiIGUZTT8WQ58RUxkXNwGepv1",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T10:26:51.128Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"YonkiIGUZTT8WQ58RUxkXNwGepv1\",\n  \"type\": \"user_profile\",\n  \"name\": \"Mithun\",\n  \"email\": \"mithun@gmail.com\",\n  \"birthData\": {\n    \"name\": \"Mithun\",\n    \"birthDate\": \"1987-02-06\",\n    \"birthTime\": \"01:05\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T10:26:50.611Z\"\n}",
+      "metadata": {
+        "userId": "YonkiIGUZTT8WQ58RUxkXNwGepv1",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T10:26:50.611Z"
+      }
+    }
+  ],
+  "timestamp": "2025-08-24T10:26:52.756Z"
+}

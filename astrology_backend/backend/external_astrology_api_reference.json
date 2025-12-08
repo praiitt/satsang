@@ -1,0 +1,6670 @@
+{
+	"info": {
+		"_postman_id": "c2622e38-d239-4b98-93d1-c4a30d6eec83",
+		"name": "Vedic AstrologyAPI Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27955699"
+	},
+	"item": [
+		{
+			"name": "Advanced Panchang",
+			"item": [
+				{
+					"name": "advanced_panchang",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/advanced_panchang",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"advanced_panchang"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "advanced_panchang/sunrise",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/advanced_panchang/sunrise",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"advanced_panchang",
+								"sunrise"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "chaughadiya_muhurta",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/chaughadiya_muhurta",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"chaughadiya_muhurta"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "hora_muhurta",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/hora_muhurta",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"hora_muhurta"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "hora_muhurta_dinman",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/hora_muhurta_dinman",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"hora_muhurta_dinman"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "panchang_chart",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/panchang_chart",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"panchang_chart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "panchang_chart/sunrise",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/panchang_chart/sunrise",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"panchang_chart",
+								"sunrise"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "find_nakshatra/:nakshatraName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/find_nakshatra/ashwini",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"find_nakshatra",
+								"ashwini"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tamil_month_panchang",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/tamil_month_panchang",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"tamil_month_panchang"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tamil_panchang",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/tamil_panchang",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"tamil_panchang"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "panchang_lagna_table",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/panchang_lagna_table",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"panchang_lagna_table"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "monthly_panchang",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/monthly_panchang",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"monthly_panchang"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "panchang_festival",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/panchang_festival",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"panchang_festival"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Ashtakvarga",
+			"item": [
+				{
+					"name": "planet_ashtak/:planet_name",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/planet_ashtak/:planet_name",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"planet_ashtak",
+								":planet_name"
+							],
+							"variable": [
+								{
+									"key": "planet_name",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sarvashtak",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sarvashtak",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sarvashtak"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Astro",
+			"item": [
+				{
+					"name": "birth_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/birth_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"birth_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "astro_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/astro_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"astro_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "planets",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/planets",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"planets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "planets/extended",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/planets/extended",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"planets",
+								"extended"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bhav_madhya",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/bhav_madhya",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"bhav_madhya"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ayanamsha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/ayanamsha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"ayanamsha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "vedic_horoscope",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"manglik_regional_setting\":\"all\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/vedic_horoscope",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"vedic_horoscope"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "auspicious_muhurta/marriage",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"duration\":4\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/auspicious_muhurta/marriage",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"auspicious_muhurta",
+								"marriage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ghat_chakra",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"manglik_regional_setting\":\"all\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/ghat_chakra",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"ghat_chakra"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Char Dasha",
+			"item": [
+				{
+					"name": "major_chardasha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/major_chardasha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"major_chardasha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "current_chardasha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/current_chardasha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"current_chardasha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sub_chardasha/:md",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sub_chardasha/aries",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sub_chardasha",
+								"aries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sub_chardasha/:md/:ad",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sub_chardasha/aries/taurus",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sub_chardasha",
+								"aries",
+								"taurus"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Gemstone Suggestion",
+			"item": [
+				{
+					"name": "basic_gem_suggestion",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/basic_gem_suggestion",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"basic_gem_suggestion"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Numerology",
+			"item": [
+				{
+					"name": "numero_table",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_table",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_table"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Panchang",
+			"item": [
+				{
+					"name": "basic_panchang",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/basic_panchang",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"basic_panchang"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "planet_panchang",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "day",
+									"value": "27",
+									"type": "text"
+								},
+								{
+									"key": "month",
+									"value": "12",
+									"type": "text"
+								},
+								{
+									"key": "year",
+									"value": "2000",
+									"type": "text"
+								},
+								{
+									"key": "hour",
+									"value": "15",
+									"type": "text"
+								},
+								{
+									"key": "min",
+									"value": "30",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "25.7464",
+									"type": "text"
+								},
+								{
+									"key": "lon",
+									"value": "82.6837",
+									"type": "text"
+								},
+								{
+									"key": "tzone",
+									"value": "5.5",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/planet_panchang",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"planet_panchang"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "basic_panchang/sunrise",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/basic_panchang/sunrise",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"basic_panchang",
+								"sunrise"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "planet_panchang/sunrise",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/planet_panchang/sunrise",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"planet_panchang",
+								"sunrise"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Vimshottari Dasha",
+			"item": [
+				{
+					"name": "current_vdasha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/current_vdasha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"current_vdasha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "current_vdasha_all",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/current_vdasha_all",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"current_vdasha_all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "major_vdasha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/major_vdasha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"major_vdasha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "current_vdasha_date",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"dasha_date\":\"8-8-2008\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/current_vdasha_date",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"current_vdasha_date"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sub_vdasha/:md",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sub_vdasha/sun",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sub_vdasha",
+								"sun"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sub_sub_vdasha/:md/:ad",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sub_sub_vdasha/sun/moon",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sub_sub_vdasha",
+								"sun",
+								"moon"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sub_sub_sub_vdasha/:md/:ad/:pd",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sub_sub_sub_vdasha/sun/sun/sun",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sub_sub_sub_vdasha",
+								"sun",
+								"sun",
+								"sun"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sub_sub_sub_sub_vdasha/:md/:ad/:pd/:sd",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sub_sub_sub_sub_vdasha/moon/sun/mars/mercury",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sub_sub_sub_sub_vdasha",
+								"moon",
+								"sun",
+								"mars",
+								"mercury"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Basic Yogini Dasha",
+			"item": [
+				{
+					"name": "major_yogini_dasha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/major_yogini_dasha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"major_yogini_dasha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sub_yogini_dasha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sub_yogini_dasha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sub_yogini_dasha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "current_yogini_dasha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/current_yogini_dasha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"current_yogini_dasha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sub_yogini_dasha/:dashaCycle/:dashaName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sub_yogini_dasha/1/ulka",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sub_yogini_dasha",
+								"1",
+								"ulka"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Beginner",
+			"item": [
+				{
+					"name": "basic_astro",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/basic_astro",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"basic_astro"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "birth_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/birth_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"birth_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "numero_table",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_table",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_table"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "basic_panchang",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/basic_panchang",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"basic_panchang"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "timezone",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"country_code\": \"Asia/Kolkata\",\n    \"isDst\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/timezone",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"timezone"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "geo_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"place\": \"jaunpur\",\n    \"maxRows\": 7\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/geo_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"geo_details"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Biorhythm",
+			"item": [
+				{
+					"name": "biorhythm",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/biorhythm",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"biorhythm"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Chinese Horoscope",
+			"item": [
+				{
+					"name": "chinese_zodiac",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/chinese_zodiac",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"chinese_zodiac"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "chinese_year_forecast",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/chinese_year_forecast",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"chinese_year_forecast"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Custom Sun Sign Daily",
+			"item": [
+				{
+					"name": "custom_daily_prediction/:zodiacName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timezone\":5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/custom_daily_prediction/aries",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"custom_daily_prediction",
+								"aries"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Daily Nakshatra Prediction",
+			"item": [
+				{
+					"name": "daily_nakshatra_prediction",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/daily_nakshatra_prediction",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"daily_nakshatra_prediction"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "daily_nakshatra_prediction/next",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/daily_nakshatra_prediction/next",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"daily_nakshatra_prediction",
+								"next"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "daily_nakshatra_prediction/previous",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/daily_nakshatra_prediction/previous",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"daily_nakshatra_prediction",
+								"previous"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "custom_nakshatra_prediction",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/custom_nakshatra_prediction",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"custom_nakshatra_prediction"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "daily_nakshatra_consolidated",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/daily_nakshatra_consolidated",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"daily_nakshatra_consolidated"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "General Reports",
+			"item": [
+				{
+					"name": "general_house_report/:planet_name",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/general_house_report/moon",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"general_house_report",
+								"moon"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "general_rashi_report/:planet_name",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/general_rashi_report/sun",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"general_rashi_report",
+								"sun"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "general_nakshatra_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/general_nakshatra_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"general_nakshatra_report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "general_ascendant_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/general_ascendant_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"general_ascendant_report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "planet_nature",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/planet_nature",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"planet_nature"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "moon_biorhythm",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/moon_biorhythm",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"moon_biorhythm"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "nakshatra_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "day",
+									"value": "27",
+									"type": "text"
+								},
+								{
+									"key": "month",
+									"value": "06",
+									"type": "text"
+								},
+								{
+									"key": "year",
+									"value": "2000",
+									"type": "text"
+								},
+								{
+									"key": "hour",
+									"value": "15",
+									"type": "text"
+								},
+								{
+									"key": "min",
+									"value": "30",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "25.7464",
+									"type": "text"
+								},
+								{
+									"key": "lon",
+									"value": "82.6837",
+									"type": "text"
+								},
+								{
+									"key": "tzone",
+									"value": "5.5",
+									"type": "text"
+								},
+								{
+									"key": "gender",
+									"value": "male",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/nakshatra_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"nakshatra_report"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Geo Details",
+			"item": [
+				{
+					"name": "geo_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"place\": \"jaunpur\",\n    \"maxRows\": 7\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/geo_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"geo_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "timezone",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"country_code\": \"Asia/Kolkata\",\n    \"isDst\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/timezone",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"timezone"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "timezone_with_dst",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"latitude\":25.7464,\n    \"longitude\":82.6837,\n    \"date\":\"06-27-2000\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/timezone_with_dst",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"timezone_with_dst"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Horoscope Chart",
+			"item": [
+				{
+					"name": "horo_chart/:chart_id",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/horo_chart/D1",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"horo_chart",
+								"D1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "horo_chart_extended/:chart_id",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/horo_chart_extended/D3",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"horo_chart_extended",
+								"D3"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Horoscope Charts",
+			"item": [
+				{
+					"name": "horo_chart_image/:chartId",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"planetColor\": \"#ff0000\",\n    \"signColor\": \"#00ff00\",\n    \"lineColor\": \"#0000ff\",\n    \"chartType\": \"north\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/horo_chart_image/D1",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"horo_chart_image",
+								"D1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Horoscope Predictions",
+			"item": [
+				{
+					"name": "horoscope_prediction/daily/:zodiacName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timezone\":5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/horoscope_prediction/daily/aries",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"horoscope_prediction",
+								"daily",
+								"aries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "horoscope_prediction/daily/next/:zodiacName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timezone\":5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/horoscope_prediction/daily/next/aries",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"horoscope_prediction",
+								"daily",
+								"next",
+								"aries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "horoscope_prediction/daily/previous/:zodiacName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timezone\":5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/horoscope_prediction/daily/previous/aries",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"horoscope_prediction",
+								"daily",
+								"previous",
+								"aries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "horoscope_prediction/weekly/:zodiacName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timezone\":5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/horoscope_prediction/weekly/gemini",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"horoscope_prediction",
+								"weekly",
+								"gemini"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "horoscope_prediction/monthly/:zodiacName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"timezone\":5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/horoscope_prediction/monthly/aries",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"horoscope_prediction",
+								"monthly",
+								"aries"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Jaimini API",
+			"item": [
+				{
+					"name": "jaimini_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/jaimini_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"jaimini_details"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "KP Astrology",
+			"item": [
+				{
+					"name": "kp_planets",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kp_planets",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kp_planets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kp_house_cusps",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kp_house_cusps",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kp_house_cusps"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kp_birth_chart",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kp_birth_chart",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kp_birth_chart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kp_house_significator",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kp_house_significator",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kp_house_significator"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kp_planet_significator",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kp_planet_significator",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kp_planet_significator"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kp_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kp_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kp_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kp_dasha_range",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "day",
+									"value": "27",
+									"type": "text"
+								},
+								{
+									"key": "month",
+									"value": "6",
+									"type": "text"
+								},
+								{
+									"key": "year",
+									"value": "2000",
+									"type": "text"
+								},
+								{
+									"key": "hour",
+									"value": "15",
+									"type": "text"
+								},
+								{
+									"key": "min",
+									"value": "30",
+									"type": "text"
+								},
+								{
+									"key": "seconds",
+									"value": "34",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "25.7464",
+									"type": "text"
+								},
+								{
+									"key": "lon",
+									"value": "82.6837",
+									"type": "text"
+								},
+								{
+									"key": "tzone",
+									"value": "5.5",
+									"type": "text"
+								},
+								{
+									"key": "start_day",
+									"value": "24",
+									"type": "text"
+								},
+								{
+									"key": "start_month",
+									"value": "6",
+									"type": "text"
+								},
+								{
+									"key": "start_year",
+									"value": "2000",
+									"type": "text"
+								},
+								{
+									"key": "start_hour",
+									"value": "15",
+									"type": "text"
+								},
+								{
+									"key": "start_minute",
+									"value": "30",
+									"type": "text"
+								},
+								{
+									"key": "start_second",
+									"value": "34",
+									"type": "text"
+								},
+								{
+									"key": "stop_day",
+									"value": "24",
+									"type": "text"
+								},
+								{
+									"key": "stop_month",
+									"value": "6",
+									"type": "text"
+								},
+								{
+									"key": "stop_year",
+									"value": "2000",
+									"type": "text"
+								},
+								{
+									"key": "stop_hour",
+									"value": "15",
+									"type": "text"
+								},
+								{
+									"key": "stop_minute",
+									"value": "30",
+									"type": "text"
+								},
+								{
+									"key": "stop_second",
+									"value": "34",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kp_dasha_range",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kp_dasha_range"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kp_planet_transit",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "day",
+									"value": "27",
+									"type": "text"
+								},
+								{
+									"key": "month",
+									"value": "6",
+									"type": "text"
+								},
+								{
+									"key": "year",
+									"value": "2000",
+									"type": "text"
+								},
+								{
+									"key": "hour",
+									"value": "15",
+									"type": "text"
+								},
+								{
+									"key": "min",
+									"value": "30",
+									"type": "text"
+								},
+								{
+									"key": "lat",
+									"value": "25.7464",
+									"type": "text"
+								},
+								{
+									"key": "lon",
+									"value": "82.6837",
+									"type": "text"
+								},
+								{
+									"key": "tzone",
+									"value": "5.5",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kp_planet_transit",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kp_planet_transit"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Kal Sarpa Dosha",
+			"item": [
+				{
+					"name": "kalsarpa_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": []
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kalsarpa_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kalsarpa_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kalsarpa_remedy",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/kalsarpa_remedy",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"kalsarpa_remedy"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Lal Kitab",
+			"item": [
+				{
+					"name": "lalkitab_horoscope",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/lalkitab_horoscope",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"lalkitab_horoscope"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "lalkitab_reports",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/lalkitab_reports",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"lalkitab_reports"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "lalkitab_debts",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/lalkitab_debts",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"lalkitab_debts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "lalkitab_remedies/:planet_name",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/lalkitab_remedies/moon",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"lalkitab_remedies",
+								"moon"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "lalkitab_houses",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/lalkitab_houses",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"lalkitab_houses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "lalkitab_planets",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/lalkitab_planets",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"lalkitab_planets"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Manglik Dosha",
+			"item": [
+				{
+					"name": "manglik",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/manglik",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"manglik"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "manglik_remedy",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/manglik_remedy",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"manglik_remedy"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Match Making",
+			"item": [
+				{
+					"name": "match_birth_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_birth_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_birth_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_astro_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_astro_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_astro_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_planet_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_planet_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_planet_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_ashtakoot_points",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_ashtakoot_points",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_ashtakoot_points"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_making_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_making_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_making_report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_manglik_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_obstructions",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_obstructions",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_obstructions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_simple_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_simple_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_simple_report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "zodiac_compatibility/:zodiacName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/zodiac_compatibility/aries",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"zodiac_compatibility",
+								"aries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "zodiac_compatibility/:zodiacName/:partnerZodiacName",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/zodiac_compatibility/taurus/aries",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"zodiac_compatibility",
+								"taurus",
+								"aries"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_rajju_dosha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_rajju_dosha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_rajju_dosha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_making_detailed_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_making_detailed_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_making_detailed_report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_dashakoot_points",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_dashakoot_points",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_dashakoot_points"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_percentage",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_percentage",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_percentage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "custom_match_profiles",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/custom_match_profiles",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"custom_match_profiles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "papasamyam_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"gender\": \"male\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/papasamyam_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"papasamyam_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "match_horoscope",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"m_day\": 27,\n    \"m_month\": 6,\n    \"m_year\": 2000,\n    \"m_hour\": 15,\n    \"m_min\": 30,\n    \"m_lat\": 25.7464,\n    \"m_lon\": 82.6837,\n    \"m_tzone\": 5.5,\n    \"f_day\": 27,\n    \"f_month\": 6,\n    \"f_year\": 2000,\n    \"f_hour\": 15,\n    \"f_min\": 30,\n    \"f_lat\": 25.7464,\n    \"f_lon\": 82.6837,\n    \"f_tzone\": 5.5,\n    \"match_method\": \"dashkoot\",\n    \"manglik_regional_setting\": \"north\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/match_horoscope",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"match_horoscope"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Numerology Predictions",
+			"item": [
+				{
+					"name": "numero_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2002,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "numero_fav_time",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2002,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_fav_time",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_fav_time"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "numero_place_vastu",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2002,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_place_vastu",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_place_vastu"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "numero_fasts_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2002,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_fasts_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_fasts_report"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "numero_fav_lord",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2002,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_fav_lord",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_fav_lord"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "numero_fav_mantra",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2002,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_fav_mantra",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_fav_mantra"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "numero_prediction/daily",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2002,\n    \"name\": \"Suraj\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/numero_prediction/daily",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"numero_prediction",
+								"daily"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Partner Report",
+			"item": [
+				{
+					"name": "partner_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"you_date\": 27,\n    \"you_month\": 6,\n    \"you_year\": 2000,\n    \"you_gender\": \"male\",\n    \"match_date\": 26,\n    \"match_month\": 9,\n    \"match_year\": 1995,\n    \"match_gender\": \"female\",\n    \"match_name\": \"Heroine\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/partner_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"partner_report"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Pitri Dosha Report",
+			"item": [
+				{
+					"name": "pitra_dosha_report",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/pitra_dosha_report",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"pitra_dosha_report"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Puja Suggesstion",
+			"item": [
+				{
+					"name": "puja_suggestion",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/puja_suggestion",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"puja_suggestion"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Rudraksha Suggestion",
+			"item": [
+				{
+					"name": "rudraksha_suggestion",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/rudraksha_suggestion",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"rudraksha_suggestion"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sadhe Sati Report",
+			"item": [
+				{
+					"name": "sadhesati_life_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sadhesati_life_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sadhesati_life_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sadhesati_current_status",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sadhesati_current_status",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sadhesati_current_status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sadhesati_remedies",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/sadhesati_remedies",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"sadhesati_remedies"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Varshaphal",
+			"item": [
+				{
+					"name": "varshaphal_month_chart",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_month_chart",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_month_chart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_details",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_details",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_planets",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_planets",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_planets"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_mudda_dasha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_mudda_dasha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_mudda_dasha"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_year_chart",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_year_chart",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_year_chart"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_yoga",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_yoga",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_yoga"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_saham_points",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_saham_points",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_saham_points"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_panchavargeeya_bala",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_panchavargeeya_bala",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_panchavargeeya_bala"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_harsha_bala",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_harsha_bala",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_harsha_bala"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "varshaphal_muntha",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "{{api_key}}",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "{{user_id}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"day\": 27,\n    \"month\": 6,\n    \"year\": 2000,\n    \"hour\": 15,\n    \"min\": 30,\n    \"lat\": 25.7464,\n    \"lon\": 82.6837,\n    \"tzone\": 5.5,\n    \"varshaphal_year\": 2001\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://json.astrologyapi.com/v1/varshaphal_muntha",
+							"protocol": "https",
+							"host": [
+								"json",
+								"astrologyapi",
+								"com"
+							],
+							"path": [
+								"v1",
+								"varshaphal_muntha"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

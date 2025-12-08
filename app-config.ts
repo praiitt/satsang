@@ -20,6 +20,7 @@ export interface AppConfig {
   tokenEndpoint?: string; // Custom token endpoint for this agent
   // experimental: enable HeyGen avatar video sidecar
   enableHeygenAvatar?: boolean;
+  metadata?: Record<string, any>; // Custom metadata to pass to agent (e.g., guruId)
 }
 
 export const APP_CONFIG_DEFAULTS: AppConfig = {

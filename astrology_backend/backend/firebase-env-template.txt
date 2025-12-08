@@ -1,0 +1,27 @@
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# OpenAI Configuration
+OPENAI_API_KEY=your-openai-api-key-here
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-change-in-production
+JWT_EXPIRES_IN=7d
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID=jain-temple-trust
+FIREBASE_API_KEY=AIzaSyBLaKLeWnIeAI4cpKjQK-OL0yq_Tq_oJTg
+FIREBASE_AUTH_DOMAIN=jain-temple-trust.firebaseapp.com
+FIREBASE_STORAGE_BUCKET=jain-temple-trust.firebasestorage.app
+FIREBASE_MESSAGING_SENDER_ID=491244969919
+FIREBASE_APP_ID=1:491244969919:web:b76399c9eeb1fcc8c00b0a
+FIREBASE_MEASUREMENT_ID=G-2VQVG0H6KM
+
+# Firebase Admin SDK (Service Account Key - JSON string)
+# Get this from Firebase Console > Project Settings > Service Accounts > Generate New Private Key
+FIREBASE_SERVICE_ACCOUNT_KEY={"type":"service_account","project_id":"jain-temple-trust","private_key_id":"...","private_key":"...","client_email":"...","client_id":"...","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url":"..."}
+
+# Astrology API Configuration
+ASTROLOGY_API_KEY=NjQ0MTM1Ojc3ZGMyNjBkODk2YTkyYzQ1ZWU0MjM3ZTcwNWJiNDBjZGU5YzY3OTk=
+ASTROLOGY_API_SECRET=your-astrology-api-secret

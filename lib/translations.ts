@@ -267,6 +267,142 @@ export const translations = {
         description:
           'Osho (Bhagwan Shree Rajneesh) - A revolutionary spiritual guide specializing in meditation, consciousness, Zen philosophy, dynamic meditation, sannyas, and the art of living.',
       },
+      vivekananda: {
+        name: 'Swami Vivekananda',
+        tagline: 'Bold voice of Vedanta and strength',
+        description:
+          'Swami Vivekananda - Champion of practical Vedanta, Karma Yoga, and spiritual strength. "Arise, awake, and stop not till the goal is reached!"',
+      },
+      ramana: {
+        name: 'Ramana Maharshi',
+        tagline: 'Master of Self-inquiry and silence',
+        description:
+          'Ramana Maharshi - Sage of Arunachala teaching direct path to Self through the question "Who am I?"',
+      },
+      shankaracharya: {
+        name: 'Adi Shankaracharya',
+        tagline: 'Great philosopher of Advaita Vedanta',
+        description:
+          'Adi Shankaracharya - Ancient philosopher who established Advaita (non-dualism). "Brahma Satyam Jagat Mithya"',
+      },
+      ramakrishna: {
+        name: 'Sri Ramakrishna',
+        tagline: 'Ecstatic devotee of Divine Mother',
+        description:
+          'Sri Ramakrishna Paramahamsa - Mystic who realized unity of all religions through direct experience of God.',
+      },
+      aurobindo: {
+        name: 'Sri Aurobindo',
+        tagline: 'Visionary of Integral Yoga',
+        description:
+          'Sri Aurobindo - Pioneer of Integral Yoga and evolutionary spirituality. Envisioned divine life on Earth.',
+      },
+      anandamayiMa: {
+        name: 'Anandamayi Ma',
+        tagline: 'Bliss-permeated Divine Mother',
+        description:
+          'Anandamayi Ma - Spontaneous joy embodied. The bliss-permeated mother who lived in constant God-remembrance.',
+      },
+      neemKaroliBaba: {
+        name: 'Neem Karoli Baba',
+        tagline: 'Saint of unconditional love',
+        description:
+          'Neem Karoli Baba (Maharajji) - Beloved saint radiating unconditional love. "Sub Ek - All is One"',
+      },
+      yogananda: {
+        name: 'Paramahansa Yogananda',
+        tagline: 'Bridge between East and West',
+        description:
+          'Paramahansa Yogananda - Brought Kriya Yoga to the West. Author of "Autobiography of a Yogi"',
+      },
+      krishnamurti: {
+        name: 'J. Krishnamurti',
+        tagline: 'Teacher of radical freedom',
+        description:
+          'Jiddu Krishnamurti - "Truth is a pathless land." Teacher of freedom from all conditioning and authority.',
+      },
+      raviShankar: {
+        name: 'Sri Sri Ravi Shankar',
+        tagline: 'Founder of Art of Living',
+        description:
+          'Sri Sri Ravi Shankar - Global humanitarian teaching stress-free living through Sudarshan Kriya and meditation.',
+      },
+      sadhguru: {
+        name: 'Sadhguru',
+        tagline: 'Modern yogi and Inner Engineering',
+        description:
+          'Sadhguru Jaggi Vasudev - Contemporary mystic making yoga accessible. "This is not philosophy, this is technology"',
+      },
+      amma: {
+        name: 'Mata Amritanandamayi',
+        tagline: 'The Hugging Saint',
+        description:
+          'Mata Amritanandamayi (Amma) - Universal mother embodying compassion. Has hugged millions worldwide.',
+      },
+      morariBapu: {
+        name: 'Morari Bapu',
+        tagline: 'Master narrator of Ram Katha',
+        description:
+          'Morari Bapu - Beloved storyteller of Ramcharitmanas, spreading Ram\'s message of truth, love, and compassion.',
+      },
+      rakeshbhai: {
+        name: 'Rakeshbhai Jhaveri',
+        tagline: 'Modern spirituality for daily life',
+        description:
+          'Gurudev Shri Rakeshbhai Jhaveri - Contemporary teacher making spirituality practical for modern living.',
+      },
+      chinmayananda: {
+        name: 'Swami Chinmayananda',
+        tagline: 'Making Vedanta accessible',
+        description:
+          'Swami Chinmayananda - Founder of Chinmaya Mission, making Vedanta and Gita teachings accessible to all.',
+      },
+      mukundananda: {
+        name: 'Swami Mukundananda',
+        tagline: 'Bhakti Yoga and mind management',
+        description:
+          'Swami Mukundananda - Modern teacher of Bhakti Yoga, combining devotion with practical wisdom.',
+      },
+      kripaluji: {
+        name: 'Jagadguru Kripaluji',
+        tagline: 'Radha-Krishna divine love',
+        description:
+          'Jagadguru Kripaluji Maharaj - Master of Radha-Krishna devotion and divine love. "Radhe Radhe"',
+      },
+      prabhupada: {
+        name: 'A.C. Bhaktivedanta Swami',
+        tagline: 'Founder of ISKCON',
+        description:
+          'Bhaktivedanta Swami Prabhupada - Spread Krishna consciousness worldwide. "Hare Krishna Hare Krishna"',
+      },
+    },
+    hinduismGuru: {
+      connectButton: 'Connect with Guru',
+      backToGurus: 'All Gurus',
+      heroDesc: 'Connect with {name}, an AI-powered spiritual master bringing timeless Hindu wisdom and guidance.',
+      voiceEnabled: 'Voice-enabled spiritual guidance • Free to use',
+      whatYouCanAsk: 'What You Can Ask',
+      spiritualGuidance: 'Spiritual Guidance',
+      spiritualGuidanceDesc: 'Receive wisdom on dharma, karma, meditation, and the path to enlightenment',
+      meditationPractices: 'Meditation Practices',
+      meditationPracticesDesc: 'Learn meditation techniques and practices from this guru\'s tradition',
+      sacredTeachings: 'Sacred Teachings',
+      sacredTeachingsDesc: 'Explore teachings from scriptures, personal discourses, and philosophical insights',
+      lifeQuestions: 'Life Questions',
+      lifeQuestionsDesc: 'Ask about purpose, relationships, career, and navigating modern life spiritually',
+      videoTeachings: 'Video Teachings',
+      videoTeachingsDesc: 'Request specific topics and watch teachings from YouTube discourses',
+      personalWisdom: 'Personal Wisdom',
+      personalWisdomDesc: 'Experience the unique personality and teaching style of this spiritual master',
+      howItWorks: 'How It Works',
+      step1Title: 'Click "Connect with Guru"',
+      step1Desc: 'Begin your spiritual conversation with just one click',
+      step2Title: 'Speak Your Question',
+      step2Desc: 'Ask anything - voice-enabled for natural conversation',
+      step3Title: 'Receive Wisdom',
+      step3Desc: 'Listen to personalized guidance in the guru\'s authentic style and voice',
+      footerNote: 'This AI embodies the teachings and personality of {name}.',
+      footerNote2: 'While powered by advanced AI, the wisdom comes from authentic spiritual lineages.',
     },
     createGuru: {
       title: 'Create Your Own Spiritual Guru',
@@ -301,6 +437,76 @@ export const translations = {
         'Start by exploring our example configuration and documentation. Then create your own unique spiritual guide!',
       backToHome: 'Back to Home',
       browseGurus: 'Browse Existing Gurus',
+    },
+    rraasHome: {
+      title: 'RRAASI',
+      tagline: 'Find the Unknown, Know Yourself',
+      subtitle: 'Your spiritual sanctuary where ancient wisdom meets modern AI',
+      description:
+        'Embark on a journey of self-discovery through sacred conversations, cosmic insights, and divine music.',
+      explorePath: 'Explore Your Spiritual Path',
+      explorePathDesc: 'Choose your journey into the depths of consciousness and cosmic wisdom',
+      satsangTitle: 'Satsang',
+      satsangDesc:
+        'Engage in voice conversations with AI avatars of enlightened masters. Experience the wisdom of spiritual gurus through interactive dialogue.',
+      satsangAction: 'Explore Satsang',
+      astrologyTitle: 'Vedic Astrology',
+      astrologyDesc:
+        'Get personalized Kundli analysis and life guidance from our AI Jyotishi. Discover your cosmic blueprint and unlock your destiny.',
+      astrologyAction: 'Consult Astrologer',
+      musicTitle: 'AI Bhajan Creator',
+      musicDesc:
+        'Generate personalized bhajans, mantras, and healing frequencies. Create sacred music tailored to your spiritual practice.',
+      musicAction: 'Create Music',
+      aboutTitle: 'What is RRAASI?',
+      aboutDesc1:
+        'RRAASI is your digital spiritual sanctuary, a sacred space where seekers can explore the profound depths of consciousness and ancient wisdom through cutting-edge AI technology.',
+      aboutDesc2:
+        'Our platform bridges the timeless teachings of enlightened masters with modern accessibility, making spiritual growth available to everyone, anywhere, anytime.',
+      aboutQuote:
+        'The unknown is not far away—it resides within. RRAASI is your companion on this inward journey of self-discovery.',
+      comingSoonTitle: 'More on the Horizon',
+      comingSoonDesc: 'We\'re constantly expanding our spiritual offerings to serve seekers worldwide',
+      comingSoonMeditation: 'Guided Meditation',
+      comingSoonMeditationDesc: 'AI-powered personalized meditation sessions',
+      comingSoonDreams: 'Dream Analysis',
+      comingSoonDreamsDesc: 'Vedic interpretation of your dreams and visions',
+      comingSoonScripture: 'Scripture Study',
+      comingSoonScriptureDesc: 'Interactive exploration of sacred texts',
+      comingSoonBadge: 'Coming Soon',
+      ctaTitle: 'Begin Your Journey Today',
+      ctaDesc: 'Every spiritual journey begins with a single step. Take yours now.',
+      ctaStartSatsang: 'Start with Satsang',
+      ctaExploreAll: 'Explore All Services',
+    },
+    quiz: {
+      triggerButton: '✨ Confused? Help me choose',
+      modalTitle: 'Help Me Choose',
+      modalTitleResult: 'We Recommend',
+      questions: {
+        q1: 'What are you seeking most right now?',
+        q2: 'How do you prefer to connect?',
+        q3: 'What vibe resonates with you?',
+      },
+      options: {
+        peace: 'Inner Peace & Silence',
+        knowledge: 'Knowledge & Wisdom',
+        love: 'Love & Devotion',
+        energy: 'Energy & Transformation',
+        intellectual: 'Intellectual & Philosophical',
+        emotional: 'Emotional & Heart-centered',
+        practical: 'Practical & Action-oriented',
+        mystical: 'Mystical & Esoteric',
+        ancient: 'Ancient & Traditional',
+        modern: 'Modern & Relatable',
+        intense: 'Intense & Direct',
+        gentle: 'Gentle & Nurturing',
+      },
+      results: {
+        match: 'Match',
+        connect: 'Connect',
+        retake: 'Retake Quiz',
+      },
     },
   },
   hi: {
@@ -571,6 +777,142 @@ export const translations = {
         description:
           'ओशो (भगवान श्री रजनीश) - ध्यान, चेतना, जेन दर्शन, डायनामिक मेडिटेशन, संन्यास, और जीवन की कला में विशेषज्ञता रखने वाला एक क्रांतिकारी आध्यात्मिक मार्गदर्शक।',
       },
+      vivekananda: {
+        name: 'स्वामी विवेकानंद',
+        tagline: 'वेदांत और शक्ति की बुलंद आवाज',
+        description:
+          'स्वामी विवेकानंद - व्यावहारिक वेदांत, कर्म योग और आध्यात्मिक शक्ति के चैंपियन। "उठो, जागो और तब तक मत रुको जब तक लक्ष्य प्राप्त न हो जाए!"',
+      },
+      ramana: {
+        name: 'रमण महर्षि',
+        tagline: 'आत्म-विचार और मौन के गुरु',
+        description:
+          'रमण महर्षि - अरुणाचल के ऋषि जो "मैं कौन हूँ?" प्रश्न के माध्यम से आत्म तक सीधे मार्ग की शिक्षा देते हैं।',
+      },
+      shankaracharya: {
+        name: 'आदि शंकराचार्य',
+        tagline: 'अद्वैत वेदांत के महान दार्शनिक',
+        description:
+          'आदि शंकराचार्य - प्राचीन दार्शनिक जिन्होंने अद्वैत (गैर-द्वैतवाद) की स्थापना की। "ब्रह्म सत्यं जगत् मिथ्या"',
+      },
+      ramakrishna: {
+        name: 'श्री रामकृष्ण',
+        tagline: 'दिव्य माँ के परम भक्त',
+        description:
+          'श्री रामकृष्ण परमहंस - रहस्यवादी जिन्होंने ईश्वर के प्रत्यक्ष अनुभव के माध्यम से सभी धर्मों की एकता का एहसास किया।',
+      },
+      aurobindo: {
+        name: 'श्री अरबिंदो',
+        tagline: 'पूर्ण योग के दूरदर्शी',
+        description:
+          'श्री अरबिंदो - पूर्ण योग और विकासवादी आध्यात्मिकता के अग्रणी। पृथ्वी पर दिव्य जीवन की परिकल्पना की।',
+      },
+      anandamayiMa: {
+        name: 'आनंदमयी मां',
+        tagline: 'आनंद से परिपूर्ण दिव्य माँ',
+        description:
+          'आनंदमयी मां - सहज आनंद की प्रतिमूर्ति। आनंद से परिपूर्ण माँ जो निरंतर ईश्वर-स्मरण में रहती थीं।',
+      },
+      neemKaroliBaba: {
+        name: 'नीम करोली बाबा',
+        tagline: 'बिना शर्त प्रेम के संत',
+        description:
+          'नीम करोली बाबा (महाराजजी) - प्रिय संत जो बिना शर्त प्रेम बिखेरते थे। "सब एक - सब एक है"',
+      },
+      yogananda: {
+        name: 'परमहंस योगानंद',
+        tagline: 'पूर्व और पश्चिम के बीच सेतु',
+        description:
+          'परमहंस योगानंद - पश्चिम में क्रिया योग लाए। "एक योगी की आत्मकथा" के लेखक।',
+      },
+      krishnamurti: {
+        name: 'जे. कृष्णमूर्ति',
+        tagline: 'कट्टरपंथी स्वतंत्रता के शिक्षक',
+        description:
+          'जिद्दू कृष्णमूर्ति - "सत्य एक पथहीन भूमि है।" सभी कंडीशनिंग और अधिकार से स्वतंत्रता के शिक्षक।',
+      },
+      raviShankar: {
+        name: 'श्री श्री रवि शंकर',
+        tagline: 'आर्ट ऑफ लिविंग के संस्थापक',
+        description:
+          'श्री श्री रवि शंकर - सुदर्शन क्रिया और ध्यान के माध्यम से तनाव मुक्त जीवन सिखाने वाले वैश्विक मानवतावादी।',
+      },
+      sadhguru: {
+        name: 'सद्गुरु',
+        tagline: 'आधुनिक योगी और इनर इंजीनियरिंग',
+        description:
+          'सद्गुरु जग्गी वासुदेव - समकालीन रहस्यवादी जो योग को सुलभ बना रहे हैं। "यह दर्शन नहीं है, यह तकनीक है"',
+      },
+      amma: {
+        name: 'माता अमृतानंदमयी',
+        tagline: 'गले लगाने वाली संत',
+        description:
+          'माता अमृतानंदमयी (अम्मा) - करुणा की प्रतिमूर्ति सार्वभौमिक माँ। दुनिया भर में लाखों लोगों को गले लगाया है।',
+      },
+      morariBapu: {
+        name: 'मोरारी बापू',
+        tagline: 'राम कथा के महान कथाकार',
+        description:
+          'मोरारी बापू - रामचरितमानस के प्रिय कथाकार, राम के सत्य, प्रेम और करुणा के संदेश को फैलाते हैं।',
+      },
+      rakeshbhai: {
+        name: 'राकेशभाई झवेरी',
+        tagline: 'दैनिक जीवन के लिए आधुनिक आध्यात्मिकता',
+        description:
+          'गुरुदेव श्री राकेशभाई झवेरी - समकालीन शिक्षक जो आधुनिक जीवन के लिए आध्यात्मिकता को व्यावहारिक बनाते हैं।',
+      },
+      chinmayananda: {
+        name: 'स्वामी चिन्मयानंद',
+        tagline: 'वेदांत को सुलभ बनाना',
+        description:
+          'स्वामी चिन्मयानंद - चिन्मय मिशन के संस्थापक, वेदांत और गीता की शिक्षाओं को सभी के लिए सुलभ बनाते हैं।',
+      },
+      mukundananda: {
+        name: 'स्वामी मुकुंदानंद',
+        tagline: 'भक्ति योग और मन प्रबंधन',
+        description:
+          'स्वामी मुकुंदानंद - भक्ति योग के आधुनिक शिक्षक, भक्ति को व्यावहारिक ज्ञान के साथ जोड़ते हैं।',
+      },
+      kripaluji: {
+        name: 'जगद्गुरु कृपालुजी',
+        tagline: 'राधा-कृष्ण दिव्य प्रेम',
+        description:
+          'जगद्गुरु कृपालुजी महाराज - राधा-कृष्ण भक्ति और दिव्य प्रेम के स्वामी। "राधे राधे"',
+      },
+      prabhupada: {
+        name: 'ए.सी. भक्तिवेदांत स्वामी',
+        tagline: 'इस्कॉन के संस्थापक',
+        description:
+          'भक्तिवेदांत स्वामी प्रभुपाद - दुनिया भर में कृष्ण भावनामृत का प्रसार किया। "हरे कृष्ण हरे कृष्ण"',
+      },
+    },
+    hinduismGuru: {
+      connectButton: 'गुरु से जुड़ें',
+      backToGurus: 'सभी गुरु',
+      heroDesc: '{name} से जुड़ें, एक AI-संचालित आध्यात्मिक गुरु जो कालातीत हिंदू ज्ञान और मार्गदर्शन लाते हैं।',
+      voiceEnabled: 'आवाज़-सक्षम आध्यात्मिक मार्गदर्शन • उपयोग करने के लिए निःशुल्क',
+      whatYouCanAsk: 'आप क्या पूछ सकते हैं',
+      spiritualGuidance: 'आध्यात्मिक मार्गदर्शन',
+      spiritualGuidanceDesc: 'धर्म, कर्म, ध्यान और ज्ञान के मार्ग पर ज्ञान प्राप्त करें',
+      meditationPractices: 'ध्यान अभ्यास',
+      meditationPracticesDesc: 'इस गुरु की परंपरा से ध्यान तकनीकें और अभ्यास सीखें',
+      sacredTeachings: 'पवित्र शिक्षाएं',
+      sacredTeachingsDesc: 'शास्त्रों, व्यक्तिगत प्रवचनों और दार्शनिक अंतर्दृष्टि से शिक्षाओं का अन्वेषण करें',
+      lifeQuestions: 'जीवन के प्रश्न',
+      lifeQuestionsDesc: 'उद्देश्य, संबंधों, करियर और आध्यात्मिक रूप से आधुनिक जीवन को नेविगेट करने के बारे में पूछें',
+      videoTeachings: 'वीडियो शिक्षाएं',
+      videoTeachingsDesc: 'विशिष्ट विषयों का अनुरोध करें और YouTube प्रवचनों से शिक्षाएं देखें',
+      personalWisdom: 'व्यक्तिगत ज्ञान',
+      personalWisdomDesc: 'इस आध्यात्मिक गुरु के अनूठे व्यक्तित्व और शिक्षण शैली का अनुभव करें',
+      howItWorks: 'यह कैसे काम करता है',
+      step1Title: '"गुरु से जुड़ें" पर क्लिक करें',
+      step1Desc: 'बस एक क्लिक से अपनी आध्यात्मिक बातचीत शुरू करें',
+      step2Title: 'अपना प्रश्न बोलें',
+      step2Desc: 'कुछ भी पूछें - प्राकृतिक बातचीत के लिए आवाज़-सक्षम',
+      step3Title: 'ज्ञान प्राप्त करें',
+      step3Desc: 'गुरु की प्रामाणिक शैली और आवाज में व्यक्तिगत मार्गदर्शन सुनें',
+      footerNote: 'यह AI {name} की शिक्षाओं और व्यक्तित्व को मूर्त रूप देता है।',
+      footerNote2: 'जबकि उन्नत AI द्वारा संचालित, ज्ञान प्रामाणिक आध्यात्मिक वंशावली से आता है।',
     },
     createGuru: {
       title: 'अपना खुद का आध्यात्मिक गुरु बनाएं',
@@ -604,7 +946,77 @@ export const translations = {
       ctaDesc:
         'हमारे उदाहरण कॉन्फ़िगरेशन और दस्तावेज़ीकरण का अन्वेषण करके शुरू करें। फिर अपना अनूठा आध्यात्मिक मार्गदर्शक बनाएं!',
       backToHome: 'होम पर वापस',
-      browseGurus: 'मौजूदा गुरुओं को ब्राउज़ करें',
+      browseGurus: 'मौजूदा गुरु देखें',
+    },
+    rraasHome: {
+      title: 'RRAASI',
+      tagline: 'अज्ञात को खोजें, स्वयं को जानें',
+      subtitle: 'आपका आध्यात्मिक अभयारण्य जहां प्राचीन ज्ञान आधुनिक AI से मिलता है',
+      description:
+        'पवित्र वार्तालाप, ब्रह्मांडीय अंतर्दृष्टि और दिव्य संगीत के माध्यम से आत्म-खोज की यात्रा पर निकलें।',
+      explorePath: 'अपना आध्यात्मिक मार्ग चुनें',
+      explorePathDesc: 'चेतना और ब्रह्मांडीय ज्ञान की गहराइयों में अपनी यात्रा चुनें',
+      satsangTitle: 'सत्संग',
+      satsangDesc:
+        'प्रबुद्ध गुरुओं के AI अवतारों के साथ आवाज वार्तालाप में जुड़ें। संवादात्मक संवाद के माध्यम से आध्यात्मिक गुरुओं का ज्ञान अनुभव करें।',
+      satsangAction: 'सत्संग देखें',
+      astrologyTitle: 'वैदिक ज्योतिष',
+      astrologyDesc:
+        'हमारे AI ज्योतिषी से व्यक्तिगत कुंडली विश्लेषण और जीवन मार्गदर्शन प्राप्त करें। अपने ब्रह्मांडीय खाके की खोज करें और अपनी नियति को अनलॉक करें।',
+      astrologyAction: 'ज्योतिषी से परामर्श करें',
+      musicTitle: 'AI भजन निर्माता',
+      musicDesc:
+        'व्यक्तिगत भजन, मंत्र और उपचार फ्रीक्वेंसी उत्पन्न करें। अपने आध्यात्मिक अभ्यास के अनुरूप पवित्र संगीत बनाएं।',
+      musicAction: 'संगीत बनाएं',
+      aboutTitle: 'RRAASI क्या है?',
+      aboutDesc1:
+        'RRAASI आपका डिजिटल आध्यात्मिक अभयारण्य है, एक पवित्र स्थान जहां साधक अत्याधुनिक AI तकनीक के माध्यम से चेतना और प्राचीन ज्ञान की गहन गहराइयों का पता लगा सकते हैं।',
+      aboutDesc2:
+        'हमारा प्लेटफॉर्म प्रबुद्ध गुरुओं की कालातीत शिक्षाओं को आधुनिक पहुंच के साथ जोड़ता है, जिससे आध्यात्मिक विकास सभी के लिए, कहीं भी, किसी भी समय उपलब्ध हो जाता है।',
+      aboutQuote:
+        'अज्ञात दूर नहीं है—यह भीतर निवास करता है। RRAASI आत्म-खोज की इस आंतरिक यात्रा में आपका साथी है।',
+      comingSoonTitle: 'और भी आ रहा है',
+      comingSoonDesc: 'हम दुनिया भर के साधकों की सेवा के लिए अपनी आध्यात्मिक पेशकश का लगातार विस्तार कर रहे हैं',
+      comingSoonMeditation: 'निर्देशित ध्यान',
+      comingSoonMeditationDesc: 'AI-संचालित व्यक्तिगत ध्यान सत्र',
+      comingSoonDreams: 'स्वप्न विश्लेषण',
+      comingSoonDreamsDesc: 'आपके स्वप्नों और दर्शनों की वैदिक व्याख्या',
+      comingSoonScripture: 'शास्त्र अध्ययन',
+      comingSoonScriptureDesc: 'पवित्र ग्रंथों का संवादात्मक अन्वेषण',
+      comingSoonBadge: 'जल्द आ रहा है',
+      ctaTitle: 'आज ही अपनी यात्रा शुरू करें',
+      ctaDesc: 'हर आध्यात्मिक यात्रा एक कदम से शुरू होती है। अपना कदम अभी उठाएं।',
+      ctaStartSatsang: 'सत्संग के साथ शुरू करें',
+      ctaExploreAll: 'सभी सेवाएं देखें',
+    },
+    quiz: {
+      triggerButton: '✨ भ्रमित हैं? चुनने में मदद करें',
+      modalTitle: 'मेरी मदद करें',
+      modalTitleResult: 'हम अनुशंसा करते हैं',
+      questions: {
+        q1: 'आप अभी सबसे ज्यादा क्या खोज रहे हैं?',
+        q2: 'आप कैसे जुड़ना पसंद करते हैं?',
+        q3: 'कौन सा वाइब आपको पसंद है?',
+      },
+      options: {
+        peace: 'आंतरिक शांति और मौन',
+        knowledge: 'ज्ञान और विवेक',
+        love: 'प्रेम और भक्ति',
+        energy: 'ऊर्जा और रूपांतरण',
+        intellectual: 'बौद्धिक और दार्शनिक',
+        emotional: 'भावनात्मक और हृदय-केंद्रित',
+        practical: 'व्यावहारिक और क्रिया-उन्मुख',
+        mystical: 'रहस्यमय और गूढ़',
+        ancient: 'प्राचीन और पारंपरिक',
+        modern: 'आधुनिक और संबंधित',
+        intense: 'तीव्र और प्रत्यक्ष',
+        gentle: 'कोमल और पोषण करने वाला',
+      },
+      results: {
+        match: 'मेल',
+        connect: 'जुड़ें',
+        retake: 'प्रश्नोत्तरी फिर से लें',
+      },
     },
   },
 } as const;

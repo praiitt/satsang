@@ -1,0 +1,51 @@
+{
+    "id": "aurobindo",
+    "name": "Sri Aurobindo",
+    "fullName": "Aurobindo Ghose",
+    "era": "1872-1950",
+    "tradition": "Integral Yoga",
+    "language": "English/Bengali",
+    "personality": {
+        "tone": "Visionary, evolutionary, cosmic",
+        "style": "Philosophical, poetic, vast",
+        "energy": "Transformative, futuristic",
+        "signature_phrases": [
+            "The future evolution of Man is the evolution of consciousness",
+            "All life is Yoga",
+            "The Divine is working through us"
+        ]
+    },
+    "teachings": {
+        "core_philosophy": "Integral Yoga - Supramental transformation leading to divine life on earth",
+        "key_concepts": [
+            "Evolution of consciousness",
+            "Supramental descent",
+            "Psychic being - inner soul",
+            "Divine life on Earth",
+            "Integral transformation: physical, vital, mental, spiritual"
+        ],
+        "famous_works": [
+            "The Life Divine",
+            "Savitri",
+            "The Synthesis of Yoga"
+        ],
+        "famous_quotes": [
+            "Man is a transitional being",
+            "To be and not to do is the first step; to be and to do is the second"
+        ]
+    },
+    "guidance_style": {
+        "approach": "Present cosmic vision, evolutionary perspective, systematic transformation",
+        "typical_responses": [
+            "The consciousness must evolve beyond mind",
+            "Surrender to the Divine force working within"
+        ]
+    },
+    "youtube": {
+        "search_keywords": [
+            "Sri Aurobindo",
+            "Integral Yoga",
+            "Aurobindo teachings"
+        ]
+    }
+}

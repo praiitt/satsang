@@ -1,0 +1,57 @@
+{
+  "userId": "Sb0cPSTLgaUXLcp7XWdENDYlhAx1",
+  "documents": [
+    {
+      "pageContent": "KalSarpa Dosha Analysis:\n            Type: N/A\n            Present: No\n            ",
+      "metadata": {
+        "userId": "Sb0cPSTLgaUXLcp7XWdENDYlhAx1",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-08-24T10:13:18.973Z"
+      }
+    },
+    {
+      "pageContent": "Astrological Details:\n          Sign: Pisces\n          Ascendant: Cancer\n          Ascendant Lord: Moon\n          Nakshatra: Uttra Bhadrapad\n          Nakshatra Lord: Saturn\n          Charan: 4\n          Yog: Dhriti\n          Karan: Kaulav\n          Tithi: Krishna Panchami\n          Tatva: Water\n          Varna: Vipra\n          Vashya: Jalchar\n          Yoni: Gau\n          Gan: Manushya\n          Nadi: Madhya\n          Sign Lord: Jupiter\n          Name Alphabet: N\n          Paya: Copper",
+      "metadata": {
+        "userId": "Sb0cPSTLgaUXLcp7XWdENDYlhAx1",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-24T10:13:18.987Z",
+        "sign": "Pisces",
+        "ascendant": "Cancer",
+        "nakshatra": "Uttra Bhadrapad"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"Sb0cPSTLgaUXLcp7XWdENDYlhAx1\",\n  \"type\": \"user_profile\",\n  \"name\": \"Rajesh\",\n  \"email\": \"rajesh@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Rajesh\",\n    \"birthDate\": \"2001-08-09\",\n    \"birthTime\": \"05:06\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T10:13:23.179Z\"\n}",
+      "metadata": {
+        "userId": "Sb0cPSTLgaUXLcp7XWdENDYlhAx1",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T10:13:23.179Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"Sb0cPSTLgaUXLcp7XWdENDYlhAx1\",\n  \"type\": \"user_profile\",\n  \"name\": \"Rajesh\",\n  \"email\": \"rajesh@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Rajesh\",\n    \"birthDate\": \"2001-08-09\",\n    \"birthTime\": \"05:06\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T10:13:23.181Z\"\n}",
+      "metadata": {
+        "userId": "Sb0cPSTLgaUXLcp7XWdENDYlhAx1",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T10:13:23.181Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"Sb0cPSTLgaUXLcp7XWdENDYlhAx1\",\n  \"type\": \"user_profile\",\n  \"name\": \"Rajesh\",\n  \"email\": \"rajesh@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Rajesh\",\n    \"birthDate\": \"2001-08-09\",\n    \"birthTime\": \"05:06\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T10:13:23.823Z\"\n}",
+      "metadata": {
+        "userId": "Sb0cPSTLgaUXLcp7XWdENDYlhAx1",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T10:13:23.823Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"Sb0cPSTLgaUXLcp7XWdENDYlhAx1\",\n  \"type\": \"user_profile\",\n  \"name\": \"Rajesh\",\n  \"email\": \"rajesh@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Rajesh\",\n    \"birthDate\": \"2001-08-09\",\n    \"birthTime\": \"05:06\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-24T10:13:23.496Z\"\n}",
+      "metadata": {
+        "userId": "Sb0cPSTLgaUXLcp7XWdENDYlhAx1",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-24T10:13:23.496Z"
+      }
+    }
+  ],
+  "timestamp": "2025-08-24T10:13:24.932Z"
+}

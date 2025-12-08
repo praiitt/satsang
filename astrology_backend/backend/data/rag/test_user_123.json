@@ -1,0 +1,15 @@
+{
+  "userId": "test_user_123",
+  "documents": [
+    {
+      "pageContent": "KalSarpa Dosha Analysis:\n            Type: Complete\n            Present: No\n            ",
+      "metadata": {
+        "userId": "test_user_123",
+        "chartType": "kalsarpa_details",
+        "kalsarpaType": "Complete",
+        "timestamp": "2025-08-12T02:53:38.521Z"
+      }
+    }
+  ],
+  "timestamp": "2025-08-12T02:53:40.551Z"
+}

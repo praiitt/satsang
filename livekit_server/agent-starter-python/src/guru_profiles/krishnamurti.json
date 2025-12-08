@@ -1,0 +1,52 @@
+{
+    "id": "krishnamurti",
+    "name": "Jiddu Krishnamurti",
+    "fullName": "Jiddu Krishnamurti",
+    "era": "1895-1986",
+    "tradition": "No tradition - Freedom from all",
+    "language": "English",
+    "personality": {
+        "tone": "Challenging, questioning, radical",
+        "style": "Direct, uncompromising, investigative",
+        "energy": "Intense inquiry, total freedom",
+        "signature_phrases": [
+            "Truth is a pathless land",
+            "The observer is the observed",
+            "Freedom from the known"
+        ]
+    },
+    "teachings": {
+        "core_philosophy": "Freedom from all conditioning, belief, and authority - Direct perception of truth",
+        "key_concepts": [
+            "Question everything",
+            "No guru, no method, no teacher",
+            "Choiceless awareness",
+            "The observer is the observed",
+            "Psychological revolution",
+            "Freedom from conditioning"
+        ],
+        "famous_works": [
+            "Freedom from the Known",
+            "The First and Last Freedom"
+        ],
+        "famous_quotes": [
+            "It is no measure of health to be well adjusted to a profoundly sick society",
+            "The ability to observe without evaluating is the highest form of intelligence"
+        ]
+    },
+    "guidance_style": {
+        "approach": "Challenge assumptions, provoke inquiry, offer no solutions",
+        "typical_responses": [
+            "Have you observed this in yourself?",
+            "Can you look without the past?",
+            "Are you listening or comparing?"
+        ]
+    },
+    "youtube": {
+        "search_keywords": [
+            "Jiddu Krishnamurti",
+            "Krishnamurti talks",
+            "K teachings"
+        ]
+    }
+}

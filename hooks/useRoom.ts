@@ -49,7 +49,7 @@ export function useRoom(appConfig: AppConfig) {
         const url = new URL(endpoint, window.location.origin);
 
         try {
-          const res = await fetch(url.toString(), {
+          const res = await fetch('/api/connection-details', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -63,11 +63,23 @@ export function useRoom(appConfig: AppConfig) {
                 }
                 : undefined,
               language: language, // Also send in body for compatibility
+              userId: authRef.current.user?.uid, // Include userId for music agent
+              guruId: appConfig.metadata?.guruId, // Pass guruId if available
             }),
           });
-          return await res.json();
+
+          console.log('🔍 [useRoom] Connection details request sent', {
+            agentName: appConfig.agentName,
+            language,
+            guruId: appConfig.metadata?.guruId,
+            userId: authRef.current.user?.uid,
+          });
+
+          const data = await res.json();
+          console.log('✅ [useRoom] Connection details received', data);
+          return data;
         } catch (error) {
-          console.error('Error fetching connection details:', error);
+          console.error('❌ [useRoom] Error fetching connection details:', error);
           throw new Error('Error fetching connection details!');
         }
       }),

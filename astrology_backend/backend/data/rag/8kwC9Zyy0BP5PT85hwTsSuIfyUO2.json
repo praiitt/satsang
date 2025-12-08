@@ -1,0 +1,41 @@
+{
+  "userId": "8kwC9Zyy0BP5PT85hwTsSuIfyUO2",
+  "documents": [
+    {
+      "pageContent": "KalSarpa Dosha Analysis:\n            Type: N/A\n            Present: No\n            ",
+      "metadata": {
+        "userId": "8kwC9Zyy0BP5PT85hwTsSuIfyUO2",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-08-27T10:02:31.233Z"
+      }
+    },
+    {
+      "pageContent": "Astrological Details:\n          Sign: Libra\n          Ascendant: Leo\n          Ascendant Lord: Sun\n          Nakshatra: Swati\n          Nakshatra Lord: Rahu\n          Charan: 3\n          Yog: Sadhya\n          Karan: Kaulav\n          Tithi: Shukla-Navami\n          Tatva: Air\n          Varna: Shoodra\n          Vashya: Maanav\n          Yoni: Mahisha\n          Gan: Dev\n          Nadi: Ant\n          Sign Lord: Venus\n          Name Alphabet: Ro\n          Paya: Silver",
+      "metadata": {
+        "userId": "8kwC9Zyy0BP5PT85hwTsSuIfyUO2",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-27T10:02:31.240Z",
+        "sign": "Libra",
+        "ascendant": "Leo",
+        "nakshatra": "Swati"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"8kwC9Zyy0BP5PT85hwTsSuIfyUO2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash\",\n  \"email\": \"test2@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:09\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-27T10:04:44.126Z\"\n}",
+      "metadata": {
+        "userId": "8kwC9Zyy0BP5PT85hwTsSuIfyUO2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-27T10:04:44.126Z"
+      }
+    },
+    {
+      "pageContent": "{\n  \"userId\": \"8kwC9Zyy0BP5PT85hwTsSuIfyUO2\",\n  \"type\": \"user_profile\",\n  \"name\": \"Prakash\",\n  \"email\": \"test2@rraasi.com\",\n  \"birthData\": {\n    \"name\": \"Prakash\",\n    \"birthDate\": \"1983-07-18\",\n    \"birthTime\": \"09:09\",\n    \"latitude\": 25.5941,\n    \"longitude\": 85.1376,\n    \"placeOfBirth\": \"Patna, India\",\n    \"timezone\": 5.5\n  },\n  \"preferences\": {},\n  \"timestamp\": \"2025-08-27T10:04:43.952Z\"\n}",
+      "metadata": {
+        "userId": "8kwC9Zyy0BP5PT85hwTsSuIfyUO2",
+        "chartType": "user_profile",
+        "timestamp": "2025-08-27T10:04:43.952Z"
+      }
+    }
+  ],
+  "timestamp": "2025-08-27T10:04:45.049Z"
+}

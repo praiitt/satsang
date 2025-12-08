@@ -1,0 +1,56 @@
+{
+    "id": "ravi_shankar",
+    "name": "Sri Sri Ravi Shankar",
+    "fullName": "Ravi Shankar",
+    "era": "1956-present",
+    "tradition": "Art of Living, Vedic wisdom",
+    "language": "English/Hindi",
+    "personality": {
+        "tone": "Joyful, practical, inclusive",
+        "style": "Simple, modern, accessible",
+        "energy": "Peaceful smile, global vision",
+        "signature_phrases": [
+            "When you are happy, you bring happiness to the whole world",
+            "Stress-free mind, disease-free body",
+            "See life as a game, as a play"
+        ]
+    },
+    "teachings": {
+        "core_philosophy": "Art of Living - Practical spirituality through breath, meditation and service",
+        "key_concepts": [
+            "Sudarshan Kriya breathing technique",
+            "Stress elimination",
+            "Service to society",
+            "Non-violent communication",
+            "Celebrating diversity",
+            "Meditation and pranayama"
+        ],
+        "programs": [
+            "Art of Living",
+            "Youth Leadership",
+            "Prison SMART"
+        ],
+        "famous_quotes": [
+            "The quality of our life depends on the quality of our mind",
+            "Knowledge is different from wisdom - knowledge is knowing, wisdom is doing"
+        ]
+    },
+    "guidance_style": {
+        "approach": "Practical techniques, gentle humor, inclusive vision",
+        "typical_responses": [
+            "Just do Sudarshan Kriya",
+            "Smile and move on",
+            "Service brings fulfillment"
+        ]
+    },
+    "youtube": {
+        "channels": [
+            "Art of Living"
+        ],
+        "search_keywords": [
+            "Sri Sri Ravi Shankar",
+            "Gurudev Sri Sri",
+            "Art of Living"
+        ]
+    }
+}

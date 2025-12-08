@@ -1,0 +1,17 @@
+{
+  "userId": "test_user_chart",
+  "documents": [
+    {
+      "pageContent": "Astrological Details:\n          Sign: Taurus\n          Ascendant: Leo\n          Ascendant Lord: N/A\n          Nakshatra: Mrigshira\n          Nakshatra Lord: N/A\n          Charan: N/A\n          Yog: N/A\n          Karan: N/A\n          Tithi: N/A\n          Tatva: N/A\n          Varna: N/A\n          Vashya: N/A\n          Yoni: N/A\n          Gan: N/A\n          Nadi: N/A\n          Sign Lord: N/A\n          Name Alphabet: N/A\n          Paya: N/A",
+      "metadata": {
+        "userId": "test_user_chart",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-24T07:06:37.411Z",
+        "sign": "Taurus",
+        "ascendant": "Leo",
+        "nakshatra": "Mrigshira"
+      }
+    }
+  ],
+  "timestamp": "2025-08-24T07:06:38.170Z"
+}

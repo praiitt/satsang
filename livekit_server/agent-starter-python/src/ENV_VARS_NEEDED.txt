@@ -1,0 +1,5 @@
+# ADD THESE TO YOUR .env.local FILE:
+
+# Astrology API Credentials (astrologyapi.com)
+ASTROLOGY_API_USER_ID=your_user_id_here
+ASTROLOGY_API_KEY=your_api_key_here

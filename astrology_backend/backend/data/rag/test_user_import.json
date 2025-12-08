@@ -1,0 +1,25 @@
+{
+  "userId": "test_user_import",
+  "documents": [
+    {
+      "pageContent": "KalSarpa Dosha Analysis:\n            Type: N/A\n            Present: No\n            ",
+      "metadata": {
+        "userId": "test_user_import",
+        "chartType": "kalsarpa_details",
+        "timestamp": "2025-08-07T19:22:58.564Z"
+      }
+    },
+    {
+      "pageContent": "Astrological Details:\n          Sign: Aquarius\n          Ascendant: Libra\n          Ascendant Lord: Venus\n          Nakshatra: Purva Bhadrapad\n          Nakshatra Lord: Jupiter\n          Charan: 2\n          Yog: Priti\n          Karan: Baalav\n          Tithi: Krishna Ashtami\n          Tatva: Air\n          Varna: Shoodra\n          Vashya: Maanav\n          Yoni: Singh\n          Gan: Manushya\n          Nadi: Adi\n          Sign Lord: Saturn\n          Name Alphabet: So\n          Paya: Copper",
+      "metadata": {
+        "userId": "test_user_import",
+        "chartType": "astro_details",
+        "timestamp": "2025-08-07T19:22:58.567Z",
+        "sign": "Aquarius",
+        "ascendant": "Libra",
+        "nakshatra": "Purva Bhadrapad"
+      }
+    }
+  ],
+  "timestamp": "2025-08-07T19:23:01.127Z"
+}

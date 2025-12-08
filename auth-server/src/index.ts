@@ -12,6 +12,7 @@ import podcastRoutes from './routes/podcast.js';
 import transcriptRoutes from './routes/transcript.js';
 import transcriptsRoutes from './routes/transcripts.js';
 import videoStitchRoutes from './routes/video-stitch.js';
+import sunoRoutes from './routes/suno.js';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -74,6 +75,7 @@ app.use('/transcript', transcriptRoutes);
 app.use('/transcripts', transcriptsRoutes);
 app.use('/podcast', podcastRoutes);
 app.use('/video-stitch', videoStitchRoutes);
+app.use('/suno', sunoRoutes);
 
 app.get('/', (_req, res) => res.json({ name: 'satsang-auth-server', ok: true }));
 

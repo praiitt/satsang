@@ -1,0 +1,497 @@
+import logging
+import os
+import json
+import asyncio
+from pathlib import Path
+from typing import Dict, Any, Optional
+
+from dotenv import load_dotenv
+from livekit.agents import (
+    Agent,
+    AgentSession,
+    JobContext,
+    JobProcess,
+    MetricsCollectedEvent,
+    RoomInputOptions,
+    WorkerOptions,
+    cli,
+    inference,
+    metrics,
+    function_tool,
+    RunContext,
+)
+from livekit.plugins import noise_cancellation, silero
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+logger = logging.getLogger("hinduism_agent")
+
+# Load .env.local
+_ENV_PATHS = [
+    Path(__file__).resolve().parent.parent / ".env.local",
+    Path.cwd() / ".env.local",
+]
+_ENV_LOADED = False
+logger.info("Attempting to load .env.local file...")
+for _env_path in _ENV_PATHS:
+    if _env_path.exists():
+        try:
+            load_dotenv(str(_env_path), override=True)
+            logger.info(f"✅ Loaded .env.local from: {_env_path}")
+            _ENV_LOADED = True
+            break
+        except Exception as e:
+            logger.error(f"Failed to load .env.local from {_env_path}: {e}")
+
+if not _ENV_LOADED:
+    logger.warning("⚠️  .env.local not found")
+
+
+class HinduismAgent(Agent):
+    """
+    Multi-guru Hinduism Agent that dynamically embodies different spiritual masters.
+    """
+    
+    def __init__(
+        self,
+        guru_id: str = "vivekananda",
+        user_id: str = "default_user",
+        publish_data_fn=None
+    ) -> None:
+        self.guru_id = guru_id
+        self.user_id = user_id
+        self.guru_profile = self._load_guru_profile(guru_id)
+        
+        # Generate instructions based on guru profile
+        instructions = self._generate_guru_instructions()
+        
+        super().__init__(instructions=instructions)
+        self._publish_data_fn = publish_data_fn
+    
+    def _load_guru_profile(self, guru_id: str) -> Dict[str, Any]:
+        """Load guru profile from JSON file."""
+        try:
+            profile_path = Path(__file__).parent / "guru_profiles" / f"{guru_id}.json"
+            logger.info(f"Loading guru profile from: {profile_path}")
+            
+            if not profile_path.exists():
+                logger.error(f"Guru profile not found: {profile_path}")
+                # Return default profile
+                return self._get_default_profile(guru_id)
+            
+            with open(profile_path, 'r', encoding='utf-8') as f:
+                profile = json.load(f)
+            
+            logger.info(f"✅ Loaded profile for {profile['name']}")
+            return profile
+            
+        except Exception as e:
+            logger.error(f"Error loading guru profile: {e}", exc_info=True)
+            return self._get_default_profile(guru_id)
+    
+    def _get_default_profile(self, guru_id: str) -> Dict[str, Any]:
+        """Return default profile if specific profile not found."""
+        return {
+            "id": guru_id,
+            "name": guru_id.replace('_', ' ').title(),
+            "personality": {
+                "tone": "Wise, compassionate",
+                "style": "Clear, spiritual",
+                "signature_phrases": ["Om Shanti"]
+            },
+            "teachings": {
+                "core_philosophy": "Hindu spiritual wisdom",
+                "key_concepts": ["Dharma", "Karma", "Moksha"]
+            }
+        }
+    
+    def _generate_guru_instructions(self) -> str:
+        """Generate LLM instructions embodying the selected guru."""
+        profile = self.guru_profile
+        
+        # Extract profile details
+        guru_name = profile.get('name', 'Spiritual Master')
+        era = profile.get('era', 'Ancient times')
+        tradition = profile.get('tradition', 'Hindu tradition')
+        
+        personality = profile.get('personality', {})
+        tone = personality.get('tone', 'Wise and compassionate')
+        style = personality.get('style', 'Clear and spiritual')
+        signature_phrases = personality.get('signature_phrases', [])
+        
+        teachings = profile.get('teachings', {})
+        core_philosophy = teachings.get('core_philosophy', 'Spiritual wisdom')
+        key_concepts = teachings.get('key_concepts', [])
+        
+        guidance = profile.get('guidance_style', {})
+        approach = guidance.get('approach', 'Guide with wisdom')
+        
+        # Build instructions
+        instructions = f"""You are {guru_name}, the great spiritual master who lived from {era}.
+
+CORE IDENTITY:
+- You ARE {guru_name}, speaking as yourself in first person
+- Your tradition: {tradition}
+- Your era: {era}
+
+PERSONALITY & SPEAKING STYLE:
+- Tone: {tone}
+- Style: {style}
+- Energy: {personality.get('energy', 'Compassionate and wise')}
+
+YOUR SIGNATURE EXPRESSIONS:
+{chr(10).join(f'- "{phrase}"' for phrase in signature_phrases[:3])}
+
+YOUR CORE TEACHINGS:
+Philosophy: {core_philosophy}
+
+Key Concepts you teach:
+{chr(10).join(f'- {concept}' for concept in key_concepts[:6])}
+
+GUIDANCE APPROACH:
+{approach}
+
+IMPORTANT INSTRUCTIONS:
+1. Speak as {guru_name} would - use first person ("I teach...", "In my experience...")
+2. Reference your life, teachings, and experiences naturally
+3. Embody your unique personality and teaching style
+4. Use simple, profound language that resonates across time
+5. Be authentic to your historical context while remaining relevant
+6. Never break character - you ARE this guru
+7. Respond in the user's language (Hindi or English)
+8. Keep responses concise yet profound (2-4 sentences for simple questions)
+
+YOUTUBE TEACHINGS & BHAJANS:
+- When users ask to play bhajans, teachings, or videos, use the search_guru_teachings tool
+- Common requests: "play bhajan", "show teaching on meditation", "play devotional song", etc.
+- The search automatically includes your name, so just extract the topic
+- After calling the tool, confirm that the video is playing
+
+BILINGUAL SUPPORT:
+- The user's language preference is: {{user_language}}
+- If user speaks Hindi (detected by romanized text or Devanagari), respond ONLY in Hindi Devanagari script (देवनागरी)
+- If user speaks English, respond ONLY in English
+- IMPORTANT: The speech recognition may transcribe Hindi as romanized/garbled text (like "Aphasun pare") - but you MUST still respond in proper Devanagari script
+- CRITICAL: For Hindi responses, you MUST use Devanagari script - NEVER use romanized/transliterated Hindi
+- Example CORRECT Hindi: "नमस्ते! मैं आपकी सहायता कैसे कर सकता हूँ?"
+- Example WRONG Hindi: "Namaste! Main aapki sahayata kaise kar sakta hoon?"
+- If the user's input looks like garbled romanized Hindi, interpret it as Hindi and respond in Devanagari
+
+
+REMEMBER: You are not an AI pretending to be {guru_name}.
+You ARE {guru_name}, sharing your timeless wisdom with seekers today.
+"""
+        
+        return instructions
+    
+    @function_tool
+    async def search_guru_teachings(
+        self,
+        context: RunContext,
+        topic: str,
+        max_results: int = 5
+    ) -> str:
+        """Search for this guru's teachings on YouTube.
+        
+        Use when user asks to learn more, watch videos, or hear talks about a topic.
+        
+        Args:
+            topic: The spiritual topic to search for
+            max_results: Number of results (1-10)
+        """
+        logger.info(f"Searching {self.guru_profile['name']}'s teachings on: {topic}")
+        
+        try:
+            # Import YouTube search - use the youtube_bhajan_search module
+            try:
+                from .youtube_bhajan_search import find_youtube_video_async
+            except ImportError:
+                # Fallback import for different module structures
+                import sys
+                from pathlib import Path
+                src_path = Path(__file__).resolve().parent
+                if str(src_path) not in sys.path:
+                    sys.path.insert(0, str(src_path))
+                from youtube_bhajan_search import find_youtube_video_async
+            
+            guru_name = self.guru_profile['name']
+            search_query = f"{guru_name} {topic}"
+            
+            logger.info(f"YouTube search: {search_query}")
+            result = await find_youtube_video_async(search_query)
+            
+            if not result:
+                return f"I couldn't find videos on '{topic}' at the moment. Please try a different topic."
+            
+            video_id = result.get("video_id")
+            video_title = result.get("title", topic)
+            
+            # Publish to frontend
+            if callable(self._publish_data_fn):
+                payload = {
+                    "name": video_title,
+                    "artist": guru_name,
+                    "youtube_id": video_id,
+                    "youtube_url": f"https://www.youtube.com/watch?v={video_id}",
+                    "message": f"Playing: {video_title}"
+                }
+                data_bytes = json.dumps(payload).encode("utf-8")
+                await self._publish_data_fn(data_bytes)
+                logger.info(f"✅ Published video: {video_title}")
+            
+            return f"I found a teaching on '{topic}'. Playing it for you now."
+            
+        except Exception as e:
+            logger.error(f"Error searching teachings: {e}", exc_info=True)
+            return "I apologize, I couldn't search for teachings at the moment."
+    
+    @function_tool
+    async def share_wisdom(
+        self,
+        context: RunContext,
+        topic: str
+    ) -> str:
+        """Share wisdom on a specific spiritual topic.
+        
+        Use when user asks for guidance, advice, or teachings on a topic.
+        
+        Args:
+            topic: The spiritual topic to share wisdom about
+        """
+        logger.info(f"Sharing wisdom on: {topic}")
+        
+        guru_name = self.guru_profile['name']
+        core_philosophy = self.guru_profile['teachings'].get('core_philosophy', '')
+        
+        # The LLM will naturally generate guru-specific wisdom
+        # This tool just provides context
+        return f"Based on my teachings of {core_philosophy}, let me share wisdom about {topic}."
+
+
+def prewarm(proc: JobProcess):
+    """Prewarm function."""
+    try:
+        logger.info("Skipping VAD preload to avoid timeout")
+        proc.userdata["vad"] = None
+    except Exception as e:
+        logger.error(f"Error in prewarm: {e}")
+        proc.userdata["vad"] = None
+
+
+async def entrypoint(ctx: JobContext):
+    """Main entrypoint for Hinduism Agent."""
+    ctx.log_context_fields = {"room": ctx.room.name}
+    
+    logger.info("="*60)
+    logger.info("ENTRYPOINT: Starting Hinduism agent")
+    logger.info("="*60)
+    
+    # Check environment
+    openai_key = os.getenv("OPENAI_API_KEY")
+    cartesia_key = os.getenv("CARTESIA_API_KEY")
+    sarvam_key = os.getenv("SARVAM_API_KEY")
+    stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
+    
+    if not openai_key or not cartesia_key:
+        logger.error("Missing API keys!")
+        raise RuntimeError("OPENAI_API_KEY and CARTESIA_API_KEY required")
+    
+    # Set default values (will be updated after connecting)
+    # Default to Hindi to match typical user preference for spiritual content
+    user_language = 'hi'
+    guru_id = 'vivekananda'
+    user_id = 'default_user'
+    
+    # Configure STT based on language preference
+    # Note: STT is now initialized AFTER connecting to room and detecting language
+    # This placeholder ensures stt variable exists in scope if needed before final init
+    stt = None
+    
+    # CONNECT TO ROOM FIRST - this is when participants join!
+    await ctx.connect()
+    
+    logger.info("✅ Connected to room, now extracting metadata from participants...")
+    
+    # NOW extract metadata from participant (after connection)
+    try:
+        # Retry loop: wait for remote participants to appear
+        max_retries = 10
+        retry_delay = 0.5
+        
+        logger.info("⏳ Checking for participant metadata...")
+        
+        for attempt in range(max_retries):
+            participant_count = len(ctx.room.remote_participants)
+            logger.info(f"🔍 Attempt {attempt + 1}/{max_retries}: Remote participants count: {participant_count}")
+            
+            if participant_count > 0:
+                # Found participants, extract metadata
+                all_participants = list(ctx.room.remote_participants.values())
+                logger.info(f"🔍 Participants: {[p.identity for p in all_participants]}")
+                
+                for participant in all_participants:
+                    logger.info(f"🔍 Checking participant: {participant.identity}")
+                    
+                    if participant.metadata:
+                        logger.info(f"🔍 Raw metadata: {participant.metadata}")
+                        try:
+                            metadata = json.loads(participant.metadata)
+                            logger.info(f"🔍 Parsed metadata: {metadata}")
+                            logger.info(f"🔍 Metadata keys: {list(metadata.keys())}")
+                            
+                            # Extract guruId
+                            if 'guruId' in metadata:
+                                guru_id = metadata['guruId']
+                                logger.info(f"🕉️  ✅ Found guruId in metadata: {guru_id}")
+                            else:
+                                logger.warning(f"⚠️  guruId NOT in metadata. Keys: {list(metadata.keys())}")
+                            
+                            # Extract userId
+                            if 'userId' in metadata:
+                                user_id = metadata['userId']
+                                logger.info(f"👤 User ID: {user_id}")
+                            
+                            # Extract language
+                            if 'language' in metadata:
+                                raw_lang = str(metadata.get("language", "")).strip().lower()
+                                if raw_lang in ["hi", "hindi", "hin"]:
+                                    user_language = "hi"
+                                elif raw_lang in ["en", "english", "eng"]:
+                                    user_language = "en"
+                                logger.info(f"🌐 Language: {user_language}")
+                            
+                            # Metadata found, break out of retry loop
+                            break
+                        except Exception as e:
+                            logger.error(f"❌ Failed to parse metadata: {e}")
+                            import traceback
+                            logger.error(f"Traceback: {traceback.format_exc()}")
+                    else:
+                        logger.warning(f"⚠️  Participant {participant.identity} has no metadata!")
+                
+                # Break out of retry loop if we found participants
+                if guru_id != 'vivekananda' or participant_count > 0:
+                    break
+            
+            # Wait before retrying
+            if attempt < max_retries - 1:
+                await asyncio.sleep(retry_delay)
+        
+        if guru_id == 'vivekananda':
+            logger.warning("⚠️  No guruId found after all retries - using default 'vivekananda'")
+            
+    except Exception as e:
+        logger.error(f"❌ Error extracting metadata: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+    
+    logger.info(f"✅ Final configuration: Guru={guru_id}, Language={user_language}")
+    
+    # Initialize STT based on detected language
+    # Initialize STT based on detected language
+    if user_language == 'hi':
+        # Use SARVAM for Hindi (best for Indian languages)
+        logger.info(f"Initializing STT with SARVAM for Hindi language recognition")
+        try:
+            from livekit.plugins import sarvam as sarvam_plugin
+            logger.info("Sarvam plugin imported successfully")
+            
+            if not sarvam_key:
+                logger.warning("SARVAM_API_KEY not set - Sarvam STT may fail. Falling back to AssemblyAI.")
+                raise ValueError("SARVAM_API_KEY not set")
+            
+            logger.info("Creating Sarvam STT instance...")
+            stt = sarvam_plugin.STT(language="hi")
+            logger.info("✅ Using Sarvam STT - BEST for Hindi/Indian languages!")
+        except ImportError as e:
+            logger.error(f"❌ Sarvam plugin not installed: {e}")
+            logger.warning("Falling back to AssemblyAI. For better Hindi accuracy, install Sarvam!")
+            stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
+            logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
+            stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
+    else:
+        # Use English STT for English language
+        logger.info(f"Initializing STT for English language recognition")
+        if stt_model == "deepgram/nova-2" or stt_model.startswith("deepgram"):
+            try:
+                stt = inference.STT(model="deepgram/nova-2", language="en")
+                logger.info("Using Deepgram Nova-2 for English STT")
+            except Exception as e:
+                logger.warning(f"Failed to initialize Deepgram STT: {e}. Falling back to AssemblyAI.")
+                stt = inference.STT(model="assemblyai/universal-streaming", language="en")
+        else:
+            # AssemblyAI with English language
+            stt = inference.STT(model=stt_model, language="en")
+            logger.info(f"Using {stt_model} for English STT")
+
+
+    # Create agent with the correct guru
+    final_agent = HinduismAgent(
+        guru_id=guru_id,
+        user_id=user_id,
+        publish_data_fn=ctx.room.local_participant.publish_data
+    )
+    
+    # Create session
+    session = AgentSession(
+        stt=stt,
+        llm=inference.LLM(model="openai/gpt-4.1-mini"),
+        tts=inference.TTS(
+            model="cartesia/sonic-3",
+            voice=os.getenv("TTS_VOICE_ID", "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"),
+            language=user_language
+        ),
+        turn_detection=None,
+        vad=ctx.proc.userdata["vad"],
+        preemptive_generation=True,
+    )
+    
+    # Metrics
+    usage_collector = metrics.UsageCollector()
+    
+    @session.on("metrics_collected")
+    def _on_metrics_collected(ev: MetricsCollectedEvent):
+        metrics.log_metrics(ev.metrics)
+        usage_collector.collect(ev.metrics)
+    
+    async def log_usage():
+        summary = usage_collector.get_summary()
+        logger.info(f"Usage: {summary}")
+    
+    ctx.add_shutdown_callback(log_usage)
+    
+    # Start session with final agent
+    await session.start(
+        agent=final_agent,
+        room=ctx.room,
+        room_input_options=RoomInputOptions(
+            noise_cancellation=noise_cancellation.BVC(),
+        ),
+    )
+    
+    # Send welcome message with correct guru in proper script
+    guru_name = final_agent.guru_profile['name']
+    if user_language == 'hi':
+        welcome_msg = f"नमस्ते! मैं {guru_name} की शिक्षाओं को समर्पित एक AI हूँ। आप मुझसे कोई भी आध्यात्मिक प्रश्न पूछ सकते हैं।"
+    else:
+        welcome_msg = f"Namaste! I am an AI embodying the teachings of {guru_name}. You may ask me any spiritual question."
+    
+    await session.say(welcome_msg)
+
+
+if __name__ == "__main__":
+    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "hinduism-agent")
+    logger.info(f"Starting agent: {agent_name}")
+    
+    cli.run_app(WorkerOptions(
+        entrypoint_fnc=entrypoint,
+        prewarm_fnc=prewarm,
+        agent_name=agent_name
+    ))

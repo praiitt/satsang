@@ -41,11 +41,22 @@ export async function POST(req: Request) {
     const participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
     const roomName = `voice_assistant_room_${Math.floor(Math.random() * 10_000)}`;
 
+    // Get guruId from request body (if available)
+    const guruId: string | undefined = body?.guruId;
+
+    console.log('🔍 Connection details request:', {
+      agentName,
+      languagePreference,
+      guruId,
+      bodyKeys: Object.keys(body || {}),
+    });
+
     const participantToken = await createParticipantToken(
       { identity: participantIdentity, name: participantName },
       roomName,
       agentName,
-      languagePreference
+      languagePreference,
+      guruId
     );
 
     // Return connection details
@@ -71,12 +82,22 @@ function createParticipantToken(
   userInfo: AccessTokenOptions,
   roomName: string,
   agentName?: string,
-  language?: string
+  language?: string,
+  guruId?: string
 ): Promise<string> {
   const at = new AccessToken(API_KEY, API_SECRET, {
     ...userInfo,
     ttl: '15m',
-    metadata: language ? JSON.stringify({ language }) : undefined, // Store language in token metadata
+    metadata: JSON.stringify({
+      language: language || 'hi',
+      guruId: guruId,
+    }), // Store language and guruId in token metadata
+  });
+
+  console.log('🔍 Creating token with metadata:', {
+    language: language || 'hi',
+    guruId: guruId,
+    metadataString: JSON.stringify({ language: language || 'hi', guruId: guruId }),
   });
   const grant: VideoGrant = {
     room: roomName,
