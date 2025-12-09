@@ -13,7 +13,9 @@ module.exports = {
             },
             autorestart: true,
             watch: false,
-            max_memory_restart: "1G"
+            max_memory_restart: "1G",
+            cpu_threshold: 70,
+            cpu_restart_delay: 30
         },
         {
             name: "agent-osho",
@@ -28,7 +30,9 @@ module.exports = {
             },
             autorestart: true,
             watch: false,
-            max_memory_restart: "1G"
+            max_memory_restart: "1G",
+            cpu_threshold: 70,
+            cpu_restart_delay: 30
         },
         {
             name: "agent-music",
@@ -43,7 +47,9 @@ module.exports = {
             },
             autorestart: true,
             watch: false,
-            max_memory_restart: "1G"
+            max_memory_restart: "1G",
+            cpu_threshold: 70,
+            cpu_restart_delay: 30
         },
         {
             name: "agent-hinduism",
@@ -58,7 +64,9 @@ module.exports = {
             },
             autorestart: true,
             watch: false,
-            max_memory_restart: "1G"
+            max_memory_restart: "1G",
+            cpu_threshold: 70,
+            cpu_restart_delay: 30
         },
         {
             name: "agent-astrology",
@@ -73,7 +81,26 @@ module.exports = {
             },
             autorestart: true,
             watch: false,
-            max_memory_restart: "1G"
+            max_memory_restart: "1G",
+            cpu_threshold: 70,
+            cpu_restart_delay: 30
+        },
+        {
+            name: "agent-et",
+            script: "src/etagent.py",
+            args: "dev",
+            interpreter: "./venv/bin/python",
+            cwd: ".",
+            env: {
+                PYTHONUNBUFFERED: "1",
+                LIVEKIT_AGENT_NAME: "etagent",
+                DOTENV_PATH: ".env.local"
+            },
+            autorestart: true,
+            watch: false,
+            max_memory_restart: "1G",
+            cpu_threshold: 70,
+            cpu_restart_delay: 30
         }
     ]
 };
