@@ -472,9 +472,14 @@ def prewarm(proc: JobProcess):
 async def entrypoint(ctx: JobContext):
     logger.info(f"Starting Music Agent for room: {ctx.room.name}")
     
-    # Wait for participant to join and extract userId from metadata
+    # Wait for participant to join and extract userId AND language from metadata
     user_id = "default_user"
+    user_language = "hi"  # Default to Hindi for devotional music
+    
     try:
+        # Wait for participants to connect
+        await asyncio.sleep(1.0)
+        
         # Get the first participant (the user who joined)
         participants = list(ctx.room.remote_participants.values())
         if participants:
@@ -482,13 +487,113 @@ async def entrypoint(ctx: JobContext):
             if participant.metadata:
                 metadata = json.loads(participant.metadata)
                 user_id = metadata.get("userId", "default_user")
-                logger.info(f"Extracted userId from participant metadata: {user_id}")
+                
+                # Parse language preference (robust parsing)
+                raw_lang = str(metadata.get("language", "")).strip().lower()
+                if raw_lang in ["hi", "hindi", "hin"]:
+                    user_language = "hi"
+                elif raw_lang in ["en", "english", "eng"]:
+                    user_language = "en"
+                else:
+                    user_language = raw_lang if raw_lang else "hi"
+                
+                logger.info(f"📝 Detected language: {user_language}, userId: {user_id}")
     except Exception as e:
-        logger.warning(f"Could not extract userId from participant metadata: {e}")
+        logger.warning(f"Could not extract metadata: {e}, using defaults (hi, default_user)")
     
-    # Initialize STT/TTS
-    stt = inference.STT(model="assemblyai/universal-streaming", language="en")
-    tts = inference.TTS(model="cartesia/sonic-3", voice="9626c31c-bec5-4cca-baa8-f8ba9e84c8bc", language="en")
+    # Final validation
+    if user_language not in {"hi", "en"}:
+        logger.warning(f"Unsupported language '{user_language}', defaulting to Hindi")
+        user_language = "hi"
+    
+    logger.info(f"🌐 Music Agent using language: {user_language}")
+    
+    # Initialize STT based on language preference
+    sarvam_key = os.getenv("SARVAM_API_KEY")
+    stt_model = os.getenv("STT_MODEL", "sarvam")
+    
+    if user_language == "hi":
+        # Use Sarvam for Hindi (best for Indian languages)
+        logger.info("Initializing STT for Hindi language")
+        
+        if stt_model == "sarvam" or stt_model.startswith("sarvam"):
+            try:
+                from livekit.plugins import sarvam as sarvam_plugin
+                logger.info("Sarvam plugin imported successfully")
+                
+                if not sarvam_key:
+                    logger.warning("SARVAM_API_KEY not set - Sarvam STT may fail. Falling back to AssemblyAI.")
+                    raise ValueError("SARVAM_API_KEY not set")
+                
+                logger.info("Creating Sarvam STT instance...")
+                stt = sarvam_plugin.STT(language="hi")
+                logger.info("✅ Using Sarvam STT - BEST for Hindi/Indian languages!")
+            except ImportError as e:
+                logger.error(f"❌ Sarvam plugin not installed: {e}")
+                logger.warning("Install with: pip install 'livekit-agents[sarvam]~=1.2'")
+                logger.warning("Falling back to AssemblyAI for Hindi")
+                stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
+            except Exception as e:
+                logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
+                logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
+                stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
+        else:
+            # Use configured STT model with Hindi
+            stt = inference.STT(model=stt_model, language="hi")
+            logger.info(f"Using {stt_model} for Hindi STT")
+    else:
+        # English STT
+        logger.info("Initializing STT for English language")
+        stt = inference.STT(model="assemblyai/universal-streaming", language="en")
+    
+    # Initialize TTS with language-specific voice
+    def select_tts_voice_for_music(lang: str) -> str:
+        """Select appropriate TTS voice for music agent based on language."""
+        if lang == "hi":
+            # Priority: Music-specific > Global Hindi > Legacy > Hardcoded fallback
+            specific = os.getenv("MUSIC_TTS_VOICE_HI")
+            global_lang = os.getenv("TTS_VOICE_HI")
+            legacy = os.getenv("TTS_VOICE_ID")
+            
+            if specific:
+                logger.info(f"Using Music TTS voice for Hindi: {specific}")
+                return specific
+            if global_lang:
+                logger.info(f"Using global Hindi TTS voice: {global_lang}")
+                return global_lang
+            if legacy:
+                logger.info(f"Using legacy TTS voice for Hindi: {legacy}")
+                return legacy
+            
+            # Hardcoded fallback
+            logger.warning("No Hindi TTS voice configured, using fallback")
+            return "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
+        else:
+            # English voice selection
+            specific = os.getenv("MUSIC_TTS_VOICE_EN")
+            global_lang = os.getenv("TTS_VOICE_EN")
+            legacy = os.getenv("TTS_VOICE_ID")
+            
+            if specific:
+                logger.info(f"Using Music TTS voice for English: {specific}")
+                return specific
+            if global_lang:
+                logger.info(f"Using global English TTS voice: {global_lang}")
+                return global_lang
+            if legacy:
+                logger.info(f"Using legacy TTS voice for English: {legacy}")
+                return legacy
+            
+            return "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
+    
+    tts_voice = select_tts_voice_for_music(user_language)
+    tts = inference.TTS(
+        model="cartesia/sonic-3",
+        voice=tts_voice,
+        language=user_language  # Dynamic language!
+    )
+    
+    logger.info(f"Using TTS voice: {tts_voice} for language: {user_language}")
     
     # Create assistant with userId
     assistant = MusicAssistant(user_id=user_id)
@@ -537,11 +642,20 @@ async def entrypoint(ctx: JobContext):
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")
     
-    # Send welcome message
-    await session.say(
-        "Welcome to RRAASI Music Creator! I'm here to help you create beautiful healing music, bhajans, and meditation tracks. "
-        "What kind of music would you like to create today?"
-    )
+    # Send language-appropriate welcome message
+    if user_language == "hi":
+        welcome_msg = (
+            "नमस्ते! मैं RRAASI म्यूजिक क्रिएटर हूं। मैं आपके लिए सुंदर भजन, मंत्र और "
+            "ध्यान संगीत बना सकता हूं। आप आज किस प्रकार का संगीत बनाना चाहेंगे?"
+        )
+    else:
+        welcome_msg = (
+            "Welcome to RRAASI Music Creator! I'm here to help you create beautiful "
+            "healing music, bhajans, and meditation tracks. What kind of music would "
+            "you like to create today?"
+        )
+    
+    await session.say(welcome_msg)
 
 if __name__ == "__main__":
     # Get agent name from environment or use default
