@@ -7,11 +7,12 @@
  * - Log management
  * - Process monitoring
  * 
- * Usage:
- *   pm2 start ecosystem.authserver.config.cjs
+ * Production Usage:
+ *   pm2 start ecosystem.authserver.config.cjs --env production
  *   pm2 logs auth-server
  *   pm2 restart auth-server
  *   pm2 stop auth-server
+ *   pm2 save  # Save process list for auto-start on reboot
  */
 
 module.exports = {
@@ -19,7 +20,7 @@ module.exports = {
         {
             name: 'auth-server',
             script: 'npm',
-            args: 'run dev',
+            args: 'start',  // Production: npm start
             cwd: './auth-server',
             instances: 1,
             exec_mode: 'fork',
@@ -35,10 +36,6 @@ module.exports = {
             restart_delay: 4000,
 
             // Environment variables
-            env: {
-                NODE_ENV: 'development',
-                PORT: 4000,
-            },
             env_production: {
                 NODE_ENV: 'production',
                 PORT: 4000,

@@ -7,11 +7,13 @@
  * - Log management
  * - Process monitoring
  * 
- * Usage:
- *   pm2 start ecosystem.frontend.config.cjs
+ * Production Usage:
+ *   npm run build  # Build production bundle first
+ *   pm2 start ecosystem.frontend.config.cjs --env production
  *   pm2 logs frontend
  *   pm2 restart frontend
  *   pm2 stop frontend
+ *   pm2 save  # Save process list for auto-start on reboot
  */
 
 module.exports = {
@@ -19,7 +21,7 @@ module.exports = {
         {
             name: 'frontend',
             script: 'npm',
-            args: 'run dev',
+            args: 'start',  // Production: npm start (runs Next.js production server)
             cwd: './',
             instances: 1,
             exec_mode: 'fork',
@@ -35,15 +37,10 @@ module.exports = {
             restart_delay: 4000, // Wait 4 seconds before restart
 
             // Environment variables
-            env: {
-                NODE_ENV: 'development',
-                PORT: 3000,
-            },
             env_production: {
                 NODE_ENV: 'production',
                 PORT: 3000,
             },
-
             // Logging
             error_file: './logs/frontend-error.log',
             out_file: './logs/frontend-out.log',
