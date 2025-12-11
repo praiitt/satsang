@@ -1,11 +1,44 @@
-livekit-agents[silero,turn-detector]~=1.2
-livekit-plugins-noise-cancellation~=0.2
-livekit-plugins-sarvam~=1.2
-python-dotenv
-torch>=2.0.0
-firebase-admin
-livekit-plugins-rag>=1.0.13
-pinecone>=7.3.0
-openai>=2.6.1
-setuptools>=61.0
-wheel
+# LiveKit Agents - CPU-optimized for server deployment
+# Updated: 2025-12-11 - CPU-only PyTorch to avoid CUDA downloads
+
+# INSTALLATION INSTRUCTIONS:
+# 1. Install CPU-only PyTorch first (small download):
+#    pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
+#
+# 2. Then install the rest:
+#    pip install -r requirements.txt --no-cache-dir
+#
+# OR use the install script:
+#    bash install_cpu.sh
+
+# Core LiveKit dependencies
+livekit-agents>=1.2.0,<2.0.0
+livekit-plugins-openai>=1.2.0,<2.0.0
+livekit-plugins-deepgram>=1.2.0,<2.0.0
+livekit-plugins-assemblyai>=1.2.0,<2.0.0
+livekit-plugins-cartesia>=1.2.0,<2.0.0
+livekit-plugins-sarvam>=1.2.0,<2.0.0
+
+# Additional plugins
+livekit-plugins-silero>=1.2.0,<2.0.0
+
+# API clients
+anthropic>=0.59.0
+openai>=1.99.2
+google-generativeai>=0.8.5
+
+# YouTube and audio processing
+yt-dlp>=2024.0.0
+pydub>=0.25.1
+
+# Google Cloud dependencies
+google-cloud-storage>=2.10.0
+google-cloud-firestore>=2.11.1
+
+# Utility libraries
+python-dotenv>=1.0.0
+aiohttp>=3.9.0
+
+# NOTE: PyTorch is NOT in this file!
+# Install it separately with CPU-only wheels:
+# pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
