@@ -393,43 +393,40 @@ async def entrypoint(ctx: JobContext):
     logger.info(f"✅ Final configuration: Guru={guru_id}, Language={user_language}")
     
     # Initialize STT based on detected language
-    # Initialize STT based on detected language
+    # Use Sarvam for Hindi (best for Indian languages) with AssemblyAI fallback
     if user_language == 'hi':
-        # Use SARVAM for Hindi (best for Indian languages)
-        logger.info(f"Initializing STT with SARVAM for Hindi language recognition")
-        try:
-            from livekit.plugins import sarvam as sarvam_plugin
-            logger.info("Sarvam plugin imported successfully")
-            
-            if not sarvam_key:
-                logger.warning("SARVAM_API_KEY not set - Sarvam STT may fail. Falling back to AssemblyAI.")
-                raise ValueError("SARVAM_API_KEY not set")
-            
-            logger.info("Creating Sarvam STT instance...")
-            stt = sarvam_plugin.STT(language="hi")
-            logger.info("✅ Using Sarvam STT - BEST for Hindi/Indian languages!")
-        except ImportError as e:
-            logger.error(f"❌ Sarvam plugin not installed: {e}")
-            logger.warning("Falling back to AssemblyAI. For better Hindi accuracy, install Sarvam!")
-            stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
-            logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
-            stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
-    else:
-        # Use English STT for English language
-        logger.info(f"Initializing STT for English language recognition")
-        if stt_model == "deepgram/nova-2" or stt_model.startswith("deepgram"):
+        # Use Sarvam for Hindi (best for Indian languages)
+        logger.info("Initializing STT for Hindi language")
+        
+        if stt_model == "sarvam" or stt_model.startswith("sarvam"):
             try:
-                stt = inference.STT(model="deepgram/nova-2", language="en")
-                logger.info("Using Deepgram Nova-2 for English STT")
+                from livekit.plugins import sarvam as sarvam_plugin
+                logger.info("Sarvam plugin imported successfully")
+                
+                if not sarvam_key:
+                    logger.warning("SARVAM_API_KEY not set - Sarvam STT may fail. Falling back to AssemblyAI.")
+                    raise ValueError("SARVAM_API_KEY not set")
+                
+                logger.info("Creating Sarvam STT instance...")
+                stt = sarvam_plugin.STT(language="hi")
+                logger.info("✅ Using Sarvam STT - BEST for Hindi/Indian languages!")
+            except ImportError as e:
+                logger.error(f"❌ Sarvam plugin not installed: {e}")
+                logger.warning("Install with: pip install 'livekit-agents[sarvam]~=1.2'")
+                logger.warning("Falling back to AssemblyAI for Hindi")
+                stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
             except Exception as e:
-                logger.warning(f"Failed to initialize Deepgram STT: {e}. Falling back to AssemblyAI.")
-                stt = inference.STT(model="assemblyai/universal-streaming", language="en")
+                logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
+                logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
+                stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
         else:
-            # AssemblyAI with English language
-            stt = inference.STT(model=stt_model, language="en")
-            logger.info(f"Using {stt_model} for English STT")
+            # Use configured STT model with Hindi
+            stt = inference.STT(model=stt_model, language="hi")
+            logger.info(f"Using {stt_model} for Hindi STT")
+    else:
+        # English STT
+        logger.info("Initializing STT for English language")
+        stt = inference.STT(model="assemblyai/universal-streaming", language="en")
 
 
     # Create agent with the correct guru
