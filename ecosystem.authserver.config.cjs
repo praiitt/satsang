@@ -39,6 +39,21 @@ module.exports = {
             env_production: {
                 NODE_ENV: 'production',
                 PORT: 4000,
+
+                // Firebase Admin SDK credentials (read from system environment)
+                // Option 1: Use service account file path
+                FIREBASE_SERVICE_ACCOUNT_PATH: process.env.FIREBASE_SERVICE_ACCOUNT_PATH,
+
+                // Option 2: Use individual credentials (if FIREBASE_SERVICE_ACCOUNT_PATH not set)
+                FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY,
+                FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL,
+                FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID,
+
+                // Other required env vars
+                OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+                LIVEKIT_API_KEY: process.env.LIVEKIT_API_KEY,
+                LIVEKIT_API_SECRET: process.env.LIVEKIT_API_SECRET,
+                LIVEKIT_URL: process.env.LIVEKIT_URL,
             },
 
             // Logging
