@@ -31,10 +31,10 @@ module.exports = {
             watch: false, // Don't watch files in production (use for dev if needed)
             max_memory_restart: '1G', // Restart if memory exceeds 1GB
 
-            // Restart behavior
-            min_uptime: '10s', // Minimum uptime before considered stable
-            max_restarts: 10, // Max restart attempts in unstable period
-            restart_delay: 4000, // Wait 4 seconds before restart
+            // Restart behavior - PREVENT CRASH LOOPS
+            min_uptime: '30s', // Minimum uptime before considered stable (increased from 10s)
+            max_restarts: 3, // Max restart attempts (reduced from 10 to prevent CPU exhaustion)
+            restart_delay: 10000, // Wait 10 seconds before restart (increased from 4s)
 
             // Environment variables
             env_production: {
@@ -51,8 +51,8 @@ module.exports = {
             kill_timeout: 5000, // Wait 5 seconds before force kill
             listen_timeout: 10000, // Wait 10 seconds for app to be ready
 
-            // Crash handling
-            exp_backoff_restart_delay: 100, // Exponential backoff delay
+            // Crash handling - Exponential backoff to prevent rapid restarts
+            exp_backoff_restart_delay: 5000, // Start at 5s, doubles each time (5s → 10s → 20s → 40s)
 
             // Health monitoring
             // PM2 will restart the app if it doesn't respond

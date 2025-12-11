@@ -30,10 +30,10 @@ module.exports = {
             watch: false,
             max_memory_restart: '512M', // Restart if memory exceeds 512MB
 
-            // Restart behavior
-            min_uptime: '10s',
-            max_restarts: 10,
-            restart_delay: 4000,
+            // Restart behavior - PREVENT CRASH LOOPS
+            min_uptime: '30s', // Minimum uptime before considered stable (increased from 10s)
+            max_restarts: 3, // Max restart attempts (reduced from 10 to prevent CPU exhaustion)
+            restart_delay: 10000, // Wait 10 seconds before restart (increased from 4s)
 
             // Environment variables
             env_production: {
@@ -51,8 +51,8 @@ module.exports = {
             kill_timeout: 5000,
             listen_timeout: 10000,
 
-            // Crash handling
-            exp_backoff_restart_delay: 100,
+            // Crash handling - Exponential backoff to prevent rapid restarts
+            exp_backoff_restart_delay: 5000, // Start at 5s, doubles each time (5s → 10s → 20s → 40s)
         },
     ],
 };
