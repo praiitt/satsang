@@ -44,48 +44,94 @@ class MusicAssistant(Agent):
         super().__init__(
             instructions="""You are RRAASI Music Creator, a specialized AI agent for creating healing, spiritual, and meditative music.
 Your goal is to create the PERFECT music track for the user.
-Because music generation is a premium service, you must NOT generate music immediately upon the first request. You must act like a professional music producer and interview the user to get every minute detail.
+
+**CRITICAL UNDERSTANDING:**
+- When generating music with vocals, the 'lyrics' parameter = EXACT text to be sung
+- The 'style' parameter = genre + mood + instruments description  
+- NEVER mix these up!
 
 **PROTOCOL FOR INTERACTION:**
 
-1.  **Deep Discovery (Do this first):**
-    When a user asks for music, do not just say "Okay". Ask clarifying questions to build a rich mental image of the track.
-    -   **Genre/Style**: "Do you want Indian Classical (Hindustani/Carnatic), Western Ambient, Lo-fi, Sufi, or something else?"
-    -   **Instruments**: "Should we feature specific instruments like the Bansuri (Flute), Sitar, Tabla, Piano, or maybe 432Hz Crystal Bowls?"
-    -   **Mood/Energy**: "Is this for deep meditation (slow, minimal), yoga (flow), or celebration (upbeat)?"
-    -   **Vocals**: "Do you want a Male voice, Female voice, Duet, or purely Instrumental?"
-    -   **Lyrics/Language**: "Should it be in Hindi, Sanskrit, or English? Do you have specific lyrics or a mantra (e.g., 'Om Namah Shivaya')?"
+1.  **Deep Discovery:**
+    When a user asks for music, ask clarifying questions:
+    -   **First question**: "Would you like this track with vocals or purely instrumental?"
+    -   **Genre/Style**: "What style? Bhajan, Meditation, Ambient, Classical?"
+    -   **Instruments**: "Which instruments? Bansuri, Sitar, Tabla, Piano, Crystal Bowls?"
+    -   **Mood**: "What mood? Peaceful, Devotional, Uplifting, Introspective?"
 
-2.  **Construct & Confirm:**
-    Once you have gathered these details, summarize them back to the user and propose the prompt you will use.
-    -   *Example:* "I have the details: A slow, meditative Krishna bhajan in Raga Yaman, featuring a bamboo flute and soft tabla, with a male vocalist singing in Sanskrit. The vibe is peaceful and healing. Shall I proceed with this?"
+2.  **LYRICS HANDLING (For vocal tracks):**
+    If user wants vocals:
+    -   **Ask**: "Would you like to provide your own lyrics, or shall I generate traditional devotional lyrics for you?"
+    
+    **If user chooses "Generate":**
+    -   Ask: "What theme?" (devotion, peace, surrender, praise)
+    -   Ask: "Any specific deity or subject?" (Krishna, Shiva, meditation, healing)
+    -   Ask: "Language preference?" (Hindi, Sanskrit, English, Tamil)
+    -   Ask: "Mood?" (peaceful, celebratory, meditative)
+    -   Call `generate_lyrics()` with collected info
+    -   Show generated lyrics to user
+    -   Get user approval or ask if they want modifications
+    -   Once approved, proceed to validate_lyrics()
+    
+    **If user provides own lyrics:**
+    -   Call `validate_lyrics(lyrics=<user_lyrics>, music_style=<style>, language=<language>)`
+    -   If validation PASSES (✅): Proceed to step 3
+    -   If validation FAILS (❌): Ask user to revise or offer to generate lyrics
+    
+    **CRITICAL**: ALWAYS validate lyrics before music generation (whether user-provided or AI-generated)
 
-3.  **Generate (Only after confirmation):**
-    Call the `generate_music` tool ONLY after the user says "Yes", "Go ahead", or confirms the plan.
+3.  **Construct & Confirm:**
+    Summarize everything:
+    -   For VOCAL: "I will create a [style] titled '[title]' with your validated lyrics: [show first line...]"
+    -   For INSTRUMENTAL: "I will create a [style] instrumental titled '[title]'"
+    -   Ask: "Shall I proceed?"
+
+4.  **Generate (Only after validation AND confirmation):**
+    Call `generate_music()` with:
+    -   `lyrics`: EXACT lyrics text (for vocal) OR empty string (for instrumental)
+    -   `style`: "Slow devotional Krishna bhajan with bamboo flute, tabla, and harmonium"
+    -   `title`: User's chosen title
+    -   `is_instrumental`: True/False
+
+**FUNCTION CALL EXAMPLES:**
+
+✅ GOOD (Vocal):
+generate_music(
+    lyrics="Govinda Gopala, Radha Ramana\\nNanda ke lala, Krishna\\nMurlidhar Giridhari",
+    style="Slow devotional Krishna bhajan with bamboo flute, tabla, and harmonium",
+    title="Govinda Gopala",
+    is_instrumental=False
+)
+
+✅ GOOD (Instrumental):
+generate_music(
+    lyrics="",
+    style="Peaceful meditation music with 432Hz crystal bowls and nature sounds",
+    title="Om Shanti",
+    is_instrumental=True
+)
+
+❌ BAD (Confusing lyrics with style):
+generate_music(
+    lyrics="Create a peaceful Krishna bhajan with flute",  # WRONG! This is style, not lyrics
+    style="Devotional",
+    is_instrumental=False
+)
 
 **RETRIEVING PAST TRACKS:**
-- If the user asks for "last music created", "my tracks", or "previous songs", use the `list_tracks` tool.
-
-**PROMPT ENGINEERING TIPS:**
--   Be extremely descriptive in the `prompt` argument.
--   Include keywords for atmosphere: "Reverb", "Ethereal", "Spacious", "Warm".
--   Specify structure if needed: "Slow build up", "Chorus heavy".
--   For healing, mention frequencies: "432Hz", "528Hz", "Solfeggio".
-
-**Example Interaction:**
-User: "Make a healing track."
-You: "I'd love to create a healing track for you. To make it perfect, could you tell me what kind of healing? Is it for sleep, focus, or emotional release? And do you prefer nature sounds or musical instruments?"
+- If user asks for "last music", "my tracks", or "previous songs", use `list_tracks` tool.
 """
         )
         self._publish_data_fn = publish_data_fn
         self.suno_client = SunoClient()
         self.user_id = user_id or "default_user"
+        self._cleanup_tasks = []  # Track background tasks for cleanup
 
     @function_tool
     async def generate_music(
         self,
         context: RunContext,
-        prompt: str,
+        lyrics: str,
         is_instrumental: bool = False,
         style: str = "Ambient",
         title: str = "RRAASI Creation"
@@ -94,9 +140,11 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
         Generate a music track using Suno AI.
         
         Args:
-            prompt: Description of the music or lyrics.
+            lyrics: For VOCAL tracks: The EXACT lyrics text to be sung.
+                   For INSTRUMENTAL: Empty string or brief description.
+                   NEVER put style/genre descriptions here - use 'style' parameter.
             is_instrumental: Whether the track should be instrumental (no vocals).
-            style: Genre or style of music (e.g., "Indian Classical", "Ambient", "Meditation").
+            style: Genre, mood, instruments description (e.g., "Slow devotional Krishna bhajan with bamboo flute and tabla").
             title: Title for the track.
         """
         logger.info(f"Generating music: {title} ({style}) - Instrumental: {is_instrumental}")
@@ -108,7 +156,7 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
             
             # Call Suno API
             result = await self.suno_client.generate_music(
-                prompt=prompt,
+                prompt=lyrics,
                 is_instrumental=is_instrumental,
                 custom_mode=True,
                 style=style,
@@ -129,14 +177,207 @@ You: "I'd love to create a healing track for you. To make it perfect, could you 
                 logger.warning(f"Could not parse taskId from result: {result}")
                 return "I've sent the request, but I couldn't track the generation status automatically. Please check back in a moment."
 
-            # Start background polling task
-            asyncio.create_task(self._poll_and_play(task_id, title))
+            # Start background polling task and track it for cleanup
+            task = asyncio.create_task(self._poll_and_play(task_id, title))
+            self._cleanup_tasks.append(task)
 
             return f"I have started creating your music: '{title}'. I will play it for you once it's ready (usually takes about a minute)."
 
         except Exception as e:
             logger.error(f"Music generation failed: {e}")
             return "I apologize, but I encountered an error while trying to generate the music. Please try again."
+
+    @function_tool
+    async def generate_lyrics(
+        self,
+        context: RunContext,
+        theme: str,
+        deity_or_subject: str = "Divine",
+        language: str = "Hindi",
+        style: str = "Bhajan",
+        mood: str = "Devotional",
+        length: str = "medium"
+    ) -> str:
+        """
+        Generate devotional lyrics using AI when user doesn't have their own lyrics.
+        
+        Args:
+            theme: Main theme (e.g., "devotion", "peace", "surrender", "praise")
+            deity_or_subject: Deity name (Krishna, Shiva, Devi) or subject (meditation, healing)
+            language: Hindi, Sanskrit, English, or Tamil
+            style: Bhajan, Stotram, Mantra, Meditation chant
+            mood: Devotional, peaceful, celebratory, introspective
+            length: short (4-6 lines), medium (8-12 lines), long (16+ lines)
+        
+        Returns:
+            Generated lyrics text that can be validated and used for music creation
+        """
+        logger.info(f"Generating {style} lyrics about {deity_or_subject} in {language}")
+        
+        # Map length to line counts
+        length_map = {
+            "short": "4-6 lines",
+            "medium": "8-12 lines",
+            "long": "16-20 lines"
+        }
+        line_count = length_map.get(length, "8-12 lines")
+        
+        # Construct prompt for lyrics generation
+        lyrics_prompt = f"""You are a master lyricist specializing in spiritual and devotional music.
+
+Create {style} lyrics with these specifications:
+- Deity/Subject: {deity_or_subject}
+- Theme: {theme}
+- Language: {language}
+- Mood: {mood}
+- Length: {line_count}
+
+Requirements:
+1. Use traditional devotional vocabulary and style
+2. Include deity names and attributes (e.g., for Krishna: Govinda, Gopala, Murlidhar)
+3. Have proper verse structure with repetition (chorus/refrain)
+4. Be suitable for singing with musical instruments
+5. Express genuine spiritual sentiment
+6. Follow traditional {style} structure
+
+For Hindi/Sanskrit:
+- Use simple Roman script transliteration
+- Include traditional epithets and names
+
+For {style} style:
+{"- Sanskrit shlokas with proper meter" if style == "Stotram" else ""}
+{"- Simple repetitive mantric phrases" if style == "Mantra" else ""}
+{"- Devotional verses with chorus" if style == "Bhajan" else ""}
+
+Generate ONLY the lyrics, no explanations or commentary."""
+
+        try:
+            import openai
+            client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            
+            response = await client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a master lyricist of devotional and spiritual music."},
+                    {"role": "user", "content": lyrics_prompt}
+                ],
+                temperature=0.8,
+                max_tokens=500
+            )
+            
+            generated_lyrics = response.choices[0].message.content.strip()
+            logger.info(f"Generated lyrics ({len(generated_lyrics)} chars)")
+            
+            return f"""I've created these lyrics for your {style}:
+
+{generated_lyrics}
+
+Would you like me to:
+1. Use these lyrics as-is
+2. Modify them (tell me what to change)
+3. Generate different lyrics with a different approach
+
+Once you approve, I'll validate and proceed with music creation."""
+            
+        except Exception as e:
+            logger.error(f"Lyrics generation failed: {e}")
+            return "I apologize, I couldn't generate lyrics at the moment. Would you like to provide your own lyrics instead?"
+
+    @function_tool
+    async def validate_lyrics(
+        self,
+        context: RunContext,
+        lyrics: str,
+        music_style: str,
+        language: str = "Hindi"
+    ) -> str:
+        """
+        Validate lyrics for quality, meaning, and appropriateness before music generation.
+        Use this when user provides lyrics for a non-instrumental track.
+        
+        Args:
+            lyrics: The lyrics text to validate
+            music_style: Type of music (e.g., "Krishna Bhajan", "Meditation", "Shiva Stotram")
+            language: Language of lyrics (Hindi, Sanskrit, English)
+        
+        Returns:
+            Validation result with feedback
+        """
+        logger.info(f"Validating lyrics for {music_style} in {language}")
+        
+        validation_prompt = f"""You are a professional lyricist and music critic specializing in spiritual and devotional music.
+
+Analyze the following lyrics for a {music_style} in {language}:
+
+--- LYRICS ---
+{lyrics}
+--- END LYRICS ---
+
+Evaluate on these criteria:
+1. MEANING: Are the lyrics meaningful and coherent? (Score 1-10)
+2. STYLE: Do they fit a {music_style}? Are they devotional/spiritual? (Score 1-10)
+3. STRUCTURE: Do they have proper verse structure, repetition, chorus? (Score 1-10)
+4. LANGUAGE: Proper grammar and spiritual vocabulary? (Score 1-10)
+5. LENGTH: Appropriate length (not too short or too long)? (Score 1-10)
+
+Respond in JSON format:
+{{
+  "is_valid": true/false,
+  "overall_score": <average of all scores>,
+  "scores": {{
+    "meaning": <1-10>,
+    "style": <1-10>,
+    "structure": <1-10>,
+    "language": <1-10>,
+    "length": <1-10>
+  }},
+  "feedback": "<Brief feedback about what's good or needs improvement>",
+  "suggestions": "<If invalid, specific suggestions to improve>"
+}}
+
+Minimum acceptable overall_score: 7.0
+If overall_score < 7.0, set is_valid to false.
+"""
+
+        try:
+            # Use OpenAI API directly for validation
+            import openai
+            client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            
+            response = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a professional lyricist specializing in devotional music."},
+                    {"role": "user", "content": validation_prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.3
+            )
+            
+            result_text = response.choices[0].message.content
+            result = json.loads(result_text)
+            
+            logger.info(f"Validation result: {result}")
+            
+            # Format user-friendly response
+            is_valid = result.get("is_valid", False)
+            score = result.get("overall_score", 0)
+            feedback = result.get("feedback", "")
+            suggestions = result.get("suggestions", "")
+            
+            if is_valid:
+                return f"✅ Lyrics validated successfully! (Score: {score}/10)\n\n{feedback}\n\nYour lyrics are ready for music generation."
+            else:
+                response_text = f"❌ Lyrics need improvement (Score: {score}/10)\n\n{feedback}"
+                if suggestions:
+                    response_text += f"\n\n💡 Suggestions: {suggestions}"
+                response_text += "\n\nPlease revise your lyrics or let me suggest some traditional devotional lyrics."
+                return response_text
+                
+        except Exception as e:
+            logger.error(f"Lyrics validation failed: {e}")
+            # Fail open - if validation fails, allow lyrics
+            return f"⚠️ Could not validate lyrics automatically, but they look okay. Proceeding with generation."
 
     @function_tool
     async def list_tracks(self, context: RunContext) -> str:
@@ -307,8 +548,11 @@ if __name__ == "__main__":
     agent_name = os.getenv("LIVEKIT_AGENT_NAME", "music-agent")
     logger.info(f"Starting agent with name: {agent_name}")
     
+    # Configure worker with connection retry limits to prevent aggressive reconnection
+    # that can trigger cloud provider abuse detection
     cli.run_app(WorkerOptions(
         entrypoint_fnc=entrypoint,
         prewarm_fnc=prewarm,
-        agent_name=agent_name
+        agent_name=agent_name,
+        max_retry=5,  # Limit to 5 retries instead of default 16
     ))
