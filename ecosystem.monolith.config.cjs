@@ -65,7 +65,8 @@ module.exports = {
             interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
-                LIVEKIT_AGENT_NAME: "guruji"
+                LIVEKIT_AGENT_NAME: "guruji",
+                LIVEKIT_HTTP_PORT: "8081"
             },
             max_memory_restart: "512M",
             restart_delay: 5000
@@ -91,7 +92,8 @@ module.exports = {
             interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
-                LIVEKIT_AGENT_NAME: "music-agent"
+                LIVEKIT_AGENT_NAME: "music-agent",
+                LIVEKIT_HTTP_PORT: "8082"
             },
             max_memory_restart: "512M",
             restart_delay: 5000
@@ -104,7 +106,8 @@ module.exports = {
             interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
-                LIVEKIT_AGENT_NAME: "hinduism-agent"
+                LIVEKIT_AGENT_NAME: "hinduism-agent",
+                LIVEKIT_HTTP_PORT: "8083"
             },
             max_memory_restart: "512M",
             restart_delay: 5000
@@ -117,7 +120,8 @@ module.exports = {
             interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
-                LIVEKIT_AGENT_NAME: "vedic-astrology-agent"
+                LIVEKIT_AGENT_NAME: "vedic-astrology-agent",
+                LIVEKIT_HTTP_PORT: "8084"
             },
             max_memory_restart: "512M",
             restart_delay: 5000
@@ -130,7 +134,8 @@ module.exports = {
             interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
-                LIVEKIT_AGENT_NAME: "etagent"
+                LIVEKIT_AGENT_NAME: "etagent",
+                LIVEKIT_HTTP_PORT: "8085"
             },
             max_memory_restart: "512M",
             restart_delay: 5000
