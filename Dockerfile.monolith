@@ -1,0 +1,58 @@
+# Syntax=docker/dockerfile:1
+FROM python:3.11-bookworm
+
+# 1. Install System Dependencies (Node.js, FFmpeg, Utils)
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    curl \
+    wget \
+    gnupg \
+    ffmpeg \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 20.x
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && npm install -g pnpm pm2
+
+# 2. Setup Working Directory
+WORKDIR /app
+
+# 3. Copy Root & Install Deps
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# 4. Copy Auth Server & Install Deps
+COPY auth-server/package.json ./auth-server/
+RUN cd auth-server && npm install
+
+# 5. Copy Astrology Backend & Install Deps
+COPY astrology_backend/backend/package.json astrology_backend/backend/package-lock.json* ./astrology_backend/backend/
+RUN cd astrology_backend/backend && npm install
+
+# 6. Copy LiveKit Agents & Install Deps (Python)
+COPY livekit_server/agent-starter-python/package.json* ./livekit_server/agent-starter-python/
+# Note: We skip the virtualenv and install directly to system python in Docker to simplify
+COPY livekit_server/agent-starter-python/requirements.txt ./livekit_server/agent-starter-python/
+RUN cd livekit_server/agent-starter-python && \
+    pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r requirements.txt
+
+# 7. Copy Source Code (Everything else)
+COPY . .
+
+# 8. Build Frontend
+# Set NEXT_PUBLIC_... environment variables that need to be baked in at build time here if static
+# For dynamic runtime vars, Next.js needs special handling or public runtime config (deprecated)
+# For now, we assume standard env vars are provided at runtime or we accept some might be empty during build
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN pnpm build
+
+# 9. Expose Ports (Frontend: 3000, Auth: 4000, Backend: 3003)
+EXPOSE 3000 4000 3003
+
+# 10. Start Command (PM2)
+# We use the monolith ecosystem config
+CMD ["pm2-runtime", "start", "ecosystem.monolith.config.cjs"]
