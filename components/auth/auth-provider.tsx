@@ -66,26 +66,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Check authentication status on mount and on window focus (handles page refresh)
+  // Check authentication status on mount only (no polling)
   useEffect(() => {
     checkAuth();
-
-    // Throttle focus checks to prevent CPU overload from frequent tab switching
-    let lastFocusCheck = 0;
-    const FOCUS_CHECK_THROTTLE = 30000; // Only check auth once every 30 seconds on focus
-
-    const handleFocus = () => {
-      const now = Date.now();
-      if (now - lastFocusCheck > FOCUS_CHECK_THROTTLE) {
-        checkAuth();
-        lastFocusCheck = now;
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
   }, [checkAuth]);
 
   const sendOTP = useCallback(
