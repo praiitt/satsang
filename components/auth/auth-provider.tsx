@@ -70,9 +70,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     checkAuth();
 
-    // Also check auth when window regains focus (handles tab switching and page refresh)
+    // Throttle focus checks to prevent CPU overload from frequent tab switching
+    let lastFocusCheck = 0;
+    const FOCUS_CHECK_THROTTLE = 30000; // Only check auth once every 30 seconds on focus
+
     const handleFocus = () => {
-      checkAuth();
+      const now = Date.now();
+      if (now - lastFocusCheck > FOCUS_CHECK_THROTTLE) {
+        checkAuth();
+        lastFocusCheck = now;
+      }
     };
 
     window.addEventListener('focus', handleFocus);
