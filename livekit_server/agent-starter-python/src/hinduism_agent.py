@@ -20,7 +20,7 @@ from livekit.agents import (
     function_tool,
     RunContext,
 )
-from livekit.plugins import noise_cancellation, silero
+# from livekit.plugins import noise_cancellation, silero
 
 # Configure logging
 logging.basicConfig(

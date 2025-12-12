@@ -20,7 +20,7 @@ from livekit.agents import (
     function_tool,
     RunContext,
 )
-from livekit.plugins import noise_cancellation, silero
+# from livekit.plugins import noise_cancellation, silero
 from pinecone_kundli_retriever import KundliRetriever
 
 # Configure logging early

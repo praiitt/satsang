@@ -19,7 +19,7 @@ from livekit.agents import (
     function_tool,
     RunContext,
 )
-from livekit.plugins import noise_cancellation, silero
+# from livekit.plugins import noise_cancellation, silero
 # Lazy import MultilingualModel to avoid blocking during module import
 # Model loading can take time and cause initialization timeout
 _MultilingualModel = None
