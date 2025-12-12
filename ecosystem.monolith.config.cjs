@@ -30,7 +30,8 @@ module.exports = {
             exec_mode: 'fork',
             env: {
                 NODE_ENV: 'production',
-                PORT: 4000
+                PORT: 4000,
+                FIREBASE_SERVICE_ACCOUNT_PATH: '/home/prakash/satsang/satsangServiceAccount.json'
             },
             restart_delay: 5000
         },
