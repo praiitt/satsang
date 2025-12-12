@@ -61,7 +61,7 @@ module.exports = {
             script: "src/agent.py",
             args: "start",
             cwd: "./livekit_server/agent-starter-python",
-            interpreter: "./livekit_server/agent-starter-python/venv/bin/python3", // Use system python
+            interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
                 LIVEKIT_AGENT_NAME: "guruji"
@@ -87,7 +87,7 @@ module.exports = {
             script: "src/music_agent.py",
             args: "start",
             cwd: "./livekit_server/agent-starter-python",
-            interpreter: "./livekit_server/agent-starter-python/venv/bin/python3",
+            interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
                 LIVEKIT_AGENT_NAME: "music-agent"
@@ -100,7 +100,7 @@ module.exports = {
             script: "src/hinduism_agent.py",
             args: "start",
             cwd: "./livekit_server/agent-starter-python",
-            interpreter: "./livekit_server/agent-starter-python/venv/bin/python3",
+            interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
                 LIVEKIT_AGENT_NAME: "hinduism-agent"
@@ -113,7 +113,7 @@ module.exports = {
             script: "src/vedic_astrology_agent.py",
             args: "start",
             cwd: "./livekit_server/agent-starter-python",
-            interpreter: "./livekit_server/agent-starter-python/venv/bin/python3",
+            interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
                 LIVEKIT_AGENT_NAME: "vedic-astrology-agent"
@@ -126,7 +126,7 @@ module.exports = {
             script: "src/etagent.py",
             args: "start",
             cwd: "./livekit_server/agent-starter-python",
-            interpreter: "./livekit_server/agent-starter-python/venv/bin/python3",
+            interpreter: "/home/prakash/satsang/livekit_server/agent-starter-python/venv/bin/python3",
             env: {
                 PYTHONUNBUFFERED: "1",
                 LIVEKIT_AGENT_NAME: "etagent"
