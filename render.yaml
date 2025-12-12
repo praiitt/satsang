@@ -3,7 +3,7 @@ services:
   - type: web
     name: satsang-monolith
     runtime: docker
-    dockerFilePath: Dockerfile.monolith
+    dockerfilePath: Dockerfile.monolith
     plan: starter
     branch: main
     envVars:
