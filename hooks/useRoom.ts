@@ -49,7 +49,7 @@ export function useRoom(appConfig: AppConfig) {
         const url = new URL(endpoint, window.location.origin);
 
         try {
-          const res = await fetch('/api/connection-details', {
+          const res = await fetch(endpoint, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

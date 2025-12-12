@@ -169,3 +169,55 @@ export async function getMP3SignedUrl(
     throw new Error(`Failed to get signed URL: ${error.message}`);
   }
 }
+
+/**
+ * Upload an audio file from a URL to Google Cloud Storage
+ * Downloads from the URL and uploads to GCS bucket
+ */
+export async function uploadAudioFromURL(
+  audioUrl: string,
+  fileName: string,
+  folder: string = 'music'
+): Promise<string> {
+  try {
+    console.log(`[gcs-audio] Uploading audio from URL: ${audioUrl}`);
+    console.log(`[gcs-audio] Target: ${folder}/${fileName}`);
+
+    // Download audio from URL
+    const response = await fetch(audioUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to download audio: ${response.statusText}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    console.log(`[gcs-audio] Downloaded ${buffer.length} bytes`);
+
+    // Upload to GCS
+    const bucket = getGcsBucket();
+    const gcsPath = `${folder}/${fileName}`;
+    const file = bucket.file(gcsPath);
+
+    await file.save(buffer, {
+      metadata: {
+        contentType: 'audio/mpeg',
+        metadata: {
+          source: 'suno-ai',
+          originalUrl: audioUrl,
+        },
+      },
+    });
+
+    // Make the file publicly accessible
+    await file.makePublic();
+
+    const publicUrl = `https://storage.googleapis.com/${GCS_BUCKET_NAME}/${gcsPath}`;
+    console.log(`[gcs-audio] Successfully uploaded to: ${publicUrl}`);
+
+    return publicUrl;
+  } catch (error: any) {
+    console.error('[gcs-audio] Error uploading audio from URL:', error);
+    throw new Error(`Failed to upload audio to GCS: ${error.message}`);
+  }
+}

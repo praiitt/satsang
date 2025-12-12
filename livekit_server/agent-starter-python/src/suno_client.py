@@ -10,9 +10,23 @@ class SunoClient:
         self.api_key = api_key or os.getenv("SUNO_API_KEY")
         # Updated base URL based on docs
         self.base_url = "https://api.sunoapi.org/api/v1"
+        # Reusable session to avoid creating 60+ sessions during polling
+        self._session: Optional[aiohttp.ClientSession] = None
         
         if not self.api_key:
             logger.warning("SUNO_API_KEY not found. Music generation will fail.")
+    
+    async def _get_session(self) -> aiohttp.ClientSession:
+        """Get or create the reusable aiohttp session."""
+        if self._session is None or self._session.closed:
+            self._session = aiohttp.ClientSession()
+        return self._session
+    
+    async def close(self):
+        """Close the aiohttp session."""
+        if self._session and not self._session.closed:
+            await self._session.close()
+            self._session = None
 
     async def generate_music(
         self,
@@ -59,18 +73,18 @@ class SunoClient:
             # Non-custom mode
             body["prompt"] = prompt
 
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(url, headers=headers, json=body) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        logger.error(f"Suno API Error: {response.status} - {error_text}")
-                        raise Exception(f"Suno API failed: {response.status} - {error_text}")
-                    
-                    return await response.json()
-            except Exception as e:
-                logger.error(f"Failed to generate music: {e}")
-                raise
+        session = await self._get_session()
+        try:
+            async with session.post(url, headers=headers, json=body) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    logger.error(f"Suno API Error: {response.status} - {error_text}")
+                    raise Exception(f"Suno API failed: {response.status} - {error_text}")
+                
+                return await response.json()
+        except Exception as e:
+            logger.error(f"Failed to generate music: {e}")
+            raise
 
     async def get_generation_status(self, task_id: str) -> Dict[str, Any]:
         """
@@ -85,15 +99,15 @@ class SunoClient:
         }
         params = {"taskId": task_id}
 
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.get(url, headers=headers, params=params) as response:
-                    if response.status != 200:
-                        error_text = await response.text()
-                        logger.error(f"Suno Status Error: {response.status} - {error_text}")
-                        raise Exception(f"Suno Status failed: {response.status}")
-                    
-                    return await response.json()
-            except Exception as e:
-                logger.error(f"Failed to get status: {e}")
-                raise
+        session = await self._get_session()
+        try:
+            async with session.get(url, headers=headers, params=params) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    logger.error(f"Suno Status Error: {response.status} - {error_text}")
+                    raise Exception(f"Suno Status failed: {response.status}")
+                
+                return await response.json()
+        except Exception as e:
+            logger.error(f"Failed to get status: {e}")
+            raise

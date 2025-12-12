@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/livekit/button';
+import { useLanguage } from '@/contexts/language-context';
 
 function MusicIcon() {
   return (
@@ -34,6 +35,7 @@ export const RRaaSiMusicWelcomeView = ({
   onStartCall,
   ref,
 }: React.ComponentProps<'div'> & RRaaSiMusicWelcomeViewProps) => {
+  const { t } = useLanguage();
   return (
     <div ref={ref} className="w-full pb-24 md:pb-32">
       {/* Hero Section */}
@@ -41,10 +43,10 @@ export const RRaaSiMusicWelcomeView = ({
         <MusicIcon />
 
         <h1 className="text-foreground mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
-          RRAASI Music Creator
+          {t('music.title')}
         </h1>
         <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-base leading-7 sm:text-lg md:text-xl">
-          Create personalized healing frequencies, bhajans, and meditation music with AI
+          {t('music.subtitle')}
         </p>
 
         {/* Action Button */}
@@ -55,72 +57,71 @@ export const RRaaSiMusicWelcomeView = ({
             onClick={onStartCall}
             className="h-14 w-full text-lg font-semibold shadow-lg sm:w-auto sm:min-w-[240px]"
           >
-            🎵 Start Creating Music
+            {t('music.startButton')}
           </Button>
         </div>
         <p className="text-muted-foreground mt-3 text-sm">
-          Free trial available • No credit card required
+          {t('music.freeTrial')}
         </p>
       </section>
 
       {/* Key Features Section */}
       <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-16">
         <h2 className="text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
-          What You Can Create
+          {t('music.featuresTitle')}
         </h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Feature 1: Bhajans */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🙏</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">Devotional Bhajans</h3>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('music.bhajansTitle')}</h3>
             <p className="text-muted-foreground text-sm leading-6">
-              Generate authentic bhajans for Krishna, Shiva, Ganesh, and other deities with
-              traditional instruments
+              {t('music.bhajansDesc')}
             </p>
           </div>
 
           {/* Feature 2: Healing Frequencies */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🎵</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">Healing Frequencies</h3>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('music.healingTitle')}</h3>
             <p className="text-muted-foreground text-sm leading-6">
-              Create 432Hz, 528Hz, and other Solfeggio frequencies for healing and meditation
+              {t('music.healingDesc')}
             </p>
           </div>
 
           {/* Feature 3: Meditation Music */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🧘</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">Meditation Tracks</h3>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('music.meditationTitle')}</h3>
             <p className="text-muted-foreground text-sm leading-6">
-              Ambient soundscapes with nature sounds, crystal bowls, and calming instruments
+              {t('music.meditationDesc')}
             </p>
           </div>
 
           {/* Feature 4: Mantras */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🕉️</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">Sacred Mantras</h3>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('music.mantrasTitle')}</h3>
             <p className="text-muted-foreground text-sm leading-6">
-              Om Namah Shivaya, Gayatri Mantra, and other sacred chants in various styles
+              {t('music.mantrasDesc')}
             </p>
           </div>
 
           {/* Feature 5: Yoga Music */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">🌸</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">Yoga Flow Music</h3>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('music.yogaTitle')}</h3>
             <p className="text-muted-foreground text-sm leading-6">
-              Rhythmic tracks for vinyasa, hatha, or restorative yoga practice
+              {t('music.yogaDesc')}
             </p>
           </div>
 
           {/* Feature 6: Custom Creations */}
           <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
             <div className="mb-3 text-3xl">✨</div>
-            <h3 className="text-foreground mb-3 text-xl font-semibold">Fully Customizable</h3>
+            <h3 className="text-foreground mb-3 text-xl font-semibold">{t('music.customTitle')}</h3>
             <p className="text-muted-foreground text-sm leading-6">
-              Specify instruments, mood, tempo, and lyrics to create your perfect track
+              {t('music.customDesc')}
             </p>
           </div>
         </div>
@@ -129,7 +130,7 @@ export const RRaaSiMusicWelcomeView = ({
       {/* How It Works Section */}
       <section className="mx-auto mt-16 max-w-4xl px-4">
         <h2 className="text-foreground mb-8 text-center text-3xl font-bold sm:text-4xl">
-          How It Works
+          {t('music.howItWorksTitle')}
         </h2>
         <div className="space-y-6">
           <div className="flex gap-4">
@@ -137,9 +138,9 @@ export const RRaaSiMusicWelcomeView = ({
               1
             </div>
             <div>
-              <h3 className="text-foreground mb-1 text-lg font-semibold">Connect with the Agent</h3>
+              <h3 className="text-foreground mb-1 text-lg font-semibold">{t('music.step1Title')}</h3>
               <p className="text-muted-foreground text-sm">
-                Start a conversation with our AI music producer
+                {t('music.step1Desc')}
               </p>
             </div>
           </div>
@@ -148,9 +149,9 @@ export const RRaaSiMusicWelcomeView = ({
               2
             </div>
             <div>
-              <h3 className="text-foreground mb-1 text-lg font-semibold">Describe Your Vision</h3>
+              <h3 className="text-foreground mb-1 text-lg font-semibold">{t('music.step2Title')}</h3>
               <p className="text-muted-foreground text-sm">
-                Tell us what kind of music you want - the agent will ask detailed questions
+                {t('music.step2Desc')}
               </p>
             </div>
           </div>
@@ -160,10 +161,10 @@ export const RRaaSiMusicWelcomeView = ({
             </div>
             <div>
               <h3 className="text-foreground mb-1 text-lg font-semibold">
-                AI Generates Your Track
+                {t('music.step3Title')}
               </h3>
               <p className="text-muted-foreground text-sm">
-                Our system creates your music in about 60 seconds
+                {t('music.step3Desc')}
               </p>
             </div>
           </div>
@@ -172,9 +173,9 @@ export const RRaaSiMusicWelcomeView = ({
               4
             </div>
             <div>
-              <h3 className="text-foreground mb-1 text-lg font-semibold">Listen & Enjoy</h3>
+              <h3 className="text-foreground mb-1 text-lg font-semibold">{t('music.step4Title')}</h3>
               <p className="text-muted-foreground text-sm">
-                Your music plays automatically when ready
+                {t('music.step4Desc')}
               </p>
             </div>
           </div>
@@ -185,7 +186,7 @@ export const RRaaSiMusicWelcomeView = ({
       <section className="mx-auto mt-12 max-w-4xl px-4">
         <div className="bg-primary text-primary-foreground flex flex-col items-center gap-3 rounded-2xl p-6 text-center shadow-sm sm:flex-row sm:justify-between">
           <p className="text-base font-semibold sm:text-left">
-            Ready to create your perfect track?
+            {t('music.ctaText')}
           </p>
           <div className="flex gap-3">
             <Button
@@ -193,7 +194,7 @@ export const RRaaSiMusicWelcomeView = ({
               variant="ghost"
               className="h-12 bg-white/10 hover:bg-white/20"
             >
-              Start Now
+              {t('music.ctaButton')}
             </Button>
           </div>
         </div>

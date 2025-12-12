@@ -67,13 +67,10 @@ export const WelcomeView = ({
 
   const handleGuruSelect = useCallback(
     (guru: GuruDefinition) => {
-      if (guru.id === 'guruji') {
-        onStartCall();
-        return;
-      }
+      // Navigate to the guru's route page
       router.push(guru.route);
     },
-    [onStartCall, router]
+    [router]
   );
   return (
     <div ref={ref} className="w-full pb-24 md:pb-32">

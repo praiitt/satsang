@@ -3,18 +3,12 @@ services:
   - type: web
     name: satsang-monolith
     runtime: docker
-    dockerFilePath: ./Dockerfile.monolith
-    plan: standard # Cost-effective but performant ($25/mo) - recommended for running 4+ processes
-    region: ohio # Close to US users, or choose frankfurt/singapore based on audience
+    dockerFilePath: Dockerfile.monolith
+    plan: starter
     branch: main
-    numInstances: 1
-    healthCheckPath: /api/health # Should be proxied to internal backend or just /
     envVars:
       - key: NODE_ENV
         value: production
-      - key: NEXT_PUBLIC_API_URL
-        value: https://satsang-monolith.onrender.com # Self-referencing available after create
-      # Add other shared env vars here as placeholders
       - key: OPENAI_API_KEY
         sync: false
       - key: LIVEKIT_API_KEY

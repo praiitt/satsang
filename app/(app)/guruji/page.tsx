@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 import { APP_CONFIG_DEFAULTS, type AppConfig } from '@/app-config';
-import { App } from '@/components/app/app';
+import { GurujiApp } from '@/components/app/guruji-app';
 
 export default async function GurujiPage() {
   await headers();
@@ -14,5 +14,5 @@ export default async function GurujiPage() {
       'Connect with Guruji, a compassionate spiritual guide rooted in Hindu and Sanatana Dharma, for satsang, dharma, yoga, meditation, karma, bhakti, and Vedanta.',
   };
 
-  return <App appConfig={appConfig} />;
+  return <GurujiApp appConfig={appConfig} />;
 }
