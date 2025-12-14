@@ -3,7 +3,7 @@
  */
 
 // Use Next.js API routes as proxy (better for cookies and CORS)
-const AUTH_SERVER_URL = '/api/auth';
+const AUTH_SERVER_URL = '/backend/auth';
 
 export interface AuthResponse {
   uid: string;
