@@ -468,9 +468,6 @@ async def entrypoint(ctx: JobContext):
     await session.start(
         agent=final_agent,
         room=ctx.room,
-        room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
-        ),
     )
     
     # Send welcome message with correct guru in proper script
