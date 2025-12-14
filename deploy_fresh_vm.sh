@@ -224,8 +224,9 @@ pnpm run build >> "$LOG_FILE" 2>&1 || error_exit "Failed to build frontend"
 # Install auth-server dependencies
 print_status "Installing auth-server dependencies..."
 cd auth-server
-npm install --production >> "$LOG_FILE" 2>&1 || error_exit "Failed to install auth-server dependencies"
+npm install >> "$LOG_FILE" 2>&1 || error_exit "Failed to install auth-server dependencies"
 npm run build >> "$LOG_FILE" 2>&1 || error_exit "Failed to build auth-server"
+npm prune --production >> "$LOG_FILE" 2>&1  # Remove dev dependencies after build
 cd ..
 
 # Install astrology-backend dependencies
