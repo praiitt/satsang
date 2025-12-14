@@ -199,17 +199,8 @@ sudo systemctl enable nginx >> "$LOG_FILE" 2>&1
 sudo systemctl start nginx >> "$LOG_FILE" 2>&1
 print_status "Nginx installed and started"
 
-# Install Docker (optional)
-print_status "Installing Docker..."
-if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh >> "$LOG_FILE" 2>&1
-    sudo sh /tmp/get-docker.sh >> "$LOG_FILE" 2>&1
-    sudo usermod -aG docker $USER
-    rm /tmp/get-docker.sh
-    print_status "Docker installed (logout/login to use without sudo)"
-else
-    print_status "Docker already installed"
-fi
+# Skip Docker installation (using PM2 only)
+print_info "Skipping Docker installation (using PM2 for process management)"
 
 # Clone or update repository
 print_status "Setting up repository..."
@@ -233,14 +224,14 @@ pnpm run build >> "$LOG_FILE" 2>&1 || error_exit "Failed to build frontend"
 # Install auth-server dependencies
 print_status "Installing auth-server dependencies..."
 cd auth-server
-npm ci --omit=dev >> "$LOG_FILE" 2>&1 || error_exit "Failed to install auth-server dependencies"
+npm install --production >> "$LOG_FILE" 2>&1 || error_exit "Failed to install auth-server dependencies"
 npm run build >> "$LOG_FILE" 2>&1 || error_exit "Failed to build auth-server"
 cd ..
 
 # Install astrology-backend dependencies
 print_status "Installing astrology-backend dependencies..."
 cd astrology_backend/backend
-npm ci --omit=dev >> "$LOG_FILE" 2>&1 || error_exit "Failed to install backend dependencies"
+npm install --production >> "$LOG_FILE" 2>&1 || error_exit "Failed to install backend dependencies"
 cd ../..
 
 # Setup Python agents virtual environment
