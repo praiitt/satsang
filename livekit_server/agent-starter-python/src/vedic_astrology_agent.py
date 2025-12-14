@@ -541,8 +541,6 @@ For example:
     await session.start(
         agent=vedic_agent,
         room=ctx.room,
-        room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
         ),
     )
 

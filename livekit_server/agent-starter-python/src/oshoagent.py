@@ -670,8 +670,6 @@ async def entrypoint(ctx: JobContext):
     await session.start(
         agent=osho_agent,
         room=ctx.room,
-        room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
         ),
     )
 

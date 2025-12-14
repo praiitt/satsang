@@ -894,9 +894,6 @@ async def entrypoint(ctx: JobContext):
     await session.start(
         agent=assistant,
         room=ctx.room,
-        room_input_options=RoomInputOptions(
-            # For telephony applications, use `BVCTelephony` for best results
-            noise_cancellation=noise_cancellation.BVC(),
         ),
     )
 
