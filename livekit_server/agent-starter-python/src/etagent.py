@@ -921,7 +921,6 @@ async def entrypoint(ctx: JobContext):
     await session.start(
         agent=et_agent,
         room=ctx.room,
-        ),
     )
 
     # Join the room and connect to the user
