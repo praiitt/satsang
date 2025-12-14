@@ -3,12 +3,14 @@ set -e  # Exit on any error
 
 echo "=================================================="
 echo "🚀 Satsang App - Fresh VM Deployment Script"
-echo "   Ubuntu 22.04 LTS"
+echo "   Ubuntu 22.04 LTS - Production Ready"
+echo "   Version: 2.0"
 echo "=================================================="
 
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
+BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
@@ -17,34 +19,83 @@ REPO_URL="https://github.com/praiitt/satsang.git"
 INSTALL_DIR="/home/$USER/satsang"
 NODE_VERSION="20"
 PYTHON_VERSION="3.10"
+LOG_FILE="/tmp/satsang_deploy_$(date +%Y%m%d_%H%M%S).log"
 
 # Function to print colored output
 print_status() {
-    echo -e "${GREEN}[✓]${NC} $1"
+    echo -e "${GREEN}[✓]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[!]${NC} $1"
+    echo -e "${YELLOW}[!]${NC} $1" | tee -a "$LOG_FILE"
 }
 
 print_error() {
-    echo -e "${RED}[✗]${NC} $1"
+    echo -e "${RED}[✗]${NC} $1" | tee -a "$LOG_FILE"
 }
 
-# Check if running on Ubuntu 22.04
-print_status "Checking OS version..."
-if ! grep -q "Ubuntu 22.04" /etc/os-release 2>/dev/null; then
-    print_warning "This script is designed for Ubuntu 22.04. Proceeding anyway..."
+print_info() {
+    echo -e "${BLUE}[i]${NC} $1" | tee -a "$LOG_FILE"
+}
+
+# Error handler
+error_exit() {
+    print_error "$1"
+    print_error "Deployment failed. Check log: $LOG_FILE"
+    exit 1
+}
+
+# Check if script is run with sudo
+if [ "$EUID" -eq 0 ]; then 
+    print_error "Please do not run this script as root/sudo"
+    print_info "The script will ask for sudo password when needed"
+    exit 1
 fi
+
+print_info "Starting deployment at $(date)"
+print_info "Log file: $LOG_FILE"
+
+# System Prerequisites Check
+print_status "Checking system prerequisites..."
+
+# Check OS version
+if ! grep -q "Ubuntu 22.04" /etc/os-release 2>/dev/null; then
+    print_warning "This script is optimized for Ubuntu 22.04"
+    read -p "Continue anyway? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+# Check internet connectivity
+if ! ping -c 1 google.com &> /dev/null; then
+    error_exit "No internet connection detected"
+fi
+print_status "Internet connection: OK"
+
+# Check available disk space (minimum 10GB)
+AVAILABLE_SPACE=$(df -BG / | awk 'NR==2 {print $4}' | sed 's/G//')
+if [ "$AVAILABLE_SPACE" -lt 10 ]; then
+    error_exit "Insufficient disk space. Need at least 10GB, have ${AVAILABLE_SPACE}GB"
+fi
+print_status "Disk space: ${AVAILABLE_SPACE}GB available"
+
+# Check RAM (minimum 3GB)
+TOTAL_RAM=$(free -g | awk 'NR==2 {print $2}')
+if [ "$TOTAL_RAM" -lt 3 ]; then
+    print_warning "Low RAM detected (${TOTAL_RAM}GB). Recommended: 8GB+"
+fi
+print_status "RAM: ${TOTAL_RAM}GB"
 
 # Update system
 print_status "Updating system packages..."
-sudo apt-get update -qq
-sudo apt-get upgrade -y -qq
+sudo apt-get update -qq >> "$LOG_FILE" 2>&1 || error_exit "Failed to update packages"
+sudo apt-get upgrade -y -qq >> "$LOG_FILE" 2>&1 || print_warning "Some packages could not be upgraded"
 
 # Install essential build tools
 print_status "Installing essential build tools..."
-sudo apt-get install -y -qq \
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
     build-essential \
     curl \
     wget \
@@ -53,34 +104,72 @@ sudo apt-get install -y -qq \
     gnupg \
     lsb-release \
     software-properties-common \
-    apt-transport-https
+    apt-transport-https \
+    unzip \
+    vim \
+    htop \
+    net-tools \
+    ufw \
+    fail2ban >> "$LOG_FILE" 2>&1 || error_exit "Failed to install build tools"
+
+# Configure firewall
+print_status "Configuring firewall (UFW)..."
+sudo ufw --force enable >> "$LOG_FILE" 2>&1
+sudo ufw default deny incoming >> "$LOG_FILE" 2>&1
+sudo ufw default allow outgoing >> "$LOG_FILE" 2>&1
+sudo ufw allow ssh >> "$LOG_FILE" 2>&1
+sudo ufw allow 80/tcp >> "$LOG_FILE" 2>&1
+sudo ufw allow 443/tcp >> "$LOG_FILE" 2>&1
+sudo ufw allow 3000/tcp >> "$LOG_FILE" 2>&1  # Frontend
+sudo ufw allow 4000/tcp >> "$LOG_FILE" 2>&1  # Auth server
+sudo ufw allow 3003/tcp >> "$LOG_FILE" 2>&1  # Backend
+print_status "Firewall configured and enabled"
+
+# Configure fail2ban
+print_status "Configuring fail2ban..."
+sudo systemctl enable fail2ban >> "$LOG_FILE" 2>&1
+sudo systemctl start fail2ban >> "$LOG_FILE" 2>&1
+print_status "fail2ban enabled"
+
+# Optimize system settings
+print_status "Optimizing system settings..."
+# Increase file descriptors
+echo "* soft nofile 65536" | sudo tee -a /etc/security/limits.conf >> "$LOG_FILE"
+echo "* hard nofile 65536" | sudo tee -a /etc/security/limits.conf >> "$LOG_FILE"
+
+# Optimize network settings
+sudo sysctl -w net.core.somaxconn=16384 >> "$LOG_FILE" 2>&1
+sudo sysctl -w net.ipv4.tcp_max_syn_backlog=8192 >> "$LOG_FILE" 2>&1
 
 # Install Node.js 20.x
 print_status "Installing Node.js ${NODE_VERSION}.x..."
 if ! command -v node &> /dev/null; then
-    curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash -
-    sudo apt-get install -y -qq nodejs
+    curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | sudo -E bash - >> "$LOG_FILE" 2>&1
+    sudo apt-get install -y nodejs >> "$LOG_FILE" 2>&1 || error_exit "Failed to install Node.js"
 fi
-print_status "Node.js version: $(node --version)"
-print_status "npm version: $(npm --version)"
+NODE_VER=$(node --version)
+print_status "Node.js installed: $NODE_VER"
 
 # Install pnpm globally
 print_status "Installing pnpm..."
 if ! command -v pnpm &> /dev/null; then
-    sudo npm install -g pnpm@9.15.9
+    sudo npm install -g pnpm@9.15.9 >> "$LOG_FILE" 2>&1 || error_exit "Failed to install pnpm"
 fi
-print_status "pnpm version: $(pnpm --version)"
+PNPM_VER=$(pnpm --version)
+print_status "pnpm installed: v$PNPM_VER"
 
 # Install PM2 globally
 print_status "Installing PM2..."
 if ! command -v pm2 &> /dev/null; then
-    sudo npm install -g pm2@latest
+    sudo npm install -g pm2@latest >> "$LOG_FILE" 2>&1 || error_exit "Failed to install PM2"
 fi
-print_status "PM2 version: $(pm2 --version)"
+PM2_VER=$(pm2 --version)
+print_status "PM2 installed: v$PM2_VER"
 
 # Setup PM2 startup script
 print_status "Configuring PM2 startup..."
-pm2 startup systemd -u $USER --hp /home/$USER | grep "sudo" | bash || true
+pm2 startup systemd -u $USER --hp /home/$USER 2>&1 | grep "sudo" | bash >> "$LOG_FILE" 2>&1 || true
+print_status "PM2 startup configured"
 
 # Install Python 3.10 and pip
 print_status "Installing Python ${PYTHON_VERSION}..."
@@ -88,63 +177,70 @@ sudo apt-get install -y -qq \
     python${PYTHON_VERSION} \
     python${PYTHON_VERSION}-dev \
     python${PYTHON_VERSION}-venv \
-    python3-pip
+    python3-pip \
+    libffi-dev \
+    libssl-dev >> "$LOG_FILE" 2>&1 || error_exit "Failed to install Python"
 
 # Set Python 3.10 as default
-sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1
-sudo update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 1
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${PYTHON_VERSION} 1 >> "$LOG_FILE" 2>&1
+sudo update-alternatives --install /usr/bin/python python /usr/bin/python${PYTHON_VERSION} 1 >> "$LOG_FILE" 2>&1
 
-print_status "Python version: $(python --version)"
-print_status "pip version: $(pip3 --version)"
+PYTHON_VER=$(python --version)
+print_status "Python installed: $PYTHON_VER"
+
+# Upgrade pip
+print_status "Upgrading pip..."
+python -m pip install --upgrade pip >> "$LOG_FILE" 2>&1
 
 # Install Nginx
 print_status "Installing Nginx..."
-sudo apt-get install -y -qq nginx
-sudo systemctl enable nginx
-print_status "Nginx installed and enabled"
+sudo apt-get install -y nginx >> "$LOG_FILE" 2>&1 || error_exit "Failed to install Nginx"
+sudo systemctl enable nginx >> "$LOG_FILE" 2>&1
+sudo systemctl start nginx >> "$LOG_FILE" 2>&1
+print_status "Nginx installed and started"
 
-# Install Docker (optional, for future use)
+# Install Docker (optional)
 print_status "Installing Docker..."
 if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
+    curl -fsSL https://get.docker.com -o /tmp/get-docker.sh >> "$LOG_FILE" 2>&1
+    sudo sh /tmp/get-docker.sh >> "$LOG_FILE" 2>&1
     sudo usermod -aG docker $USER
-    rm get-docker.sh
-fi
-print_status "Docker version: $(docker --version)"
-
-# Clone repository
-print_status "Cloning repository..."
-if [ -d "$INSTALL_DIR" ]; then
-    print_warning "Directory $INSTALL_DIR already exists. Pulling latest changes..."
-    cd $INSTALL_DIR
-    git pull
+    rm /tmp/get-docker.sh
+    print_status "Docker installed (logout/login to use without sudo)"
 else
-    git clone $REPO_URL $INSTALL_DIR
-    cd $INSTALL_DIR
+    print_status "Docker already installed"
 fi
 
+# Clone or update repository
+print_status "Setting up repository..."
+if [ -d "$INSTALL_DIR" ]; then
+    print_warning "Directory $INSTALL_DIR exists. Backing up and updating..."
+    mv "$INSTALL_DIR" "${INSTALL_DIR}_backup_$(date +%Y%m%d_%H%M%S)" 2>/dev/null || true
+fi
+
+git clone $REPO_URL $INSTALL_DIR >> "$LOG_FILE" 2>&1 || error_exit "Failed to clone repository"
+cd $INSTALL_DIR
 print_status "Repository cloned to $INSTALL_DIR"
 
 # Install frontend dependencies
-print_status "Installing frontend dependencies..."
-pnpm install --frozen-lockfile
+print_status "Installing frontend dependencies (this may take a while)..."
+pnpm install --frozen-lockfile >> "$LOG_FILE" 2>&1 || error_exit "Failed to install frontend dependencies"
 
 # Build frontend
 print_status "Building frontend..."
-pnpm run build
+pnpm run build >> "$LOG_FILE" 2>&1 || error_exit "Failed to build frontend"
 
 # Install auth-server dependencies
 print_status "Installing auth-server dependencies..."
 cd auth-server
-npm ci --omit=dev
-npm run build
+npm ci --omit=dev >> "$LOG_FILE" 2>&1 || error_exit "Failed to install auth-server dependencies"
+npm run build >> "$LOG_FILE" 2>&1 || error_exit "Failed to build auth-server"
 cd ..
 
 # Install astrology-backend dependencies
 print_status "Installing astrology-backend dependencies..."
 cd astrology_backend/backend
-npm ci --omit=dev
+npm ci --omit=dev >> "$LOG_FILE" 2>&1 || error_exit "Failed to install backend dependencies"
 cd ../..
 
 # Setup Python agents virtual environment
@@ -153,24 +249,23 @@ cd livekit_server/agent-starter-python
 
 # Create virtual environment
 if [ ! -d "venv" ]; then
-    python3 -m venv venv
+    python3 -m venv venv >> "$LOG_FILE" 2>&1 || error_exit "Failed to create Python venv"
 fi
 
 # Activate and install dependencies
 source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-
-# Deactivate venv
+pip install --upgrade pip >> "$LOG_FILE" 2>&1
+pip install -r requirements.txt >> "$LOG_FILE" 2>&1 || error_exit "Failed to install Python dependencies"
 deactivate
 cd ../..
+
+print_status "All dependencies installed successfully"
 
 # Setup environment files
 print_status "Setting up environment files..."
 
-# Check if .env.local exists
+# Create .env.local template if it doesn't exist
 if [ ! -f ".env.local" ]; then
-    print_warning ".env.local not found. Please create it with your API keys."
     cat > .env.local << 'EOF'
 # LiveKit Configuration
 LIVEKIT_API_KEY=your_api_key_here
@@ -189,70 +284,128 @@ YOUTUBE_API_KEY=your_youtube_key_here
 # Sarvam AI Configuration (Hindi/Tamil TTS)
 SARVAM_API_KEY=your_sarvam_key_here
 
+# STT Model (options: deepgram, sarvam)
+STT_MODEL=deepgram
+
 # Firebase Configuration
 FIREBASE_SERVICE_ACCOUNT_PATH=/home/$USER/satsang/satsangServiceAccount.json
+
+# Node Environment
+NODE_ENV=production
 EOF
-    print_warning "Please edit .env.local with your actual API keys"
+    print_warning "Created .env.local template - Please update with your actual API keys!"
+else
+    print_status ".env.local already exists"
 fi
 
 # Copy environment files
-print_status "Copying environment files..."
-cp .env.local auth-server/.env 2>/dev/null || print_warning "auth-server/.env already exists"
-cp .env.local livekit_server/agent-starter-python/.env.local 2>/dev/null || print_warning "agent .env.local already exists"
+cp .env.local auth-server/.env 2>/dev/null || print_warning "auth-server/.env exists"
+cp .env.local livekit_server/agent-starter-python/.env.local 2>/dev/null || print_warning "agent .env.local exists"
 
 # Setup Nginx configuration
 print_status "Setting up Nginx..."
-if [ -f "nginx/satsang-ssl.conf" ]; then
-    sudo cp nginx/satsang-ssl.conf /etc/nginx/sites-available/satsang
+if [ -f "nginx/satsang-ssl.conf" ] || [ -f "nginx/satsang.conf" ]; then
+    NGINX_CONF=$([ -f "nginx/satsang-ssl.conf" ] && echo "nginx/satsang-ssl.conf" || echo "nginx/satsang.conf")
+    sudo cp "$NGINX_CONF" /etc/nginx/sites-available/satsang
     sudo ln -sf /etc/nginx/sites-available/satsang /etc/nginx/sites-enabled/default
     
     # Test nginx configuration
-    if sudo nginx -t; then
+    if sudo nginx -t >> "$LOG_FILE" 2>&1; then
         print_status "Nginx configuration is valid"
+        sudo systemctl reload nginx >> "$LOG_FILE" 2>&1
     else
-        print_error "Nginx configuration has errors"
+        print_error "Nginx configuration has errors - check $LOG_FILE"
     fi
 else
-    print_warning "Nginx configuration file not found. Skipping Nginx setup."
+    print_warning "Nginx configuration files not found. Using default nginx config."
 fi
 
 # Start services with PM2
 print_status "Starting services with PM2..."
 pm2 delete all 2>/dev/null || true
-pm2 start ecosystem.monolith.config.cjs
-pm2 save
+pm2 start ecosystem.monolith.config.cjs >> "$LOG_FILE" 2>&1 || error_exit "Failed to start PM2 services"
+pm2 save >> "$LOG_FILE" 2>&1
 
-# Display service status
-print_status "PM2 Services Status:"
-pm2 status
+# Wait for services to initialize
+print_status "Waiting for services to initialize..."
+sleep 10
 
-# Display system information
+# Display final status
 echo ""
 echo "=================================================="
-print_status "Deployment Complete! 🎉"
+print_status "🎉 Deployment Complete!"
 echo "=================================================="
 echo ""
 echo "📊 System Information:"
-echo "   Node.js: $(node --version)"
-echo "   pnpm: $(pnpm --version)"
-echo "   PM2: $(pm2 --version)"
-echo "   Python: $(python --version)"
-echo "   Docker: $(docker --version 2>/dev/null || echo 'Not installed')"
+echo "   Node.js: $NODE_VER"
+echo "   pnpm: v$PNPM_VER"
+echo "   PM2: v$PM2_VER"
+echo "   Python: $PYTHON_VER"
+echo "   RAM: ${TOTAL_RAM}GB"
+echo "   Disk: ${AVAILABLE_SPACE}GB available"
 echo ""
-echo "📁 Installation Directory: $INSTALL_DIR"
+echo "📁 Installation: $INSTALL_DIR"
+echo "📝 Log File: $LOG_FILE"
 echo ""
-echo "🔥 PM2 Services:"
-pm2 list
+
+# PM2 Service Status
+print_status "PM2 Services Status:"
+pm2 status
+
+echo ""
+echo "🔥 Service Health Check:"
+sleep 5
+
+# Check if services are running
+FRONTEND_STATUS=$(pm2 jlist | jq -r '.[] | select(.name=="frontend") | .pm2_env.status' 2>/dev/null || echo "unknown")
+AUTH_STATUS=$(pm2 jlist | jq -r '.[] | select(.name=="auth-server") | .pm2_env.status' 2>/dev/null || echo "unknown")
+
+if [ "$FRONTEND_STATUS" = "online" ]; then
+    print_status "Frontend: Running"
+else
+    print_warning "Frontend: $FRONTEND_STATUS"
+fi
+
+if [ "$AUTH_STATUS" = "online" ]; then
+    print_status "Auth Server: Running"
+else
+    print_warning "Auth Server: $AUTH_STATUS"
+fi
+
 echo ""
 echo "📝 Next Steps:"
-echo "   1. Edit .env.local with your actual API keys"
-echo "   2. Copy SSL certificates to nginx/ssl/ (if using HTTPS)"
-echo "   3. Update Firebase credentials (satsangServiceAccount.json)"
-echo "   4. Restart services: pm2 restart all"
-echo "   5. Check logs: pm2 logs"
+echo "   1. Edit .env.local with your API keys:"
+echo "      cd $INSTALL_DIR && nano .env.local"
+echo ""
+echo "   2. Add Firebase credentials:"
+echo "      scp satsangServiceAccount.json user@server:$INSTALL_DIR/"
+echo ""
+echo "   3. Add SSL certificates (if using HTTPS):"
+echo "      sudo cp certificate.crt /etc/ssl/certs/rraasi.crt"
+echo "      sudo cp private.key /etc/ssl/private/rraasi.key"
+echo ""
+echo "   4. Restart services after configuration:"
+echo "      pm2 restart all && pm2 save"
+echo ""
+echo "   5. View logs:"
+echo "      pm2 logs"
 echo ""
 echo "🌐 Access your app:"
-echo "   Frontend: http://$(curl -s ifconfig.me):3000"
-echo "   With Nginx: http://$(curl -s ifconfig.me)"
+if command -v curl &> /dev/null; then
+    PUBLIC_IP=$(curl -s ifconfig.me 2>/dev/null || echo "your-server-ip")
+    echo "   Frontend: http://$PUBLIC_IP:3000"
+    echo "   With Nginx: http://$PUBLIC_IP"
+else
+    echo "   Frontend: http://your-server-ip:3000"
+    echo "   With Nginx: http://your-server-ip"
+fi
 echo ""
-print_status "Happy deploying! 🚀"
+echo "🔒 Security Notes:"
+echo "   - Firewall (UFW) is enabled"
+echo "   - fail2ban is running"
+echo "   - SSH is protected"
+echo "   - Update .env files with real API keys"
+echo "   - Consider setting up SSL certificates"
+echo ""
+print_status "Deployment completed successfully at $(date)"
+print_info "Full deployment log saved to: $LOG_FILE"
