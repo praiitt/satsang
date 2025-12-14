@@ -562,7 +562,7 @@ export const translations = {
       step2Title: 'AI generates your music',
       step2Desc: 'Our advanced AI creates original music based on your request in seconds',
       step3Title: 'Listen and refine',
-      step3Desc: 'Listen to the generated music and request changes until it's perfect',
+      step3Desc: 'Listen to the generated music and request changes until it is perfect',
       step4Title: 'Download and share',
       step4Desc: 'Download your custom spiritual music and use it for meditation, yoga, or sharing with others',
       ctaText: 'Ready to create your spiritual soundtrack?',
