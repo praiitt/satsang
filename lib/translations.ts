@@ -11,7 +11,7 @@ export const translations = {
       freeTrial: 'Free Trial',
       remaining: 'remaining',
       redirecting: 'Redirecting to login...',
-      siteTitle: 'RRAASI Satsang',
+      siteTitle: 'RRAASI',
     },
     auth: {
       welcome: 'Welcome to Satsang',
@@ -248,12 +248,16 @@ export const translations = {
       ctaStartNow: 'Start Now',
       startButton: 'Connect with Osho',
     },
+    guruji: {
+      startButton: 'Talk to Guruji',
+    },
     gurus: {
       guruji: {
         name: 'Guruji',
         tagline: 'Your spiritual guide rooted in Hindu and Sanatana Dharma',
         description:
           'A compassionate spiritual guru specializing in dharma, yoga, meditation, karma, bhakti, and Vedanta. Answers questions from Gita, Vedas, Upanishads, Ramayana, and Mahabharata.',
+        startButton: 'Talk to Guruji',
       },
       etAgent: {
         name: 'ET Agent',
@@ -446,18 +450,38 @@ export const translations = {
         'Embark on a journey of self-discovery through sacred conversations, cosmic insights, and divine music.',
       explorePath: 'Explore Your Spiritual Path',
       explorePathDesc: 'Choose your journey into the depths of consciousness and cosmic wisdom',
+
+      // Satsang Section
       satsangTitle: 'Satsang',
-      satsangDesc:
-        'Engage in voice conversations with AI avatars of enlightened masters. Experience the wisdom of spiritual gurus through interactive dialogue.',
-      satsangAction: 'Explore Satsang',
+      satsangSubtitle: 'Your Personal Spiritual Sanctuary',
+      satsangDesc: 'Engage in voice-to-voice conversations with AI avatars of over 20+ enlightened masters. Receive instant guidance rooted in eternal scriptures.',
+      satsangFeature1: 'Connect with 20+ Spiritual Masters',
+      satsangFeature2: 'Voice-First Interaction (Hindi & English)',
+      satsangFeature3: 'Wisdom from Gita, Vedas & Upanishads',
+      satsangFeature4: 'Available 24/7 for Guidance',
+      satsangAction: 'Start Satsang Now',
+
+      // Astrology Section
       astrologyTitle: 'Vedic Astrology',
-      astrologyDesc:
-        'Get personalized Kundli analysis and life guidance from our AI Jyotishi. Discover your cosmic blueprint and unlock your destiny.',
-      astrologyAction: 'Consult Astrologer',
-      musicTitle: 'AI Bhajan Creator',
-      musicDesc:
-        'Generate personalized bhajans, mantras, and healing frequencies. Create sacred music tailored to your spiritual practice.',
+      astrologySubtitle: 'Cosmic Wisdom Meets AI',
+      astrologyDesc: 'Unlock your destiny with precision. Get instant Kundli analysis, matrimony matchmaking, and personalized remedies based on ancient Vedic science.',
+      astrologyFeature1: 'Instant Kundli Generation',
+      astrologyFeature2: '36-Point Matchmaking (Guna Milan)',
+      astrologyFeature3: 'Manglik Dosha & Remedy Check',
+      astrologyFeature4: 'Daily Personalized Horoscope',
+      astrologyAction: 'Get Early Access',
+
+      // Music Section
+      musicTitle: 'AI Music Creator',
+      musicSubtitle: 'Sacred Sounds & Healing Frequencies',
+      musicDesc: 'Create personalized spiritual music in seconds. From devotional bhajans to healing solfeggio frequencies, let AI compose the soundtrack for your soul.',
+      musicFeature1: 'Generate Custom Bhajans & Mantras',
+      musicFeature2: 'Healing Frequencies (432Hz, 528Hz)',
+      musicFeature3: 'Personalized Meditation Soundscapes',
+      musicFeature4: 'Royalty-Free & Unique Compositions',
       musicAction: 'Create Music',
+
+
       aboutTitle: 'What is RRAASI?',
       aboutDesc1:
         'RRAASI is your digital spiritual sanctuary, a sacred space where seekers can explore the profound depths of consciousness and ancient wisdom through cutting-edge AI technology.',
@@ -478,36 +502,36 @@ export const translations = {
       ctaDesc: 'Every spiritual journey begins with a single step. Take yours now.',
       ctaStartSatsang: 'Start with Satsang',
       ctaExploreAll: 'Explore All Services',
-    music: {
-      title: 'RRAASI Music Creator',
-      subtitle: 'Create personalized healing frequencies, bhajans, and meditation music with AI',
-      startButton: '🎵 Start Creating Music',
-      freeTrial: 'Free trial available • No credit card required',
-      featuresTitle: 'What You Can Create',
-      bhajansTitle: 'Devotional Bhajans',
-      bhajansDesc: 'Generate authentic bhajans for Krishna, Shiva, Ganesh, and other deities with traditional instruments',
-      healingTitle: 'Healing Frequencies',
-      healingDesc: 'Create 432Hz, 528Hz, and other Solfeggio frequencies for healing and meditation',
-      meditationTitle: 'Meditation Tracks',
-      meditationDesc: 'Ambient soundscapes with nature sounds, crystal bowls, and calming instruments',
-      mantrasTitle: 'Sacred Mantras',
-      mantrasDesc: 'Om Namah Shivaya, Gayatri Mantra, and other sacred chants in various styles',
-      yogaTitle: 'Yoga Flow Music',
-      yogaDesc: 'Rhythmic tracks for vinyasa, hatha, or restorative yoga practice',
-      customTitle: 'Fully Customizable',
-      customDesc: 'Specify instruments, mood, tempo, and lyrics to create your perfect track',
-      howItWorksTitle: 'How It Works',
-      step1Title: 'Connect with the Agent',
-      step1Desc: 'Start a conversation with our AI music producer',
-      step2Title: 'Describe Your Vision',
-      step2Desc: 'Tell us what kind of music you want - the agent will ask detailed questions',
-      step3Title: 'AI Generates Your Track',
-      step3Desc: 'Our system creates your music in about 60 seconds',
-      step4Title: 'Listen & Enjoy',
-      step4Desc: 'Your music plays automatically when ready',
-      ctaText: 'Ready to create your perfect track?',
-      ctaButton: 'Start Now',
-    },
+      music: {
+        title: 'RRAASI Music Creator',
+        subtitle: 'Create personalized healing frequencies, bhajans, and meditation music with AI',
+        startButton: '🎵 Start Creating Music',
+        freeTrial: 'Free trial available • No credit card required',
+        featuresTitle: 'What You Can Create',
+        bhajansTitle: 'Devotional Bhajans',
+        bhajansDesc: 'Generate authentic bhajans for Krishna, Shiva, Ganesh, and other deities with traditional instruments',
+        healingTitle: 'Healing Frequencies',
+        healingDesc: 'Create 432Hz, 528Hz, and other Solfeggio frequencies for healing and meditation',
+        meditationTitle: 'Meditation Tracks',
+        meditationDesc: 'Ambient soundscapes with nature sounds, crystal bowls, and calming instruments',
+        mantrasTitle: 'Sacred Mantras',
+        mantrasDesc: 'Om Namah Shivaya, Gayatri Mantra, and other sacred chants in various styles',
+        yogaTitle: 'Yoga Flow Music',
+        yogaDesc: 'Rhythmic tracks for vinyasa, hatha, or restorative yoga practice',
+        customTitle: 'Fully Customizable',
+        customDesc: 'Specify instruments, mood, tempo, and lyrics to create your perfect track',
+        howItWorksTitle: 'How It Works',
+        step1Title: 'Connect with the Agent',
+        step1Desc: 'Start a conversation with our AI music producer',
+        step2Title: 'Describe Your Vision',
+        step2Desc: 'Tell us what kind of music you want - the agent will ask detailed questions',
+        step3Title: 'AI Generates Your Track',
+        step3Desc: 'Our system creates your music in about 60 seconds',
+        step4Title: 'Listen & Enjoy',
+        step4Desc: 'Your music plays automatically when ready',
+        ctaText: 'Ready to create your perfect track?',
+        ctaButton: 'Start Now',
+      },
     },
     quiz: {
       triggerButton: '✨ Confused? Help me choose',
@@ -579,7 +603,7 @@ export const translations = {
       freeTrial: 'Free Trial',
       remaining: 'शेष',
       redirecting: 'लॉगिन पर रीडायरेक्ट हो रहा है...',
-      siteTitle: 'RRAASI सत्संग',
+      siteTitle: 'RRAASI',
     },
     auth: {
       welcome: 'सत्संग में आपका स्वागत है',
@@ -818,12 +842,16 @@ export const translations = {
       ctaStartNow: 'अभी शुरू करें',
       startButton: 'ओशो से जुड़ें',
     },
+    guruji: {
+      startButton: 'गुरुजी से बात करें',
+    },
     gurus: {
       guruji: {
         name: 'गुरुजी',
         tagline: 'हिंदू और सनातन धर्म में निहित आपका आध्यात्मिक मार्गदर्शक',
         description:
           'धर्म, योग, ध्यान, कर्म, भक्ति और वेदांत में विशेषज्ञता रखने वाला एक दयालु आध्यात्मिक गुरु। गीता, वेद, उपनिषद, रामायण और महाभारत से प्रश्नों के उत्तर देता है।',
+        startButton: 'गुरुजी से बात करें',
       },
       etAgent: {
         name: 'ET Agent',
@@ -1016,19 +1044,39 @@ export const translations = {
         'पवित्र वार्तालाप, ब्रह्मांडीय अंतर्दृष्टि और दिव्य संगीत के माध्यम से आत्म-खोज की यात्रा पर निकलें।',
       explorePath: 'अपना आध्यात्मिक मार्ग चुनें',
       explorePathDesc: 'चेतना और ब्रह्मांडीय ज्ञान की गहराइयों में अपनी यात्रा चुनें',
+
+      // Satsang Section (Hindi)
       satsangTitle: 'सत्संग',
-      satsangDesc:
-        'प्रबुद्ध गुरुओं के AI अवतारों के साथ आवाज वार्तालाप में जुड़ें। संवादात्मक संवाद के माध्यम से आध्यात्मिक गुरुओं का ज्ञान अनुभव करें।',
-      satsangAction: 'सत्संग देखें',
+      satsangSubtitle: 'आपका व्यक्तिगत आध्यात्मिक आश्रय',
+      satsangDesc: '20 से अधिक प्रबुद्ध गुरुओं के AI अवतारों के साथ आवाज़ में बातचीत करें। शाश्वत शास्त्रों पर आधारित त्वरित मार्गदर्शन प्राप्त करें।',
+      satsangFeature1: '20+ आध्यात्मिक गुरुओं से जुड़ें',
+      satsangFeature2: 'आवाज़-आधारित बातचीत (हिंदी और अंग्रेजी)',
+      satsangFeature3: 'गीता, वेद और उपनिषदों से ज्ञान',
+      satsangFeature4: 'मार्गदर्शन के लिए 24/7 उपलब्ध',
+      satsangAction: 'सत्संग शुरू करें',
+
+      // Astrology Section (Hindi)
       astrologyTitle: 'वैदिक ज्योतिष',
-      astrologyDesc:
-        'हमारे AI ज्योतिषी से व्यक्तिगत कुंडली विश्लेषण और जीवन मार्गदर्शन प्राप्त करें। अपने ब्रह्मांडीय खाके की खोज करें और अपनी नियति को अनलॉक करें।',
-      astrologyAction: 'ज्योतिषी से परामर्श करें',
-      musicTitle: 'AI भजन निर्माता',
-      musicDesc:
-        'व्यक्तिगत भजन, मंत्र और उपचार फ्रीक्वेंसी उत्पन्न करें। अपने आध्यात्मिक अभ्यास के अनुरूप पवित्र संगीत बनाएं।',
+      astrologySubtitle: 'ब्रह्मांडीय ज्ञान और AI का मिलन',
+      astrologyDesc: 'पूरी सटीकता के साथ अपना भाग्य जानें। प्राचीन वैदिक विज्ञान पर आधारित त्वरित कुंडली विश्लेषण, वैवाहिक मिलान और व्यक्तिगत उपाय प्राप्त करें।',
+      astrologyFeature1: 'त्वरित कुंडली निर्माण',
+      astrologyFeature2: '36-गुण मिलान (कुंडली मिलान)',
+      astrologyFeature3: 'मांगलिक दोष और उपाय जांच',
+      astrologyFeature4: 'दैनिक व्यक्तिगत राशिफल',
+      astrologyAction: 'अर्ली एक्सेस प्राप्त करें',
+
+      // Music Section (Hindi)
+      musicTitle: 'AI संगीत निर्माता',
+      musicSubtitle: 'पवित्र ध्वनियाँ और हीलिंग फ्रीक्वेंसी',
+      musicDesc: 'सेकंडों में व्यक्तिगत आध्यात्मिक संगीत बनाएं। भक्ति भजनों से लेकर हीलिंग सोल्फेजियो फ्रीक्वेंसी तक, AI को अपनी आत्मा के लिए संगीत बनाने दें।',
+      musicFeature1: 'कस्टम भजन और मंत्र बनाएं',
+      musicFeature2: 'हीलिंग फ्रीक्वेंसी (432Hz, 528Hz)',
+      musicFeature3: 'व्यक्तिगत ध्यान संगीत',
+      musicFeature4: 'रॉयल्टी-मुक्त और अनूठी रचनाएँ',
       musicAction: 'संगीत बनाएं',
+
       aboutTitle: 'RRAASI क्या है?',
+
       aboutDesc1:
         'RRAASI आपका डिजिटल आध्यात्मिक अभयारण्य है, एक पवित्र स्थान जहां साधक अत्याधुनिक AI तकनीक के माध्यम से चेतना और प्राचीन ज्ञान की गहन गहराइयों का पता लगा सकते हैं।',
       aboutDesc2:
@@ -1077,6 +1125,36 @@ export const translations = {
         connect: 'जुड़ें',
         retake: 'प्रश्नोत्तरी फिर से लें',
       },
+    },
+    music: {
+      title: 'AI के साथ हीलिंग और आध्यात्मिक संगीत बनाएं',
+      subtitle: 'भजन, मंत्र, ध्यान संगीत और हीलिंग फ्रीक्वेंसी तुरंत उत्पन्न करें',
+      startButton: 'संगीत बनाना शुरू करें',
+      freeTrial: 'निःशुल्क परीक्षण - कोई क्रेडिट कार्ड आवश्यक नहीं',
+      featuresTitle: 'आप क्या बना सकते हैं',
+      bhajansTitle: 'भक्ति भजन',
+      bhajansDesc: 'कृष्ण, शिव, राम और अन्य देवताओं के लिए पारंपरिक भारतीय शास्त्रीय शैलियों में सुंदर भजन बनाएं',
+      healingTitle: 'हीलिंग फ्रीक्वेंसी',
+      healingDesc: 'चक्र हीलिंग और ऊर्जा संतुलन के लिए 432Hz, 528Hz और अन्य सोल्फेजियो फ्रीक्वेंसी',
+      meditationTitle: 'ध्यान संगीत',
+      meditationDesc: 'गहरे ध्यान के लिए प्रकृति की आवाज़, सिंगिंग बाउल्स और बाइनॉरल बीट्स के साथ परिवेशीय ध्वनियाँ',
+      mantrasTitle: 'पवित्र मंत्र',
+      mantrasDesc: 'प्रामाणिक उच्चारण के साथ ओम का जाप, गायत्री मंत्र, और अन्य वैदिक मंत्र',
+      yogaTitle: 'योग संगीत',
+      yogaDesc: 'योग अभ्यास, प्राणायाम और विश्राम के लिए उत्तम कोमल वाद्य संगीत',
+      customTitle: 'कस्टम रचनाएं',
+      customDesc: 'किसी भी आध्यात्मिक या हीलिंग संगीत का वर्णन करें जिसकी आपको आवश्यकता है और AI को इसे आपके लिए बनाने दें',
+      howItWorksTitle: 'यह कैसे काम करता है',
+      step1Title: 'AI को बताएं कि आपको क्या चाहिए',
+      step1Desc: 'आवाज़ या टेक्स्ट का उपयोग करके उस संगीत का वर्णन करें जो आप चाहते हैं - भजन, मंत्र, ध्यान ट्रैक, या हीलिंग फ्रीक्वेंसी',
+      step2Title: 'AI आपका संगीत बनाता है',
+      step2Desc: 'हमारी उन्नत AI आपके अनुरोध के आधार पर सेकंडों में मौलिक संगीत बनाती है',
+      step3Title: 'सुनें और सुधारें',
+      step3Desc: 'जेनरेट किए गए संगीत को सुनें और जब तक यह सही न हो जाए तब तक बदलाव का अनुरोध करें',
+      step4Title: 'डाउनलोड करें और साझा करें',
+      step4Desc: 'अपना कस्टम आध्यात्मिक संगीत डाउनलोड करें और इसे ध्यान, योग या दूसरों के साथ साझा करने के लिए उपयोग करें',
+      ctaText: 'क्या आप अपना आध्यात्मिक साउंडट्रैक बनाने के लिए तैयार हैं?',
+      ctaButton: 'निःशुल्क शुरू करें',
     },
   },
 } as const;

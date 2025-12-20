@@ -35,7 +35,7 @@ export interface GuruDefinition {
 export const GURUS: GuruDefinition[] = [
   {
     id: 'guruji',
-    route: '/',
+    route: '/guruji',
     agentName: 'guruji',
     name: 'Guruji',
     nameKey: 'gurus.guruji.name',
