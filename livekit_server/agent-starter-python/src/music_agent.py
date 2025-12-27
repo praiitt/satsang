@@ -126,7 +126,6 @@ generate_music(
         self._publish_data_fn = publish_data_fn
         self.suno_client = SunoClient()
         self.user_id = user_id or "default_user"
-        self._cleanup_tasks = []  # Track background tasks for cleanup
 
     @function_tool
     async def generate_music(
@@ -179,11 +178,11 @@ generate_music(
                 logger.warning(f"Could not parse taskId from result: {result}")
                 return "I've sent the request, but I couldn't track the generation status automatically. Please check back in a moment."
 
-            # Start background polling task and track it for cleanup
-            task = asyncio.create_task(self._poll_and_play(task_id, title))
-            self._cleanup_tasks.append(task)
+            # Callback webhook will handle saving to Firebase when ready
+            logger.info(f"Music generation started. Task ID: {task_id}")
+            logger.info(f"Callback webhook will save track automatically")
 
-            return f"I have started creating your music: '{title}'. I will play it for you once it's ready (usually takes about a minute)."
+            return f"I have started creating your music: '{title}'. The track will be saved automatically when ready (usually takes about a minute). You can check your tracks anytime!"
 
         except Exception as e:
             logger.error(f"Music generation failed: {e}")
