@@ -680,12 +680,12 @@ async def entrypoint(ctx: JobContext):
     # Send language-appropriate welcome message
     if user_language == "hi":
         welcome_msg = (
-            "नमस्ते! मैं RRAASI म्यूजिक क्रिएटर हूं। मैं आपके लिए सुंदर भजन, मंत्र और "
+            "नमस्ते! मैं आपके लिए सुंदर भजन, मंत्र और "
             "ध्यान संगीत बना सकता हूं। आप आज किस प्रकार का संगीत बनाना चाहेंगे?"
         )
     else:
         welcome_msg = (
-            "Welcome to RRAASI Music Creator! I'm here to help you create beautiful "
+            "Welcome ,I'm here to help you create beautiful "
             "healing music, bhajans, and meditation tracks. What kind of music would "
             "you like to create today?"
         )
