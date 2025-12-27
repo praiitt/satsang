@@ -20,6 +20,7 @@ try:
 except ImportError:
     # When running as script, use absolute import
     from suno_client import SunoClient
+from firebase_db import FirebaseDB
 
 # Configure logging
 logging.basicConfig(
@@ -150,9 +151,10 @@ generate_music(
         logger.info(f"Generating music: {title} ({style}) - Instrumental: {is_instrumental}")
         
         try:
-            # Get auth server URL from environment
-            auth_server_url = os.getenv("AUTH_SERVER_URL", "http://localhost:4000")
-            callback_url = f"{auth_server_url}/suno/callback?userId={self.user_id}"
+            # Use new dedicated Cloud Function for callbacks
+            callback_url = f"https://rraasi-music-webhook-6ougd45dya-uc.a.run.app?userId={self.user_id}"
+            
+            logger.info(f"DEBUG CALLBACK: Callback URL: {callback_url}")
             
             # Call Suno API
             result = await self.suno_client.generate_music(
@@ -388,8 +390,8 @@ If overall_score < 7.0, set is_valid to false.
         try:
             import aiohttp
             
-            # Get auth server URL
-            auth_server_url = os.getenv("AUTH_SERVER_URL", "http://localhost:4000")
+            # Get tracks from auth server (still using auth-server for track retrieval)
+            auth_server_url = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
             url = f"{auth_server_url}/suno/tracks?userId={self.user_id}&limit=5"
             
             async with aiohttp.ClientSession() as session:
@@ -434,14 +436,47 @@ If overall_score < 7.0, set is_valid to false.
                     
                     # Handle both SUCCESS and FIRST_SUCCESS (which means one clip is ready)
                     if status in ["SUCCESS", "FIRST_SUCCESS", "TEXT_SUCCESS"]:
-                        clips = data.get("clips", [])
+                        clips = data.get("clips")
+                        if not clips:
+                             # Fallback for different API structure seen in debug
+                             clips = data.get("response", {}).get("sunoData", [])
+                        
+                        logger.info(f"Poll Clips Data: {clips}") # DEBUG: See what we are getting
+                        
+                        logger.info(f"Checking {len(clips)} clips for audio...")
                         # Usually generates 2 clips
                         # We'll play the first one
                         for clip in clips:
                             audio_url = clip.get("audio_url")
+                            logger.info(f"Clip {clip.get('id')} Audio URL: {audio_url}")
+                            
                             if audio_url:
                                 logger.info(f"Music ready! Playing: {audio_url}")
-                                logger.info(f"Track will be saved via callback to auth server")
+                                
+                                # FALLBACK: Save directly to Firestore since callback is unreliable
+                                try:
+                                    logger.info(f"Adding fallback save to Firestore for user {self.user_id}")
+                                    track_id = clip.get("id")
+                                    track_data = {
+                                        # "userId": self.user_id, # Added by save_music_track
+                                        "sunoId": track_id,
+                                        "title": title or clip.get("title") or "Untitled Track",
+                                        "audioUrl": audio_url,
+                                        "videoUrl": clip.get("video_url"),
+                                        "imageUrl": clip.get("image_url"),
+                                        "status": "SUCCESS",
+                                        "metadata": {
+                                            "model_name": clip.get("model_name"),
+                                            "prompt": clip.get("prompt"),
+                                            "tags": clip.get("tags")
+                                        },
+                                        "isPublic": False
+                                    }
+                                    FirebaseDB().save_music_track(self.user_id, track_data, track_id)
+                                except Exception as e:
+                                    logger.error(f"Fallback save failed: {e}")
+
+                                logger.info(f"Track should also be saved via callback (if it works)")
 
                                 # Send to frontend
                                 if self._publish_data_fn:
