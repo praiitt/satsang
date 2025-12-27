@@ -37,6 +37,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       const keys = key.split('.');
       let value: any = translations[language];
 
+      // Debug: Log what we're trying to access
+      if (typeof window !== 'undefined' && key.startsWith('rraasHome')) {
+        console.log('[Translation Debug]', {
+          key,
+          language,
+          hasTranslations: !!translations[language],
+          firstKey: keys[0],
+          hasFirstKey: !!(translations[language] as any)?.[keys[0]]
+        });
+      }
+
       for (const k of keys) {
         value = value?.[k];
       }
