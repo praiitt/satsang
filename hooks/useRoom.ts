@@ -63,7 +63,7 @@ export function useRoom(appConfig: AppConfig) {
                 }
                 : undefined,
               language: language, // Also send in body for compatibility
-              userId: authRef.current.user?.uid, // Include userId for music agent
+              userId: authRef.current.user?.phoneNumber || authRef.current.user?.uid, // Use phone number for music tracking
               guruId: appConfig.metadata?.guruId, // Pass guruId if available
             }),
           });
@@ -72,7 +72,7 @@ export function useRoom(appConfig: AppConfig) {
             agentName: appConfig.agentName,
             language,
             guruId: appConfig.metadata?.guruId,
-            userId: authRef.current.user?.uid,
+            userId: authRef.current.user?.phoneNumber || authRef.current.user?.uid,
           });
 
           const data = await res.json();
