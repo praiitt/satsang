@@ -416,6 +416,86 @@ If overall_score < 7.0, set is_valid to false.
             logger.error(f"Failed to list tracks: {e}")
             return "I'm sorry, I couldn't retrieve your tracks right now."
 
+    @function_tool
+    async def check_song_status(
+        self,
+        context: RunContext,
+        song_title: str = "",
+    ) -> str:
+        """
+        Check if a song has been created and is ready to play.
+        Searches user's tracks in Firebase by title.
+        
+        Args:
+            song_title: Optional title or keywords to search for. If empty, shows recent tracks.
+        
+        Returns:
+            Status message with play link if found, or instruction to check later.
+        """
+        try:
+            import aiohttp
+            
+            logger.info(f"Checking song status for user {self.user_id}, title: '{song_title}'")
+            
+            # Get tracks from auth server
+            auth_server_url = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
+            url = f"{auth_server_url}/suno/tracks?userId={self.user_id}&limit=20"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status != 200:
+                        logger.error(f"Failed to fetch tracks: {response.status}")
+                        return "I'm having trouble checking your songs right now. Please try again in a moment."
+                    
+                    data = await response.json()
+                    tracks = data.get("tracks", [])
+            
+            if not tracks:
+                return "You haven't created any music tracks yet. Would you like to create one?"
+            
+            # If song_title provided, search for it
+            if song_title:
+                # Search for matching tracks (case-insensitive)
+                matching_tracks = [
+                    t for t in tracks 
+                    if song_title.lower() in t.get("title", "").lower()
+                ]
+                
+                if matching_tracks:
+                    # Found matching track(s)
+                    track = matching_tracks[0]  # Get most recent match
+                    title = track.get("title", "Untitled")
+                    audio_url = track.get("audioUrl", "")
+                    status = track.get("status", "UNKNOWN")
+                    
+                    if status == "COMPLETED" and audio_url:
+                        logger.info(f"Found completed track: {title}")
+                        # Play the track
+                        await self._play_audio_url(audio_url, title)
+                        return f"Great news! Your song '{title}' is ready and playing now!"
+                    else:
+                        return f"I found your song '{title}', but it's still being created. Please check 'My Music' in a few moments!"
+                else:
+                    return f"I couldn't find a song matching '{song_title}' in your library. Your recent tracks are: {', '.join([t.get('title', 'Untitled') for t in tracks[:3]])}. Would you like me to play one of these?"
+            
+            # No title provided - show recent completed tracks
+            completed_tracks = [t for t in tracks if t.get("status") == "COMPLETED" and t.get("audioUrl")]
+            
+            if completed_tracks:
+                response = "Here are your recent completed songs:\n"
+                for i, track in enumerate(completed_tracks[:5], 1):
+                    title = track.get("title", "Untitled")
+                    response += f"{i}. {title}\n"
+                response += "\nWhich one would you like to play?"
+                return response
+            else:
+                return "Your songs are still being created. Please check 'My Music' in a few moments!"
+                
+        except Exception as e:
+            logger.error(f"Failed to check song status: {e}")
+            return "I'm having trouble checking your songs right now. Please try again in a moment."
+
+
 
 def prewarm(proc: JobProcess):
     proc.userdata["vad"] = None
