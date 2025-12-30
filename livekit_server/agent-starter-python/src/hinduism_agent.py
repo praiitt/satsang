@@ -645,34 +645,44 @@ async def entrypoint(ctx: JobContext):
     satsang_plan = None
     plan_id = None
     
-    # Try to extract planId from metadata (scanning again locally since we might have missed it in the loop above if we didn't store it)
-    # Actually, let's just grab it from the last seen metadata if possible or re-scan logic is messy.
-    # Better to iterate participants again or store it in the loop. 
-    # Let's simplify: access ctx.room.remote_participants directly.
+    # Try to extract plan from metadata
     for p in ctx.room.remote_participants.values():
         if p.metadata:
             try:
                 md = json.loads(p.metadata)
+                
+                # Check for FULL PLAN embedded in metadata (Best method avoids DB call)
+                if 'satsang_plan' in md and md['satsang_plan']:
+                    satsang_plan = md['satsang_plan']
+                    plan_id = md.get('planId') or satsang_plan.get('id')
+                    logger.info(f"📜 Found FULL satsang plan in metadata! (ID: {plan_id})")
+                    break
+                
+                # Fallback to just ID
                 if 'planId' in md:
                     plan_id = md['planId']
-                    logger.info(f"📜 Found Satsang Plan ID: {plan_id}")
+                    logger.info(f"📜 Found Satsang Plan ID in metadata: {plan_id}")
                     break
             except:
                 pass
 
     hosted_instructions = None
 
-    if plan_id:
-        logger.info(f"Loading satsang plan {plan_id}...")
+    # If we have ID but no full plan, try DB (Fallback)
+    if plan_id and not satsang_plan:
+        logger.info(f"Loading satsang plan {plan_id} from DB...")
         try:
             db = FirebaseDB()
             satsang_plan = db.get_satsang_plan(plan_id)
-            if satsang_plan:
-                logger.info("✅ Satsang Plan loaded successfully")
-                
-                # CALCULATE INSTRUCTIONS FOR HOSTED MODE
-                logger.info("🔒 Activating STRICT HOSTED SATSANG MODE")
-                intro_text = satsang_plan.get('intro_text', '')
+        except Exception as e:
+            logger.error(f"❌ Failed to load plan from DB: {e}")
+
+    if satsang_plan:
+        logger.info("✅ Satsang Plan loaded successfully")
+        
+        # CALCULATE INSTRUCTIONS FOR HOSTED MODE
+        logger.info("🔒 Activating STRICT HOSTED SATSANG MODE")
+        intro_text = satsang_plan.get('intro_text', '')
                 bhajan_query = satsang_plan.get('bhajan_query', '')
                 pravachan_points = satsang_plan.get('pravachan_points', [])
                 closing_text = satsang_plan.get('closing_text', '')

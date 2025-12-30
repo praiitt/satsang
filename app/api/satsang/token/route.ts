@@ -54,12 +54,30 @@ export async function POST(req: Request) {
 
         const participantIdentity = `satsang_user_${userId}_${Date.now()}`;
 
+        // Fetch plan if planId is provided
+        let fullPlan = null;
+        if (body.planId) {
+            try {
+                // Import locally to avoid issues if not used elsewhere
+                const { getAdminDb } = require('@/lib/firebase-admin');
+                const db = getAdminDb();
+                const planDoc = await db.collection('satsang_plans').doc(body.planId).get();
+                if (planDoc.exists) {
+                    fullPlan = planDoc.data();
+                    console.log(`[PrivateSatsang Token] Fetched plan ${body.planId} for metadata embedding`);
+                }
+            } catch (e) {
+                console.error('[PrivateSatsang Token] Failed to fetch plan for metadata:', e);
+            }
+        }
+
         // Create metadata for the agent to consume
         const metadata = JSON.stringify({
             guruId: guruId,
             userId: userId,
             language: language,
             planId: body.planId,
+            satsang_plan: fullPlan, // Embed full plan
             type: 'private-satsang'
         });
 
