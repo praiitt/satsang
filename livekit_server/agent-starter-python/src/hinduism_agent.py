@@ -815,7 +815,11 @@ CONTEXT (For persona style only):
         
         await session.say(welcome_msg)
     else:
-        logger.info("🤫 Hosted Mode active: Skipping welcome message. Waiting for start signal.")
+        logger.info("🤫 Hosted Mode active: Starting session with Intro Text.")
+        if 'intro_text' in locals() and intro_text:
+            await session.say(intro_text)
+        else:
+            await session.say("Namaste. I am ready to begin our satsang.")
 
 
 if __name__ == "__main__":
