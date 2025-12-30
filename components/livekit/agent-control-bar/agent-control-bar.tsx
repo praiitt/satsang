@@ -119,10 +119,13 @@ export function AgentControlBar({
         {/* Chat Toggle */}
         {visibleControls.chat && (
           <Button
-            variant={chatOpen ? 'primary' : 'secondary'}
+            variant="secondary"
             size="icon"
             onClick={() => handleToggleTranscript(!chatOpen)}
-            className="rounded-full h-16 w-16 border-4 border-slate-900 shadow-xl"
+            className={cn(
+              "rounded-full h-16 w-16 border-4 border-slate-900 shadow-xl transition-all flex item-center justify-center shrink-0",
+              chatOpen ? "bg-primary text-primary-foreground" : "bg-white text-slate-950 hover:bg-slate-200"
+            )}
             aria-label={chatOpen ? 'Close chat' : 'Open chat'}
           >
             <ChatTextIcon weight="fill" className="h-7 w-7" />
