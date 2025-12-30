@@ -150,9 +150,11 @@ generate_music(
         logger.info(f"Generating music: {title} ({style}) - Instrumental: {is_instrumental}")
         
         try:
-            # Use new dedicated Cloud Function for callbacks
-            callback_url = f"https://rraasi-music-webhook-6ougd45dya-uc.a.run.app?userId={self.user_id}"
+            # Use auth server for callbacks (more robust)
+            auth_server_url = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
+            callback_url = f"{auth_server_url}/suno/callback?userId={self.user_id}"
             
+            logger.info(f"DEBUG CALLBACK: Using User ID: {self.user_id}")
             logger.info(f"DEBUG CALLBACK: Callback URL: {callback_url}")
             
             # Call Suno API
@@ -182,7 +184,7 @@ generate_music(
             logger.info(f"Music generation started. Task ID: {task_id}")
             logger.info(f"Callback webhook will save track automatically")
 
-            return f"I have started creating your music: '{title}'. The track will be saved automatically when ready (usually takes about a minute). You can check your tracks anytime!"
+            return f"I have started creating your spiritual track: '{title}'. It usually takes about 60-90 seconds to manifest. I will notify you when it's ready, or you can ask me to 'play my last track' in a minute!"
 
         except Exception as e:
             logger.error(f"Music generation failed: {e}")
@@ -476,24 +478,39 @@ If overall_score < 7.0, set is_valid to false.
                     else:
                         return f"I found your song '{title}', but it's still being created. Please check 'My Music' in a few moments!"
                 else:
-                    return f"I couldn't find a song matching '{song_title}' in your library. Your recent tracks are: {', '.join([t.get('title', 'Untitled') for t in tracks[:3]])}. Would you like me to play one of these?"
+                    return f"I couldn't find a song matching '{song_title}' in your library. Would you like me to play your most recent track instead?"
             
-            # No title provided - show recent completed tracks
+            # No title provided - find the MOST RECENT completed track
             completed_tracks = [t for t in tracks if t.get("status") == "COMPLETED" and t.get("audioUrl")]
             
             if completed_tracks:
-                response = "Here are your recent completed songs:\n"
-                for i, track in enumerate(completed_tracks[:5], 1):
-                    title = track.get("title", "Untitled")
-                    response += f"{i}. {title}\n"
-                response += "\nWhich one would you like to play?"
-                return response
-            else:
-                return "Your songs are still being created. Please check 'My Music' in a few moments!"
+                # Play the absolute most recent one
+                latest_track = completed_tracks[0]
+                title = latest_track.get("title", "Untitled")
+                audio_url = latest_track.get("audioUrl", "")
                 
+                logger.info(f"Playing latest track for user: {title}")
+                await self._play_audio_url(audio_url, title)
+                return f"I've found your latest track '{title}'. Playing it now for you!"
+            else:
+                return "Your tracks are still in the process of creation. Please give it another minute and then ask me again!"
+                
+    async def _play_audio_url(self, url: str, title: str):
+        """Internal helper to publish play event to frontend."""
+        if not self._publish_data_fn:
+            logger.warning("No publish function available for playback")
+            return
+            
+        try:
+            payload = {
+                "name": title,
+                "artist": "RRAASI AI",
+                "audio_url": url,
+                "message": f"Playing '{title}'..."
+            }
+            await self._publish_data_fn(json.dumps(payload).encode("utf-8"))
         except Exception as e:
-            logger.error(f"Failed to check song status: {e}")
-            return "I'm having trouble checking your songs right now. Please try again in a moment."
+            logger.error(f"Error publishing playback data: {e}")
 
 
 
@@ -508,29 +525,36 @@ async def entrypoint(ctx: JobContext):
     user_language = "hi"  # Default to Hindi for devotional music
     
     try:
-        # Wait for participants to connect
-        await asyncio.sleep(1.0)
+        logger.info("Waiting for participant to join...")
+        participant = await ctx.wait_for_participant()
+        logger.info(f"Participant joined: {participant.identity}")
         
-        # Get the first participant (the user who joined)
-        participants = list(ctx.room.remote_participants.values())
-        if participants:
-            participant = participants[0]
-            if participant.metadata:
-                metadata = json.loads(participant.metadata)
-                user_id = metadata.get("userId", "default_user")
-                
-                # Parse language preference (robust parsing)
-                raw_lang = str(metadata.get("language", "")).strip().lower()
-                if raw_lang in ["hi", "hindi", "hin"]:
-                    user_language = "hi"
-                elif raw_lang in ["en", "english", "eng"]:
-                    user_language = "en"
-                else:
-                    user_language = raw_lang if raw_lang else "hi"
-                
-                logger.info(f"📝 Detected language: {user_language}, userId: {user_id}")
+        # Wait a small bit for metadata to sync if needed
+        if not participant.metadata:
+            for _ in range(5):
+                await asyncio.sleep(0.5)
+                if participant.metadata:
+                    break
+        
+        if participant.metadata:
+            metadata = json.loads(participant.metadata)
+            user_id = metadata.get("userId", "default_user")
+            
+            # Parse language preference
+            raw_lang = str(metadata.get("language", "")).strip().lower()
+            if raw_lang in ["hi", "hindi", "hin"]:
+                user_language = "hi"
+            elif raw_lang in ["en", "english", "eng"]:
+                user_language = "en"
+            else:
+                user_language = raw_lang if raw_lang else "hi"
+            
+            logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}")
+        else:
+            logger.warning("No metadata found for participant, using defaults")
     except Exception as e:
-        logger.warning(f"Could not extract metadata: {e}, using defaults (hi, default_user)")
+        logger.error(f"Error extracting metadata from participant: {e}")
+        logger.warning("Using defaults (hi, default_user)")
     
     # Final validation
     if user_language not in {"hi", "en"}:

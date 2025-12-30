@@ -48,9 +48,10 @@ yarn-error.log*
 .pnpm-debug.log*
 lerna-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
 !.env.example
+# !.env.local
 
 # vercel
 .vercel
@@ -94,8 +95,10 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+#lib/
 lib64/
+#!src/lib/
+#!lib/
 parts/
 sdist/
 var/

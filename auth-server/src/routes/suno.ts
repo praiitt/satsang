@@ -1,9 +1,84 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../firebase.js';
+import admin from 'firebase-admin';
 
 const router = Router();
 
-interface SunoCallbackPayload {
+const COIN_SERVICE_URL = process.env.COIN_SERVICE_URL || 'https://us-central1-rraasi-8a619.cloudfunctions.net/rraasi-coin-service';
+
+/**
+ * Deduct coins for music generation
+ */
+async function deductMusicCoins(userId: string, trackId: string, trackTitle: string) {
+    try {
+        console.log(`[Coin Deduction] Deducting 50 coins for user: ${userId}, track: ${trackId}`);
+
+        // Get user's ID token for auth
+        const userDoc = await getDb().collection('users').doc(userId).get();
+        if (!userDoc.exists) {
+            console.warn(`[Coin Deduction] User ${userId} not found, skipping deduction`);
+            return;
+        }
+
+        // Call coin service to deduct coins
+        const response = await fetch(`${COIN_SERVICE_URL}/coins/deduct`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Note: In production, you'd need proper auth token here
+                // For now, the service might bypass auth for server-to-server calls
+            },
+            body: JSON.stringify({
+                userId: userId,
+                featureId: 'music_generation',
+                metadata: {
+                    trackId,
+                    trackTitle,
+                    source: 'suno_callback'
+                }
+            })
+        });
+
+        const result = await response.json() as any;
+
+        if (result.success) {
+            console.log(`[Coin Deduction] ✅ Successfully deducted coins. New balance: ${result.newBalance}`);
+        } else {
+            console.error(`[Coin Deduction] ❌ Failed to deduct coins:`, result.error);
+        }
+    } catch (error) {
+        console.error(`[Coin Deduction] ❌ Error deducting coins:`, error);
+        // Don't throw - we don't want coin deduction failures to break the callback
+    }
+}
+
+// Official Suno API Callback Payload Format (from docs.sunoapi.org)
+interface SunoOfficialCallbackPayload {
+    code: number;  // 200 for success, 400/451/500 for errors
+    msg: string;   // Status message
+    data: {
+        callbackType: 'text' | 'first' | 'complete' | 'error';  // Callback type
+        task_id: string;  // Task ID
+        data: Array<{
+            id: string;
+            audio_url: string;
+            source_audio_url: string;
+            stream_audio_url: string;
+            source_stream_audio_url: string;
+            image_url: string;
+            source_image_url: string;
+            prompt: string;
+            model_name: string;
+            title: string;
+            tags: string;
+            createTime: string;
+            duration: number;
+        }>;
+    };
+}
+
+// Legacy format (for backwards compatibility if needed)
+interface SunoLegacyCallbackPayload {
     taskId: string;
     status: string;
     clips?: Array<{
@@ -26,65 +101,134 @@ interface SunoCallbackPayload {
 /**
  * POST /api/suno/callback
  * Receives callbacks from Suno API when music generation is complete
+ * Supports both official and legacy callback formats
  */
 router.post('/callback', async (req: Request, res: Response) => {
     try {
-        const payload: SunoCallbackPayload = req.body;
-        const userId = (req.query.userId as string) || 'default_user';
+        const payload = req.body;
+        const query = req.query || {};
+        const userId = (query.userId as string) || 'default_user';
 
-        console.log('[Suno Callback] Received callback:', JSON.stringify(payload, null, 2));
-        console.log('[Suno Callback] UserId from query:', userId);
+        console.log(`[Suno Callback] Received for User: ${userId}`);
+        console.log(`[Suno Callback] Full payload:`, JSON.stringify(payload, null, 2));
 
-        // Validate payload
-        if (!payload.taskId) {
-            console.error('[Suno Callback] Missing taskId in payload');
-            return res.status(400).json({ error: 'Missing taskId' });
-        }
+        // Detect payload format
+        const isOfficialFormat = payload.code !== undefined && payload.data?.callbackType !== undefined;
 
-        // Only process successful completions
-        if (payload.status === 'SUCCESS' && payload.clips && payload.clips.length > 0) {
-            const db = getDb();
-            const musicTracksRef = db.collection('music_tracks');
+        if (isOfficialFormat) {
+            // Official Suno API format
+            const officialPayload = payload as SunoOfficialCallbackPayload;
+            console.log(`[Suno Callback] Official format - Code: ${officialPayload.code}, Type: ${officialPayload.data.callbackType}`);
 
-            // Save each clip to Firebase
-            for (const clip of payload.clips) {
-                if (clip.audio_url) {
-                    const trackData = {
-                        taskId: payload.taskId,
-                        clipId: clip.id,
-                        title: clip.title || 'Untitled',
-                        audioUrl: clip.audio_url,
-                        videoUrl: clip.video_url || null,
-                        imageUrl: clip.image_url || null,
-                        lyric: clip.lyric || null,
-                        status: payload.status,
-                        userId: userId,
-                        createdAt: new Date(),
-                        metadata: {
-                            modelName: clip.model_name,
-                            prompt: clip.prompt,
-                            style: clip.style,
-                            tags: clip.tags,
-                            gptDescription: clip.gpt_description_prompt,
-                        },
-                    };
+            // Only process successful callbacks with complete or first status
+            if (officialPayload.code === 200 &&
+                (officialPayload.data.callbackType === 'complete' || officialPayload.data.callbackType === 'first')) {
 
-                    await musicTracksRef.add(trackData);
-                    console.log(`[Suno Callback] Saved track: ${clip.title} (${clip.id}) for user: ${userId}`);
+                const tracks = officialPayload.data.data || [];
+                console.log(`[Suno Callback] Processing ${tracks.length} track(s)`);
+
+                const db = getDb();
+                const musicTracksRef = db.collection('music_tracks');
+                const batch = db.batch();
+
+                for (const track of tracks) {
+                    console.log(`[Suno Callback] Processing track: ${track.id} - ${track.title}`);
+                    if (track.audio_url) {
+                        const trackData = {
+                            userId: userId,
+                            sunoId: track.id,
+                            title: track.title || 'Untitled Track',
+                            audioUrl: track.audio_url,
+                            sourceAudioUrl: track.source_audio_url || null,
+                            streamAudioUrl: track.stream_audio_url || null,
+                            imageUrl: track.image_url || null,
+                            sourceImageUrl: track.source_image_url || null,
+                            status: 'COMPLETED',
+                            metadata: {
+                                model_name: track.model_name || null,
+                                prompt: track.prompt || null,
+                                tags: track.tags || null,
+                                duration: track.duration || null,
+                                createTime: track.createTime || null
+                            },
+                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                            isPublic: false
+                        };
+
+                        const docRef = musicTracksRef.doc(track.id);
+                        batch.set(docRef, trackData, { merge: true });
+                    }
                 }
-            }
 
-            console.log(`[Suno Callback] Successfully saved ${payload.clips.length} tracks for task ${payload.taskId}, user ${userId}`);
+                await batch.commit();
+                console.log(`[Suno Callback] ✅ Successfully saved ${tracks.length} track(s) to Firestore`);
+
+                // Deduct coins for successful music generation
+                for (const track of tracks) {
+                    if (track.audio_url) {
+                        await deductMusicCoins(userId, track.id, track.title);
+                    }
+                }
+            } else {
+                console.log(`[Suno Callback] Skipping - Code: ${officialPayload.code}, Type: ${officialPayload.data?.callbackType}`);
+            }
         } else {
-            console.log(`[Suno Callback] Task ${payload.taskId} status: ${payload.status} - not saving`);
+            // Legacy format (backwards compatibility)
+            const legacyPayload = payload as SunoLegacyCallbackPayload;
+            console.log(`[Suno Callback] Legacy format - Status: ${legacyPayload.status}`);
+
+            if (legacyPayload.status === 'SUCCESS' && legacyPayload.clips && legacyPayload.clips.length > 0) {
+                const db = getDb();
+                const musicTracksRef = db.collection('music_tracks');
+                const batch = db.batch();
+
+                for (const clip of legacyPayload.clips) {
+                    console.log(`[Suno Callback] Processing clip: ${clip.id} - ${clip.title}`);
+                    if (clip.audio_url) {
+                        const trackData = {
+                            userId: userId,
+                            sunoId: clip.id,
+                            title: clip.title || 'Untitled Track',
+                            audioUrl: clip.audio_url,
+                            videoUrl: clip.video_url || null,
+                            imageUrl: clip.image_url || null,
+                            status: 'COMPLETED',
+                            metadata: {
+                                model_name: clip.model_name || null,
+                                prompt: clip.prompt || null,
+                                tags: clip.tags || null
+                            },
+                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                            isPublic: false
+                        };
+
+                        const docRef = musicTracksRef.doc(clip.id);
+                        batch.set(docRef, trackData, { merge: true });
+                    }
+                }
+
+                await batch.commit();
+                console.log(`[Suno Callback] ✅ Successfully saved ${legacyPayload.clips.length} track(s) to Firestore (legacy format)`);
+
+                // Deduct coins for successful music generation
+                for (const clip of legacyPayload.clips) {
+                    if (clip.audio_url) {
+                        await deductMusicCoins(userId, clip.id, clip.title);
+                    }
+                }
+            } else {
+                console.log(`[Suno Callback] No tracks to save - Status: ${legacyPayload.status}`);
+            }
         }
 
-        // Always return 200 to acknowledge receipt
-        res.status(200).json({ received: true, taskId: payload.taskId });
+        // Always return 200 to acknowledge receipt (as per Suno docs)
+        res.status(200).json({ status: 'received' });
     } catch (error) {
-        console.error('[Suno Callback] Error processing callback:', error);
-        // Still return 200 to prevent Suno from retrying
-        res.status(200).json({ received: true, error: 'Internal error' });
+        console.error('[Suno Callback] ❌ Error processing callback:', error);
+        // Still return 200 to prevent retries on our errors
+        res.status(200).json({ status: 'error', message: 'Internal processing error' });
     }
 });
 
@@ -94,8 +238,10 @@ router.post('/callback', async (req: Request, res: Response) => {
  */
 router.get('/tracks', async (req: Request, res: Response) => {
     try {
-        const userId = req.query.userId as string || 'default_user';
-        const limit = parseInt(req.query.limit as string) || 10;
+        const userId = (req.query?.userId as string) || 'default_user';
+        const limit = parseInt(req.query?.limit as string) || 10;
+
+        console.log(`[Suno Tracks] userId=${userId}, req.query exists? ${!!req.query}`);
 
         const db = getDb();
         const snapshot = await db
@@ -120,6 +266,60 @@ router.get('/tracks', async (req: Request, res: Response) => {
     } catch (error) {
         console.error('[Suno Tracks] Error fetching tracks:', error);
         res.status(500).json({ error: 'Failed to fetch tracks' });
+    }
+});
+
+/**
+ * GET /api/suno/community-tracks
+ * Get music tracks created by all users (paginated)
+ */
+router.get('/community-tracks', async (req: Request, res: Response) => {
+    try {
+        const page = parseInt(req.query?.page as string) || 1;
+        const limit = parseInt(req.query?.limit as string) || 10;
+
+        console.log(`[Suno Community Tracks] Page=${page}, Limit=${limit}, req.query exists? ${!!req.query}`);
+        const offset = (page - 1) * limit;
+
+        const db = getDb();
+
+        // Note: For large collections, offset is inefficient, but fine for now.
+        // A better approach would be cursor-based pagination (startAfter).
+        // Since we want to sort by creation time, we need an index on createdAt.
+        // If index is missing, this might fail or require one.
+        // For simplicity and to avoid index requirement errors immediately if not set up,
+        // we might fetch a bit more or rely on client-side sorting if volume is low,
+        // but let's try standard orderBy first.
+
+        // Query for tracks with audioUrl (completed tracks)
+        const tracksQuery = db.collection('music_tracks')
+            .orderBy('createdAt', 'desc')
+            .limit(limit)
+            .offset(offset);
+
+        // Also get total count (approximate or separate query)
+        // Firestore count() aggregation is cost-effective
+        const validTracksQuery = db.collection('music_tracks').where('status', '==', 'SUCCESS');
+        const countSnapshot = await validTracksQuery.count().get();
+        const total = countSnapshot.data().count;
+
+        const snapshot = await tracksQuery.get();
+
+        const tracks = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+
+        res.json({
+            tracks,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit),
+            hasMore: page * limit < total
+        });
+    } catch (error) {
+        console.error('[Suno Community Tracks] Error fetching community tracks:', error);
+        res.status(500).json({ error: 'Failed to fetch community tracks' });
     }
 });
 

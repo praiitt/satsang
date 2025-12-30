@@ -7,6 +7,7 @@ import { RootProvider } from '@/components/app/root-provider';
 import { SiteFooter } from '@/components/app/site-footer';
 import { SiteHeader } from '@/components/app/site-header';
 import { ApplyThemeScript, ThemeToggle } from '@/components/app/theme-toggle';
+import { OnboardingProvider } from '@/components/providers/onboarding-provider';
 import { cn, getAppConfig, getStyles } from '@/lib/utils';
 import '@/styles/globals.css';
 
@@ -78,13 +79,15 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       </head>
       <body className="overflow-x-hidden">
         <RootProvider>
-          <SiteHeader />
-          {children}
-          <SiteFooter />
-          {/* <BottomNav /> */}
-          <div className="group fixed bottom-0 left-1/2 z-50 mb-2 -translate-x-1/2">
-            <ThemeToggle className="translate-y-20 transition-transform delay-150 duration-300 group-hover:translate-y-0" />
-          </div>
+          <OnboardingProvider>
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+            {/* <BottomNav /> */}
+            <div className="group fixed bottom-0 left-1/2 z-50 mb-2 -translate-x-1/2">
+              <ThemeToggle className="translate-y-20 transition-transform delay-150 duration-300 group-hover:translate-y-0" />
+            </div>
+          </OnboardingProvider>
         </RootProvider>
         {/* Google Analytics */}
         <Script

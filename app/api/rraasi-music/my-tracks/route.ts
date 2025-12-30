@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-api';
+import { headers } from 'next/headers';
 
 /**
  * GET /api/rraasi-music/my-tracks
@@ -7,8 +8,9 @@ import { getCurrentUser } from '@/lib/auth-api';
  */
 export async function GET(request: NextRequest) {
     try {
-        // Get authenticated user
-        const user = await getCurrentUser();
+        // Get authenticated user - pass server-side cookies
+        const headerList = await headers();
+        const user = await getCurrentUser(headerList.get('cookie') || undefined);
 
         if (!user || !user.phoneNumber) {
             return NextResponse.json(

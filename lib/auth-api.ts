@@ -3,7 +3,10 @@
  */
 
 // Use Next.js API routes as proxy (better for cookies and CORS)
-const AUTH_SERVER_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || '/backend/auth';
+const AUTH_SERVER_URL = process.env.NEXT_PUBLIC_AUTH_API_URL ||
+  (typeof window === 'undefined'
+    ? ((process.env.AUTH_SERVER_URL || 'http://localhost:4000') + '/auth')
+    : '/backend/auth');
 
 export interface AuthResponse {
   uid: string;
@@ -64,12 +67,38 @@ export async function sessionLogout(): Promise<void> {
 
 /**
  * Get current authenticated user
+ * @param reqCookies Optional cookies to pass (useful for server-side calls)
  */
-export async function getCurrentUser(): Promise<UserInfo> {
-  const response = await fetch(`${AUTH_SERVER_URL}/me`, {
+export async function getCurrentUser(reqCookies?: string): Promise<UserInfo> {
+  const fetchOptions: RequestInit = {
     method: 'GET',
     credentials: 'include',
-  });
+  };
+
+  if (typeof window === 'undefined') {
+    let cookie = reqCookies;
+
+    // If no cookies passed, try to get from next/headers
+    if (!cookie) {
+      try {
+        // Use dynamic import to avoid issues in client-side bundles
+        const { headers } = await import('next/headers');
+        const headerList = await headers();
+        cookie = headerList.get('cookie') || undefined;
+      } catch (e) {
+        // Probably not in a context where headers() is available
+      }
+    }
+
+    if (cookie) {
+      fetchOptions.headers = {
+        ...fetchOptions.headers,
+        cookie: cookie,
+      };
+    }
+  }
+
+  const response = await fetch(`${AUTH_SERVER_URL}/me`, fetchOptions);
 
   if (!response.ok) {
     throw new Error('Not authenticated');

@@ -121,6 +121,48 @@ module.exports = {
             exp_backoff_restart_delay: 100,
             cpu_threshold: 70,
             cpu_restart_delay: 30
+        },
+        {
+            name: "agent-psychedelic",
+            script: "src/psychedelic_agent.py",
+            args: "dev",
+            interpreter: "./venv/bin/python",
+            cwd: ".",
+            env: {
+                PYTHONUNBUFFERED: "1",
+                LIVEKIT_AGENT_NAME: "psychedelic-agent",
+                DOTENV_PATH: ".env.local"
+            },
+            autorestart: true,
+            watch: false,
+            max_memory_restart: "1G",
+            max_restarts: 10,
+            min_uptime: "10s",
+            restart_delay: 5000,
+            exp_backoff_restart_delay: 100,
+            cpu_threshold: 70,
+            cpu_restart_delay: 30
+        },
+        {
+            name: "agent-tarot",
+            script: "src/tarot_agent.py",
+            args: "dev",
+            interpreter: "./venv/bin/python",
+            cwd: ".",
+            env: {
+                PYTHONUNBUFFERED: "1",
+                LIVEKIT_AGENT_NAME: "tarot-agent",
+                DOTENV_PATH: ".env.local"
+            },
+            autorestart: true,
+            watch: false,
+            max_memory_restart: "1G",
+            max_restarts: 10,
+            min_uptime: "10s",
+            restart_delay: 5000,
+            exp_backoff_restart_delay: 100,
+            cpu_threshold: 70,
+            cpu_restart_delay: 30
         }
     ]
 };

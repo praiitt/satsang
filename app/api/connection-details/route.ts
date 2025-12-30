@@ -39,15 +39,24 @@ export async function POST(req: Request) {
     // Generate participant token
     const participantName = 'user';
     const participantIdentity = `voice_assistant_user_${Math.floor(Math.random() * 10_000)}`;
-    const roomName = `voice_assistant_room_${Math.floor(Math.random() * 10_000)}`;
 
-    // Get guruId from request body (if available)
+    // Customize room name prefix based on agent
+    let roomPrefix = 'voice_assistant_room';
+    if (agentName && agentName.toLowerCase().includes('tarot')) {
+      roomPrefix = 'tarot_room';
+    }
+
+    const roomName = `${roomPrefix}_${Math.floor(Math.random() * 10_000)}`;
+
+    // Get guruId and userId from request body (if available)
     const guruId: string | undefined = body?.guruId;
+    const userId: string | undefined = body?.userId;
 
     console.log('🔍 Connection details request:', {
       agentName,
       languagePreference,
       guruId,
+      userId,
       bodyKeys: Object.keys(body || {}),
     });
 
@@ -56,7 +65,8 @@ export async function POST(req: Request) {
       roomName,
       agentName,
       languagePreference,
-      guruId
+      guruId,
+      userId
     );
 
     // Return connection details
@@ -83,7 +93,8 @@ function createParticipantToken(
   roomName: string,
   agentName?: string,
   language?: string,
-  guruId?: string
+  guruId?: string,
+  userId?: string
 ): Promise<string> {
   const at = new AccessToken(API_KEY, API_SECRET, {
     ...userInfo,
@@ -91,13 +102,15 @@ function createParticipantToken(
     metadata: JSON.stringify({
       language: language || 'hi',
       guruId: guruId,
-    }), // Store language and guruId in token metadata
+      userId: userId,
+    }), // Store language, guruId, and userId in token metadata
   });
 
   console.log('🔍 Creating token with metadata:', {
     language: language || 'hi',
     guruId: guruId,
-    metadataString: JSON.stringify({ language: language || 'hi', guruId: guruId }),
+    userId: userId,
+    metadataString: JSON.stringify({ language: language || 'hi', guruId: guruId, userId: userId }),
   });
   const grant: VideoGrant = {
     room: roomName,
