@@ -683,16 +683,16 @@ async def entrypoint(ctx: JobContext):
         # CALCULATE INSTRUCTIONS FOR HOSTED MODE
         logger.info("🔒 Activating STRICT HOSTED SATSANG MODE")
         intro_text = satsang_plan.get('intro_text', '')
-                bhajan_query = satsang_plan.get('bhajan_query', '')
-                pravachan_points = satsang_plan.get('pravachan_points', [])
-                closing_text = satsang_plan.get('closing_text', '')
-                bhajan_title = satsang_plan.get('bhajan_title', bhajan_query)
-                bhajan_vid = satsang_plan.get('bhajan_video_id', '')
+        bhajan_query = satsang_plan.get('bhajan_query', '')
+        pravachan_points = satsang_plan.get('pravachan_points', [])
+        closing_text = satsang_plan.get('closing_text', '')
+        bhajan_title = satsang_plan.get('bhajan_title', bhajan_query)
+        bhajan_vid = satsang_plan.get('bhajan_video_id', '')
 
-                pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
+        pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
 
-                hosted_instructions = f"""
-IMPORTANT: YOU ARE IN **HOSTED SATSANG MODE**. 
+        hosted_instructions = f"""
+IMPORTANT: YOU ARE IN **HOSTED SATSANG MODE**.  
 You are NOT a general assistant. You are executing a formal spiritual session.
 Your instructions are overridden by the plan below.
 
@@ -720,10 +720,8 @@ CLOSING TEXT:
 CONTEXT (For persona style only):
 (You are {guru_id})
 """
-            else:
-                logger.error(f"❌ Satsang Plan ID {plan_id} NOT found in DB. DB returned None.")
-        except Exception as e:
-            logger.error(f"❌ Failed to load plan: {e}")
+    else:
+         pass # No instructions needed for non-hosted mode yet, or logic handled elsewhere
 
     logger.info(f"✅ Final configuration: Guru={guru_id}, Language={user_language}, Plan={bool(satsang_plan)}")
     
