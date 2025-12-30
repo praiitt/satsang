@@ -23,9 +23,10 @@ export async function POST(req: Request) {
         }
 
         // 1. Generate Script and Bhajan Query using LLM
+        const prompt = `
       You are an expert Hindu Satsang planner and Spiritual Guide.
             Topic: "${topic}"
-        Language: ${ language } (Output must be in this language.If 'hi', use high - quality Hindi with Sanskrit terms where appropriate).
+        Language: ${language} (Output must be in this language.If 'hi', use high - quality Hindi with Sanskrit terms where appropriate).
       
       Generate a structured, profound, and spiritually deep plan for a "Private Satsang" session.
       The content should be philosophical, meditative, and reference ancient wisdom(Vedas, Upanishads, Gita) where applicable.
