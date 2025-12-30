@@ -817,7 +817,34 @@ CONTEXT (For persona style only):
     else:
         logger.info("🤫 Hosted Mode active: Starting session with Intro Text.")
         if 'intro_text' in locals() and intro_text:
+            # 1. Speak Intro
             await session.say(intro_text)
+            
+            # 2. Auto-play Bhajan
+            if 'bhajan_vid' in locals() and bhajan_vid:
+                logger.info(f"🎶 Auto-playing Bhajan: {bhajan_vid}")
+                # We can trigger the tool-like behavior directly or instruct the agent
+                # Direct trigger is safer for hosted mode
+                
+                # Construct a fake search result or just play it if we had a direct play method
+                # Since we rely on the frontend to play based on tool output/events, 
+                # let's try to simulate what the tool does: publish data to frontend.
+                
+                # The 'search_guru_teachings' tool usually creates a track. 
+                # But here we want to ensure the agent 'knows' it played it.
+                # Simplest way: Append a user-like message "Play the bhajan now" to the chat context? 
+                # No, better to directly publish the event like the tool would.
+                
+                if final_agent._publish_data_fn:
+                     payload = json.dumps({
+                        "type": "video_result",
+                        "videoId": bhajan_vid,
+                        "title": bhajan_title or "Bhajan",
+                        "autoplay": True
+                    })
+                     await final_agent._publish_data_fn(payload, reliable=True)
+                     logger.info("📡 Sent Play Bhajan signal to frontend")
+            
         else:
             await session.say("Namaste. I am ready to begin our satsang.")
 
