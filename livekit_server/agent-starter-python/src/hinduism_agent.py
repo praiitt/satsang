@@ -17,10 +17,13 @@ from livekit.agents import (
     cli,
     inference,
     metrics,
-    function_tool,
     RunContext,
 )
-from .firebase_db import FirebaseDB
+try:
+    from .firebase_db import FirebaseDB
+except ImportError:
+    # Fallback for when running as a script
+    from firebase_db import FirebaseDB
 # from livekit.plugins import noise_cancellation, silero
 
 # Configure logging
