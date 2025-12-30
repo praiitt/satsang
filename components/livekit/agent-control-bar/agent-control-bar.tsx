@@ -106,134 +106,99 @@ export function AgentControlBar({
     <div
       aria-label="Voice assistant controls"
       className={cn(
-        'bg-background border-input/50 dark:border-muted flex flex-col overflow-visible rounded-[31px] border p-3 drop-shadow-md/3',
+        'relative flex w-full flex-col items-center justify-end', // Parent container flexibility
         className
       )}
       {...props}
     >
-      {/* Chat Input */}
-      {visibleControls.chat && (
+      {/* End Call Button moved to bottom bar for better UX consistency */}
+
+      {/* Main Control Bar (Bottom Center) */}
+      <div className="flex items-center gap-3 rounded-full bg-slate-950/80 p-2 backdrop-blur-xl border border-white/10 shadow-2xl">
+
+        {/* Chat Toggle */}
+        {visibleControls.chat && (
+          <Button
+            variant={chatOpen ? 'primary' : 'secondary'}
+            size="icon"
+            onClick={() => handleToggleTranscript(!chatOpen)}
+            className="rounded-full h-16 w-16 border-4 border-slate-900 shadow-xl"
+            aria-label={chatOpen ? 'Close chat' : 'Open chat'}
+          >
+            <ChatTextIcon weight="fill" className="h-7 w-7" />
+          </Button>
+        )}
+
+        {/* Microphone Toggle (Central) */}
+        {visibleControls.microphone && (
+          <div className="mx-2">
+            <TrackSelector
+              kind="audioinput"
+              aria-label="Toggle microphone"
+              source={Track.Source.Microphone}
+              pressed={microphoneToggle.enabled}
+              disabled={microphoneToggle.pending}
+              audioTrackRef={micTrackRef}
+              onPressedChange={microphoneToggle.toggle}
+              onMediaDeviceError={handleMicrophoneDeviceSelectError}
+              onActiveDeviceChange={handleAudioDeviceChange}
+              className="h-16 w-16 rounded-full border-4 border-slate-900 shadow-xl"
+            // Note: You might need to adjust TrackSelector's internal Button styles via className prop if supported, 
+            // or ensure it accepts 'className' to override size. 
+            // Assuming TrackSelector passes className to its internal button.
+            />
+          </div>
+        )}
+
+        {/* Agent Sleep Toggle */}
+        <Button
+          size="icon"
+          variant={agentIsSleeping ? 'secondary' : 'ghost'}
+          onClick={handleToggleAgentSleep}
+          className={cn(
+            'rounded-full h-12 w-12 transition-colors',
+            agentIsSleeping && 'bg-amber-500/20 text-amber-500'
+          )}
+          title={agentIsSleeping ? 'Wake Agent' : 'Sleep Agent'}
+        >
+          {agentIsSleeping ? (
+            <Moon weight="fill" className="h-6 w-6" />
+          ) : (
+            <Sun weight="fill" className="h-6 w-6" />
+          )}
+        </Button>
+
+        {/* End Call Button - Compact & Integrated */}
+        {visibleControls.leave && (
+          <Button
+            variant="destructive"
+            size="icon"
+            onClick={handleDisconnect}
+            disabled={!isSessionActive}
+            className="rounded-full h-12 w-12 shrink-0 shadow-lg border border-white/10 ml-2"
+            aria-label={t('session.endConversation')}
+            title={t('session.endConversation')}
+          >
+            <PhoneDisconnectIcon weight="fill" className="h-6 w-6" />
+          </Button>
+        )}
+      </div>
+
+      {/* Sleeping State Banner (Floating above controls) */}
+      {agentIsSleeping && (
+        <div className="absolute bottom-24 bg-black/60 backdrop-blur-md text-amber-200 px-4 py-2 rounded-full text-sm font-medium border border-amber-500/30 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4">
+          <Moon weight="fill" className="h-4 w-4" />
+          {t('session.agentSleeping')}
+        </div>
+      )}
+
+      {/* Chat Input - Prominent overlay when chat is open */}
+      <div className="w-full max-w-lg mb-4">
         <ChatInput
           chatOpen={chatOpen}
           isAgentAvailable={isAgentAvailable}
           onSend={handleSendMessage}
         />
-      )}
-
-      <div className="flex flex-col gap-2">
-        {/* Agent sleep/wake status banner */}
-        {agentIsSleeping && (
-          <div className="flex items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
-            <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-amber-400/70 shadow-sm">
-              <Moon weight="fill" className="h-4 w-4 text-amber-900" />
-              {/* Blinking pulse ring */}
-              <div className="absolute inset-0 animate-ping rounded-full bg-amber-400 opacity-75" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-[11px] font-semibold tracking-wide animate-pulse">
-                {t('session.agentSleeping')}
-              </span>
-              <span className="text-[10px] opacity-80">{t('session.agentSleepingDesc')}</span>
-            </div>
-          </div>
-        )}
-        {/* Chat Button - Prominent */}
-        {visibleControls.chat && (
-          <Button
-            variant={chatOpen ? 'primary' : 'outline'}
-            size="lg"
-            onClick={() => handleToggleTranscript(!chatOpen)}
-            className="w-full justify-center gap-2 font-semibold shadow-lg"
-            aria-label={chatOpen ? 'Close chat' : 'Open chat'}
-          >
-            <ChatTextIcon weight="bold" className="h-5 w-5" />
-            <span>{chatOpen ? t('session.closeChat') : t('session.openChat')}</span>
-          </Button>
-        )}
-
-        {/* Control Row */}
-        <div className="flex gap-1">
-          <div className="flex grow gap-1">
-            {/* Toggle Microphone */}
-            {visibleControls.microphone && (
-              <TrackSelector
-                kind="audioinput"
-                aria-label="Toggle microphone"
-                source={Track.Source.Microphone}
-                pressed={microphoneToggle.enabled}
-                disabled={microphoneToggle.pending}
-                audioTrackRef={micTrackRef}
-                onPressedChange={microphoneToggle.toggle}
-                onMediaDeviceError={handleMicrophoneDeviceSelectError}
-                onActiveDeviceChange={handleAudioDeviceChange}
-              />
-            )}
-
-            {/* Toggle Camera */}
-            {visibleControls.camera && (
-              <TrackSelector
-                kind="videoinput"
-                aria-label="Toggle camera"
-                source={Track.Source.Camera}
-                pressed={cameraToggle.enabled}
-                pending={cameraToggle.pending}
-                disabled={cameraToggle.pending}
-                onPressedChange={cameraToggle.toggle}
-                onMediaDeviceError={handleCameraDeviceSelectError}
-                onActiveDeviceChange={handleVideoDeviceChange}
-              />
-            )}
-
-            {/* Toggle Screen Share */}
-            {visibleControls.screenShare && (
-              <TrackToggle
-                size="icon"
-                variant="secondary"
-                aria-label="Toggle screen share"
-                source={Track.Source.ScreenShare}
-                pressed={screenShareToggle.enabled}
-                disabled={screenShareToggle.pending}
-                onPressedChange={screenShareToggle.toggle}
-              />
-            )}
-
-            {/* Manual Agent Sleep/Wake Toggle */}
-            <Button
-              size="icon"
-              variant={agentIsSleeping ? 'secondary' : 'outline'}
-              onClick={handleToggleAgentSleep}
-              className={cn(
-                'transition-colors',
-                agentIsSleeping && 'bg-yellow-500/20 hover:bg-yellow-500/30'
-              )}
-              title={
-                agentIsSleeping ? 'Wake Agent (Agent is sleeping)' : 'Sleep Agent (Agent is awake)'
-              }
-              aria-label={agentIsSleeping ? 'Wake agent' : 'Sleep agent'}
-            >
-              {agentIsSleeping ? (
-                <Moon weight="fill" className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              ) : (
-                <Sun weight="fill" className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* End Call Button - Most Prominent */}
-        {visibleControls.leave && (
-          <Button
-            variant="destructive"
-            size="lg"
-            onClick={handleDisconnect}
-            disabled={!isSessionActive}
-            className="relative z-10 min-h-[50px] w-full justify-center gap-2 text-base font-bold shadow-xl transition-all hover:shadow-2xl"
-            aria-label="End call"
-          >
-            <PhoneDisconnectIcon weight="bold" className="h-6 w-6" />
-            <span className="whitespace-nowrap">{t('session.endConversation')}</span>
-          </Button>
-        )}
       </div>
     </div>
   );

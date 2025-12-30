@@ -36,7 +36,7 @@ interface ChatInputProps {
 export function ChatInput({
   chatOpen,
   isAgentAvailable = false,
-  onSend = async () => {},
+  onSend = async () => { },
 }: ChatInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isSending, setIsSending] = useState(false);
@@ -69,11 +69,11 @@ export function ChatInput({
       inert={!chatOpen}
       {...MOTION_PROPS}
       animate={chatOpen ? 'visible' : 'hidden'}
-      className="border-input/50 flex w-full items-start overflow-hidden border-b"
+      className="flex w-full overflow-hidden"
     >
       <form
         onSubmit={handleSubmit}
-        className="mb-3 flex grow items-end gap-2 rounded-md pl-1 text-sm"
+        className="flex grow items-center gap-3 rounded-2xl bg-slate-900/60 backdrop-blur-md border border-white/10 p-3 shadow-lg"
       >
         <input
           autoFocus
@@ -81,9 +81,9 @@ export function ChatInput({
           type="text"
           value={message}
           disabled={!chatOpen}
-          placeholder="अपना संदेश लिखें..."
+          placeholder="Type your message here... / अपना संदेश लिखें..."
           onChange={(e) => setMessage(e.target.value)}
-          className="h-8 flex-1 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-10 flex-1 bg-transparent text-white placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 px-2"
         />
         <Button
           size="icon"
@@ -91,12 +91,12 @@ export function ChatInput({
           disabled={isDisabled}
           variant={isDisabled ? 'secondary' : 'primary'}
           title={isSending ? 'Sending...' : 'Send'}
-          className="self-start"
+          className="h-10 w-10 shrink-0 rounded-xl"
         >
           {isSending ? (
-            <SpinnerIcon className="animate-spin" weight="bold" />
+            <SpinnerIcon className="animate-spin h-5 w-5" weight="bold" />
           ) : (
-            <PaperPlaneRightIcon weight="bold" />
+            <PaperPlaneRightIcon weight="bold" className="h-5 w-5" />
           )}
         </Button>
       </form>
