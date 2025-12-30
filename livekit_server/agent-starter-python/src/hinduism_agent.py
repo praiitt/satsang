@@ -17,6 +17,7 @@ from livekit.agents import (
     cli,
     inference,
     metrics,
+    function_tool,
     RunContext,
 )
 try:
