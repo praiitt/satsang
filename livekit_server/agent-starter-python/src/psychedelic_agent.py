@@ -315,10 +315,37 @@ async def entrypoint(ctx: JobContext):
         stt = inference.STT(model="assemblyai/universal-streaming", language="en") # reliable default
 
     # Agent Session
-    # Use a deeper, calmer voice if available. "248be419-3632-4f4d-b671-2f4625026332" is a placeholder for a 'calm' voice
-    # or use default.
-    # Cartesia Voice ID for "Calm" or "Wise" could be specified in ENV.
-    tts_voice_id = "248be419-3632-4f4d-b671-2f4625026332" # Example generic ID, will fallback if invalid
+    # Select appropriate voice based on language
+    def select_tts_voice(lang: str) -> str:
+        """Select appropriate TTS voice for psychedelic agent."""
+        if lang == "hi":
+            # Priority: Specific > Global Hindi > Legacy > Known-good fallback
+            specific = os.getenv("PSYCHEDELIC_TTS_VOICE_HI")
+            global_hi = os.getenv("TTS_VOICE_HI")
+            legacy = os.getenv("TTS_VOICE_ID")
+            
+            if specific: return specific
+            if global_hi: return global_hi
+            if legacy: return legacy
+            
+            # Known good Hindi/Multilingual voice from Cartesia (deep/calm)
+            # This is the same one used by Guruji
+            return "1259b7e3-cb8a-43df-9446-30971a46b8b0"
+        else:
+            # English voice selection
+            specific = os.getenv("PSYCHEDELIC_TTS_VOICE_EN")
+            global_en = os.getenv("TTS_VOICE_EN")
+            legacy = os.getenv("TTS_VOICE_ID")
+            
+            if specific: return specific
+            if global_en: return global_en
+            if legacy: return legacy
+            
+            # Known good English voice
+            return "248be419-3632-4f4d-b671-2f4625026332"
+
+    tts_voice_id = select_tts_voice(user_language)
+    logger.info(f"Using TTS voice ID: {tts_voice_id} for language: {user_language}")
     
     session = AgentSession(
         stt=stt,
