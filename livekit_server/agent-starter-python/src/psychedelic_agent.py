@@ -302,17 +302,29 @@ async def entrypoint(ctx: JobContext):
 
     # STT Setup
     stt_model = os.getenv("STT_MODEL", "assemblyai/universal-streaming")
+    sarvam_key = os.getenv("SARVAM_API_KEY")
+    
+    logger.info(f"Initializing STT with model: {stt_model} for language={user_language}")
+    
     if user_language == "hi":
-         if stt_model.startswith("sarvam") and os.getenv("SARVAM_API_KEY"):
+         # Priority: Sarvam (best for Hindi) > Deepgram > AssemblyAI
+         if (stt_model == "sarvam" or stt_model.startswith("sarvam")) and sarvam_key:
              try:
                  from livekit.plugins import sarvam as sarvam_plugin
                  stt = sarvam_plugin.STT(language="hi")
-             except:
+                 logger.info("✅ Using Sarvam STT for Hindi")
+             except Exception as e:
+                 logger.warning(f"Failed to use Sarvam STT: {e}. Falling back.")
                  stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
+         elif "deepgram" in stt_model.lower():
+             stt = inference.STT(model=stt_model, language="hi")
+             logger.info(f"✅ Using Deepgram ({stt_model}) for Hindi")
          else:
              stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
+             logger.info("Using AssemblyAI for Hindi fallback")
     else:
-        stt = inference.STT(model="assemblyai/universal-streaming", language="en") # reliable default
+        stt = inference.STT(model=stt_model, language="en")
+        logger.info(f"✅ Using {stt_model} for English")
 
     # Agent Session
     # Select appropriate voice based on language
@@ -349,7 +361,7 @@ async def entrypoint(ctx: JobContext):
     
     session = AgentSession(
         stt=stt,
-        llm=inference.LLM(model="openai/gpt-4.1-mini"),
+        llm=inference.LLM(model="openai/gpt-4o-mini"),
         tts=inference.TTS(
             model="cartesia/sonic-3",
             voice=tts_voice_id,
