@@ -47,6 +47,16 @@ export function useSatsangLogic({
     const [currentIndex, setCurrentIndex] = useState(0);
     const [remaining, setRemaining] = useState<number>(durations.intro);
     const [isRunning, setIsRunning] = useState(false);
+
+    // Auto-start effect
+    useEffect(() => {
+        if (!room) return;
+        // Small delay to ensure connection is stable and agent is ready
+        const t = setTimeout(() => {
+            if (!isRunning) handleStart();
+        }, 1000);
+        return () => clearTimeout(t);
+    }, [room]); // Run once when room is available
     const timerRef = useRef<number | null>(null);
     const lastPhaseRef = useRef<PhaseName | null>(null);
     const sentScheduleRef = useRef(false);

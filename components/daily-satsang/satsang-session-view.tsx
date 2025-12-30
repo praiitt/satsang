@@ -97,40 +97,82 @@ export function SatsangSessionView({
             </div>
 
             {/* 3. Center Stage (Visualizer & Phase Info) */}
-            <div className="relative z-10 flex flex-1 flex-col items-center justify-center space-y-8 p-6 text-center">
+            <div className="relative z-10 flex flex-1 flex-col items-center justify-center space-y-10 p-6 text-center">
 
-                {/* Guru Avatar Bubble */}
-                <div className="relative mb-4">
-                    <div className={cn(
-                        "h-32 w-32 rounded-full border-4 border-white/20 shadow-[0_0_40px_rgba(255,165,0,0.3)] bg-stone-800 flex items-center justify-center overflow-hidden transition-all duration-700",
-                        isRunning && "border-orange-500/50 shadow-[0_0_60px_rgba(255,165,0,0.6)] scale-105"
-                    )}>
-                        <span className="text-4xl">🧘</span>
-                        {/* Can replace with actual <img src=...> if available */}
+                {/* Circular Progress Timer */}
+                <div className="relative">
+                    {/* SVG Circle */}
+                    <div className="relative h-64 w-64 md:h-72 md:w-72">
+                        <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 100 100">
+                            {/* Track */}
+                            <circle
+                                className="text-white/10"
+                                strokeWidth="4"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="45"
+                                cx="50"
+                                cy="50"
+                            />
+                            {/* Progress */}
+                            <circle
+                                className="text-orange-500 transition-all duration-1000 ease-linear"
+                                strokeWidth="4"
+                                strokeDasharray={2 * Math.PI * 45} // approx 282.7
+                                strokeDashoffset={(2 * Math.PI * 45) * (1 - (remaining / (durations[currentPhase.key] || 1)))}
+                                strokeLinecap="round"
+                                stroke="currentColor"
+                                fill="transparent"
+                                r="45"
+                                cx="50"
+                                cy="50"
+                            />
+                        </svg>
+
+                        {/* Center Content */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                            <div className={cn(
+                                "h-40 w-40 rounded-full border-4 border-white/10 shadow-[0_0_50px_rgba(255,165,0,0.2)] bg-stone-900/80 backdrop-blur-sm flex items-center justify-center overflow-hidden transition-all duration-1000",
+                                isRunning && "border-orange-500/30 shadow-[0_0_80px_rgba(255,165,0,0.4)]"
+                            )}>
+                                <span className="text-6xl animate-pulse delay-700">🕉️</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                {/* Phase Title & Timer */}
-                <div className="space-y-2">
-                    <h2 className="text-3xl font-light text-white/90 tracking-wide font-serif">
-                        {currentPhase.label}
-                    </h2>
-                    <div className="text-5xl font-extralight tracking-tighter tabular-nums text-orange-50">
+                {/* Phase Title & Timer Text */}
+                <div className="space-y-3">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-200 text-sm font-medium uppercase tracking-wider backdrop-blur-md">
+                        <span className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+                        {currentPhase.label} Phase
+                    </div>
+
+                    <div className="text-6xl md:text-7xl font-extralight tracking-tighter tabular-nums text-white font-sans">
                         {mm}:{ss}
                     </div>
+                    <p className="text-white/40 text-sm font-light tracking-wide">
+                        In Progress • {phases.findIndex(p => p.key === currentPhase.key) + 1} of {phases.length}
+                    </p>
                 </div>
 
-                {/* Progress Dots */}
-                <div className="flex gap-2 mt-4">
-                    {phases.map((p, idx) => (
-                        <div
-                            key={p.key}
-                            className={cn(
-                                "h-1.5 rounded-full transition-all duration-500",
-                                idx === phases.findIndex(ph => ph.key === currentPhase.key) ? "w-8 bg-orange-500" : "w-1.5 bg-white/20"
-                            )}
-                        />
-                    ))}
+                {/* Progress Steps */}
+                <div className="flex items-center gap-1 mt-4 bg-white/5 p-2 rounded-full backdrop-blur-sm border border-white/5">
+                    {phases.map((p, idx) => {
+                        const isActive = p.key === currentPhase.key;
+                        const isPast = phases.findIndex(ph => ph.key === currentPhase.key) > idx;
+
+                        return (
+                            <div
+                                key={p.key}
+                                className={cn(
+                                    "h-2 rounded-full transition-all duration-700 mx-1",
+                                    isActive ? "w-12 bg-gradient-to-r from-orange-500 to-red-500 shadow-[0_0_10px_rgba(249,115,22,0.5)]" :
+                                        isPast ? "w-2 bg-orange-500/40" : "w-2 bg-white/10"
+                                )}
+                            />
+                        )
+                    })}
                 </div>
             </div>
 
