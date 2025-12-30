@@ -315,6 +315,31 @@ class AstrologyAPIClient:
     async def get_ascendant_report(self, birth_data: dict) -> Optional[dict]:
         """Get Ascendant (Lagna) analysis report."""
         return await self._call_api("general_ascendant_report", birth_data)
+        
+    # ============================================
+    # TAROT ENDPOINTS
+    # ============================================
+
+    async def get_tarot_predictions(self, topic_data: dict) -> Optional[dict]:
+        """
+        Get Tarot predictions.
+        
+        Args:
+            topic_data: Dictionary with topic keys (e.g., {"love": 1, "career": 1})
+        """
+        return await self._call_api("tarot_predictions", topic_data)
+
+    async def get_yes_no_tarot(self, question_data: dict) -> Optional[dict]:
+        """
+        Get Yes/No Tarot reading.
+        
+        Args:
+            question_data: Dictionary with question (e.g., {"question": "Will I get the job?"})
+        
+        Returns:
+            dict with answer, card_name, interpretation
+        """
+        return await self._call_api("yes_no_tarot", question_data)
 
 
 # Singleton instance

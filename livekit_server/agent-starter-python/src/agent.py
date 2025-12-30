@@ -690,6 +690,39 @@ async def entrypoint(ctx: JobContext):
     logger.info("Using default VAD (Voice Activity Detector) for stability")
     turn_detector = None
     
+    # Check if this is a Tarot reading room
+    if "tarot" in ctx.room.name.lower():
+        logger.info(f"🔮 Detected Tarot room ({ctx.room.name}). Initializing Tarot Agent...")
+        try:
+            from .tarot_agent import TarotAgent
+            
+            # Helper to publish data
+            async def _publish_data(data_bytes: bytes):
+                lp = ctx.room.local_participant
+                if lp:
+                    await lp.publish_data(data_bytes, reliable=True, topic="tarot.event")
+
+            tarot_agent = TarotAgent(is_group_conversation=False, publish_data_fn=_publish_data)
+            
+            session = AgentSession(
+                stt=stt,
+                llm=inference.LLM(model="openai/gpt-4.1-mini"),
+                tts=inference.TTS(model="cartesia/sonic-3", language=user_language, voice="248be419-3632-4f38-9500-05f963c9f743"), # Mystical voice
+                preemptive_generation=True,
+                turn_detection=turn_detector,
+                vad=ctx.proc.userdata["vad"],
+            )
+            
+            await session.start(agent=tarot_agent, room=ctx.room)
+            await ctx.connect()
+            return # Exit function, we are done
+            
+        except ImportError as e:
+            logger.error(f"Failed to import TarotAgent: {e}")
+        except Exception as e:
+            logger.error(f"Failed to start TarotAgent: {e}", exc_info=True)
+
+
     # The following complex initialization is disabled to prevent crashes:
     # _init_turn_detector_with_timeout() logic removed temporarily
     
@@ -1300,8 +1333,4 @@ if __name__ == "__main__":
         logger.info("Starting agent worker without agent_name restriction (will join any room)")
     
     # Only set agent_name in WorkerOptions if explicitly provided
-    worker_options = {"entrypoint_fnc": entrypoint, "prewarm_fnc": prewarm}
-    if agent_name:
-        worker_options["agent_name"] = agent_name
-    
-    cli.run_app(WorkerOptions(**worker_options))
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=agent_name, max_retry=5))

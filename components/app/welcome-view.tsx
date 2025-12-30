@@ -151,14 +151,20 @@ export const WelcomeView = ({
         </h2>
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {/* Feature 1: Voice AI Assistant */}
-          <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+          <div
+            onClick={onStartCall}
+            className="bg-background border-input hover:border-primary h-full cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition-all hover:scale-[1.02] hover:shadow-md"
+          >
             <div className="mb-3 text-3xl">🎤</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">{t('welcome.voiceAI')}</h3>
             <p className="text-muted-foreground text-sm leading-6">{t('welcome.voiceAIDesc')}</p>
           </div>
 
           {/* Feature 2: Hindi Language Support */}
-          <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+          <div
+            onClick={onStartCall}
+            className="bg-background border-input hover:border-primary h-full cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition-all hover:scale-[1.02] hover:shadow-md"
+          >
             <div className="mb-3 text-3xl">🇮🇳</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">
               {t('welcome.hindiSupport')}
@@ -169,7 +175,10 @@ export const WelcomeView = ({
           </div>
 
           {/* Feature 3: Bhajan Playback */}
-          <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+          <div
+            onClick={onStartCall}
+            className="bg-background border-input hover:border-primary h-full cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition-all hover:scale-[1.02] hover:shadow-md"
+          >
             <div className="mb-3 text-3xl">🎵</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">
               {t('welcome.playBhajans')}
@@ -180,7 +189,10 @@ export const WelcomeView = ({
           </div>
 
           {/* Feature 4: Vani/Pravachan Playback */}
-          <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+          <div
+            onClick={onStartCall}
+            className="bg-background border-input hover:border-primary h-full cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition-all hover:scale-[1.02] hover:shadow-md"
+          >
             <div className="mb-3 text-3xl">📿</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">
               {t('welcome.pravachanVani')}
@@ -191,7 +203,10 @@ export const WelcomeView = ({
           </div>
 
           {/* Feature 5: Spiritual Guidance */}
-          <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+          <div
+            onClick={onStartCall}
+            className="bg-background border-input hover:border-primary h-full cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition-all hover:scale-[1.02] hover:shadow-md"
+          >
             <div className="mb-3 text-3xl">🕉️</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">
               {t('welcome.spiritualGuidance')}
@@ -202,7 +217,10 @@ export const WelcomeView = ({
           </div>
 
           {/* Feature 6: Easy Setup */}
-          <div className="bg-background border-input rounded-2xl border p-6 text-left shadow-sm transition-shadow hover:shadow-md">
+          <div
+            onClick={onStartCall}
+            className="bg-background border-input hover:border-primary h-full cursor-pointer rounded-2xl border p-6 text-left shadow-sm transition-all hover:scale-[1.02] hover:shadow-md"
+          >
             <div className="mb-3 text-3xl">✨</div>
             <h3 className="text-foreground mb-3 text-xl font-semibold">{t('welcome.easySetup')}</h3>
             <p className="text-muted-foreground text-sm leading-6">{t('welcome.easySetupDesc')}</p>

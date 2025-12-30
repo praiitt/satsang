@@ -6,7 +6,7 @@ export function SiteFooter() {
       <div className="mx-auto w-full max-w-6xl px-4 py-6">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <p className="text-muted-foreground text-xs">
-            © {new Date().getFullYear()} RRAASI. सर्वाधिकार सुरक्षित।
+            © {new Date().getFullYear()} RRAASI.ai. सर्वाधिकार सुरक्षित।
           </p>
           <nav className="flex flex-wrap items-center gap-4 text-xs">
             <Link href="/#faq" className="text-muted-foreground hover:text-foreground">

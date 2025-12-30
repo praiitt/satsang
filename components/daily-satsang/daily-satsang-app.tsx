@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Room, RoomEvent } from 'livekit-client';
 import { RoomAudioRenderer, RoomContext, StartAudio, useChat } from '@livekit/components-react';
 import { TileLayout } from '@/components/app/tile-layout';
@@ -8,6 +8,7 @@ import { Toaster } from '@/components/livekit/toaster';
 import { ParticipantList } from '@/components/livesatsang/participant-list';
 import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player';
 import { DailySatsangOrchestrator } from './orchestrator';
+import { deductSatsangCoins } from '@/lib/services/coinDeduction';
 
 // Component to send wait message to agent when room connects
 function AgentWaitHandler({ room, isConnected }: { room: Room | null; isConnected: boolean }) {
@@ -42,6 +43,7 @@ export function DailySatsangApp() {
   const [showParticipants, setShowParticipants] = useState(false);
   const [started, setStarted] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
+  const sessionStartTimeRef = useRef<number | null>(null);
   // Daily satsang must use guruji-daily agent only
   const dailyAgentName =
     (process.env.NEXT_PUBLIC_DAILY_SATSANG_AGENT_NAME?.trim() ?? '') || 'guruji-daily';
@@ -131,7 +133,24 @@ export function DailySatsangApp() {
             'कृपया प्रतीक्षा करें। सत्र अभी शुरू नहीं हुआ है। जब होस्ट "शुरू करें" बटन दबाएगा, तभी आपको बोलना शुरू करना होगा।',
         });
       });
-      newRoom.on(RoomEvent.Disconnected, () => {
+      newRoom.on(RoomEvent.Disconnected, async () => {
+        // Deduct coins for session duration on disconnect
+        if (sessionStartTimeRef.current) {
+          const durationSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
+          const durationMinutes = Math.ceil(durationSeconds / 60);
+
+          if (durationMinutes > 0) {
+            console.log(`[DailySatsang] Disconnected - Deducting coins for ${durationMinutes} minutes`);
+            try {
+              await deductSatsangCoins(durationMinutes);
+              console.log('[DailySatsang] Coins deducted successfully');
+            } catch (error) {
+              console.error('[DailySatsang] Failed to deduct coins:', error);
+            }
+          }
+          sessionStartTimeRef.current = null;
+        }
+
         setIsConnected(false);
         setRoom(null);
       });
@@ -148,6 +167,23 @@ export function DailySatsangApp() {
 
   const handleLeave = async () => {
     if (room) {
+      // Deduct coins for session duration
+      if (sessionStartTimeRef.current) {
+        const durationSeconds = Math.floor((Date.now() - sessionStartTimeRef.current) / 1000);
+        const durationMinutes = Math.ceil(durationSeconds / 60); // Round up to charge full minutes
+
+        if (durationMinutes > 0) {
+          console.log(`[DailySatsang] Deducting coins for ${durationMinutes} minutes`);
+          try {
+            await deductSatsangCoins(durationMinutes);
+            console.log('[DailySatsang] Coins deducted successfully');
+          } catch (error) {
+            console.error('[DailySatsang] Failed to deduct coins:', error);
+          }
+        }
+        sessionStartTimeRef.current = null;
+      }
+
       await room.disconnect();
       setRoom(null);
       setIsConnected(false);
@@ -163,6 +199,15 @@ export function DailySatsangApp() {
     const id = window.setInterval(() => setElapsedSec((s) => s + 1), 1000);
     return () => window.clearInterval(id);
   }, [started]);
+
+  // Track session start time for coin deduction
+  useEffect(() => {
+    if (started && !sessionStartTimeRef.current) {
+      sessionStartTimeRef.current = Date.now();
+      console.log('[DailySatsang] Session started, tracking time for coin deduction');
+    }
+  }, [started]);
+
 
   const fmt = (n: number) => String(n).padStart(2, '0');
   const elapsedLabel = `${fmt(Math.floor(elapsedSec / 60))}:${fmt(elapsedSec % 60)}`;

@@ -49,7 +49,7 @@ export default function LoginPage() {
           <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
             <span className="text-3xl">🕉️</span>
           </div>
-          <h1 className="text-foreground text-3xl font-bold">RRAASI सत्संग</h1>
+          <h1 className="text-foreground text-3xl font-bold">RRAASI.ai</h1>
           <p className="text-muted-foreground mt-2 text-sm">{t('auth.loginSuccess')}</p>
         </div>
         <PhoneAuthForm onSuccess={handleLoginSuccess} />

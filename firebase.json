@@ -1,9 +1,15 @@
 {
   "hosting": {
-    "source": ".",
-    "frameworksBackend": {
-      "region": "asia-south1"
-    }
+    "public": "public",
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "satsang-frontend",
+          "region": "asia-south1"
+        }
+      }
+    ]
   },
   "firestore": {
     "rules": "firestore.rules"

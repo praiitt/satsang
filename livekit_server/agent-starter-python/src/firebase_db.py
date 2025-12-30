@@ -25,7 +25,7 @@ class FirebaseDB:
             if not firebase_admin._apps:
                 # Use default credentials (GOOGLE_APPLICATION_CREDENTIALS env var)
                 # or try to find serviceAccountKey.json
-                cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+                cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
                 if not cred_path and os.path.exists("serviceAccountKey.json"):
                     cred_path = "serviceAccountKey.json"
                 
@@ -42,7 +42,7 @@ class FirebaseDB:
         except Exception as e:
             logger.error(f"Failed to initialize Firebase: {e}")
 
-    def save_music_track(self, user_id: str, track_data: dict):
+    def save_music_track(self, user_id: str, track_data: dict, track_id: str = None):
         """Save a generated music track to Firestore."""
         if not self.db:
             logger.warning("Firebase not initialized, skipping save")
@@ -54,7 +54,11 @@ class FirebaseDB:
             track_data["userId"] = user_id
             
             # Save to 'music_tracks' collection
-            self.db.collection("music_tracks").add(track_data)
+            if track_id:
+                self.db.collection("music_tracks").document(track_id).set(track_data, merge=True)
+            else:
+                self.db.collection("music_tracks").add(track_data)
+                
             logger.info(f"Saved track {track_data.get('title')} for user {user_id}")
         except Exception as e:
             logger.error(f"Failed to save track: {e}")
@@ -76,3 +80,16 @@ class FirebaseDB:
         except Exception as e:
             logger.error(f"Failed to get tracks: {e}")
             return []
+    def get_satsang_plan(self, plan_id: str):
+        """Get a pre-generated satsang plan."""
+        if not self.db:
+            return None
+
+        try:
+            doc = self.db.collection("satsang_plans").document(plan_id).get()
+            if doc.exists:
+                return doc.to_dict()
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get satsang plan: {e}")
+            return None

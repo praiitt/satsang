@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.local
+.env.yaml
+.DS_Store
+try_deploy.sh
+deploy_to_gcf.sh

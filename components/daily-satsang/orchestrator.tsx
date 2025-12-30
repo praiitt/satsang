@@ -6,6 +6,8 @@ import { useChat, useRoomContext } from '@livekit/components-react';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import { type DailySatsangConfig, HostPanel } from './host-panel';
+import { useServiceCost } from '@/hooks/useServiceCost';
+import { InsufficientBalanceModal } from '@/components/ui/insufficient-balance-modal';
 
 type PhaseName = 'intro' | 'bhajan' | 'pravachan' | 'qa' | 'closing';
 
@@ -25,37 +27,56 @@ export const DailySatsangOrchestrator = {
   }) {
     const [name, setName] = useState('');
     const [role, setRole] = useState<'host' | 'participant'>('participant');
+    const { hasInsufficientBalance, costDisplay, showInsufficientBalanceModal, setShowInsufficientBalanceModal, cost, balance } = useServiceCost('satsang');
+
+    const handleJoinClick = () => {
+      if (hasInsufficientBalance) {
+        setShowInsufficientBalanceModal(true);
+        return;
+      }
+      onJoin(name || 'अतिथि', role);
+    };
+
     return (
-      <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
-        <h1 className="text-2xl font-bold">डेली सत्संग</h1>
-        <div className="w-full max-w-xs space-y-3">
-          <input
-            className="border-input bg-background text-foreground h-11 w-full rounded-lg border px-3"
-            placeholder="अपना नाम लिखें"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <div className="flex gap-2">
-            <Button
-              variant={role === 'participant' ? 'primary' : 'outline'}
-              className="flex-1"
-              onClick={() => setRole('participant')}
-            >
-              प्रतिभागी
-            </Button>
-            <Button
-              variant={role === 'host' ? 'primary' : 'outline'}
-              className="flex-1"
-              onClick={() => setRole('host')}
-            >
-              होस्ट
+      <>
+        <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+          <h1 className="text-2xl font-bold">डेली सत्संग</h1>
+          <div className="w-full max-w-xs space-y-3">
+            <input
+              className="border-input bg-background text-foreground h-11 w-full rounded-lg border px-3"
+              placeholder="अपना नाम लिखें"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            <div className="flex gap-2">
+              <Button
+                variant={role === 'participant' ? 'primary' : 'outline'}
+                className="flex-1"
+                onClick={() => setRole('participant')}
+              >
+                प्रतिभागी
+              </Button>
+              <Button
+                variant={role === 'host' ? 'primary' : 'outline'}
+                className="flex-1"
+                onClick={() => setRole('host')}
+              >
+                होस्ट
+              </Button>
+            </div>
+            <Button className="w-full" onClick={handleJoinClick}>
+              डेली सत्संग जॉइन करें {costDisplay && `• ${costDisplay}`}
             </Button>
           </div>
-          <Button className="w-full" onClick={() => onJoin(name || 'अतिथि', role)}>
-            डेली सत्संग जॉइन करें
-          </Button>
         </div>
-      </div>
+        <InsufficientBalanceModal
+          isOpen={showInsufficientBalanceModal}
+          onClose={() => setShowInsufficientBalanceModal(false)}
+          required={cost}
+          available={balance}
+          service="डेली सत्संग"
+        />
+      </>
     );
   },
 

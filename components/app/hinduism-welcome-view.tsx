@@ -84,6 +84,15 @@ export const HinduismWelcomeView = ({
                     >
                         🙏 {buttonText}
                     </Button>
+                    <Link href={`/satsang/private/${guruId}`} className="w-full sm:w-auto">
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            className="h-14 w-full text-lg font-semibold shadow-lg border-orange-600 text-orange-900 hover:bg-orange-50 sm:w-auto sm:min-w-[240px]"
+                        >
+                            🧘 Private Satsang
+                        </Button>
+                    </Link>
                 </div>
                 <p className="mt-3 text-sm text-orange-700">{t('hinduismGuru.voiceEnabled')}</p>
             </section>

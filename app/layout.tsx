@@ -65,8 +65,8 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     >
       <head>
         {styles && <style>{styles}</style>}
-        <title>{pageTitle}</title>
-        <meta name="description" content={pageDescription} />
+        <title>RRAASI.ai — Conscious AI</title>
+        <meta name="description" content="Elevating Human Consciousness Through Intelligent Wisdom" />
         <meta name="theme-color" content="#f97316" />
         {/* Primary favicon: Om-in-purple-circle RRAASI icon */}
         <link rel="icon" href="/icon.svg" type="image/svg+xml" />

@@ -3,17 +3,34 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirebaseFirestore } from '@/lib/firebase-client';
 
 export function VedicEarlyAccessView() {
     const [email, setEmail] = useState('');
     const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (email) {
-            // Here we would send to backend, for now just simulate
-            console.log('Early access sign up:', email);
-            setIsSubmitted(true);
+        if (email && !isLoading) {
+            setIsLoading(true);
+            try {
+                const db = getFirebaseFirestore();
+                await addDoc(collection(db, 'early_access_requests'), {
+                    email,
+                    service: 'vedic_astrology',
+                    createdAt: serverTimestamp(),
+                    status: 'pending',
+                });
+                console.log('Vedic Astrology early access sign up:', email);
+                setIsSubmitted(true);
+            } catch (error) {
+                console.error('Error saving email:', error);
+                alert('Failed to sign up. Please try again.');
+            } finally {
+                setIsLoading(false);
+            }
         }
     };
 
@@ -97,13 +114,15 @@ export function VedicEarlyAccessView() {
                                     placeholder="Enter your email address"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full rounded-lg border border-orange-200 bg-white px-4 py-3 text-lg outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 dark:border-orange-800 dark:bg-slate-900 dark:focus:ring-orange-900"
+                                    disabled={isLoading}
+                                    className="w-full rounded-lg border border-orange-200 bg-white px-4 py-3 text-lg outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-200 disabled:opacity-50 dark:border-orange-800 dark:bg-slate-900 dark:focus:ring-orange-900"
                                 />
                                 <button
                                     type="submit"
-                                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-amber-600 px-4 py-3 text-lg font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                                    disabled={isLoading}
+                                    className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-amber-600 px-4 py-3 text-lg font-bold text-white shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Access & Claim Free Gift
+                                    {isLoading ? 'Signing Up...' : 'Join & Claim Free Gift'}
                                 </button>
                             </form>
                             <p className="mt-4 text-xs text-slate-400 dark:text-slate-500">

@@ -1,0 +1,27 @@
+{
+    "name": "rraasi-coin-service",
+    "version": "1.0.0",
+    "description": "RRAASI Coins Service - Google Cloud Function for coin-based monetization",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "deploy": "bash deploy.sh",
+        "test": "jest"
+    },
+    "dependencies": {
+        "@google-cloud/firestore": "^7.1.0",
+        "cors": "^2.8.5",
+        "express": "^4.18.2",
+        "firebase-admin": "^12.0.0",
+        "razorpay": "^2.9.6"
+    },
+    "devDependencies": {
+        "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/node": "^20.10.0",
+        "typescript": "^5.3.3"
+    },
+    "engines": {
+        "node": "20"
+    }
+}

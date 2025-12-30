@@ -2,6 +2,9 @@
 
 A spiritual voice assistant for Hindu and Sanātana Dharma teachings, built with LiveKit Agents.
 
+## 🧠 Agent Memory
+For developers and AI agents: Critical infrastructure details and common fixes are documented in **[AGENT_MEMORY.md](./AGENT_MEMORY.md)**. Please refer to this file before making deployment changes.
+
 ## Features
 
 - Real-time voice interaction with a spiritual guru assistant

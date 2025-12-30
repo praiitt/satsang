@@ -43,8 +43,8 @@ router.post('/sessionLogin', async (req, res) => {
     res.cookie(SESSION_COOKIE_NAME, cookie, {
       maxAge: expiresIn,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // Only secure in production
-      sameSite: 'lax',
+      secure: true, // Must be true for SameSite=None
+      sameSite: 'none', // Allow cross-site usage (required for some proxy setups)
       path: '/',
     });
     return res.json({

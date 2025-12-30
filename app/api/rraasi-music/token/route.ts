@@ -46,11 +46,14 @@ export async function POST(req: Request) {
             `[RRAASI Music Token] Generating token for ${participantName} (${role}, userId: ${userId}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
         );
 
+        // Generate a unique room name for this session to ensure 1:1 interaction with the agent
+        const uniqueRoomName = `${RRAASI_MUSIC_ROOM_NAME}_${userId}_${Math.floor(Math.random() * 1000)}`;
+
         const participantIdentity = `rraasi_music_${role}_${Math.floor(Math.random() * 10_000)}_${Date.now()}`;
 
         const participantToken = await createParticipantToken(
             { identity: participantIdentity, name: participantName },
-            RRAASI_MUSIC_ROOM_NAME,
+            uniqueRoomName,
             role,
             agentName,
             userId
@@ -58,7 +61,7 @@ export async function POST(req: Request) {
 
         const data: RRaaSiMusicTokenResponse = {
             serverUrl: LIVEKIT_URL,
-            roomName: RRAASI_MUSIC_ROOM_NAME,
+            roomName: uniqueRoomName,
             participantToken,
             participantName,
             agentName,

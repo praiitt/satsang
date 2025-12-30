@@ -1286,9 +1286,5 @@ if __name__ == "__main__":
         logger.info("Starting ET agent worker without agent_name restriction (will join any room)")
     
     # Only set agent_name in WorkerOptions if explicitly provided
-    worker_options = {"entrypoint_fnc": entrypoint, "prewarm_fnc": prewarm}
-    if agent_name:
-        worker_options["agent_name"] = agent_name
-    
-    cli.run_app(WorkerOptions(**worker_options))
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=agent_name, max_retry=5))
 

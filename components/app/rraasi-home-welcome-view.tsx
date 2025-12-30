@@ -2,6 +2,7 @@
 
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 import { SacredGeometryBg } from '@/components/app/sacred-geometry-bg';
 import { useLanguage } from '@/contexts/language-context';
 
@@ -210,6 +211,24 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         icon="🎵"
                         align="right"
                         gradient="from-blue-500/30 to-cyan-500/30"
+                    />
+
+                    {/* Tarot */}
+                    <FeatureSection
+                        title={t('rraasHome.tarotTitle')}
+                        subtitle={t('rraasHome.tarotSubtitle')}
+                        description={t('rraasHome.tarotDesc')}
+                        features={[
+                            t('rraasHome.tarotFeature1'),
+                            t('rraasHome.tarotFeature2'),
+                            t('rraasHome.tarotFeature3'),
+                            t('rraasHome.tarotFeature4'),
+                        ]}
+                        actionText={t('rraasHome.tarotAction')}
+                        actionHref="/tarot"
+                        icon="🔮"
+                        align="left"
+                        gradient="from-purple-500/30 to-indigo-500/30"
                     />
 
                     {/* Vedic Astrology */}

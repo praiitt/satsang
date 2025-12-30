@@ -1,0 +1,12 @@
+# Python dependencies for audio transcription
+# Install with: pip install -r requirements.txt
+
+# Whisper for transcription
+openai-whisper>=20231117
+
+# Optional: For better performance with GPU
+# torch>=2.0.0
+# torchaudio>=2.0.0
+
+# Required for audio processing
+requests>=2.31.0

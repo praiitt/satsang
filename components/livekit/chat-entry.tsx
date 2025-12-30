@@ -55,8 +55,10 @@ export const ChatEntry = ({
       </header>
       <span
         className={cn(
-          'max-w-4/5 rounded-[20px]',
-          messageOrigin === 'local' ? 'bg-muted ml-auto p-2' : 'mr-auto'
+          'max-w-[85%] rounded-2xl px-4 py-3 shadow-sm text-sm md:text-base',
+          messageOrigin === 'local'
+            ? 'bg-amber-600/90 text-white rounded-br-none ml-auto'
+            : 'bg-indigo-900/80 text-white rounded-bl-none mr-auto backdrop-blur-sm border border-white/10'
         )}
       >
         {displayMessage}

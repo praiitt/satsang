@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
-import { LogoutButton } from '@/components/auth/logout-button';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 
@@ -17,8 +16,10 @@ export function LoginLink() {
     return null;
   }
 
+  // Only show login link when not authenticated
+  // Logout is now in the profile page
   if (isAuthenticated) {
-    return <LogoutButton variant="secondary" size="sm" className="text-xs sm:text-sm" />;
+    return null;
   }
 
   return (

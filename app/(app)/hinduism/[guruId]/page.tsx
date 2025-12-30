@@ -24,7 +24,7 @@ const VALID_GURU_IDS = [
     'prabhupada',
 ];
 
-const GURU_DISPLAY_NAMES: Record<string, string> = {
+export const GURU_DISPLAY_NAMES: Record<string, string> = {
     shankaracharya: 'Adi Shankaracharya',
     ramana: 'Ramana Maharshi',
     vivekananda: 'Swami Vivekananda',

@@ -8,7 +8,7 @@ export const en = {
     freeTrial: 'Free Trial',
     remaining: 'remaining',
     redirecting: 'Redirecting to login...',
-    siteTitle: 'RRAASI',
+    siteTitle: 'RRAASI.ai',
   },
   auth: {
     welcome: 'Welcome to Satsang',
@@ -45,8 +45,8 @@ export const en = {
       'Bhajan or vani is playing — will start listening again when finished or paused.',
   },
   welcome: {
-    title: 'Find Your Guru. Many Paths, One Satsang Home.',
-    subtitle: 'All spiritual belief systems in one place',
+    title: 'RRAASI.ai — Conscious AI. For Inner Awakening.',
+    subtitle: 'Elevating Human Consciousness Through Intelligent Wisdom',
     description:
       'RRAASI brings together all spiritual traditions - connect with your favorite guru, explore different paths, or create your own spiritual guide. Voice-powered satsang in Hindi and English.',
     vision: 'One Platform, Many Paths, Infinite Wisdom',
@@ -481,8 +481,8 @@ export const en = {
   },
   rraasHome: {
     title: 'RRAASI',
-    tagline: 'Find the Unknown, Know Yourself',
-    subtitle: 'Your spiritual sanctuary where ancient wisdom meets modern AI',
+    tagline: 'Conscious AI — For Inner Awakening',
+    subtitle: 'Elevating Human Consciousness Through Intelligent Wisdom',
     description:
       'A sanctuary for every seeker. No matter your path, caste, creed, or religion, find the wisdom that raises your consciousness here.',
     explorePath: 'Explore Your Spiritual Path',

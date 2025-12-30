@@ -1,6 +1,10 @@
 import admin from 'firebase-admin';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 let initialized = false;
 
@@ -22,23 +26,52 @@ export function initFirebaseAdmin() {
     return;
   }
 
-  // Fallback to file-based auth
-  const explicitPath =
-    process.env.FIREBASE_SERVICE_ACCOUNT_PATH ||
-    path.resolve(process.cwd(), '..', 'satsangServiceAccount.json');
+  // Initialize Firebase Admin with service account
+  let serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
 
-  if (fs.existsSync(explicitPath)) {
+  if (!serviceAccountPath) {
+    const deploymentPath = path.resolve(process.cwd(), 'rraasiServiceAccount.json');
+    // In production (dist/), __dirname is .../dist. We need ../rraasiServiceAccount.json
+    // In dev (src/), __dirname is .../src. Local file might be in .../ (parent of src) ie ../rraasiServiceAccount.json
+    // Previous code used ../../ which implies parent of parent, valid for workspace root but not deployed function
+    const localPath = path.resolve(__dirname, '../rraasiServiceAccount.json');
+
+    console.log(`[auth-server] Debug Paths: cwd=${process.cwd()}, __dirname=${__dirname}`);
+    console.log(`[auth-server] Checking paths: deployment=${deploymentPath}, local=${localPath}`);
+
+    if (fs.existsSync(deploymentPath)) {
+      serviceAccountPath = deploymentPath;
+    } else if (fs.existsSync(localPath)) {
+      serviceAccountPath = localPath;
+    } else {
+      // Try one level up just in case (original logic fallback)
+      const parentPath = path.resolve(__dirname, '../../rraasiServiceAccount.json');
+      if (fs.existsSync(parentPath)) {
+        serviceAccountPath = parentPath;
+      } else {
+        serviceAccountPath = deploymentPath; // Default to deployment path for error message
+      }
+    }
+  }
+
+  if (fs.existsSync(serviceAccountPath)) {
     try {
-      const serviceAccount = JSON.parse(fs.readFileSync(explicitPath, 'utf8'));
+      const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
       initialized = true;
-      console.log(`[auth-server] ✅ Initialized Firebase Admin from file: ${explicitPath}`);
+      console.log(`[auth-server] ✅ Initialized Firebase Admin from file: ${serviceAccountPath}`);
       return;
     } catch (error) {
-      console.error('[auth-server] Failed to parse service account file:', error);
+      console.error(
+        `[auth-server] Failed to parse service account file: ${error}`
+      );
     }
+  } else {
+    console.warn(
+      `[auth-server] Service account file not found at: ${serviceAccountPath}`
+    );
   }
 
   throw new Error(

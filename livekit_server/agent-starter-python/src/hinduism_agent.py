@@ -20,6 +20,7 @@ from livekit.agents import (
     function_tool,
     RunContext,
 )
+from .firebase_db import FirebaseDB
 # from livekit.plugins import noise_cancellation, silero
 
 # Configure logging
@@ -272,6 +273,263 @@ You ARE {guru_name}, sharing your timeless wisdom with seekers today.
         # This tool just provides context
         return f"Based on my teachings of {core_philosophy}, let me share wisdom about {topic}."
 
+    @function_tool
+    async def play_bhajan(
+        self,
+        context: RunContext,
+        bhajan_name: str,
+        artist: str = None,
+        video_id: str = None,
+    ) -> str:
+        """Play a devotional bhajan (song) when users request it.
+
+        Use this tool when users ask to:
+        - Play a bhajan (e.g., "krishna ka bhajan bajao", "hare krishna sunao", "bhajan chal")
+        - Hear a devotional song
+        - Listen to spiritual music
+        - Play a specific mantra or chant
+        
+        The bhajan name can be in Hindi (Romanized) or English. Common bhajan names:
+        - "hare krishna" or "hare krishna hare rama"
+        - "om namah shivaya" or "shiva mantra"
+        - "govind bolo" or "hari gopal bolo"
+        - "jai ganesh" or "ganesh bhajan"
+        - "ram ram" or "rama bhajan"
+        
+        Args:
+            bhajan_name: The name of the bhajan requested.
+            artist: Optional artist name.
+            video_id: Optional YouTube Video ID if specifically known (skips search).
+        
+        Returns:
+            A short Hindi confirmation/error sentence for speaking. Do NOT include URLs.
+        """
+        import json
+        
+        logger.info(f"User requested bhajan: '{bhajan_name}' (artist: {artist}, video_id: {video_id})")
+        
+        # Search YouTube for video
+        youtube_video_id = video_id
+        youtube_video_title = None
+        youtube_video_name = bhajan_name  # Default to requested name
+        
+        if not youtube_video_id:
+            logger.info(f"🔍 Starting YouTube search for bhajan: '{bhajan_name}'")
+            try:
+                # Lazy import YouTube search to avoid blocking if module not available
+                try:
+                    # Try relative import first (when running as package)
+                    try:
+                        from .youtube_search import find_youtube_video_async
+                        logger.info("✅ Imported YouTube search module (relative)")
+                    except ImportError:
+                        # Fallback to absolute import (when running as script)
+                        import sys
+                        from pathlib import Path
+                        src_path = Path(__file__).resolve().parent
+                        if str(src_path) not in sys.path:
+                            sys.path.insert(0, str(src_path))
+                        from youtube_search import find_youtube_video_async
+                        logger.info("✅ Imported YouTube search module (absolute)")
+                    
+                    # Check if API key is available
+                    youtube_api_key = os.getenv("YOUTUBE_API_KEY")
+                    if not youtube_api_key:
+                        logger.error("❌ YOUTUBE_API_KEY not found in environment - YouTube search will fail")
+                        return f"क्षमा करें, YouTube खोज सेवा उपलब्ध नहीं है। कृपया बाद में कोशिश करें।"
+                    else:
+                        logger.info(f"✅ YOUTUBE_API_KEY is set (length: {len(youtube_api_key)})")
+                    
+                    logger.info(f"🔍 Calling find_youtube_video_async('{bhajan_name}')...")
+                    youtube_result = await find_youtube_video_async(bhajan_name)
+                    logger.info(f"🔍 YouTube search returned: {youtube_result}")
+                    
+                    if youtube_result:
+                        youtube_video_id = youtube_result.get("video_id")
+                        youtube_video_title = youtube_result.get("title")
+                        youtube_video_name = youtube_result.get("title", bhajan_name)
+                        logger.info(f"✅ Found YouTube video: {youtube_video_id} - {youtube_video_title}")
+                    else:
+                        logger.warning(f"⚠️ No YouTube video found for '{bhajan_name}' (search returned None)")
+                        return f"क्षमा करें, '{bhajan_name}' भजन YouTube पर नहीं मिला। कृपया कोई अन्य भजन सुनने के लिए कहें।"
+                except ImportError as e:
+                    logger.error(f"❌ YouTube search module not available: {e}", exc_info=True)
+                    return f"क्षमा करें, YouTube खोज मॉड्यूल उपलब्ध नहीं है।"
+                except Exception as e:
+                    logger.error(f"❌ Error searching YouTube: {e}", exc_info=True)
+                    return f"क्षमा करें, YouTube खोज में त्रुटि हुई। कृपया बाद में कोशिश करें।"
+            except Exception as e:
+                logger.error(f"❌ YouTube search failed: {e}", exc_info=True)
+                return f"क्षमा करें, YouTube खोज असफल रही। कृपया बाद में कोशिश करें."
+        else:
+            logger.info(f"✅ Using provided video_id: {youtube_video_id}")
+            youtube_video_name = bhajan_name # Use provided name
+        
+        # If no YouTube video found, return error
+        if not youtube_video_id:
+            logger.error(f"❌ No YouTube video ID found for bhajan: '{bhajan_name}'")
+            return f"क्षमा करें, '{bhajan_name}' भजन YouTube पर नहीं मिला। कृपया कोई अन्य भजन सुनने के लिए कहें।"
+        
+        # Build structured result for data channel - YouTube only
+        logger.info(f"🔍 Final YouTube search result: youtube_video_id={youtube_video_id}, youtube_video_title={youtube_video_title}")
+        
+        result = {
+            "name": youtube_video_name,
+            "artist": artist or "",
+            "youtube_id": youtube_video_id,  # YouTube video ID for IFrame Player API
+            "youtube_url": f"https://www.youtube.com/watch?v={youtube_video_id}",  # Full YouTube URL
+            "message": f"भजन '{youtube_video_name}' चल रहा है। आनंद लें!",
+        }
+        
+        logger.info(f"Returning bhajan result: name={result['name']}, has_youtube_id={bool(youtube_video_id)}")
+        
+        # Emit structured data over LiveKit data channel using injected publisher
+        try:
+            publish_fn = getattr(self, "_publish_data_fn", None)
+            
+            if callable(publish_fn):
+                data_bytes = json.dumps(result).encode("utf-8")
+                
+                # Call the publish function (it's async, so we await it)
+                import inspect
+                if inspect.iscoroutinefunction(publish_fn):
+                    await publish_fn(data_bytes)
+                else:
+                    publish_fn(data_bytes)
+                
+                logger.info("✅ Successfully called publish function")
+            else:
+                logger.warning("⚠️ No publish_data_fn configured; frontend will not receive bhajan.track event")
+        except Exception as e:
+            logger.error(f"❌ Failed to publish bhajan data message: {e}", exc_info=True)
+        
+        # Speak only a friendly confirmation, without any URLs/JSON
+        return f"मैं '{youtube_video_name}' भजन चला रहा हूं। आनंद लें!"
+
+    @function_tool
+    async def search_vani(
+        self,
+        context: RunContext,
+        topic: str,
+        max_results: int = 5,
+    ) -> str:
+        """Search for spiritual discourses (vani/pravachan) on a topic.
+
+        Use this when the user asks for teachings/pravachan/satsang on a specific topic.
+
+        Args:
+            topic: The spiritual topic to search (e.g., "bhakti", "karma", "adhyatma").
+            max_results: Number of results to return (1-10).
+
+        Returns:
+            A short Hindi confirmation telling the user results were found and asking which to play.
+        """
+        import json
+        try:
+            try:
+                # Prefer package-relative import
+                from .youtube_search import find_vani_videos_async  # type: ignore
+            except ImportError:
+                import sys
+                from pathlib import Path
+                src_path = Path(__file__).resolve().parent
+                if str(src_path) not in sys.path:
+                    sys.path.insert(0, str(src_path))
+                from youtube_search import find_vani_videos_async  # type: ignore
+
+            max_results = max(1, min(int(max_results), 10))
+            results = await find_vani_videos_async(topic, max_results)
+        except Exception as e:
+            logger.error(f"vani search failed for topic='{topic}': {e}", exc_info=True)
+            results = []
+
+        # Build payload for frontend (list of lectures)
+        payload = {
+            "type": "vani.results",
+            "topic": topic,
+            "results": [
+                {
+                    "videoId": r.get("video_id"),
+                    "title": r.get("title"),
+                    "channelTitle": r.get("channel_title"),
+                    "thumbnail": r.get("thumbnail"),
+                    "url": r.get("url"),
+                }
+                for r in results
+            ],
+        }
+
+        # Publish with appropriate topic (handled by publisher)
+        try:
+            publish_fn = getattr(self, "_publish_data_fn", None)
+            if callable(publish_fn):
+                data_bytes = json.dumps(payload).encode("utf-8")
+                # Need to use a different mechanism or rely on frontend distinguishing messages?
+                # The generic publish_data_fn usually just publishes to a default topic unless we wrap it
+                # In helper functions above, we see: await lp.publish_data(data_bytes, reliable=True, topic="tarot.event")
+                # Here self._publish_data_fn is ctx.room.local_participant.publish_data
+                # But it expects arguments.
+                # In agent.py: ctx.room.local_participant.publish_data -> accepts (data, reliable, topic)
+                # But `HinduismAgent` is initialized with `publish_data_fn=ctx.room.local_participant.publish_data`
+                
+                # Let's check how it's used in search_guru_teachings in this file:
+                # await self._publish_data_fn(data_bytes)
+                # It just calls it with one arg?
+                # AccessTokenOptions is different? No, publish_data takes `payload: Uint8Array, options?: DataPublishOptions` in JS SDK
+                # In Python SDK: `publish_data(self, payload: bytes, *, reliable: bool = True, topic: str | None = None)`
+                
+                # If we pass just `data_bytes`, the other args use defaults.
+                # The frontend needs to distinguish this. daily-satsang-app checks for structure.
+                
+                # For `vani.results`, we might want to ensure it's handled correctly.
+                # However, the existing implementation in agent.py relies on the same pattern.
+                import inspect
+                if inspect.iscoroutinefunction(publish_fn):
+                    await publish_fn(data_bytes)
+                else:
+                    publish_fn(data_bytes)
+                    
+        except Exception as e:
+            logger.error(f"Failed to publish vani results: {e}", exc_info=True)
+
+        if results:
+            first_result = results[0]
+            first_title = first_result.get("title", topic)
+            first_video_id = first_result.get("video_id")
+            
+            # Also publish the first result in bhajan.track format for automatic playback
+            if first_video_id:
+                try:
+                    publish_fn = getattr(self, "_publish_data_fn", None)
+                    if callable(publish_fn):
+                        # Publish in bhajan.track format for automatic playback
+                        play_payload = {
+                            "name": first_title,
+                            "artist": first_result.get("channel_title", ""),
+                            "youtube_id": first_video_id,
+                            "youtube_url": first_result.get("url", f"https://www.youtube.com/watch?v={first_video_id}"),
+                            "message": f"प्रवचन '{first_title}' चल रहा है।",
+                        }
+                        play_data_bytes = json.dumps(play_payload).encode("utf-8")
+                        
+                        import inspect
+                        if inspect.iscoroutinefunction(publish_fn):
+                            await publish_fn(play_data_bytes)
+                        else:
+                            publish_fn(play_data_bytes)
+                            
+                        logger.info(f"✅ Published first vani for playback: {first_title} ({first_video_id})")
+                except Exception as e:
+                    logger.error(f"Failed to publish vani for playback: {e}", exc_info=True)
+            
+            return (
+                f"मुझे '{topic}' विषय पर प्रवचन मिला है। मैं '{first_title}' चला रहा हूं। आनंद लें!"
+            )
+        else:
+            return (
+                f"क्षमा करें, '{topic}' विषय पर उपयुक्त प्रवचन अभी नहीं मिला। क्या आप कोई दूसरा विषय बताना चाहेंगे?"
+            )
+
 
 def prewarm(proc: JobProcess):
     """Prewarm function."""
@@ -390,7 +648,38 @@ async def entrypoint(ctx: JobContext):
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
     
-    logger.info(f"✅ Final configuration: Guru={guru_id}, Language={user_language}")
+    # Check for Satsang Plan
+    satsang_plan = None
+    plan_id = None
+    
+    # Try to extract planId from metadata (scanning again locally since we might have missed it in the loop above if we didn't store it)
+    # Actually, let's just grab it from the last seen metadata if possible or re-scan logic is messy.
+    # Better to iterate participants again or store it in the loop. 
+    # Let's simplify: access ctx.room.remote_participants directly.
+    for p in ctx.room.remote_participants.values():
+        if p.metadata:
+            try:
+                md = json.loads(p.metadata)
+                if 'planId' in md:
+                    plan_id = md['planId']
+                    logger.info(f"📜 Found Satsang Plan ID: {plan_id}")
+                    break
+            except:
+                pass
+
+    if plan_id:
+        logger.info(f"Loading satsang plan {plan_id}...")
+        try:
+            db = FirebaseDB()
+            satsang_plan = db.get_satsang_plan(plan_id)
+            if satsang_plan:
+                logger.info("✅ Satsang Plan loaded successfully")
+            else:
+                logger.error("❌ Statsang Plan not found in DB")
+        except Exception as e:
+            logger.error(f"❌ Failed to load plan: {e}")
+
+    logger.info(f"✅ Final configuration: Guru={guru_id}, Language={user_language}, Plan={bool(satsang_plan)}")
     
     # Initialize STT based on detected language
     # Use Sarvam for Hindi (best for Indian languages) with AssemblyAI fallback
@@ -435,6 +724,50 @@ async def entrypoint(ctx: JobContext):
         user_id=user_id,
         publish_data_fn=ctx.room.local_participant.publish_data
     )
+    
+    # If we have a plan, inject it into the instructions
+    if satsang_plan:
+        logger.info("Injecting Satsang Plan into Agent Instructions")
+        intro_text = satsang_plan.get('intro_text', '')
+        bhajan_query = satsang_plan.get('bhajan_query', '')
+        pravachan_points = satsang_plan.get('pravachan_points', [])
+        closing_text = satsang_plan.get('closing_text', '')
+        bhajan_title = satsang_plan.get('bhajan_title', bhajan_query)
+        bhajan_vid = satsang_plan.get('bhajan_video_id', '')
+
+        pravachan_text = "\n".join([f"- {p}" for p in pravachan_points])
+
+        plan_instructions = f"""
+        
+IMPORTANT: YOU ARE IN HOSTED SATSANG MODE.
+You must strictly follow the pre-generated plan below. Do not deviate or improvise unless asking for confirmation.
+
+--- SATSANG PLAN ---
+TOPIC: {satsang_plan.get('topic', 'Satsang')}
+
+1. INTRODUCTION PHASE:
+   When the session starts or you are asked to introduce, speak EXACTLY this text (with emotion):
+   "{intro_text}"
+
+2. BHAJAN PHASE:
+   When asked to play a bhajan, you MUST play specifically: "{bhajan_title}" (Video ID: {bhajan_vid}).
+   Use the 'play_bhajan' tool with arguments: bhajan_name="{bhajan_title}", video_id="{bhajan_vid}".
+
+3. PRAVACHAN (DISCOURSE) PHASE:
+   When asked to give the discourse/pravachan, cover these points in detail:
+   {pravachan_text}
+   
+   Speak comfortably and wisely. Do not rush.
+
+4. CLOSING PHASE:
+   When asked to close the session, say:
+   "{closing_text}"
+
+--- END PLAN ---
+
+Note: The user (Host) will guide you through phases (Intro -> Bhajan -> Pravachan). Wait for their cue to move to the next phase.
+"""
+        final_agent.instructions += plan_instructions
     
     # Create session
     session = AgentSession(
@@ -487,5 +820,6 @@ if __name__ == "__main__":
     cli.run_app(WorkerOptions(
         entrypoint_fnc=entrypoint,
         prewarm_fnc=prewarm,
-        agent_name=agent_name
+        agent_name=agent_name,
+        max_retry=5
     ))

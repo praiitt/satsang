@@ -1,10 +1,10 @@
 /* eslint-disable prettier/prettier */
 import { NextRequest, NextResponse } from 'next/server';
 
-const AUTH_SERVER_URL = process.env.AUTH_SERVER_URL || 'http://localhost:4000';
+const MARKETING_SERVER_URL = process.env.MARKETING_SERVER_URL || 'http://localhost:4001';
 
 export async function POST(request: NextRequest) {
-  const url = `${AUTH_SERVER_URL}/video-stitch`;
+  const url = `${MARKETING_SERVER_URL}/video-stitch`;
 
   const headers: HeadersInit = {
     'Content-Type': 'application/json',

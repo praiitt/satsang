@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const files: Array<{ name: string; buffer: Buffer; size: number }> = [];
 
     // Extract all files from form data
-    for (const [key, value] of formData.entries()) {
+    for (const [key, value] of (formData as any).entries()) {
       // Check if value is a File-like object (Blob)
       if (value && typeof value === 'object' && 'arrayBuffer' in value) {
         const file = value as any;
