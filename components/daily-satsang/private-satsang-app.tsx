@@ -49,103 +49,117 @@ export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) 
     const sessionStartTimeRef = useRef<number | null>(null);
     const router = useRouter();
 
-    // Handle topic submission
-    const handleTopicSubmit = (selectedTopic: string) => {
+    const [generatedPlanId, setGeneratedPlanId] = useState<string | null>(null);
+    const [isPlanReady, setIsPlanReady] = useState(false);
+
+    // Handle topic submission -> Triggers Generation
+    const handleTopicSubmit = async (selectedTopic: string) => {
         setTopic(selectedTopic);
         setIsTopicSelected(true);
+        await generatePlan(selectedTopic);
     };
 
     const handleSurpriseMe = () => {
-        const topics = ['मन की शांति', 'कर्म योग', 'ध्यान कैसे करें?', 'जीवन का उद्देश्य', 'सच्चा प्रेम', 'डर पर विजय'];
+        const topics = [
+            'मैं कौन हूँ? आत्म-अन्वेषण की यात्रा',
+            'कर्म और भाग्य का रहस्य: क्या सब कुछ पूर्व निर्धारित है?',
+            'मोक्ष क्या है और इसे इसी जीवन में कैसे प्राप्त करें?',
+            'सांसारिक जीवन में रहते हुए ईश्वर की प्राप्ति कैसे संभव है?',
+            'दुःख का मूल कारण और स्थायी आनंद का मार्ग',
+            'मृत्यु के बाद आत्मा की यात्रा क्या है?',
+            'वेदांत का सार: "तत् त्वम् असि" (वह तुम ही हो)',
+            'मन को वश में कैसे करें और आंतरिक शांति कैसे पाएं?',
+            'भक्ति योग vs ज्ञान योग: मेरे लिए क्या सही है?'
+        ];
         const randomTopic = topics[Math.floor(Math.random() * topics.length)];
         handleTopicSubmit(randomTopic);
     };
 
-    // Connect only after topic is selected
+    // 1. Generate Plan
+    const generatePlan = async (selectedTopic: string) => {
+        try {
+            setIsGenerating(true);
+            console.log('Generating satsang plan for:', selectedTopic);
+
+            const genRes = await fetch('/api/satsang/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    topic: selectedTopic,
+                    guruId,
+                    userId: 'user_' + Math.floor(Math.random() * 10000),
+                    language: 'hi'
+                }),
+            });
+
+            if (!genRes.ok) throw new Error('Failed to generate session plan');
+
+            const { planId } = await genRes.json();
+            console.log('Generated Plan ID:', planId);
+
+            setGeneratedPlanId(planId);
+            setIsPlanReady(true); // Move to "Ready" state
+
+        } catch (error) {
+            console.error('Error generating plan:', error);
+            // reset state to allow retry?
+            setIsTopicSelected(false);
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    // 2. Connect to Room (Triggered by user)
+    const handleEnterSatsang = async () => {
+        if (!generatedPlanId) return;
+
+        try {
+            const response = await fetch('/api/satsang/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    guruId,
+                    role: 'host',
+                    planId: generatedPlanId
+                }),
+            });
+
+            if (!response.ok) {
+                console.error('Failed to get token');
+                return;
+            }
+
+            const data = await response.json();
+            setParticipantName(data.participantName);
+
+            const newRoom = new Room({
+                adaptiveStream: true,
+                dynacast: true,
+                publishDefaults: { simulcast: true },
+            });
+
+            setRoom(newRoom);
+
+            await newRoom.connect(data.serverUrl, data.participantToken);
+            setIsConnected(true);
+            console.log('Connected to private satsang room:', newRoom.name);
+
+            // Mark session start time for coin deduction
+            sessionStartTimeRef.current = Date.now();
+
+        } catch (error) {
+            console.error('Error connecting to room:', error);
+        }
+    };
+
+    // Cleanup on unmount
     useEffect(() => {
-        if (!isTopicSelected || !guruId) return;
-
-        let currentRoom: Room | null = null;
-
-        const connectToRoom = async () => {
-            try {
-                // 1. Generate Session Plan
-                setIsGenerating(true);
-                console.log('Generating satsang plan for:', topic);
-
-                const genRes = await fetch('/api/satsang/generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        topic,
-                        guruId,
-                        userId: 'user_' + Math.floor(Math.random() * 10000), // Should use real user ID if available
-                        language: 'hi' // Default to Hindi
-                    }),
-                });
-
-                if (!genRes.ok) {
-                    throw new Error('Failed to generate session plan');
-                }
-
-                const { planId } = await genRes.json();
-                console.log('Generated Plan ID:', planId);
-
-                // 2. Get Token with Plan ID
-                const response = await fetch('/api/satsang/token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        guruId,
-                        role: 'host',
-                        planId: planId // Pass planId to token
-                    }),
-                });
-
-                if (!response.ok) {
-                    console.error('Failed to get token');
-                    return;
-                }
-
-                const data = await response.json();
-                setParticipantName(data.participantName);
-
-                const newRoom = new Room({
-                    adaptiveStream: true,
-                    dynacast: true,
-                    publishDefaults: {
-                        simulcast: true,
-                    },
-                });
-
-                currentRoom = newRoom;
-                setRoom(newRoom);
-
-                await newRoom.connect(data.serverUrl, data.participantToken);
-                setIsConnected(true);
-                console.log('Connected to private satsang room:', newRoom.name);
-
-                // Mark session start time for coin deduction
-                sessionStartTimeRef.current = Date.now();
-
-            } catch (error) {
-                console.error('Error connecting to room:', error);
-            } finally {
-                setIsGenerating(false);
-            }
-        };
-
-        connectToRoom();
-
         return () => {
-            if (currentRoom) {
-                if (currentRoom.state !== 'disconnected') {
-                    currentRoom.disconnect();
-                }
-                currentRoom = null;
+            if (room && room.state !== 'disconnected') {
+                room.disconnect();
             }
         };
-    }, [isTopicSelected, guruId]);
+    }, [room]);
 
     // Handle leave
     const handleLeave = async () => {
@@ -235,21 +249,53 @@ export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) 
 
     if (!room) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white">
-                {/* Guru Background for Loading State */}
+            <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white relative overflow-hidden">
+                {/* Guru Background for Loading/Ready State */}
                 <div
                     className="absolute inset-0 bg-cover bg-center opacity-30 blur-sm"
                     style={{ backgroundImage: `url('/images/gurus/${guruId}.jpg')` }}
                 />
-                <div className="relative z-10 flex flex-col items-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mb-4"></div>
-                    <p className="text-lg font-light tracking-wide text-center px-4">
-                        {isGenerating
-                            ? `Preparing your spiritual journey on "${topic}"...`
-                            : "Connecting..."}
-                    </p>
-                    {isGenerating && (
-                        <p className="text-sm text-gray-400 mt-2">Creating custom discourse and selecting bhajan...</p>
+                <div className="relative z-10 flex flex-col items-center max-w-md w-full px-6 space-y-6 animate-in fade-in zoom-in duration-300">
+
+                    {isPlanReady ? (
+                        // Session Ready State
+                        <>
+                            <div className="w-16 h-16 rounded-full bg-orange-500/20 flex items-center justify-center mb-2 border border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.5)]">
+                                <span className="text-3xl">🕉️</span>
+                            </div>
+
+                            <h2 className="text-2xl font-serif text-orange-50">Satsang is Ready</h2>
+                            <p className="text-gray-300 text-center font-light">
+                                Your spiritual session on <br />
+                                <span className="text-orange-300 font-medium">"{topic}"</span><br />
+                                has been prepared.
+                            </p>
+
+                            <button
+                                onClick={handleEnterSatsang}
+                                className="w-full py-4 rounded-xl bg-gradient-to-r from-orange-600 to-red-600 font-semibold text-white shadow-xl shadow-orange-900/40 hover:from-orange-500 hover:to-red-500 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 group"
+                            >
+                                <span>Start Satsang</span>
+                                <span className="group-hover:translate-x-1 transition-transform">→</span>
+                            </button>
+
+                            <p className="text-xs text-gray-500 text-center mt-4">
+                                Click to connect. The Guru is waiting.
+                            </p>
+                        </>
+                    ) : (
+                        // Generating State
+                        <>
+                            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500 mb-4"></div>
+                            <p className="text-lg font-light tracking-wide text-center">
+                                {isGenerating
+                                    ? `Preparing your spiritual journey on "${topic}"...`
+                                    : "Connecting..."}
+                            </p>
+                            {isGenerating && (
+                                <p className="text-sm text-gray-400 mt-2 text-center">Creating custom discourse and selecting bhajan...</p>
+                            )}
+                        </>
                     )}
                 </div>
             </div>

@@ -23,21 +23,29 @@ export async function POST(req: Request) {
         }
 
         // 1. Generate Script and Bhajan Query using LLM
-        const prompt = `
-      You are an expert Hindu Satsang planner.
-      Topic: "${topic}"
-      Language: ${language} (Output must be in this language, primarily Hindi/Sanskrit if 'hi').
+      You are an expert Hindu Satsang planner and Spiritual Guide.
+            Topic: "${topic}"
+        Language: ${ language } (Output must be in this language.If 'hi', use high - quality Hindi with Sanskrit terms where appropriate).
       
-      Generate a structured plan for a "Private Satsang" session.
+      Generate a structured, profound, and spiritually deep plan for a "Private Satsang" session.
+      The content should be philosophical, meditative, and reference ancient wisdom(Vedas, Upanishads, Gita) where applicable.
+      AVOID superficial or generic advice.Dive deep into the essence of the topic.
+      
       The output must be valid JSON with the following fields:
-      
-      1. "intro_text": A warm, spiritual introduction (Parichay) regarding the topic. (approx 4-5 sentences).
-      2. "bhajan_query": A specific YouTube search query for a popular, high-quality bhajan related to the topic. Do not use generic terms like "bhajan". Use specific artist names if known (e.g., "Jagjit Singh", "Anup Jalota") or specific famous tracks.
-      3. "pravachan_points": An array of strings. Each string is a paragraph of the discourse. Generate about 4-5 substantial paragraphs that cover the topic deeply. (Total reading time ~5-10 mins).
-      4. "closing_text": A brief, inspiring closing statement invoking blessings.
 
+        1. "intro_text": A warm, spiritual introduction(Parichay) setting a sacred atmosphere. (approx 4 - 5 sentences).
+      2. "bhajan_query": A specific YouTube search query for a classic, devotional bhajan related to the topic.Prefer classical renditions or famous artists(e.g., "Pt. Bhimsen Joshi", "Lata Mangeshkar", "Jagjit Singh", "M.S. Subbulakshmi").
+      3. "pravachan_points": An array of strings.Each string is a substantial paragraph of the discourse. 
+         - Generate 5 - 6 detailed paragraphs.
+         - Start with the nature of the problem / topic.
+         - Move to the spiritual / philosophical perspective.
+         - Include a relevant story or metaphor if fitting.
+         - Conclude with practical spiritual application.
+         - (Total reading time ~8 - 12 mins).
+        4. "closing_text": A formal, blessing - filled closing statement(Ashirwad).
+      
       JSON Output:
-    `;
+        `;
 
         const completion = await openai.chat.completions.create({
             messages: [{ role: 'system', content: prompt }],
