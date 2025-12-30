@@ -334,10 +334,13 @@ async def entrypoint(ctx: JobContext):
         preemptive_generation=True,
     )
 
-    agent = PsychedelicAgent(publish_data_fn=ctx.room.local_participant.publish_data)
+    agent = PsychedelicAgent()
     
-    # Start the session
+    # Start the session (this connects to the room)
     await session.start(agent, room=ctx.room)
+    
+    # Now that we're connected, set the publish function
+    agent._publish_data_fn = ctx.room.local_participant.publish_data
     
     if user_language == "hi":
         welcome_msg = "नमस्ते, साधक। मैं यहाँ एक दर्पण के रूप में हूँ, गुरु के रूप में नहीं। इस समय आपकी श्वास की स्थिति क्या है?"
