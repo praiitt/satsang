@@ -347,9 +347,14 @@ async def entrypoint(ctx: JobContext):
     await session.say(welcome_msg, allow_interruptions=True)
 
 if __name__ == "__main__":
+    # Get agent name from environment or use default
+    agent_name = os.getenv("LIVEKIT_AGENT_NAME", "psychedelic-agent")
+    logger.info(f"Starting agent with name: {agent_name}")
+    
     cli.run_app(
         WorkerOptions(
             entrypoint_fnc=entrypoint,
             prewarm_fnc=prewarm,
+            agent_name=agent_name,
         )
     )
