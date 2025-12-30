@@ -26,14 +26,32 @@ class FirebaseDB:
                 # Use default credentials (GOOGLE_APPLICATION_CREDENTIALS env var)
                 # or try to find serviceAccountKey.json
                 cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
-                if not cred_path and os.path.exists("serviceAccountKey.json"):
-                    cred_path = "serviceAccountKey.json"
                 
-                if cred_path:
-                    cred = credentials.Certificate(cred_path)
+                # Robust search for credential file if not found at specified path
+                potential_paths = [
+                    cred_path,
+                    "serviceAccountKey.json",
+                    "satsangServiceAccount.json",
+                    "../satsangServiceAccount.json",
+                    "../../satsangServiceAccount.json",
+                    "../../../satsangServiceAccount.json",
+                    "/home/prakash/satsang/satsangServiceAccount.json" # Keep the VM path as fallback
+                ]
+                
+                final_cred_path = None
+                for path in potential_paths:
+                    if path and os.path.exists(path):
+                        final_cred_path = path
+                        logger.info(f"✅ Found credential file at: {final_cred_path}")
+                        break
+                
+                if final_cred_path:
+                    cred = credentials.Certificate(final_cred_path)
                     firebase_admin.initialize_app(cred)
+                    logger.info("✅ Firebase initialized with certificate")
                 else:
                     # Try initializing without explicit creds (e.g. cloud run)
+                    logger.warning("⚠️ No credential file found. Trying default application credentials.")
                     firebase_admin.initialize_app()
             
             self.db = firestore.client()
