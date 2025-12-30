@@ -66,14 +66,20 @@ class HinduismAgent(Agent):
         self,
         guru_id: str = "vivekananda",
         user_id: str = "default_user",
-        publish_data_fn=None
+        publish_data_fn=None,
+        initial_instructions: Optional[str] = None 
     ) -> None:
         self.guru_id = guru_id
         self.user_id = user_id
         self.guru_profile = self._load_guru_profile(guru_id)
         
-        # Generate instructions based on guru profile
-        instructions = self._generate_guru_instructions()
+        # Use provided instructions or generate them
+        if initial_instructions:
+            logger.info("📝 Using provided initial instructions")
+            instructions = initial_instructions
+        else:
+            logger.info("🧠 Generating default guru instructions")
+            instructions = self._generate_guru_instructions()
         
         super().__init__(instructions=instructions)
         self._publish_data_fn = publish_data_fn
@@ -190,8 +196,10 @@ BILINGUAL SUPPORT:
 
 REMEMBER: You are not an AI pretending to be {guru_name}.
 You ARE {guru_name}, sharing your timeless wisdom with seekers today.
+
+
+(Respond to the user naturally)
 """
-        
         return instructions
     
     @function_tool
@@ -652,6 +660,8 @@ async def entrypoint(ctx: JobContext):
             except:
                 pass
 
+    hosted_instructions = None
+
     if plan_id:
         logger.info(f"Loading satsang plan {plan_id}...")
         try:
@@ -659,8 +669,49 @@ async def entrypoint(ctx: JobContext):
             satsang_plan = db.get_satsang_plan(plan_id)
             if satsang_plan:
                 logger.info("✅ Satsang Plan loaded successfully")
+                
+                # CALCULATE INSTRUCTIONS FOR HOSTED MODE
+                logger.info("🔒 Activating STRICT HOSTED SATSANG MODE")
+                intro_text = satsang_plan.get('intro_text', '')
+                bhajan_query = satsang_plan.get('bhajan_query', '')
+                pravachan_points = satsang_plan.get('pravachan_points', [])
+                closing_text = satsang_plan.get('closing_text', '')
+                bhajan_title = satsang_plan.get('bhajan_title', bhajan_query)
+                bhajan_vid = satsang_plan.get('bhajan_video_id', '')
+
+                pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
+
+                hosted_instructions = f"""
+IMPORTANT: YOU ARE IN **HOSTED SATSANG MODE**. 
+You are NOT a general assistant. You are executing a formal spiritual session.
+Your instructions are overridden by the plan below.
+
+SESSION TOPIC: {satsang_plan.get('topic', 'Satsang')}
+
+--- HOSTED SESSION RULES ---
+1. **SILENCE ON CONNECT**: Do NOT say "Namaste" or "Hello" when you join. Wait specifically for the 'START' signal from the host.
+2. **STRICT PHASE EXECUTION**:
+   - **INTRO**: When the session starts (you receive START signal), read the INTRO text below with warmth.
+   - **BHAJAN**: When asked for bhajan, play exactly: "{bhajan_title}" (ID: {bhajan_vid}).
+   - **PRAVACHAN**: Deliver the discourse points below. Expand on them but stay on topic.
+   - **CLOSING**: End with the closing message.
+3. **NO SMALL TALK**: Do not ask "How are you?" or "What else can I do?". You are the Guru delivering a sermon.
+
+--- CONTENT TO DELIVER ---
+INTRO TEXT:
+"{intro_text}"
+
+PRAVACHAN POINTS (Discourse):
+{pravachan_text}
+
+CLOSING TEXT:
+"{closing_text}"
+
+CONTEXT (For persona style only):
+(You are {guru_id})
+"""
             else:
-                logger.error("❌ Statsang Plan not found in DB")
+                logger.error(f"❌ Satsang Plan ID {plan_id} NOT found in DB. DB returned None.")
         except Exception as e:
             logger.error(f"❌ Failed to load plan: {e}")
 
@@ -703,62 +754,14 @@ async def entrypoint(ctx: JobContext):
         stt = inference.STT(model="assemblyai/universal-streaming", language="en")
 
 
-    # Create agent with the correct guru
+    # Create agent with the correct guru and instructions
     final_agent = HinduismAgent(
         guru_id=guru_id,
         user_id=user_id,
-        publish_data_fn=ctx.room.local_participant.publish_data
+        publish_data_fn=ctx.room.local_participant.publish_data,
+        initial_instructions=hosted_instructions # PASS INSTRUCTIONS HERE
     )
     
-    # If we have a plan, REPLACE the instructions to force Hosted Mode
-    if satsang_plan:
-        logger.info("🔒 Activating STRICT HOSTED SATSANG MODE")
-        intro_text = satsang_plan.get('intro_text', '')
-        bhajan_query = satsang_plan.get('bhajan_query', '')
-        pravachan_points = satsang_plan.get('pravachan_points', [])
-        closing_text = satsang_plan.get('closing_text', '')
-        bhajan_title = satsang_plan.get('bhajan_title', bhajan_query)
-        bhajan_vid = satsang_plan.get('bhajan_video_id', '')
-
-        # Capture original persona for style reference only. 
-        # Note: formatting can be an issue if using direct variables, so we are cautious.
-        
-        pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
-
-        plan_instructions = f"""
-IMPORTANT: YOU ARE IN **HOSTED SATSANG MODE**. 
-You are NOT a general assistant. You are executing a formal spiritual session.
-Your instructions are overridden by the plan below.
-
-SESSION TOPIC: {satsang_plan.get('topic', 'Satsang')}
-
---- HOSTED SESSION RULES ---
-1. **SILENCE ON CONNECT**: Do NOT say "Namaste" or "Hello" when you join. Wait specifically for the 'START' signal from the host.
-2. **STRICT PHASE EXECUTION**:
-   - **INTRO**: When the session starts (you receive START signal), read the INTRO text below with warmth.
-   - **BHAJAN**: When asked for bhajan, play exactly: "{bhajan_title}" (ID: {bhajan_vid}).
-   - **PRAVACHAN**: Deliver the discourse points below. Expand on them but stay on topic.
-   - **CLOSING**: End with the closing message.
-3. **NO SMALL TALK**: Do not ask "How are you?" or "What else can I do?". You are the Guru delivering a sermon.
-
---- CONTENT TO DELIVER ---
-INTRO TEXT:
-"{intro_text}"
-
-PRAVACHAN POINTS (Discourse):
-{pravachan_text}
-
-CLOSING TEXT:
-"{closing_text}"
-
-CONTEXT (For persona style only):
-(You are {guru_id})
-"""
-        final_agent.instructions = plan_instructions
-        logger.info("✅ Instructions overwritten for Hosted Mode")
-    else:
-        # Normal mode
-        final_agent.instructions += "\\n\\n(Respond to the user naturally)"
     
     # Create session
     session = AgentSession(
