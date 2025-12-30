@@ -468,25 +468,6 @@ You ARE {guru_name}, sharing your timeless wisdom with seekers today.
             publish_fn = getattr(self, "_publish_data_fn", None)
             if callable(publish_fn):
                 data_bytes = json.dumps(payload).encode("utf-8")
-                # Need to use a different mechanism or rely on frontend distinguishing messages?
-                # The generic publish_data_fn usually just publishes to a default topic unless we wrap it
-                # In helper functions above, we see: await lp.publish_data(data_bytes, reliable=True, topic="tarot.event")
-                # Here self._publish_data_fn is ctx.room.local_participant.publish_data
-                # But it expects arguments.
-                # In agent.py: ctx.room.local_participant.publish_data -> accepts (data, reliable, topic)
-                # But `HinduismAgent` is initialized with `publish_data_fn=ctx.room.local_participant.publish_data`
-                
-                # Let's check how it's used in search_guru_teachings in this file:
-                # await self._publish_data_fn(data_bytes)
-                # It just calls it with one arg?
-                # AccessTokenOptions is different? No, publish_data takes `payload: Uint8Array, options?: DataPublishOptions` in JS SDK
-                # In Python SDK: `publish_data(self, payload: bytes, *, reliable: bool = True, topic: str | None = None)`
-                
-                # If we pass just `data_bytes`, the other args use defaults.
-                # The frontend needs to distinguish this. daily-satsang-app checks for structure.
-                
-                # For `vani.results`, we might want to ensure it's handled correctly.
-                # However, the existing implementation in agent.py relies on the same pattern.
                 import inspect
                 if inspect.iscoroutinefunction(publish_fn):
                     await publish_fn(data_bytes)
@@ -729,9 +710,9 @@ async def entrypoint(ctx: JobContext):
         publish_data_fn=ctx.room.local_participant.publish_data
     )
     
-    # If we have a plan, inject it into the instructions
+    # If we have a plan, REPLACE the instructions to force Hosted Mode
     if satsang_plan:
-        logger.info("Injecting Satsang Plan into Agent Instructions")
+        logger.info("🔒 Activating STRICT HOSTED SATSANG MODE")
         intro_text = satsang_plan.get('intro_text', '')
         bhajan_query = satsang_plan.get('bhajan_query', '')
         pravachan_points = satsang_plan.get('pravachan_points', [])
@@ -739,39 +720,45 @@ async def entrypoint(ctx: JobContext):
         bhajan_title = satsang_plan.get('bhajan_title', bhajan_query)
         bhajan_vid = satsang_plan.get('bhajan_video_id', '')
 
-        pravachan_text = "\n".join([f"- {p}" for p in pravachan_points])
+        # Capture original persona for style reference only. 
+        # Note: formatting can be an issue if using direct variables, so we are cautious.
+        
+        pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
 
         plan_instructions = f"""
-        
-IMPORTANT: YOU ARE IN HOSTED SATSANG MODE.
-You must strictly follow the pre-generated plan below. Do not deviate or improvise unless asking for confirmation.
+IMPORTANT: YOU ARE IN **HOSTED SATSANG MODE**. 
+You are NOT a general assistant. You are executing a formal spiritual session.
+Your instructions are overridden by the plan below.
 
---- SATSANG PLAN ---
-TOPIC: {satsang_plan.get('topic', 'Satsang')}
+SESSION TOPIC: {satsang_plan.get('topic', 'Satsang')}
 
-1. INTRODUCTION PHASE:
-   When the session starts or you are asked to introduce, speak EXACTLY this text (with emotion):
-   "{intro_text}"
+--- HOSTED SESSION RULES ---
+1. **SILENCE ON CONNECT**: Do NOT say "Namaste" or "Hello" when you join. Wait specifically for the 'START' signal from the host.
+2. **STRICT PHASE EXECUTION**:
+   - **INTRO**: When the session starts (you receive START signal), read the INTRO text below with warmth.
+   - **BHAJAN**: When asked for bhajan, play exactly: "{bhajan_title}" (ID: {bhajan_vid}).
+   - **PRAVACHAN**: Deliver the discourse points below. Expand on them but stay on topic.
+   - **CLOSING**: End with the closing message.
+3. **NO SMALL TALK**: Do not ask "How are you?" or "What else can I do?". You are the Guru delivering a sermon.
 
-2. BHAJAN PHASE:
-   When asked to play a bhajan, you MUST play specifically: "{bhajan_title}" (Video ID: {bhajan_vid}).
-   Use the 'play_bhajan' tool with arguments: bhajan_name="{bhajan_title}", video_id="{bhajan_vid}".
+--- CONTENT TO DELIVER ---
+INTRO TEXT:
+"{intro_text}"
 
-3. PRAVACHAN (DISCOURSE) PHASE:
-   When asked to give the discourse/pravachan, cover these points in detail:
-   {pravachan_text}
-   
-   Speak comfortably and wisely. Do not rush.
+PRAVACHAN POINTS (Discourse):
+{pravachan_text}
 
-4. CLOSING PHASE:
-   When asked to close the session, say:
-   "{closing_text}"
+CLOSING TEXT:
+"{closing_text}"
 
---- END PLAN ---
-
-Note: The user (Host) will guide you through phases (Intro -> Bhajan -> Pravachan). Wait for their cue to move to the next phase.
+CONTEXT (For persona style only):
+(You are {guru_id})
 """
-        final_agent.instructions += plan_instructions
+        final_agent.instructions = plan_instructions
+        logger.info("✅ Instructions overwritten for Hosted Mode")
+    else:
+        # Normal mode
+        final_agent.instructions += "\\n\\n(Respond to the user naturally)"
     
     # Create session
     session = AgentSession(
@@ -784,7 +771,7 @@ Note: The user (Host) will guide you through phases (Intro -> Bhajan -> Pravacha
         ),
         turn_detection=None,
         vad=ctx.proc.userdata["vad"],
-        preemptive_generation=True,
+        preemptive_generation=False, # Disable for hosted mode to be safe? Let's keep true but handle turn detection if needed
     )
     
     # Metrics
@@ -807,14 +794,17 @@ Note: The user (Host) will guide you through phases (Intro -> Bhajan -> Pravacha
         room=ctx.room,
     )
     
-    # Send welcome message with correct guru in proper script
-    guru_name = final_agent.guru_profile['name']
-    if user_language == 'hi':
-        welcome_msg = f"नमस्ते! मैं {guru_name} की शिक्षाओं को समर्पित एक AI हूँ। आप मुझसे कोई भी आध्यात्मिक प्रश्न पूछ सकते हैं।"
+    # Send welcome message ONLY IF NOT IN HOSTED MODE
+    if not satsang_plan:
+        guru_name = final_agent.guru_profile['name']
+        if user_language == 'hi':
+            welcome_msg = f"नमस्ते! मैं {guru_name} की शिक्षाओं को समर्पित एक AI हूँ। आप मुझसे कोई भी आध्यात्मिक प्रश्न पूछ सकते हैं।"
+        else:
+            welcome_msg = f"Namaste! I am an AI embodying the teachings of {guru_name}. You may ask me any spiritual question."
+        
+        await session.say(welcome_msg)
     else:
-        welcome_msg = f"Namaste! I am an AI embodying the teachings of {guru_name}. You may ask me any spiritual question."
-    
-    await session.say(welcome_msg)
+        logger.info("🤫 Hosted Mode active: Skipping welcome message. Waiting for start signal.")
 
 
 if __name__ == "__main__":
