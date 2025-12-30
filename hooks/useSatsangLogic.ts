@@ -77,11 +77,11 @@ export function useSatsangLogic({
 
     // Helper to publish messages to agent
     const publishToAgent = useCallback(
-        (payload: Record<string, unknown>) => {
-            if (!room) return;
+        async (payload: Record<string, unknown>) => {
+            if (!room || room.state !== 'connected') return;
             try {
                 const data = new TextEncoder().encode(JSON.stringify(payload));
-                room.localParticipant.publishData(data, {
+                await room.localParticipant.publishData(data, {
                     reliable: true,
                     topic: 'daily_satsang',
                 });
@@ -95,8 +95,8 @@ export function useSatsangLogic({
 
     // Send phase message
     const sendPhaseMessage = useCallback(
-        (phase: PhaseName, topic?: string) => {
-            if (!room) return;
+        async (phase: PhaseName, topic?: string) => {
+            if (!room || room.state !== 'connected') return;
             const message = {
                 type: 'daily_satsang_phase',
                 phase,
@@ -108,7 +108,7 @@ export function useSatsangLogic({
             try {
                 const encoder = new TextEncoder();
                 const data = encoder.encode(JSON.stringify(message));
-                room.localParticipant.publishData(data, {
+                await room.localParticipant.publishData(data, {
                     reliable: true,
                     topic: 'daily_satsang',
                 });
