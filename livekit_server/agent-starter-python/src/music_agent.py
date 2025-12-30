@@ -495,6 +495,10 @@ If overall_score < 7.0, set is_valid to false.
             else:
                 return "Your tracks are still in the process of creation. Please give it another minute and then ask me again!"
                 
+        except Exception as e:
+            logger.error(f"Failed to check song status: {e}")
+            return "I'm having trouble checking your songs right now. Please try again in a moment."
+                
     async def _play_audio_url(self, url: str, title: str):
         """Internal helper to publish play event to frontend."""
         if not self._publish_data_fn:
