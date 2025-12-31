@@ -419,8 +419,8 @@ async def entrypoint(ctx: JobContext):
             if legacy: return legacy
             
             # Known good Hindi/Multilingual voice from Cartesia (deep/calm)
-            # This is the same one used by Guruji
-            return "1259b7e3-cb8a-43df-9446-30971a46b8b0"
+            # Using Osho's voice for more psychedelic/hypnotic effect
+            return "ef348979-a766-4ac2-b29c-cec355967e49"
         else:
             # English voice selection
             specific = os.getenv("PSYCHEDELIC_TTS_VOICE_EN")
@@ -460,9 +460,9 @@ async def entrypoint(ctx: JobContext):
     agent._publish_data_fn = ctx.room.local_participant.publish_data
     
     if user_language == "hi":
-        welcome_msg = "नमस्ते, साधक। मैं यहाँ एक दर्पण के रूप में हूँ, गुरु के रूप में नहीं। इस समय आपकी श्वास की स्थिति क्या है?"
+        welcome_msg = "नमस्ते, साधक। मैं यहाँ एक दर्पण के रूप में हूँ। हम साथ में ध्यान कर सकते हैं, या मैं आपके लिए साइकेडेलिक मंत्र (Psychedelic Mantra) और संगीत बना सकता हूँ। आप क्या करना चाहेंगे?"
     else:
-        welcome_msg = "Welcome, seeker. I am here as a mirror, not a master. How is your breath right now?"
+        welcome_msg = "Welcome, seeker. I am here as a mirror. We can meditate, or I can generate unique psychedelic mantras (Psychedelic Trance/Mantra) for your journey. What is your will?"
 
     await session.say(welcome_msg, allow_interruptions=True)
 
