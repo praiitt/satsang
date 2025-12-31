@@ -476,9 +476,9 @@ async def entrypoint(ctx: JobContext):
     agent._publish_data_fn = ctx.room.local_participant.publish_data
     
     if user_language == "hi":
-        welcome_msg = "नमस्ते, साधक। मैं यहाँ एक दर्पण के रूप में हूँ। हम साथ में ध्यान कर सकते हैं, या मैं आपके लिए साइकेडेलिक मंत्र (Psychedelic Mantra) और संगीत बना सकता हूँ। आप क्या करना चाहेंगे?"
+        welcome_msg = "नमस्ते, साधक। मैं यहाँ एक दर्पण के रूप में हूँ। हम साथ में ध्यान कर सकते हैं, या मैं आपके लिए साइकेडेलिक ट्रान्स (Psychedelic Trance) और संगीत बना सकता हूँ। आप क्या करना चाहेंगे?"
     else:
-        welcome_msg = "Welcome, seeker. I am here as a mirror. We can meditate, or I can generate unique psychedelic mantras (Psychedelic Trance/Mantra) for your journey. What is your will?"
+        welcome_msg = "Welcome, seeker. I am here as a mirror. We can meditate, or I can generate unique psychedelic trance (Psychedelic Trance/Techno) for your journey. What is your will?"
 
     await session.say(welcome_msg, allow_interruptions=True)
 
