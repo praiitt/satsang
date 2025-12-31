@@ -63,16 +63,21 @@ export function useRoom(appConfig: AppConfig) {
                 }
                 : undefined,
               language: language, // Also send in body for compatibility
-              userId: authRef.current.user?.phoneNumber || authRef.current.user?.uid, // Use phone number for music tracking
+              userId: authRef.current.user?.uid || authRef.current.user?.phoneNumber,
               guruId: appConfig.metadata?.guruId, // Pass guruId if available
             }),
           });
 
+          const resolvedUserId = authRef.current.user?.uid || authRef.current.user?.phoneNumber;
           console.log('🔍 [useRoom] Connection details request sent', {
             agentName: appConfig.agentName,
             language,
             guruId: appConfig.metadata?.guruId,
-            userId: authRef.current.user?.phoneNumber || authRef.current.user?.uid,
+            userId: resolvedUserId,
+            authState: {
+              isAuthenticated: !!authRef.current.user,
+              uid: authRef.current.user?.uid
+            }
           });
 
           const data = await res.json();
