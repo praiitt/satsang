@@ -50,7 +50,25 @@ export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) 
     const router = useRouter();
 
     const [generatedPlanId, setGeneratedPlanId] = useState<string | null>(null);
+    const [satsangPlan, setSatsangPlan] = useState<any>(null); // Store full plan
     const [isPlanReady, setIsPlanReady] = useState(false);
+    const [recentTopics, setRecentTopics] = useState<string[]>([]);
+
+    // Fetch recent topics
+    useEffect(() => {
+        const fetchTopics = async () => {
+            try {
+                const res = await fetch(`/api/satsang/topics?guruId=${guruId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setRecentTopics(data.topics || []);
+                }
+            } catch (e) {
+                console.error('Failed to fetch recent topics', e);
+            }
+        };
+        fetchTopics();
+    }, [guruId]);
 
     // Handle topic submission -> Triggers Generation
     const handleTopicSubmit = async (selectedTopic: string) => {
@@ -94,10 +112,11 @@ export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) 
 
             if (!genRes.ok) throw new Error('Failed to generate session plan');
 
-            const { planId } = await genRes.json();
+            const { planId, plan } = await genRes.json();
             console.log('Generated Plan ID:', planId);
 
             setGeneratedPlanId(planId);
+            setSatsangPlan(plan);
             setIsPlanReady(true); // Move to "Ready" state
 
         } catch (error) {
@@ -241,6 +260,23 @@ export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) 
                         >
                             <span>✨</span> Suggest a Topic
                         </button>
+
+                        {recentTopics.length > 0 && (
+                            <div className="pt-2 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
+                                <p className="text-xs text-center text-white/40 mb-3 uppercase tracking-widest">Recently Discussed</p>
+                                <div className="flex flex-wrap justify-center gap-2">
+                                    {recentTopics.map((t, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => handleTopicSubmit(t)}
+                                            className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-orange-500/10 hover:border-orange-500/30 text-xs text-gray-300 hover:text-orange-200 transition-all cursor-pointer whitespace-nowrap"
+                                        >
+                                            {t}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -314,9 +350,10 @@ export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) 
                 room={room}
                 guruName={guruName}
                 guruId={guruId}
-                durations={{ intro: 2, bhajan: 5, pravachan: 10, qa: 15, closing: 3 }}
+                durations={{ intro: 120, bhajan: 300, pravachan: 600, qa: 900, closing: 180 }}
                 onLeave={handleLeave}
                 initialTopic={topic}
+                bhajanVideoId={satsangPlan?.bhajan_video_id}
             />
 
             {/* Hidden Components */}

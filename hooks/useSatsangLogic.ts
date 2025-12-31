@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Room, RoomEvent } from 'livekit-client';
+import { ConnectionState, Room, RoomEvent } from 'livekit-client';
 import { useChat } from '@livekit/components-react';
 
 export type PhaseName = 'intro' | 'bhajan' | 'pravachan' | 'qa' | 'closing';
@@ -78,7 +78,10 @@ export function useSatsangLogic({
     // Helper to publish messages to agent
     const publishToAgent = useCallback(
         async (payload: Record<string, unknown>) => {
-            if (!room || room.state !== 'connected') return;
+            if (!room || room.state !== 'connected') {
+                console.warn('[SatsangLogic] Room not connected, skipping publish', payload.type);
+                return;
+            }
             try {
                 const data = new TextEncoder().encode(JSON.stringify(payload));
                 await room.localParticipant.publishData(data, {
@@ -86,8 +89,13 @@ export function useSatsangLogic({
                     topic: 'daily_satsang',
                 });
                 console.log('[SatsangLogic] → agent', payload);
-            } catch (e) {
-                console.error('[SatsangLogic] publish error', e);
+            } catch (e: any) {
+                // Swallow connection errors to prevent app crash
+                if (e?.message?.includes('closed') || e?.name === 'UnexpectedConnectionState') {
+                    console.warn('[SatsangLogic] Connection closed while publishing:', e);
+                } else {
+                    console.error('[SatsangLogic] publish error', e);
+                }
             }
         },
         [room]
@@ -96,7 +104,7 @@ export function useSatsangLogic({
     // Send phase message
     const sendPhaseMessage = useCallback(
         async (phase: PhaseName, topic?: string) => {
-            if (!room || room.state !== 'connected') return;
+            if (!room || room.state !== ConnectionState.Connected) return;
             const message = {
                 type: 'daily_satsang_phase',
                 phase,
@@ -112,8 +120,12 @@ export function useSatsangLogic({
                     reliable: true,
                     topic: 'daily_satsang',
                 });
-            } catch (error) {
-                console.error('Failed to send phase message:', error);
+            } catch (error: any) {
+                if (error?.message?.includes('closed') || error?.name === 'UnexpectedConnectionState') {
+                    console.warn('Connection closed while sending phase message');
+                } else {
+                    console.error('Failed to send phase message:', error);
+                }
             }
         },
         [room, config.topic, getDuration]
@@ -126,68 +138,97 @@ export function useSatsangLogic({
             const mins = (sec: number) => Math.max(1, Math.round(sec / 60));
             let prompt = '';
 
+            if (!room || room.state !== ConnectionState.Connected) {
+                console.warn('[SatsangLogic] Room not connected, skipping prompt for', phase);
+                return;
+            }
+
             switch (phase) {
                 case 'intro':
                     // Explicit instruction to start with the chosen topic and give a "Parichay"
-                    prompt = `परिचय चरण (Introduction Phase).
-                    विषय: "${topic}"
+                    prompt = `STARTING PHASE: INTRO
+                    Topic: "${topic}"
                     
-                    निर्देश:
-                    1. सबसे पहले स्पष्ट रूप से बताएं कि आज का विषय "${topic}" है।
-                    2. इस विषय पर एक संक्षिप्त परिचय (Parichay) दें।
-                    3. श्रोताओं का स्वागत करें।
-                    
-                    यह चरण छोटा रखें (लगभग 2 मिनट)।`;
+                    Instructions for Agent:
+                    1. Direct your attention to the topic "${topic}".
+                    2. Provide a warm and insightful introduction (Parichay) to this topic in Hindi.
+                    3. Welcome the seekers.
+                    4. Keep this brief (approx 2 mins).`;
                     break;
                 case 'bhajan':
                     // Instruct to find popular/community appreciated music
-                    prompt = `भजन चरण (Bhajan Phase).
-                    विषय: "${topic}"
+                    const videoId = config.introBhajanVideoId || '';
+                    if (!videoId) {
+                        console.warn('[SatsangLogic] No specific bhajan video ID found in config');
+                    } else {
+                        console.log('[SatsangLogic] Using specific bhajan video ID:', videoId);
+                    }
+
+                    const specificInstruction = videoId
+                        ? `3. CRITICAL: Use tool 'play_bhajan' with video_id="${videoId}"`
+                        : `3. Use tool 'play_bhajan' to play a popular bhajan related to "${topic}"`;
+
+                    prompt = `STARTING PHASE: BHAJAN
+                    Topic: "${topic}"
                     
-                    निर्देश:
-                    1. अब कहें "अब हम भजन सुनेंगे"।
-                    2. विषय से संबंधित एक "सुप्रसिद्ध (popular community favorite)" भजन 'play_bhajan' टूल का उपयोग करके चलाएं।
-                    3. भजन चलने के दौरान शांत रहें।`;
+                    Instructions for Agent:
+                    1. Announce: "अब हम भजन सुनेंगे" (Now we will listen to a bhajan).
+                    2. You MUST play music now.
+                    ${specificInstruction}
+                    4. Remain silent while the music plays.`;
                     break;
                 case 'pravachan':
                     // Enforce duration more strictly
                     const durationMins = mins(durations.pravachan);
-                    prompt = `प्रवचन चरण (Discourse Phase).
-                    विषय: "${topic}"
+                    prompt = `STARTING PHASE: PRAVACHAN (Discourse)
+                    Topic: "${topic}"
                     
-                    निर्देश:
-                    1. अब मुख्य प्रवचन शुरू करें।
-                    2. आपको कम से कम ${durationMins} मिनट तक लगातार बोलना है।
-                    3. विषय को गहराई से समझाएं, उदाहरण और कहानियां (stories) दें।
-                    4. बीच में रुकें नहीं, यह एक विस्तृत प्रवचन होना चाहिए।`;
+                    Instructions for Agent:
+                    1. Begin the main discourse now.
+                    2. You must speak for at least ${durationMins} minutes.
+                    3. Deeply explore the topic with stories, metaphors, and scripture.
+                    4. Do not stop early. This is the main teaching.`;
                     break;
                 case 'qa':
-                    prompt = `प्रश्नोत्तर चरण (Q&A Phase).
-                    विषय: "${topic}"
+                    prompt = `STARTING PHASE: Q&A
+                    Topic: "${topic}"
                     
-                    निर्देश:
-                    1. अब श्रोताओं से प्रश्न पूछने के लिए कहें।
-                    2. उनके सवालों के जवाब दें।`;
+                    Instructions for Agent:
+                    1. Invite the seekers to ask questions about the discourse.
+                    2. Answer their questions with wisdom and patience.`;
                     break;
                 case 'closing':
-                    prompt = `समापन चरण (Closing Phase).
+                    const closingVideoId = config.closingBhajanVideoId || '';
+                    const closingInstruction = closingVideoId
+                        ? `3. Use tool 'play_bhajan' with video_id="${closingVideoId}" for the closing Aarti/Bhajan`
+                        : `3. Use tool 'play_bhajan' to play a closing Aarti or peaceful chant`;
+
+                    prompt = `STARTING PHASE: CLOSING
+                    Topic: "${topic}"
                     
-                    निर्देश:
-                    1. सत्र का समापन करें।
-                    2. 'play_bhajan' टूल से एक आरती या समापन भजन चलाएं।
-                    3. अंतिम आशीर्वाद दें।`;
+                    Instructions for Agent:
+                    1. Bring the session to a gentle close.
+                    2. Offer final blessings.
+                    ${closingInstruction}
+                    4. Bid farewell.`;
                     break;
             }
 
             if (prompt) {
-                await send(prompt);
+                // Ensure we catch any errors if send fails due to connection
+                try {
+                    await send(prompt);
+                    console.log(`[SatsangLogic] Sent prompt for ${phase}`);
+                } catch (e) {
+                    console.warn(`[SatsangLogic] Failed to send prompt for ${phase}`, e);
+                }
             }
 
             if (phase !== 'bhajan' && phase !== 'closing') {
                 publishToAgent({ type: 'bhajan', action: 'pause' });
             }
         },
-        [config.topic, durations, publishToAgent, send]
+        [config.topic, config.introBhajanVideoId, config.closingBhajanVideoId, durations, publishToAgent, send]
     );
 
     // Phase transition effect

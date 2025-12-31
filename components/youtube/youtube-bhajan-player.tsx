@@ -25,9 +25,12 @@ import { useYouTubePlayer } from '@/hooks/useYouTubePlayer';
  */
 interface YouTubeBhajanPlayerProps {
   agentName?: string;
+  className?: string;
+  forcedVideoId?: string;
+  onEnded?: () => void;
 }
 
-export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
+export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTubeBhajanPlayerProps) {
   const messages = useChatMessages();
   const room = useRoomContext();
   const lastProcessedMessageRef = useRef<string>('');
@@ -58,7 +61,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
     setVolume,
     player,
     retry,
-  } = useYouTubePlayer();
+  } = useYouTubePlayer({ onEnded });
   const [showControls, setShowControls] = useState(false);
   const [currentTrackName, setCurrentTrackName] = useState<string | null>(null);
   const [volume, setVolumeState] = useState(50); // Default volume 50%
@@ -249,6 +252,30 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
           }
         }
 
+        // Handle video_result format (from hosted agent auto-play)
+        if (parsed.type === 'video_result' && parsed.videoId) {
+          const videoId = extractYouTubeVideoId(parsed.videoId);
+          if (videoId) {
+            console.log('[YouTubeBhajanPlayer] ✅ Playing video from video_result:', {
+              videoId,
+              title: parsed.title,
+            });
+            setCurrentTrackName(parsed.title || 'Bhajan');
+            setShowControls(true);
+            playVideo(videoId, 0)
+              .then(async () => {
+                await setAgentAudioMuted(true);
+                if (!agentIsSleeping) {
+                  await publishAgentControl('sleep', 'bhajan_playing');
+                }
+              })
+              .catch((err) => {
+                console.error('[YouTubeBhajanPlayer] Play error:', err);
+              });
+          }
+          return;
+        }
+
         // Handle daily_satsang format (action-based commands)
         if (parsed.action === 'play' && parsed.videoId) {
           const videoId = extractYouTubeVideoId(parsed.videoId);
@@ -360,7 +387,7 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
           });
 
           // Stop any YouTube video that might be playing
-          stop().catch(() => {});
+          stop().catch(() => { });
 
           // Set MP3 URL and track name
           setMp3Url(parsed.mp3Url);
@@ -473,6 +500,22 @@ export function YouTubeBhajanPlayer({ agentName }: YouTubeBhajanPlayerProps) {
       room.off(RoomEvent.DataReceived, onData);
     };
   }, [room, playVideo, pause, resume, agentIsSleeping, publishAgentControl]);
+
+  // Handle forced playback from props (Frontend-driven)
+  useEffect(() => {
+    if (forcedVideoId && isReady) {
+      const vid = extractYouTubeVideoId(forcedVideoId);
+      // Play if we have a valid ID and it's NOT the current video
+      // OR if it IS the current video but we aren't playing (and haven't manually paused? tough to know)
+      // safeguard: only if video ID differs
+      if (vid && vid !== currentVideoId) {
+        console.log('[YouTubeBhajanPlayer] 🚀 Forced playback triggered:', vid);
+        setCurrentTrackName('Bhajan');
+        setShowControls(true);
+        playVideo(vid, 0).catch(err => console.error('Forced play failed', err));
+      }
+    }
+  }, [forcedVideoId, isReady, currentVideoId, playVideo]);
 
   // Also listen to chat messages for backward compatibility (extract YouTube URLs)
   useEffect(() => {

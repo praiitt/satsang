@@ -81,7 +81,7 @@ interface UseYouTubePlayerReturn {
   retry: () => void;
 }
 
-export function useYouTubePlayer(): UseYouTubePlayerReturn {
+export function useYouTubePlayer({ onEnded }: { onEnded?: () => void } = {}): UseYouTubePlayerReturn {
   const [player, setPlayer] = useState<YouTubePlayer | null>(null);
   const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -251,6 +251,7 @@ export function useYouTubePlayer(): UseYouTubePlayerReturn {
             if (state === 0) {
               // Video ended - notify via custom event
               wasPlayingBeforeHiddenRef.current = false;
+              if (onEnded) onEnded();
               window.dispatchEvent(new CustomEvent('youtube-video-ended'));
             } else if (state === 2) {
               // Video paused - only notify if tab is visible (not paused due to tab hidden)

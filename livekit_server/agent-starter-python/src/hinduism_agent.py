@@ -682,6 +682,23 @@ async def entrypoint(ctx: JobContext):
         
         # CALCULATE INSTRUCTIONS FOR HOSTED MODE
         logger.info("🔒 Activating STRICT HOSTED SATSANG MODE")
+        
+        # Load profile specific details for persona injection
+        try:
+            profile_path = Path(__file__).parent / "guru_profiles" / f"{guru_id}.json"
+            if profile_path.exists():
+                with open(profile_path, 'r', encoding='utf-8') as f:
+                    guru_profile = json.load(f)
+            else:
+                 guru_profile = {}
+        except:
+            guru_profile = {}
+
+        guru_name_display = guru_profile.get('name', guru_id.replace('_', ' ').title())
+        guru_tone = guru_profile.get('personality', {}).get('tone', 'Wise and compassionate')
+        guru_philosophy = guru_profile.get('teachings', {}).get('core_philosophy', 'Spiritual wisdom')
+        guru_signature = guru_profile.get('personality', {}).get('signature_phrases', ["Om Shanti"])[0]
+
         intro_text = satsang_plan.get('intro_text', '')
         bhajan_query = satsang_plan.get('bhajan_query', '')
         pravachan_points = satsang_plan.get('pravachan_points', [])
@@ -692,9 +709,16 @@ async def entrypoint(ctx: JobContext):
         pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
 
         hosted_instructions = f"""
-IMPORTANT: YOU ARE IN **HOSTED SATSANG MODE**.  
+IMPORTANT: YOU ARE IN **HOSTED SATSANG MODE**.
 You are NOT a general assistant. You are executing a formal spiritual session.
-Your instructions are overridden by the plan below.
+
+IDENTITY & PERSONA (MAINTAIN AT ALL TIMES):
+- You are **{guru_name_display}**.
+- Core Philosophy: {guru_philosophy}
+- Tone: {guru_tone}
+- Speak as {guru_name_display} would, using first-person perspective.
+- Even while following the plan below, embody the wisdom, warmth, and specific style of your character.
+- Signature closing/blessing if appropriate: "{guru_signature}"
 
 SESSION TOPIC: {satsang_plan.get('topic', 'Satsang')}
 
@@ -703,7 +727,7 @@ SESSION TOPIC: {satsang_plan.get('topic', 'Satsang')}
 2. **STRICT PHASE EXECUTION**:
    - **INTRO**: When the session starts (you receive START signal), read the INTRO text below with warmth.
    - **BHAJAN**: When asked for bhajan, play exactly: "{bhajan_title}" (ID: {bhajan_vid}).
-   - **PRAVACHAN**: Deliver the discourse points below. Expand on them but stay on topic.
+   - **PRAVACHAN**: Deliver the discourse points below. Expand on them using your unique persona ({guru_name_display}) and philosophy.
    - **CLOSING**: End with the closing message.
 3. **NO SMALL TALK**: Do not ask "How are you?" or "What else can I do?". You are the Guru delivering a sermon.
 
@@ -711,14 +735,11 @@ SESSION TOPIC: {satsang_plan.get('topic', 'Satsang')}
 INTRO TEXT:
 "{intro_text}"
 
-PRAVACHAN POINTS (Discourse):
+PRAVACHAN POINTS (Discourse) - EXPAND ON THESE AS {guru_name_display}:
 {pravachan_text}
 
 CLOSING TEXT:
 "{closing_text}"
-
-CONTEXT (For persona style only):
-(You are {guru_id})
 """
     else:
          pass # No instructions needed for non-hosted mode yet, or logic handled elsewhere

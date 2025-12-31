@@ -27,15 +27,27 @@ class FirebaseDB:
                 # or try to find serviceAccountKey.json
                 cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS") or os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH")
                 
-                # Robust search for credential file if not found at specified path
+                # Robust search for credential file using Path relative to this script
+                # Script is in .../satsang/livekit_server/agent-starter-python/src/firebase_db.py
+                # Root is .../satsang/satsangServiceAccount.json
+                
+                current_file = Path(__file__).resolve()
+                src_dir = current_file.parent # src
+                agent_dir = src_dir.parent # agent-starter-python
+                livekit_dir = agent_dir.parent # livekit_server
+                repo_root = livekit_dir.parent # satsang (root)
+                
                 potential_paths = [
-                    cred_path,
-                    "serviceAccountKey.json",
+                    os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
+                    os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH"),
+                    str(repo_root / "satsangServiceAccount.json"), # Best guess based on repo structure
+                    str(agent_dir / "satsangServiceAccount.json"),
                     "satsangServiceAccount.json",
                     "../satsangServiceAccount.json",
-                    "../../satsangServiceAccount.json",
+                    "../../satsangServiceAccount.json", 
                     "../../../satsangServiceAccount.json",
-                    "/home/prakash/satsang/satsangServiceAccount.json" # Keep the VM path as fallback
+                    "/home/prakash/satsang/satsangServiceAccount.json",
+                    "/home/prakash/testproj/satsang/satsangServiceAccount.json" # Add the observed VM path
                 ]
                 
                 final_cred_path = None
@@ -50,8 +62,8 @@ class FirebaseDB:
                     firebase_admin.initialize_app(cred)
                     logger.info("✅ Firebase initialized with certificate")
                 else:
-                    # Try initializing without explicit creds (e.g. cloud run)
-                    logger.warning("⚠️ No credential file found. Trying default application credentials.")
+                    logger.warning(f"⚠️ No credential file found. Checked: {[p for p in potential_paths if p]}")
+                    # Try initializing without explicit creds
                     firebase_admin.initialize_app()
             
             self.db = firestore.client()

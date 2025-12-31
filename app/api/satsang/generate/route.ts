@@ -103,7 +103,12 @@ export async function POST(req: Request) {
 
         await planRef.set(finalPlan);
 
-        return NextResponse.json({ planId: finalPlan.id });
+        await planRef.set(finalPlan);
+
+        return NextResponse.json({
+            planId: finalPlan.id,
+            plan: finalPlan // Return full plan details to frontend
+        });
 
     } catch (error: any) {
         console.error('Error generating satsang plan:', error);

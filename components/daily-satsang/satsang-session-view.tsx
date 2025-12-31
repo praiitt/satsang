@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Pause, SkipForward, SkipBack, PhoneOff, Mic, MicOff } from 'lucide-react';
 import { useLocalParticipant } from '@livekit/components-react';
+import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player';
 
 interface SatsangSessionViewProps {
     room: Room | null;
@@ -15,6 +16,8 @@ interface SatsangSessionViewProps {
     guruId: string; // Used for background image lookup if needed
     durations: Durations;
     onLeave: () => void;
+    initialTopic?: string;
+    bhajanVideoId?: string;
 }
 
 export function SatsangSessionView({
@@ -22,7 +25,9 @@ export function SatsangSessionView({
     guruName,
     guruId,
     durations,
-    onLeave
+    onLeave,
+    initialTopic,
+    bhajanVideoId
 }: SatsangSessionViewProps) {
 
     const {
@@ -37,7 +42,10 @@ export function SatsangSessionView({
     } = useSatsangLogic({
         room,
         durations,
-        config: { topic: 'Spiritual Wisdom' }, // topic could be dynamic later
+        config: {
+            topic: initialTopic || 'Spiritual Wisdom',
+            introBhajanVideoId: bhajanVideoId
+        },
         onLeave
     });
 
@@ -97,6 +105,22 @@ export function SatsangSessionView({
             </div>
 
             {/* 3. Center Stage (Visualizer & Phase Info) */}
+            <div className={cn(
+                "relative z-10 w-full px-4 transition-all duration-700 ease-in-out",
+                (currentPhase.key === 'bhajan' || currentPhase.key === 'closing')
+                    ? "opacity-100 max-h-[500px]"
+                    : "opacity-0 max-h-0 overflow-hidden"
+            )}>
+                <YouTubeBhajanPlayer
+                    agentName="guruji"
+                    forcedVideoId={currentPhase.key === 'bhajan' ? bhajanVideoId : undefined}
+                    onEnded={() => {
+                        console.log('[SatsangSessionView] Bhajan ended, auto-transitioning phase');
+                        handleNext();
+                    }}
+                />
+            </div>
+
             <div className="relative z-10 flex flex-1 flex-col items-center justify-center space-y-10 p-6 text-center">
 
                 {/* Circular Progress Timer */}
