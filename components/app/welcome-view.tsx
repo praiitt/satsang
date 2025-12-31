@@ -42,7 +42,7 @@ function VideoSection() {
             src="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4"
             poster="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4#t=0.1"
             autoPlay
-            loop
+            loop={false}
             className="w-full"
             hideProgressBar
           />

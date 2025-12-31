@@ -249,7 +249,12 @@ export function useYouTubePlayer({ onEnded }: { onEnded?: () => void } = {}): Us
             // Notify components when video ends or pauses (for agent wake)
             // Components listening to isPlaying will handle agent.control messages
             if (state === 0) {
-              // Video ended - notify via custom event
+              // Video ended - stop player and notify
+              try {
+                event.target.stopVideo();
+              } catch (e) {
+                // Ignore
+              }
               wasPlayingBeforeHiddenRef.current = false;
               if (onEnded) onEnded();
               window.dispatchEvent(new CustomEvent('youtube-video-ended'));

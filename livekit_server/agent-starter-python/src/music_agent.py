@@ -150,9 +150,9 @@ generate_music(
         logger.info(f"Generating music: {title} ({style}) - Instrumental: {is_instrumental}")
         
         try:
-            # Use auth server for callbacks (more robust)
-            auth_server_url = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
-            callback_url = f"{auth_server_url}/suno/callback?userId={self.user_id}"
+            # Use specific callback server for webhooks
+            callback_base = os.getenv("SUNO_CALLBACK_URL", "https://rraasi-music-webhook-6ougd45dya-uc.a.run.app")
+            callback_url = f"{callback_base}/suno/callback?userId={self.user_id}"
             
             logger.info(f"DEBUG CALLBACK: Using User ID: {self.user_id}")
             logger.info(f"DEBUG CALLBACK: Callback URL: {callback_url}")
