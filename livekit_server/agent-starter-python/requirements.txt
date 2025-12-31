@@ -43,3 +43,4 @@ aiohttp>=3.9.0
 # Install it separately with CPU-only wheels:
 # pip install torch==2.3.0 --index-url https://download.pytorch.org/whl/cpu
 firebase-admin
+pinecone-client>=3.0.0
