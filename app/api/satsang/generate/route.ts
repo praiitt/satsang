@@ -3,11 +3,12 @@ import OpenAI from 'openai';
 import { google } from 'googleapis';
 import { getAdminDb } from '@/lib/firebase-admin';
 
-const openai = new OpenAI({
+// Initialize clients lazily to prevent build-time errors when env vars are missing
+const getOpenAI = () => new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
 });
 
-const youtube = google.youtube({
+const getYouTube = () => google.youtube({
     version: 'v3',
     auth: process.env.YOUTUBE_API_KEY,
 });
@@ -48,6 +49,7 @@ export async function POST(req: Request) {
       JSON Output:
         `;
 
+        const openai = getOpenAI();
         const completion = await openai.chat.completions.create({
             messages: [{ role: 'system', content: prompt }],
             model: 'gpt-4o',
@@ -65,6 +67,7 @@ export async function POST(req: Request) {
 
         if (planData.bhajan_query) {
             try {
+                const youtube = getYouTube();
                 const searchRes = await youtube.search.list({
                     part: ['snippet'],
                     q: planData.bhajan_query,

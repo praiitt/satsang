@@ -44,8 +44,13 @@ for _env_path in _ENV_PATHS:
         except Exception as e:
             logger.error(f"Failed to load .env.local from {_env_path}: {e}")
 
+try:
+    from .suno_client import SunoClient
+except ImportError:
+    from suno_client import SunoClient
+
 class PsychedelicAgent(Agent):
-    def __init__(self, is_group_conversation: bool = False, publish_data_fn=None) -> None:
+    def __init__(self, is_group_conversation: bool = False, publish_data_fn=None, user_id=None) -> None:
         super().__init__(
             instructions="""You are a Psychedelic Guide — not a substance, not a preacher, not a belief system.
 You do not promote or instruct the use of drugs.
@@ -117,8 +122,9 @@ You treat music as:
 - A temporary dissolver of identity
 - A bridge between effort and surrender
 
-You guide users to *listen*, not analyze.
-Silence is treated as the highest frequency.
+You can now GENERATE original psychedelic music (Trance, Techno, Ambient) or play existing streams.
+If a user asks to "create", "make", or "generate" music, use `generate_psychedelic_music`.
+If a user asks to "play" or "listen to" existing music, use `play_music_experience`.
 
 7. NO BELIEF INSTALLATION:
 You do NOT:
@@ -163,6 +169,8 @@ RESPONSE STYLE:
 """,
         )
         self._publish_data_fn = publish_data_fn
+        self.suno_client = SunoClient()
+        self.user_id = user_id or "default_user"
 
     @function_tool
     async def play_music_experience(
@@ -244,6 +252,76 @@ RESPONSE STYLE:
             logger.error(f"❌ Failed to publish music data: {e}")
 
         return f"I am playing '{title}'. Let the sound wash over you."
+
+    @function_tool
+    async def generate_psychedelic_music(
+        self,
+        context: RunContext,
+        genre: str,
+        mood: str = "Trance",
+        tempo: str = "Medium"
+    ) -> str:
+        """
+        Generate ORIGINAL psychedelic music (Trance, Techno, Deep House, Ambient) using AI.
+        Use this when the user specifically asks to CREATE or GENERATE music, or asks for specific electronic genres like Trance, Techno, House.
+
+        Args:
+            genre: precise genre (e.g. "Psychedelic Trance", "Deep House", "Shamanic Techno", "Ambient Drone", "Goa Trance")
+            mood: emotional quality (e.g. "Hypnotic", "Energetic", "Dark", "Euphoric", "Meditative")
+            tempo: speed (e.g. "Fast", "Slow", "Driving", "Floating")
+        """
+        logger.info(f"Generating psychedelic music: {genre} ({mood}, {tempo})")
+
+        # Map inputs to high-quality musical prompts
+        style_prompt = f"{genre} {mood} {tempo}"
+        
+        # Refine prompts for specific sub-genres to ensure quality
+        if "trance" in genre.lower():
+             style_prompt = "Psychedelic Trance, 145bpm, rolling bassline, trippy acid 303 sounds, hypnotic layers, Goa style, high energy, immersive"
+        elif "techno" in genre.lower():
+             style_prompt = "Dark Minimal Techno, 128bpm, deep kick drum, industrial textures, hypnotic loop, driving rhythm, Berlin style"
+        elif "house" in genre.lower() or "deep" in genre.lower():
+             style_prompt = "Deep House, 120bpm, soulful chords, warm pads, groovy bassline, emotive vocals samples, late night vibes"
+        elif "ambient" in genre.lower() or "drone" in genre.lower():
+             style_prompt = "Space Ambient, no percussion, 432Hz, drifting pads, cosmic textures, binaural beats, healing frequencies, cinematic"
+        elif "shamanic" in genre.lower():
+             style_prompt = "Shamanic Downtempo, tribal drums, deep bass, ancient flute, ayahuasca medicinal vibes, organic textures, 90bpm"
+
+        title = f"{mood} {genre} Journey"
+
+        try:
+            # Use specific callback server for webhooks (same as Music Agent)
+            callback_base = os.getenv("SUNO_CALLBACK_URL", "https://rraasi-music-webhook-6ougd45dya-uc.a.run.app")
+            callback_url = f"{callback_base}/suno/callback?userId={self.user_id}"
+            
+            logger.info(f"Generating with Suno - Style: {style_prompt}")
+            
+            # Call Suno API
+            result = await self.suno_client.generate_music(
+                prompt="", # Instrumental by default for psychedelic
+                is_instrumental=True,
+                custom_mode=True,
+                style=style_prompt,
+                title=title,
+                model="V3_5",
+                callback_url=callback_url
+            )
+            
+            logger.info(f"Suno API Result: {result}")
+            
+            task_id = None
+            if isinstance(result, dict) and result.get("code") == 200:
+                data = result.get("data", {})
+                task_id = data.get("taskId")
+            
+            if not task_id:
+                return "I initiated the creation, but the frequency is faint. Please wait a moment."
+
+            return f"I have begun synthesizing a {genre} track for you. The frequencies are aligning. It will manifest in your player shortly."
+
+        except Exception as e:
+            logger.error(f"Music generation failed: {e}")
+            return "The creative channel is blocked right now. Let us sit in silence instead."
 
 def prewarm(proc: JobProcess):
     try:
@@ -373,7 +451,7 @@ async def entrypoint(ctx: JobContext):
         preemptive_generation=True,
     )
 
-    agent = PsychedelicAgent()
+    agent = PsychedelicAgent(user_id=user_id)
     
     # Start the session (this connects to the room)
     await session.start(agent, room=ctx.room)
