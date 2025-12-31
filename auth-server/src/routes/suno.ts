@@ -134,7 +134,12 @@ router.post('/callback', async (req: Request, res: Response) => {
                 for (const track of tracks) {
                     console.log(`[Suno Callback] Processing track: ${track.id} - ${track.title}`);
                     if (track.audio_url) {
-                        const trackData = {
+                        const docRef = musicTracksRef.doc(track.id);
+                        const existingDoc = await docRef.get();
+                        const exists = existingDoc.exists;
+                        const existingData = exists ? existingDoc.data() : {};
+
+                        const trackData: any = {
                             userId: userId,
                             sunoId: track.id,
                             title: track.title || 'Untitled Track',
@@ -151,12 +156,17 @@ router.post('/callback', async (req: Request, res: Response) => {
                                 duration: track.duration || null,
                                 createTime: track.createTime || null
                             },
-                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
                             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                             isPublic: false
                         };
 
-                        const docRef = musicTracksRef.doc(track.id);
+                        // Only set createdAt if it's a new document
+                        if (!exists) {
+                            trackData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+                            // Initialize coinsDeducted to false, we'll confirm it after deduction
+                            trackData.coinsDeducted = false;
+                        }
+
                         batch.set(docRef, trackData, { merge: true });
                     }
                 }
@@ -164,10 +174,21 @@ router.post('/callback', async (req: Request, res: Response) => {
                 await batch.commit();
                 console.log(`[Suno Callback] ✅ Successfully saved ${tracks.length} track(s) to Firestore`);
 
-                // Deduct coins for successful music generation
+                // Deduct coins for successful music generation (Idempotent)
                 for (const track of tracks) {
                     if (track.audio_url) {
-                        await deductMusicCoins(userId, track.id, track.title);
+                        const docRef = musicTracksRef.doc(track.id);
+                        const doc = await docRef.get();
+                        // Deduct only if NOT already deducted
+                        if (!doc.data()?.coinsDeducted) {
+                            await deductMusicCoins(userId, track.id, track.title);
+                            // Verify deduction was attempted (success/fail logged in function) and mark as deducted to prevent double charge
+                            // In a stricter system, checking the return value of deductMusicCoins would be better.
+                            // For now, we assume we should mark it to avoid endless retries on every callback.
+                            await docRef.update({ coinsDeducted: true });
+                        } else {
+                            console.log(`[Suno Callback] Coins already deducted for track ${track.id}, skipping.`);
+                        }
                     }
                 }
             } else {
@@ -186,7 +207,11 @@ router.post('/callback', async (req: Request, res: Response) => {
                 for (const clip of legacyPayload.clips) {
                     console.log(`[Suno Callback] Processing clip: ${clip.id} - ${clip.title}`);
                     if (clip.audio_url) {
-                        const trackData = {
+                        const docRef = musicTracksRef.doc(clip.id);
+                        const existingDoc = await docRef.get();
+                        const exists = existingDoc.exists;
+
+                        const trackData: any = {
                             userId: userId,
                             sunoId: clip.id,
                             title: clip.title || 'Untitled Track',
@@ -199,12 +224,15 @@ router.post('/callback', async (req: Request, res: Response) => {
                                 prompt: clip.prompt || null,
                                 tags: clip.tags || null
                             },
-                            createdAt: admin.firestore.FieldValue.serverTimestamp(),
                             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
                             isPublic: false
                         };
 
-                        const docRef = musicTracksRef.doc(clip.id);
+                        if (!exists) {
+                            trackData.createdAt = admin.firestore.FieldValue.serverTimestamp();
+                            trackData.coinsDeducted = false;
+                        }
+
                         batch.set(docRef, trackData, { merge: true });
                     }
                 }
@@ -215,7 +243,14 @@ router.post('/callback', async (req: Request, res: Response) => {
                 // Deduct coins for successful music generation
                 for (const clip of legacyPayload.clips) {
                     if (clip.audio_url) {
-                        await deductMusicCoins(userId, clip.id, clip.title);
+                        const docRef = musicTracksRef.doc(clip.id);
+                        const doc = await docRef.get();
+                        if (!doc.data()?.coinsDeducted) {
+                            await deductMusicCoins(userId, clip.id, clip.title);
+                            await docRef.update({ coinsDeducted: true });
+                        } else {
+                            console.log(`[Suno Callback] Coins already deducted for clip ${clip.id}, skipping.`);
+                        }
                     }
                 }
             } else {
