@@ -10,10 +10,12 @@ import { initFirebaseAdmin } from './firebase.js';
 import authRoutes from './routes/auth.js';
 import sunoRoutes from './routes/suno.js';
 import tarotRoutes from './routes/tarot.js';
+import coinRoutes from './routes/coins.js';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
 
 // Load .env.local from project root
 const envPaths = [

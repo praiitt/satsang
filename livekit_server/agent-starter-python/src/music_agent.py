@@ -721,6 +721,59 @@ async def entrypoint(ctx: JobContext):
     
     await session.say(welcome_msg)
 
+    # --- SESSION MONITORING & COIN DEDUCTION ---
+    import time
+    import aiohttp
+    
+    start_time = time.time()
+    logger.info(f"⏱️ Session started at {start_time}")
+    
+    # Wait for disconnection
+    disconnect_future = asyncio.Future()
+    
+    @ctx.room.on("disconnected")
+    def on_disconnected(reason):
+        logger.info(f"🔌 Disconnected: {reason}")
+        if not disconnect_future.done():
+            disconnect_future.set_result(True)
+    
+    try:
+        await disconnect_future
+    finally:
+        end_time = time.time()
+        duration_seconds = end_time - start_time
+        duration_minutes = duration_seconds / 60.0
+        
+        logger.info(f"⏱️ Session ended. Duration: {duration_seconds:.2f}s ({duration_minutes:.2f} min)")
+        
+        # Deduct coins if session was meaningful (> 30s) and user is authenticated
+        if duration_seconds > 30 and user_id != "default_user":
+            try:
+                auth_url = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
+                # Ensure no trailing slash
+                auth_url = auth_url.rstrip('/')
+                deduct_url = f"{auth_url}/coins/deduct-session"
+                
+                logger.info(f"💸 Attempting coin deduction at: {deduct_url}")
+                
+                async with aiohttp.ClientSession() as http_session:
+                    payload = {
+                        "userId": user_id,
+                        "durationMinutes": duration_minutes,
+                        "agentName": "music_agent"
+                    }
+                    async with http_session.post(deduct_url, json=payload) as resp:
+                        if resp.status == 200:
+                             data = await resp.json()
+                             logger.info(f"✅ Coin deduction successful: {data}")
+                        else:
+                             text = await resp.text()
+                             logger.error(f"❌ Coin deduction failed ({resp.status}): {text}")
+            except Exception as e:
+                logger.error(f"❌ Failed to call coin deduction API: {e}")
+        else:
+            logger.info(f"⏭️ Skipping deduction (Duration: {duration_seconds:.2f}s, User: {user_id})")
+
 if __name__ == "__main__":
     # Get agent name from environment or use default
     agent_name = os.getenv("LIVEKIT_AGENT_NAME", "music-agent")
