@@ -288,6 +288,10 @@ RESPONSE STYLE:
         """
         logger.info(f"Generating psychedelic music: {genre} ({mood}, {tempo})")
 
+        # Check if user is logged in
+        if self.user_id == "default_user" or not self.user_id:
+            return "I cannot manifest this journey yet. Please log in to the application so I can anchor these frequencies to your soul's library."
+
         # Map inputs to high-quality musical prompts
         style_prompt = f"{genre} {mood} {tempo}"
         
