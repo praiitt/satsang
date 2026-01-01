@@ -375,6 +375,7 @@ async def entrypoint(ctx: JobContext):
                     break
         
         if participant.metadata:
+            logger.info(f"🔍 RAW METADATA RECEIVED: {participant.metadata}")
             metadata = json.loads(participant.metadata)
             user_id = metadata.get("userId", "default_user")
             

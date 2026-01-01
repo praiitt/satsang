@@ -69,6 +69,13 @@ export function useRoom(appConfig: AppConfig) {
           });
 
           const resolvedUserId = authRef.current.user?.uid || authRef.current.user?.phoneNumber;
+          if (!resolvedUserId) {
+            console.warn('⚠️ [useRoom] Requesting connection details WITHOUT User ID! Agent will see "default_user". Auth loading:', authRef.current.loading);
+          } else {
+            console.log('✅ [useRoom] Using User ID:', resolvedUserId);
+          }
+
+          const resolvedUserId = authRef.current.user?.uid || authRef.current.user?.phoneNumber;
           console.log('🔍 [useRoom] Connection details request sent', {
             agentName: appConfig.agentName,
             language,
