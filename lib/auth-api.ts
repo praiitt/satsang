@@ -69,7 +69,7 @@ export async function sessionLogout(): Promise<void> {
  * Get current authenticated user
  * @param reqCookies Optional cookies to pass (useful for server-side calls)
  */
-export async function getCurrentUser(reqCookies?: string): Promise<UserInfo> {
+export async function getCurrentUser(reqCookies?: string): Promise<UserInfo | null> {
   const fetchOptions: RequestInit = {
     method: 'GET',
     credentials: 'include',
@@ -101,7 +101,10 @@ export async function getCurrentUser(reqCookies?: string): Promise<UserInfo> {
   const response = await fetch(`${AUTH_SERVER_URL}/me`, fetchOptions);
 
   if (!response.ok) {
-    throw new Error('Not authenticated');
+    if (response.status === 401) {
+      return null;
+    }
+    throw new Error('Failed to fetch user');
   }
 
   return response.json();

@@ -120,4 +120,6 @@ router.get('/balance', async (req: Request, res: Response) => {
     }
 });
 
+router.get('/health', (req, res) => res.json({ status: 'ok' }));
+
 export default router;

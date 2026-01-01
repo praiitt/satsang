@@ -310,10 +310,11 @@ router.get('/tracks', async (req: Request, res: Response) => {
  */
 router.get('/community-tracks', async (req: Request, res: Response) => {
     try {
-        const page = parseInt(req.query?.page as string) || 1;
-        const limit = parseInt(req.query?.limit as string) || 10;
+        const query = req.query || {};
+        const page = parseInt(query.page as string) || 1;
+        const limit = parseInt(query.limit as string) || 10;
 
-        console.log(`[Suno Community Tracks] Page=${page}, Limit=${limit}, req.query exists? ${!!req.query}`);
+        console.log(`[Suno Community Tracks] Parsing params: page=${query.page}, limit=${query.limit}`);
         const offset = (page - 1) * limit;
 
         const db = getDb();
@@ -327,14 +328,18 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
         // but let's try standard orderBy first.
 
         // Query for tracks with audioUrl (completed tracks)
+        // Ensure standard query order: orderBy -> offset -> limit
         const tracksQuery = db.collection('music_tracks')
             .orderBy('createdAt', 'desc')
-            .limit(limit)
-            .offset(offset);
+            .offset(offset)
+            .limit(limit);
+
+        // Log the query construction
+        console.log(`[Suno Community Tracks] Querying: offset=${offset}, limit=${limit}`);
 
         // Also get total count (approximate or separate query)
         // Firestore count() aggregation is cost-effective
-        const validTracksQuery = db.collection('music_tracks').where('status', '==', 'SUCCESS');
+        const validTracksQuery = db.collection('music_tracks'); // Count all tracks since list query doesn't filter
         const countSnapshot = await validTracksQuery.count().get();
         const total = countSnapshot.data().count;
 

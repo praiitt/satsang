@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SacredGeometryBg } from '@/components/app/sacred-geometry-bg';
 import { useLanguage } from '@/contexts/language-context';
 
@@ -118,13 +118,80 @@ function FeatureSection({
 
 export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
     const { t } = useLanguage();
+    // Default to unmuted as requested, though browsers might block autoplay with sound
+    const [isMuted, setIsMuted] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    const toggleMute = () => {
+        setIsMuted(prev => !prev);
+        if (videoRef.current) {
+            videoRef.current.muted = !isMuted;
+        }
+    };
+
+    // Attempt to handle autoplay policy
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.muted = isMuted;
+            const playPromise = videoRef.current.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.log("Autoplay prevented:", error);
+                    // Fallback: Mute and play if autoplay with sound failed
+                    if (!isMuted) {
+                        setIsMuted(true);
+                        if (videoRef.current) {
+                            videoRef.current.muted = true;
+                            videoRef.current.play();
+                        }
+                    }
+                });
+            }
+        }
+    }, []);
 
     return (
         <div ref={ref} className="relative w-full overflow-hidden">
             <SacredGeometryBg />
 
             {/* Hero Section */}
-            <section className="relative flex min-h-[90vh] flex-col items-center justify-center px-4 py-20 text-center">
+            <section className="relative flex min-h-[90vh] flex-col items-center justify-center px-4 py-20 text-center overflow-hidden">
+                {/* Bot Video Background */}
+                <div className="absolute inset-0 w-full h-full z-0">
+                    <video
+                        ref={videoRef}
+                        autoPlay
+                        loop
+                        muted={isMuted}
+                        playsInline
+                        className="h-full w-full object-cover"
+                    >
+                        <source src="https://storage.googleapis.com/ips_bucket_video/36ae7bff4f734639909f53f5148b9f13.mp4" type="video/mp4" />
+                    </video>
+                    {/* Gradient Overlays for Blending - Reduced opacity for clarity */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-background dark:from-background/20 dark:via-background/40 dark:to-background" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+                </div>
+
+                {/* Prominent Sound Control */}
+                <button
+                    onClick={toggleMute}
+                    className="absolute bottom-10 right-10 z-30 flex items-center gap-2 rounded-full bg-primary/90 px-6 py-3 text-primary-foreground shadow-xl backdrop-blur-md transition-all hover:bg-primary hover:scale-105 active:scale-95 group border-2 border-white/20"
+                    aria-label={isMuted ? "Unmute video" : "Mute video"}
+                >
+                    {isMuted ? (
+                        <>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
+                            <span className="font-bold">UNMUTE</span>
+                        </>
+                    ) : (
+                        <>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                            <span className="font-bold">MUTE</span>
+                        </>
+                    )}
+                </button>
+
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -133,15 +200,15 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                 >
                     <OmSymbol />
 
-                    <h1 className="mb-6 text-5xl font-bold tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-8xl">
+                    <h1 className="mb-6 text-5xl font-bold tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg">
                         {t('rraasHome.title')}
                     </h1>
 
-                    <p className="mx-auto mb-8 max-w-2xl text-xl font-medium text-primary sm:text-2xl md:text-3xl">
+                    <p className="mx-auto mb-8 max-w-2xl text-xl font-medium text-primary sm:text-2xl md:text-3xl drop-shadow-md">
                         {t('rraasHome.tagline')}
                     </p>
 
-                    <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl">
+                    <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl drop-shadow-sm font-medium">
                         {t('rraasHome.subtitle')} {t('rraasHome.description')}
                     </p>
 
@@ -162,11 +229,11 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
 
                     {/* Scroll indicator */}
                     <motion.div
-                        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+                        className="absolute -bottom-32 left-1/2 -translate-x-1/2"
                         animate={{ y: [0, 10, 0] }}
                         transition={{ duration: 2, repeat: Infinity }}
                     >
-                        <svg className="h-8 w-8 text-muted-foreground/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="h-8 w-8 text-muted-foreground/80 drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
                         </svg>
                     </motion.div>

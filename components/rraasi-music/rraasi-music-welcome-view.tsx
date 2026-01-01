@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import { musicTranslations } from '@/lib/translations/music';
 import { MusicCategoryTabs, type MusicCategory } from '@/components/rraasi-music/music-category-tabs';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
 import { Music, Plus, Headphones } from 'lucide-react';
-import { useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase-client';
 import { useAuth } from '@/components/auth/auth-provider';
@@ -39,6 +38,7 @@ interface MusicTrack {
   id: string;
   title: string;
   audioUrl: string;
+  imageUrl?: string; // Add imageUrl
   prompt?: string;
   category?: MusicCategory;
   createdAt: any;
@@ -54,13 +54,48 @@ export const RRaaSiMusicWelcomeView = ({
 }: React.ComponentProps<'div'> & RRaaSiMusicWelcomeViewProps) => {
   const { language } = useLanguage();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  /* State */
   const [activeCategory, setActiveCategory] = useState<MusicCategory>('all');
   const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
   const [myTracks, setMyTracks] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [myTracksLoading, setMyTracksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+
+  // Video State
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const toggleMute = () => {
+    setIsMuted(prev => !prev);
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+    }
+  };
+
+  // Attempt to handle autoplay policy
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log("Autoplay prevented:", error);
+          if (!isMuted) {
+            setIsMuted(true);
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              videoRef.current.play();
+            }
+          }
+        });
+      }
+    }
+  }, []);
 
   const mt = (key: string) => {
     const keys = key.split('.');
@@ -75,8 +110,12 @@ export const RRaaSiMusicWelcomeView = ({
     return typeof value === 'string' ? value : key;
   };
 
+  // Reset pagination when category changes
   useEffect(() => {
-    fetchMusic();
+    setPage(1);
+    setHasMore(true);
+    setMusicTracks([]); // Clear existing tracks
+    fetchMusic(1, true); // Fetch first page
   }, [activeCategory]);
 
   useEffect(() => {
@@ -98,6 +137,7 @@ export const RRaaSiMusicWelcomeView = ({
           id: t.id || t.trackId,
           title: t.title || t.trackName || 'Untitled',
           audioUrl: t.audioUrl || t.audio_url,
+          imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl, // Map image
           prompt: t.prompt,
           category: t.category,
           createdAt: t.createdAt || t.created_at,
@@ -111,41 +151,72 @@ export const RRaaSiMusicWelcomeView = ({
     }
   };
 
-  const fetchMusic = async () => {
-    setLoading(true);
+  // Updated fetchMusic to use API
+  const fetchMusic = async (pageNum: number, isNewCategory = false) => {
+    if (pageNum === 1) {
+      setLoading(true);
+    } else {
+      setLoadingMore(true);
+    }
     setError(null);
-    try {
-      const db = getFirebaseFirestore();
-      let q = query(
-        collection(db, 'music_tracks'),
-        orderBy('createdAt', 'desc'),
-        limit(12)
-      );
 
-      // Filter by category if not 'all'
-      if (activeCategory !== 'all') {
-        q = query(
-          collection(db, 'music_tracks'),
-          where('category', '==', activeCategory),
-          orderBy('createdAt', 'desc'),
-          limit(12)
-        );
+    try {
+      // Build API URL
+      let url = `/api/rraasi-music/community-tracks?page=${pageNum}&limit=12`;
+      // Note: Backend might not support category filtering yet on this endpoint,
+      // but if it does, we'd add it here. For now, client-side filtering or ignoring category for community tracks
+      // as the backend endpoint provided earlier only supports page/limit.
+      // If category filtering is crucial, we should update the backend endpoint too.
+      // For now, assuming 'all' or relying on backend to return mixed.
+
+      const response = await fetch(url);
+
+      if (!response.ok) throw new Error('Failed to fetch tracks');
+
+      const data = await response.json();
+      const newTracks: MusicTrack[] = (data.tracks || []).map((t: any) => ({
+        id: t.id,
+        title: t.title || 'Untitled',
+        audioUrl: t.audioUrl || t.audio_url,
+        imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl, // Map image
+        prompt: t.prompt,
+        category: t.category,
+        createdAt: t.createdAt, // Backend should return serialized date or timestamp
+      }));
+
+      // If filtering by category is needed client-side:
+      const filteredNewTracks = activeCategory === 'all'
+        ? newTracks
+        : newTracks.filter(t => t.category === activeCategory);
+
+      if (isNewCategory) {
+        setMusicTracks(filteredNewTracks);
+      } else {
+        // Append unique tracks
+        setMusicTracks(prev => {
+          const existingIds = new Set(prev.map(t => t.id));
+          const uniqueNew = filteredNewTracks.filter(t => !existingIds.has(t.id));
+          return [...prev, ...uniqueNew];
+        });
       }
 
-      const snapshot = await getDocs(q);
-      const tracks: MusicTrack[] = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data(),
-      } as MusicTrack));
+      // Check if we have more pages
+      setHasMore(data.hasMore || (data.tracks && data.tracks.length === 12));
 
-      setMusicTracks(tracks);
     } catch (error) {
       console.error('Error fetching music:', error);
       setError(mt('browse.error') || 'Failed to load music');
-      setMusicTracks([]);
+      if (isNewCategory) setMusicTracks([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchMusic(nextPage, false);
   };
 
   const handlePlay = (trackId: string) => {
@@ -155,29 +226,66 @@ export const RRaaSiMusicWelcomeView = ({
 
   return (
     <div ref={ref} className="w-full pb-24">
-      {/* Simplified Hero Section */}
-      <section className="bg-gradient-to-b from-amber-50 to-white dark:from-gray-900 dark:to-gray-800 py-12 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <MusicIcon />
-          <h1 className="text-foreground mt-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+      {/* Hero Section with Rraasi Video */}
+      <section className="relative flex min-h-[60vh] flex-col items-center justify-center px-4 py-20 text-center overflow-hidden">
+        {/* Rraasi Video Background */}
+        <div className="absolute inset-0 w-full h-full z-0">
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted={isMuted}
+            playsInline
+            className="h-full w-full object-cover"
+          >
+            <source src="https://storage.googleapis.com/ips_bucket_video/37cfd7f4c0fa4524b99a3beffe68155c.mp4" type="video/mp4" />
+          </video>
+          {/* Gradient Overlays for Blending */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-background dark:from-background/20 dark:via-background/40 dark:to-background" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+        </div>
+
+        {/* Prominent Sound Control */}
+        <button
+          onClick={toggleMute}
+          className="absolute bottom-10 right-10 z-30 flex items-center gap-2 rounded-full bg-primary/90 px-6 py-3 text-primary-foreground shadow-xl backdrop-blur-md transition-all hover:bg-primary hover:scale-105 active:scale-95 group border-2 border-white/20"
+          aria-label={isMuted ? "Unmute video" : "Mute video"}
+        >
+          {isMuted ? (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
+              <span className="font-bold">UNMUTE</span>
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+              <span className="font-bold">MUTE</span>
+            </>
+          )}
+        </button>
+
+        <div className="relative z-10 max-w-4xl mx-auto text-center">
+          <div className="flex justify-center mb-6">
+            <MusicIcon />
+          </div>
+          <h1 className="mb-6 text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl drop-shadow-lg">
             {mt('title')}
           </h1>
-          <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg">
+          <p className="text-white/90 font-medium mx-auto mt-4 max-w-2xl text-xl drop-shadow-md">
             {mt('subtitle')}
           </p>
 
-          {/* Create Music CTA */}
           <Button
             variant="primary"
             size="lg"
             onClick={onStartCall}
-            className="mt-8 h-14 px-8 text-lg font-semibold shadow-lg"
+            className="mt-8 h-14 px-8 text-lg font-semibold shadow-xl hover:scale-105 transition-transform"
           >
             <Plus className="w-5 h-5 mr-2" />
             {mt('startButton')}
             <span className="ml-2 text-xs opacity-75">• 50 coins</span>
           </Button>
-          <p className="text-muted-foreground mt-3 text-sm">
+          <p className="text-white/80 mt-3 text-sm font-medium drop-shadow-sm">
             {mt('freeTrial')}
           </p>
         </div>
@@ -229,6 +337,7 @@ export const RRaaSiMusicWelcomeView = ({
                 key={track.id}
                 title={track.title || 'Untitled'}
                 audioUrl={track.audioUrl}
+                imageUrl={track.imageUrl} // Pass imageUrl
                 category={track.category || 'other'}
                 prompt={track.prompt}
                 createdAt={track.createdAt}
@@ -285,19 +394,44 @@ export const RRaaSiMusicWelcomeView = ({
             </Button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {musicTracks.map((track) => (
-              <MusicPlayerCard
-                key={track.id}
-                title={track.title || 'Untitled'}
-                audioUrl={track.audioUrl}
-                category={track.category || 'other'}
-                prompt={track.prompt}
-                createdAt={track.createdAt?.toDate?.()?.toISOString() || new Date(track.createdAt).toISOString()}
-                onPlay={() => handlePlay(track.id)}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {musicTracks.map((track) => (
+                <MusicPlayerCard
+                  key={track.id}
+                  title={track.title || 'Untitled'}
+                  audioUrl={track.audioUrl}
+                  imageUrl={track.imageUrl} // Pass imageUrl
+                  category={track.category || 'other'}
+                  prompt={track.prompt}
+                  createdAt={track.createdAt?.toDate?.()?.toISOString() || track.createdAt || new Date().toISOString()}
+                  onPlay={() => handlePlay(track.id)}
+                />
+              ))}
+            </div>
+
+            {/* Load More Button */}
+            {hasMore && (
+              <div className="mt-12 text-center">
+                <Button
+                  onClick={handleLoadMore}
+                  variant="outline"
+                  size="lg"
+                  disabled={loadingMore}
+                  className="min-w-[200px]"
+                >
+                  {loadingMore ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600 mr-2"></div>
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More Tracks'
+                  )}
+                </Button>
+              </div>
+            )}
+          </>
         )}
       </section>
 

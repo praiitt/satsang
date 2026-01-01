@@ -246,17 +246,17 @@ export const en = {
     startButton: 'Connect with Osho',
   },
   psychedelicGuru: {
-    title: 'Psychedelic Guide',
+    title: 'Trance Music Guide',
     description:
-      'A guide representing the psychedelic state of consciousness — naturally arising through music, breath, and insight. Not a substance, but a pointer to the truth within. Experience expanded awareness without chemicals.',
+      'A guide representing the dynamic path of Trance Music. Use music as a bridge to higher realms. Meditation meets rhythm to dissolve the ego.',
     freeTrial: '🎁 15-minute free session • No substances involved',
-    videoTitle: 'Experience the Psychedelic Guide',
+    videoTitle: 'Experience the Trance Music Guide',
     videoDescription:
-      'Discover how music, breath, and silence can induce altered states of consciousness naturally.',
+      'Discover how Trance Music and dynamic meditation can induce altered states of consciousness naturally.',
     features: 'The Journey',
-    musicAsVehicle: 'Music as Medicine',
+    musicAsVehicle: 'Trance as Medicine',
     musicAsVehicleDesc:
-      'Psychedelic, ambient, and shamanic soundscapes curated to dissolve the ego and open the heart.',
+      'Psychedelic Trance, ambient, and shamanic soundscapes curated to dissolve the ego and open the heart.',
     breathwork: 'Breathwork Guidance',
     breathworkDesc:
       'Simple, powerful breath techniques to shift your state of being instantly.',
@@ -269,7 +269,7 @@ export const en = {
     safeSpace: 'Safe & Grounded',
     safeSpaceDesc:
       'A distinct absence of judgment. A digital space to let go and just be.',
-    ctaReady: 'Ready to drop the ego?',
+    ctaReady: 'Ready to dissolve into the music?',
     ctaStartNow: 'Start Journey',
     startButton: 'Connect with Guide',
   },
@@ -405,10 +405,10 @@ export const en = {
         'Bhaktivedanta Swami Prabhupada - Spread Krishna consciousness worldwide. "Hare Krishna Hare Krishna"',
     },
     psychedelicGuru: {
-      name: 'Psychedelic Guide',
-      tagline: 'Natural expanded states through music & insight',
+      name: 'Trance Music Guide',
+      tagline: 'Dynamic meditation through Trance Music',
       description:
-        'A guide to natural psychedelic states through music, breath, and silence. No chemicals, just consciousness.',
+        'A guide to higher realms through Trance Music and dynamic meditation. Music is the method.',
     },
     tarot: {
       name: 'Mystic Tarot Reader',

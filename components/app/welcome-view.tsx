@@ -1,11 +1,10 @@
 'use client';
 
 /* eslint-disable prettier/prettier */
-import { useCallback } from 'react';
+import { useCallback, useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CustomGuruInterestForm } from '@/components/app/custom-guru-interest-form';
 import { GuruDirectoryView } from '@/components/app/guru-directory-view';
-import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import type { GuruDefinition } from '@/lib/gurus';
@@ -29,28 +28,7 @@ function WelcomeImage() {
   );
 }
 
-function VideoSection() {
-  const { t } = useLanguage();
-  return (
-    <section className="mx-auto mt-8 w-full max-w-5xl px-4 sm:mt-12 md:mt-16">
-      <div className="w-full">
-        <h2 className="text-foreground mb-4 text-center text-xl font-bold sm:mb-6 sm:text-2xl md:text-3xl">
-          {t('welcome.videoTitle')}
-        </h2>
-        <div className="overflow-hidden rounded-2xl shadow-2xl">
-          <HeroVideoPlayer
-            src="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4"
-            poster="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4#t=0.1"
-            autoPlay
-            loop={false}
-            className="w-full"
-            hideProgressBar
-          />
-        </div>
-      </div>
-    </section>
-  );
-}
+
 
 interface WelcomeViewProps {
   startButtonText: string;
@@ -72,69 +50,164 @@ export const WelcomeView = ({
     },
     [router]
   );
+
+  // Video State
+  const [isMuted, setIsMuted] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  const toggleMute = () => {
+    setIsMuted(prev => !prev);
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+    }
+  };
+
+  const toggleFullScreen = () => {
+    if (!videoRef.current) return;
+
+    if (!document.fullscreenElement) {
+      videoRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  // Attempt to handle autoplay policy
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log("Autoplay prevented:", error);
+          if (!isMuted) {
+            setIsMuted(true);
+            if (videoRef.current) {
+              videoRef.current.muted = true;
+              videoRef.current.play();
+            }
+          }
+        });
+      }
+    }
+  }, []);
   return (
     <div ref={ref} className="w-full pb-24 md:pb-32">
       {/* Hero Section - Always visible at top */}
-      <section className="bg-background flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[80vh] md:min-h-screen md:py-12">
-        <WelcomeImage />
+      <section className="relative flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[80vh] md:min-h-screen md:py-12 overflow-hidden">
 
-        <h1 className="text-foreground mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">
-          {t('welcome.title')}
-        </h1>
-        {t('welcome.subtitle') && (
-          <p className="text-muted-foreground mx-auto mt-2 max-w-2xl text-base font-medium sm:text-lg">
-            {t('welcome.subtitle')}
-          </p>
-        )}
-        <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-base leading-7 sm:text-lg md:text-xl">
-          {t('welcome.description')}
-        </p>
-
-        {/* Action Buttons - Prominently displayed */}
-        <div className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={() => {
-              // Scroll to guru directory
-              const element = document.getElementById('guru-directory');
-              if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              } else {
-                onStartCall();
-              }
-            }}
-            className="h-14 w-full text-lg font-semibold shadow-lg sm:w-auto sm:min-w-[240px]"
+        {/* Rraasi Video Background */}
+        <div className="absolute inset-0 w-full h-full z-0">
+          <video
+            ref={videoRef}
+            autoPlay
+            loop
+            muted={isMuted}
+            playsInline
+            className="h-full w-full object-cover"
           >
-            {t('welcome.discoverGurus')}
-          </Button>
-          <div className="flex justify-center">
-            <FindYourGuruQuiz
-              trigger={
-                <Button
-                  variant="secondary"
-                  size="lg"
-                  className="h-14 w-full text-lg font-semibold sm:w-auto sm:min-w-[240px] gap-2"
-                >
-                  {t('quiz.triggerButton')}
-                </Button>
-              }
-            />
-          </div>
-          <Button
-            variant="secondary"
-            size="lg"
-            onClick={onStartCall}
-            className="h-14 w-full text-lg font-semibold sm:w-auto sm:min-w-[240px]"
-          >
-            {startButtonText}
-          </Button>
+            <source src="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4" type="video/mp4" />
+          </video>
+          {/* Gradient Overlays for Blending */}
+          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-background dark:from-background/20 dark:via-background/40 dark:to-background" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
         </div>
-        <p className="text-muted-foreground mt-3 text-sm">{t('welcome.freeTrial')}</p>
+
+        {/* Prominent Controls Container */}
+        <div className="absolute top-20 right-6 z-30 flex items-center gap-3">
+          {/* Full Screen Button */}
+          <button
+            onClick={toggleFullScreen}
+            className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-3 text-white shadow-xl backdrop-blur-md transition-all hover:bg-white/20 hover:scale-105 active:scale-95 border-2 border-white/20"
+            aria-label="Toggle Fullscreen"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" /></svg>
+          </button>
+
+          {/* Mute Button */}
+          <button
+            onClick={toggleMute}
+            className="flex items-center gap-2 rounded-full bg-primary/90 px-6 py-3 text-primary-foreground shadow-xl backdrop-blur-md transition-all hover:bg-primary hover:scale-105 active:scale-95 group border-2 border-white/20"
+            aria-label={isMuted ? "Unmute video" : "Mute video"}
+          >
+            {isMuted ? (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
+                <span className="font-bold">UNMUTE</span>
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                <span className="font-bold">MUTE</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center">
+          <div className="text-white drop-shadow-md">
+            <WelcomeImage />
+          </div>
+
+          <h1 className="text-white mt-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl drop-shadow-lg">
+            {t('welcome.title')}
+          </h1>
+          {t('welcome.subtitle') && (
+            <p className="text-white/90 mx-auto mt-4 max-w-2xl text-lg font-medium sm:text-xl drop-shadow-md">
+              {t('welcome.subtitle')}
+            </p>
+          )}
+          <p className="text-white/80 mx-auto mt-6 max-w-2xl text-lg leading-8 sm:text-xl md:text-2xl drop-shadow-md font-medium">
+            {t('welcome.description')}
+          </p>
+
+          {/* Action Buttons - Prominently displayed */}
+          <div className="mt-10 flex w-full max-w-md flex-col gap-4 sm:flex-row sm:justify-center sm:gap-6">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => {
+                // Scroll to guru directory
+                const element = document.getElementById('guru-directory');
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                  onStartCall();
+                }
+              }}
+              className="h-14 w-full text-lg font-bold shadow-xl sm:w-auto sm:min-w-[240px] hover:scale-105 transition-transform"
+            >
+              {t('welcome.discoverGurus')}
+            </Button>
+            <div className="flex justify-center">
+              <FindYourGuruQuiz
+                trigger={
+                  <Button
+                    variant="secondary"
+                    size="lg"
+                    className="h-14 w-full text-lg font-semibold sm:w-auto sm:min-w-[240px] gap-2 shadow-lg backdrop-blur-sm bg-white/90 hover:bg-white text-black"
+                  >
+                    {t('quiz.triggerButton')}
+                  </Button>
+                }
+              />
+            </div>
+            <Button
+              variant="secondary"
+              size="lg"
+              onClick={onStartCall}
+              className="h-14 w-full text-lg font-semibold sm:w-auto sm:min-w-[240px] shadow-lg backdrop-blur-sm bg-white/90 hover:bg-white text-black"
+            >
+              {startButtonText}
+            </Button>
+          </div>
+          <p className="text-white/90 mt-4 text-sm font-medium drop-shadow-sm">{t('welcome.freeTrial')}</p>
+        </div>
       </section>
 
-      {/* Video Introduction Section */}
-      <VideoSection />
+
 
       {/* Guru Directory Section */}
       <div id="guru-directory">

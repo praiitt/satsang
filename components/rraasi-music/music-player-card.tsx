@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/livekit/button';
 
 interface MusicPlayerCardProps {
-    id?: string; // Add ID if not already there
+    id?: string;
     title: string;
     audioUrl: string;
     category?: string;
@@ -14,6 +14,7 @@ interface MusicPlayerCardProps {
     prompt?: string;
     createdAt?: string;
     onPlay?: () => void;
+    imageUrl?: string; // New prop
 }
 
 export function MusicPlayerCard({
@@ -25,6 +26,7 @@ export function MusicPlayerCard({
     prompt,
     createdAt,
     onPlay,
+    imageUrl,
 }: MusicPlayerCardProps) {
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
 
@@ -46,7 +48,8 @@ export function MusicPlayerCard({
                 audioUrl,
                 category,
                 prompt,
-                createdAt
+                createdAt,
+                imageUrl // Pass image to context if supported
             };
             playTrack(track);
             onPlay?.();
@@ -54,64 +57,79 @@ export function MusicPlayerCard({
     };
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden group border border-transparent dark:border-gray-700 hover:border-amber-200 dark:hover:border-amber-900/50">
-            {/* Category & Status Badge */}
-            <div className="flex justify-between items-center bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-750 px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                <span className="text-gray-500 text-xs font-semibold uppercase tracking-wide">
-                    {category}
-                </span>
-                {isActuallyPlaying && (
-                    <div className="flex gap-0.5 items-end h-3">
-                        <span className="w-0.5 bg-amber-500 h-full animate-music-bar-1"></span>
-                        <span className="w-0.5 bg-amber-500 h-2/3 animate-music-bar-2"></span>
-                        <span className="w-0.5 bg-amber-500 h-full animate-music-bar-3"></span>
-                    </div>
+        <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            {/* Background Image with Overlay */}
+            <div className="absolute inset-0 z-0 h-full w-full">
+                {imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt={title}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                ) : (
+                    <div className="h-full w-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 dark:from-indigo-900/40 dark:to-purple-900/40" />
                 )}
+                {/* Gradient Overlay for Text Readability */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
             </div>
 
-            {/* Content */}
-            <div className="p-4">
-                <div className="flex items-start justify-between gap-4 mb-3">
-                    <h3 className={cn(
-                        "text-lg font-bold transition-colors line-clamp-2",
-                        isActuallyPlaying ? "text-amber-600 dark:text-amber-400" : "text-gray-900 dark:text-white"
-                    )}>
-                        {title}
-                    </h3>
+            {/* Content Container */}
+            <div className="relative z-10 flex h-64 flex-col justify-between p-5 text-white">
+                {/* Top Row: Category & Status */}
+                <div className="flex items-center justify-between">
+                    <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md">
+                        {category}
+                    </span>
+                    {isActuallyPlaying && (
+                        <div className="flex gap-0.5 items-end h-4">
+                            <span className="w-1 bg-amber-400 h-full animate-music-bar-1" />
+                            <span className="w-1 bg-amber-400 h-2/3 animate-music-bar-2" />
+                            <span className="w-1 bg-amber-400 h-full animate-music-bar-3" />
+                        </div>
+                    )}
                 </div>
 
-                {prompt && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-4 line-clamp-2 h-8">
-                        {prompt}
-                    </p>
-                )}
-
-                {/* Player Controls */}
-                <div className="flex items-center gap-3 mt-auto">
-                    <button
-                        onClick={handlePlayClick}
-                        className={cn(
-                            "flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-white transition-all duration-200 shadow-md transform hover:scale-105",
-                            isActuallyPlaying ? "bg-amber-500 hover:bg-amber-600" : "bg-gray-900 dark:bg-white dark:text-gray-900 hover:bg-gray-700 dark:hover:bg-gray-200"
+                {/* Bottom Row: Info & Controls */}
+                <div className="space-y-3">
+                    <div>
+                        <h3 className={cn(
+                            "text-xl font-bold leading-tight tracking-tight text-white mb-1 shadow-black drop-shadow-md line-clamp-2",
+                            isActuallyPlaying && "text-amber-400"
+                        )}>
+                            {title}
+                        </h3>
+                        {prompt && (
+                            <p className="line-clamp-2 text-xs text-gray-300 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                                {prompt}
+                            </p>
                         )}
-                        aria-label={isActuallyPlaying ? "Pause" : "Play"}
-                    >
-                        {isActuallyPlaying ? (
-                            <Pause className="w-5 h-5 fill-current" />
-                        ) : (
-                            <Play className="w-5 h-5 ml-0.5 fill-current" />
-                        )}
-                    </button>
-
-                    <div className="flex flex-col">
-                        <span className="text-xs font-medium text-gray-900 dark:text-white">
-                            {isActuallyPlaying ? "Now Playing" : "Listen"}
-                        </span>
                         {createdAt && (
-                            <span className="text-[10px] text-gray-400">
+                            <p className="text-[10px] text-gray-400 mt-1">
                                 {new Date(createdAt).toLocaleDateString()}
-                            </span>
+                            </p>
                         )}
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handlePlayClick}
+                            className={cn(
+                                "flex h-12 w-12 items-center justify-center rounded-full shadow-lg backdrop-blur-sm transition-all hover:scale-110 active:scale-95",
+                                isActuallyPlaying
+                                    ? "bg-amber-500 text-white hover:bg-amber-400"
+                                    : "bg-white/20 text-white hover:bg-white hover:text-black"
+                            )}
+                            aria-label={isActuallyPlaying ? "Pause" : "Play"}
+                        >
+                            {isActuallyPlaying ? (
+                                <Pause className="h-5 w-5 fill-current" />
+                            ) : (
+                                <Play className="h-5 w-5 ml-1 fill-current" />
+                            )}
+                        </button>
+                        <span className="text-sm font-medium">
+                            {isActuallyPlaying ? "Now Playing" : "Play Track"}
+                        </span>
                     </div>
                 </div>
             </div>

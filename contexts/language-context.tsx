@@ -14,12 +14,22 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('hi');
 
-  // Load language from localStorage on mount
+  // Load language from URL param or localStorage on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('language') as Language;
-      if (saved && (saved === 'en' || saved === 'hi')) {
-        setLanguageState(saved);
+      // Check URL param first
+      const params = new URLSearchParams(window.location.search);
+      const urlLang = params.get('ln');
+
+      if (urlLang && (urlLang === 'en' || urlLang === 'hi')) {
+        setLanguageState(urlLang as Language);
+        localStorage.setItem('language', urlLang);
+      } else {
+        // Fallback to localStorage
+        const saved = localStorage.getItem('language') as Language;
+        if (saved && (saved === 'en' || saved === 'hi')) {
+          setLanguageState(saved);
+        }
       }
     }
   }, []);

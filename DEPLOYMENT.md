@@ -1,5 +1,18 @@
 # Satsang App - Deployment Guide
 
+## Deploy to Cloud Run (Frontend)
+
+To deploy the frontend to Cloud Run with correct environment variables from `.env.local`:
+
+```bash
+python3 scripts/deploy_frontend_cloudrun.py
+```
+
+This script will:
+1. Read `NEXT_PUBLIC_` variables from `.env.local`
+2. Trigger a Cloud Build
+3. Deploy to Cloud Run with the correct environment variables
+
 ## Quick Deploy on Fresh Ubuntu 22.04 VM
 
 ### One-Command Deployment

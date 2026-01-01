@@ -65,6 +65,9 @@ app.use(cookieParser());
 app.use('/auth', authRoutes);
 app.use('/suno', sunoRoutes);
 app.use('/tarot', tarotRoutes);
+app.use('/coins', coinRoutes);
+
+app.get('/test-coins', (req, res) => res.json({ status: 'ok', message: 'Auth Server is running' }));
 
 app.get('/', (_req, res) => res.json({ name: 'satsang-auth-server', ok: true }));
 

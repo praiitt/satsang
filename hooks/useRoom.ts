@@ -75,7 +75,6 @@ export function useRoom(appConfig: AppConfig) {
             console.log('✅ [useRoom] Using User ID:', resolvedUserId);
           }
 
-          const resolvedUserId = authRef.current.user?.uid || authRef.current.user?.phoneNumber;
           console.log('🔍 [useRoom] Connection details request sent', {
             agentName: appConfig.agentName,
             language,

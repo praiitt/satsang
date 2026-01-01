@@ -27,7 +27,7 @@ export function CommunityMusic() {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
-    const LIMIT = 12;
+    const LIMIT = 24;
 
     const fetchTracks = async (pageNum: number) => {
         try {
