@@ -4,7 +4,7 @@ import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 
-function PsychedelicWelcomeImage() {
+function TranceMusicWelcomeImage() {
     return (
         <svg
             width="64"
@@ -29,16 +29,16 @@ function PsychedelicWelcomeImage() {
     );
 }
 
-interface PsychedelicWelcomeViewProps {
+interface TranceMusicWelcomeViewProps {
     startButtonText?: string;
     onStartCall: () => void;
 }
 
-export const PsychedelicWelcomeView = ({
+export const TranceMusicWelcomeView = ({
     startButtonText,
     onStartCall,
     ref,
-}: React.ComponentProps<'div'> & PsychedelicWelcomeViewProps) => {
+}: React.ComponentProps<'div'> & TranceMusicWelcomeViewProps) => {
     const { t } = useLanguage();
 
     // Use translation if startButtonText is not provided, otherwise use the provided text
@@ -48,7 +48,7 @@ export const PsychedelicWelcomeView = ({
         <div ref={ref} className="w-full pb-24 md:pb-32 bg-gradient-to-b from-background to-background/50">
             {/* Hero Section */}
             <section className="bg-background flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[80vh] md:min-h-screen md:py-12">
-                <PsychedelicWelcomeImage />
+                <TranceMusicWelcomeImage />
 
                 <h1 className="text-foreground mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-500 animate-gradient-x">
                     {t('psychedelicGuru.title')}
@@ -71,33 +71,7 @@ export const PsychedelicWelcomeView = ({
                 <p className="text-muted-foreground mt-3 text-sm">{t('psychedelicGuru.freeTrial')}</p>
             </section>
 
-            {/* Video Introduction Section */}
-            <section className="mx-auto mt-8 w-full max-w-5xl px-4 sm:mt-12 md:mt-16">
-                <div className="w-full">
-                    <h2 className="text-foreground mb-4 text-center text-xl font-bold sm:mb-6 sm:text-2xl md:text-3xl">
-                        {t('psychedelicGuru.videoTitle') || 'Experience the Essence'}
-                    </h2>
-                    {/* Placeholder for Video - using empty div mostly, or reuse ET video structurally if needed, but keeping it generic for now. 
-              Ideally we'd have a specific video URL here. I'll use a placeholder or reuse ET's for now/demo purposes if no specific video provided.
-              Actually, let's just comment out the src for now or put a placeholder to avoid broken links.
-          */}
-                    <div className="overflow-hidden rounded-2xl shadow-2xl border border-white/10 relative aspect-video bg-black/80 flex items-center justify-center">
-                        <p className="text-white/50">Video Coming Soon</p>
-                        {/* <HeroVideoPlayer
-              src="" 
-              poster=""
-              autoPlay
-              loop
-              className="w-full"
-            /> */}
-                    </div>
-                    {t('psychedelicGuru.videoDescription') && (
-                        <p className="text-muted-foreground mt-4 text-center text-sm leading-6 sm:text-base">
-                            {t('psychedelicGuru.videoDescription')}
-                        </p>
-                    )}
-                </div>
-            </section>
+
 
             {/* Key Features Section */}
             <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-16">

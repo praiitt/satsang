@@ -9,10 +9,15 @@ export async function GET(req: NextRequest) {
         const limit = searchParams.get('limit') || '12';
 
         // Construct Auth Server URL
-        // Use the same logic as next.config.ts or defaults
-        const AUTH_URL = process.env.AUTH_SERVER_URL ||
-            process.env.AUTH_SERVICE_URL ||
-            'https://satsang-auth-server-6ougd45dya-el.a.run.app';
+        let AUTH_URL = process.env.AUTH_SERVER_URL || process.env.AUTH_SERVICE_URL;
+
+        if (!AUTH_URL) {
+            if (process.env.NODE_ENV === 'development') {
+                AUTH_URL = 'http://localhost:4000';
+            } else {
+                AUTH_URL = 'https://satsang-auth-server-6ougd45dya-el.a.run.app';
+            }
+        }
 
         const url = `${AUTH_URL}/suno/community-tracks?page=${page}&limit=${limit}`;
 

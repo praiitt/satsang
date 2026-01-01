@@ -4,14 +4,14 @@ import { useRef } from 'react';
 import { AnimatePresence, type Transition, type Variants, motion } from 'motion/react';
 import { RoomAudioRenderer, StartAudio, useRoomContext } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
-import { PsychedelicWelcomeView } from '@/components/app/psychedelic-welcome-view';
+import { TranceMusicWelcomeView } from '@/components/app/trance-music-welcome-view';
 import { SessionProvider, useSession } from '@/components/app/session-provider';
 import { SessionView } from '@/components/app/session-view';
 import { HeygenAvatarPlayer } from '@/components/heygen/heygen-avatar-player';
 import { Toaster } from '@/components/livekit/toaster';
 import { PWAInstaller } from '@/components/pwa-installer';
 
-const MotionPsychedelicWelcomeView = motion.create(PsychedelicWelcomeView);
+const MotionTranceMusicWelcomeView = motion.create(TranceMusicWelcomeView);
 const MotionSessionView = motion.create(SessionView);
 
 const viewVariants: Variants = {
@@ -36,7 +36,7 @@ const VIEW_MOTION_PROPS = {
     transition: viewTransition,
 } as const;
 
-function PsychedelicViewController() {
+function TranceMusicViewController() {
     const room = useRoomContext();
     const isSessionActiveRef = useRef(false);
     const { appConfig, isSessionActive, startSession } = useSession();
@@ -55,7 +55,7 @@ function PsychedelicViewController() {
         <AnimatePresence mode="wait">
             {/* Welcome screen */}
             {!isSessionActive && (
-                <MotionPsychedelicWelcomeView key="welcome" {...VIEW_MOTION_PROPS} onStartCall={startSession} />
+                <MotionTranceMusicWelcomeView key="welcome" {...VIEW_MOTION_PROPS} onStartCall={startSession} />
             )}
             {/* Session view */}
             {isSessionActive && (
@@ -70,15 +70,15 @@ function PsychedelicViewController() {
     );
 }
 
-interface PsychedelicAppProps {
+interface TranceMusicAppProps {
     appConfig: AppConfig;
 }
 
-export function PsychedelicApp({ appConfig }: PsychedelicAppProps) {
+export function TranceMusicApp({ appConfig }: TranceMusicAppProps) {
     return (
         <SessionProvider appConfig={appConfig}>
             <main className="min-h-svh w-full overflow-y-auto">
-                <PsychedelicViewController />
+                <TranceMusicViewController />
             </main>
             <StartAudio label="Start Audio" />
             <RoomAudioRenderer />

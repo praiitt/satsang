@@ -157,7 +157,8 @@ router.post('/callback', async (req: Request, res: Response) => {
                                 createTime: track.createTime || null
                             },
                             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                            isPublic: false
+                            isPublic: false,
+                            category: (query.category as string) || 'rraasi-music' // Default to rraasi-music if not provided
                         };
 
                         // Only set createdAt if it's a new document
@@ -225,7 +226,8 @@ router.post('/callback', async (req: Request, res: Response) => {
                                 tags: clip.tags || null
                             },
                             updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                            isPublic: false
+                            isPublic: false,
+                            category: (query.category as string) || 'rraasi-music'
                         };
 
                         if (!exists) {

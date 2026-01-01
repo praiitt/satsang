@@ -312,7 +312,7 @@ RESPONSE STYLE:
         try:
             # Use specific callback server for webhooks (same as Music Agent)
             callback_base = os.getenv("SUNO_CALLBACK_URL", "https://rraasi-music-webhook-6ougd45dya-uc.a.run.app")
-            callback_url = f"{callback_base}/suno/callback?userId={self.user_id}"
+            callback_url = f"{callback_base}/suno/callback?userId={self.user_id}&category=psychedelic_music"
             
             logger.info(f"Generating with Suno - Style: {style_prompt}")
             

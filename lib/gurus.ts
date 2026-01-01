@@ -69,7 +69,7 @@ export const GURUS: GuruDefinition[] = [
   },
   {
     id: 'psychedelic_guru',
-    route: '/psychedelic-guru',
+    route: '/trance-music-guide',
     agentName: 'psychedelic-agent',
     name: 'Trance Music Guide',
     nameKey: 'gurus.psychedelicGuru.name',
@@ -77,7 +77,7 @@ export const GURUS: GuruDefinition[] = [
     tagline: 'Dynamic meditation through Trance Music',
     taglineKey: 'gurus.psychedelicGuru.tagline',
     description:
-      'A guide to higher realms through Trance Music and dynamic meditation. Music is the method to dissolve the ego and find the truth.',
+      'Create your own trance music just by talking to the guide. A guide to higher realms through Trance Music and dynamic meditation.',
     descriptionKey: 'gurus.psychedelicGuru.description',
     tags: ['Trance Music', 'Dynamic Meditation', 'Consciousness', 'Higher Realms'],
     icon: '🎧',

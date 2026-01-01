@@ -248,7 +248,7 @@ export const en = {
   psychedelicGuru: {
     title: 'Trance Music Guide',
     description:
-      'A guide representing the dynamic path of Trance Music. Use music as a bridge to higher realms. Meditation meets rhythm to dissolve the ego.',
+      'Create your own trance music just by talking to the guide. Use music as a bridge to higher realms. Meditation meets rhythm to dissolve the ego.',
     freeTrial: '🎁 15-minute free session • No substances involved',
     videoTitle: 'Experience the Trance Music Guide',
     videoDescription:
@@ -408,7 +408,7 @@ export const en = {
       name: 'Trance Music Guide',
       tagline: 'Dynamic meditation through Trance Music',
       description:
-        'A guide to higher realms through Trance Music and dynamic meditation. Music is the method.',
+        'Create your own trance music just by talking to the guide. Music is the method.',
     },
     tarot: {
       name: 'Mystic Tarot Reader',
