@@ -371,9 +371,9 @@ async def entrypoint(ctx: JobContext):
         participant = await ctx.wait_for_participant()
         logger.info(f"Participant joined: {participant.identity}")
         
-        # Wait a small bit for metadata to sync if needed
         if not participant.metadata:
-            for _ in range(5):
+            logger.info("Metadata missing, waiting for sync...")
+            for _ in range(10):  # Wait up to 5 seconds
                 await asyncio.sleep(0.5)
                 if participant.metadata:
                     break
@@ -385,10 +385,12 @@ async def entrypoint(ctx: JobContext):
             
             # Parse language preference
             raw_lang = str(metadata.get("language", "")).strip().lower()
-            if raw_lang in ["hi", "hindi", "hin"]:
-                user_language = "hi"
-            elif raw_lang in ["en", "english", "eng"]:
+            logger.info(f"🔍 Raw language parsed from metadata: '{raw_lang}'")
+
+            if any(x in raw_lang for x in ["en", "english", "eng", "us", "uk"]):
                 user_language = "en"
+            elif any(x in raw_lang for x in ["hi", "hindi", "hin"]):
+                user_language = "hi"
             else:
                 user_language = raw_lang if raw_lang else "hi"
             
