@@ -14,4 +14,4 @@ steps:
       '.'
     ]
 images:
-  - 'gcr.io/rraasi-8a619/satsang-frontend'
+  - 'gcr.io/rraasi-8a619/satsang-frontend:fresh'
