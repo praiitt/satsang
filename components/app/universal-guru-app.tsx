@@ -4,14 +4,14 @@ import { useRef } from 'react';
 import { AnimatePresence, type Transition, type Variants, motion } from 'motion/react';
 import { RoomAudioRenderer, StartAudio, useRoomContext } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
-import { HinduismWelcomeView } from '@/components/app/hinduism-welcome-view';
+import { UniversalGuruWelcomeView } from '@/components/app/universal-guru-welcome';
 import { SessionProvider, useSession } from '@/components/app/session-provider';
 import { SessionView } from '@/components/app/session-view';
 import { HeygenAvatarPlayer } from '@/components/heygen/heygen-avatar-player';
 import { Toaster } from '@/components/livekit/toaster';
 import { PWAInstaller } from '@/components/pwa-installer';
 
-const MotionHinduismWelcomeView = motion.create(HinduismWelcomeView);
+const MotionUniversalGuruWelcomeView = motion.create(UniversalGuruWelcomeView);
 const MotionSessionView = motion.create(SessionView);
 
 const viewVariants: Variants = {
@@ -36,7 +36,19 @@ const VIEW_MOTION_PROPS = {
     transition: viewTransition,
 } as const;
 
-function HinduismViewController({ guruId, guruName }: { guruId: string; guruName: string }) {
+function UniversalGuruViewController({
+    guruId,
+    guruName,
+    traditionName,
+    traditionEmoji,
+    theme
+}: {
+    guruId: string;
+    guruName: string;
+    traditionName?: string;
+    traditionEmoji?: string;
+    theme?: string;
+}) {
     const room = useRoomContext();
     const isSessionActiveRef = useRef(false);
     const { appConfig, isSessionActive, startSession } = useSession();
@@ -55,12 +67,15 @@ function HinduismViewController({ guruId, guruName }: { guruId: string; guruName
         <AnimatePresence mode="wait">
             {/* Welcome screen */}
             {!isSessionActive && (
-                <MotionHinduismWelcomeView
+                <MotionUniversalGuruWelcomeView
                     key="welcome"
                     {...VIEW_MOTION_PROPS}
                     onStartCall={startSession}
                     guruId={guruId}
                     guruName={guruName}
+                    traditionName={traditionName}
+                    traditionEmoji={traditionEmoji}
+                    theme={theme}
                 />
             )}
             {/* Session view */}
@@ -76,17 +91,26 @@ function HinduismViewController({ guruId, guruName }: { guruId: string; guruName
     );
 }
 
-interface HinduismAppProps {
+interface UniversalGuruAppProps {
     appConfig: AppConfig;
     guruId: string;
     guruName: string;
+    traditionName?: string;
+    traditionEmoji?: string;
+    theme?: string;
 }
 
-export function HinduismApp({ appConfig, guruId, guruName }: HinduismAppProps) {
+export function UniversalGuruApp({ appConfig, guruId, guruName, traditionName, traditionEmoji, theme }: UniversalGuruAppProps) {
     return (
         <SessionProvider appConfig={appConfig}>
             <main className="min-h-svh w-full overflow-y-auto">
-                <HinduismViewController guruId={guruId} guruName={guruName} />
+                <UniversalGuruViewController
+                    guruId={guruId}
+                    guruName={guruName}
+                    traditionName={traditionName}
+                    traditionEmoji={traditionEmoji}
+                    theme={theme}
+                />
             </main>
             <StartAudio label="Start Audio" />
             <RoomAudioRenderer />

@@ -3,44 +3,42 @@
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { FindYourGuruQuiz } from '@/components/find-your-guru-quiz';
-
-const gurus = [
-    { id: 'shankaracharya', name: 'Adi Shankaracharya', tradition: 'Advaita Vedanta', era: '788-820 CE' },
-    { id: 'ramana', name: 'Ramana Maharshi', tradition: 'Self-Inquiry', era: '1879-1950' },
-    { id: 'vivekananda', name: 'Swami Vivekananda', tradition: 'Vedanta', era: '1863-1902' },
-    { id: 'ramakrishna', name: 'Sri Ramakrishna', tradition: 'Bhakti & Tantra', era: '1836-1886' },
-    { id: 'aurobindo', name: 'Sri Aurobindo', tradition: 'Integral Yoga', era: '1872-1950' },
-    { id: 'anandamayi_ma', name: 'Anandamayi Ma', tradition: 'Universal Mother', era: '1896-1982' },
-    { id: 'neem_karoli_baba', name: 'Neem Karoli Baba', tradition: 'Bhakti', era: '1900-1973' },
-    { id: 'yogananda', name: 'Paramahansa Yogananda', tradition: 'Kriya Yoga', era: '1893-1952' },
-    { id: 'krishnamurti', name: 'J. Krishnamurti', tradition: 'Freedom', era: '1895-1986' },
-    { id: 'ravi_shankar', name: 'Sri Sri Ravi Shankar', tradition: 'Art of Living', era: '1956-present' },
-    { id: 'sadhguru', name: 'Sadhguru', tradition: 'Isha Yoga', era: '1957-present' },
-    { id: 'amma', name: 'Mata Amritanandamayi', tradition: 'Universal Love', era: '1953-present' },
-    { id: 'morari_bapu', name: 'Morari Bapu', tradition: 'Ram Katha', era: '1946-present' },
-    { id: 'rakeshbhai', name: 'Rakeshbhai Jhaveri', tradition: 'Modern Spirituality', era: 'Contemporary' },
-    { id: 'chinmayananda', name: 'Swami Chinmayananda', tradition: 'Vedanta', era: '1916-1993' },
-    { id: 'mukundananda', name: 'Swami Mukundananda', tradition: 'Bhakti Yoga', era: '1960-present' },
-    { id: 'kripaluji', name: 'Jagadguru Kripaluji', tradition: 'Radha-Krishna Bhakti', era: '1922-2013' },
-    { id: 'prabhupada', name: 'A.C. Bhaktivedanta Swami', tradition: 'ISKCON', era: '1896-1977' },
-];
-
 import { useLanguage } from '@/contexts/language-context';
+import { ALL_GURUS, TRADITION_DETAILS, DEFAULT_TRADITION_THEME } from '@/lib/gurus';
+import { notFound } from 'next/navigation';
+import { use } from 'react';
 
-export default function HinduismPage() {
+export default function TraditionPage({ params }: { params: Promise<{ tradition: string }> }) {
     const router = useRouter();
     const { t } = useLanguage();
+    const { tradition } = use(params);
+
+    // Normalize tradition slug
+    const normalizedTradition = tradition.toLowerCase();
+
+    // Filter gurus for this tradition
+    const categoryGurus = ALL_GURUS.filter(g => g.category === normalizedTradition);
+
+    // If no gurus found for this tradition, show 404 (or maybe a generic page? better 404 for now)
+    if (categoryGurus.length === 0) {
+        notFound();
+    }
+
+    const details = TRADITION_DETAILS[normalizedTradition] || {
+        ...DEFAULT_TRADITION_THEME,
+        title: `${normalizedTradition.charAt(0).toUpperCase() + normalizedTradition.slice(1)} Masters`
+    };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-orange-50 via-yellow-50 to-red-50">
+        <div className={`min-h-screen bg-gradient-to-br ${details.theme}`}>
             {/* Header */}
             <div className="bg-gradient-to-r from-orange-600 to-red-600 text-white py-12">
                 <div className="container mx-auto px-4">
                     <h1 className="text-5xl font-bold text-center mb-4">
-                        🕉️ Hindu Spiritual Masters
+                        {details.emoji} {details.title}
                     </h1>
                     <p className="text-center text-orange-100 text-lg max-w-3xl mx-auto mb-8">
-                        Connect with the wisdom of India's greatest spiritual teachers. Each master offers unique guidance on the path to enlightenment.
+                        {details.description}
                     </p>
 
                     <div className="flex justify-center">
@@ -58,10 +56,10 @@ export default function HinduismPage() {
             {/* Guru Grid */}
             <div className="container mx-auto px-4 py-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {gurus.map((guru) => (
+                    {categoryGurus.map((guru) => (
                         <Link
                             key={guru.id}
-                            href={`/hinduism/${guru.id}`}
+                            href={`/${normalizedTradition}/${guru.id}`}
                             className="group block"
                         >
                             <div className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 overflow-hidden border-2 border-orange-100 hover:border-orange-400 transform hover:-translate-y-2">
@@ -99,7 +97,7 @@ export default function HinduismPage() {
             <div className="bg-orange-100 py-8 mt-12">
                 <div className="container mx-auto px-4 text-center">
                     <p className="text-orange-800">
-                        "When the student is ready, the teacher appears" - Buddhist Proverb
+                        "When the student is ready, the teacher appears"
                     </p>
                 </div>
             </div>

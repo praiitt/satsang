@@ -233,7 +233,7 @@ export const RRaaSiMusicWelcomeView = ({
           <video
             ref={videoRef}
             autoPlay
-            loop
+            loop={false}
             muted={isMuted}
             playsInline
             className="h-full w-full object-cover"

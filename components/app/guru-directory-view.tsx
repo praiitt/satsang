@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { Search } from 'lucide-react';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import { GURUS, type GuruDefinition, type GuruTradition, getAllTraditions } from '@/lib/gurus';
@@ -13,15 +14,32 @@ interface GuruDirectoryViewProps {
 export function GuruDirectoryView({ onGuruSelect }: GuruDirectoryViewProps) {
   const { t } = useLanguage();
   const [selectedTradition, setSelectedTradition] = useState<GuruTradition | 'All'>('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const traditions = useMemo(() => ['All' as const, ...getAllTraditions()], []);
 
   const filteredGurus = useMemo(() => {
-    if (selectedTradition === 'All') {
-      return GURUS;
+    let gurus = GURUS;
+
+    // Filter by tradition
+    if (selectedTradition !== 'All') {
+      gurus = gurus.filter((guru) => guru.tradition === selectedTradition);
     }
-    return GURUS.filter((guru) => guru.tradition === selectedTradition);
-  }, [selectedTradition]);
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase().trim();
+      gurus = gurus.filter(
+        (guru) =>
+          guru.name.toLowerCase().includes(lowerQuery) ||
+          guru.tradition.toLowerCase().includes(lowerQuery) ||
+          guru.category.toLowerCase().includes(lowerQuery) ||
+          guru.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery))
+      );
+    }
+
+    return gurus;
+  }, [selectedTradition, searchQuery]);
 
   return (
     <section className="mx-auto mt-12 max-w-7xl px-4 sm:mt-16">
@@ -48,6 +66,20 @@ export function GuruDirectoryView({ onGuruSelect }: GuruDirectoryViewProps) {
             {tradition === 'All' ? t('welcome.allTraditions') : tradition}
           </Button>
         ))}
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative mx-auto mb-8 max-w-md">
+        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+          <Search className="text-muted-foreground h-5 w-5" />
+        </div>
+        <input
+          type="text"
+          className="border-input placeholder:text-muted-foreground focus:ring-primary flex h-12 w-full rounded-full border bg-background py-2 pl-10 pr-4 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-offset-2"
+          placeholder={t('welcome.searchPlaceholder')}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       {/* Guru Grid */}

@@ -581,6 +581,57 @@ async def entrypoint(ctx: JobContext):
         user_language = "hi"
     
     logger.info(f"🌐 Using language: {user_language} (default: Hindi)")
+
+    # Extract guruId for Universal Wisdom dispatch
+    guru_id = "guruji" # Default to generic guruji
+    try:
+        # We re-iterate or reuse logic. Since we only parsed language above, let's find guruId now.
+        for participant in ctx.room.remote_participants.values():
+            if participant.metadata:
+                import json
+                try:
+                    metadata = json.loads(participant.metadata)
+                    if "guruId" in metadata:
+                        guru_id = metadata["guruId"]
+                        logger.info(f"🕉️  Detected guruId: {guru_id}")
+                        break
+                except:
+                    pass
+    except Exception as e:
+        logger.error(f"Error extracting guruId: {e}")
+
+    # Check for Universal Wisdom dispatch
+    # If guru_id is specific (not 'guruji') and NOT the default fallback
+    # We load UniversalWisdomAgent.
+    # We must ensure we don't break Tarot dispatch which is handled separately above.
+    is_universal_guru = guru_id and guru_id != "guruji" and guru_id != "default_user"
+
+    if is_universal_guru and "tarot" not in ctx.room.name.lower():
+        logger.info(f"✨ Dispatching to UniversalWisdomAgent for guru: {guru_id}")
+        try:
+            from .universal_wisdom_agent import UniversalWisdomAgent
+            
+            # Initialize Universal Agent
+            universal_agent = UniversalWisdomAgent(
+                guru_id=guru_id,
+                user_id="user", # TODO: Extract real userId if needed
+                publish_data_fn=ctx.room.local_participant.publish_data
+            )
+            
+            logger.info("UniversalWisdomAgent initialized successfully")
+
+            # Initialize Session for Universal Agent
+            # Note: We duplicate some session setup here to ensure correct binding
+            
+            # STT Setup (Reused from above)
+            # Create STT instance (reusing the logic below would be cleaner, but let's do it inline for dispatch)
+            # Actually, let's reuse the 'stt' variable which is initialized below!
+            # So we defer session creation until after STT is ready.
+            
+        except Exception as e:
+            logger.error(f"Failed to load UniversalWisdomAgent: {e}", exc_info=True)
+            is_universal_guru = False # Fallback to default
+
     
     # Set up a voice AI pipeline using OpenAI, Cartesia, AssemblyAI, and the LiveKit turn detector
     
@@ -798,6 +849,33 @@ async def entrypoint(ctx: JobContext):
                 voice=tts_voice_id,
                 language=user_language,
                 extra_kwargs={
+                    "speed": "normal",
+                    "emotion": ["positivity:highest", "curiosity:high"]
+                }
+            ),
+            preemptive_generation=True,
+            turn_detection=turn_detector,
+            vad=ctx.proc.userdata.get("vad"),
+        )
+
+        # Decide which agent instance to use
+        # If is_universal_guru is set (and valid), use it.
+        # Otherwise use Assistant (default)
+        if 'is_universal_guru' in locals() and is_universal_guru and 'universal_agent' in locals():
+            agent_instance = universal_agent
+            logger.info(f"🚀 Starting session with UniversalWisdomAgent ({guru_id})")
+        else:
+            agent_instance = Assistant(
+                is_group_conversation=is_live_satsang,
+                publish_data_fn=ctx.room.local_participant.publish_data,
+                user_language=user_language
+            )
+            logger.info("🚀 Starting session with Default Assistant (Guruji)")
+
+        session.on("metrics_collected", _on_metrics_collected)
+
+        await session.start(agent=agent_instance, room=ctx.room)
+
                     # Cartesia supports speed: "slow" | "normal" | "fast"
                     "speed": (os.getenv("TTS_SPEED") or "slow")
                     if (os.getenv("TTS_SPEED") or "slow") in {"slow", "normal", "fast"}

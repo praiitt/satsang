@@ -1,453 +1,547 @@
-/**
- * Guru Configuration
- *
- * Central configuration for all spiritual gurus/agents available on RRAASI.
- * This drives the multi-guru landing page and guru directory.
- */
-
-export type GuruTradition =
-  | 'Hindu'
-  | 'Sanatana Dharma'
-  | 'Zen'
-  | 'Buddhist'
-  | 'Sufi'
-  | 'ET/Consciousness'
-  | 'Modern'
-  | 'Universal';
-
-export interface GuruDefinition {
+export interface Guru {
   id: string;
-  route: string;
-  agentName: string;
   name: string;
-  nameKey: string; // Translation key for name
-  tradition: GuruTradition;
-  tagline: string;
-  taglineKey: string; // Translation key for tagline
-  description: string;
-  descriptionKey: string; // Translation key for description
-  tags: string[];
-  icon: string; // Emoji or icon identifier
-  isFeatured: boolean;
-  color?: string; // Optional accent color
+  tradition: string; // The display tradition from JSON
+  era: string;
+  category: string; // The URL slug (e.g. 'hinduism', 'buddhism')
 }
 
-export const GURUS: GuruDefinition[] = [
+export const TRADITION_DETAILS: Record<string, { title: string; description: string; emoji: string; theme: string }> = {
+  hinduism: {
+    title: 'Hindu Spiritual Masters',
+    description: "Connect with the wisdom of India's greatest spiritual teachers. Each master offers unique guidance on the path to enlightenment.",
+    emoji: '🕉️',
+    theme: 'from-orange-50 via-yellow-50 to-red-50'
+  },
+  buddhism: {
+    title: 'Buddhist Masters',
+    description: 'Discover the path of awakening with enlightened masters from the Buddhist tradition. Find peace, compassion, and mindfulness.',
+    emoji: '☸️',
+    theme: 'from-amber-50 via-yellow-50 to-orange-50'
+  },
+  jainism: {
+    title: 'Jain Tirthankaras & Acharyas',
+    description: 'Explore the path of Ahimsa and self-realization with the great teachers of Jainism.',
+    emoji: '✋',
+    theme: 'from-yellow-50 via-white to-green-50'
+  },
+  sikhism: {
+    title: 'Sikh Gurus',
+    description: 'Connect with the divine wisdom of the Sikh Gurus. One God, equality, and service to humanity.',
+    emoji: '☬',
+    theme: 'from-orange-50 via-yellow-50 to-blue-50'
+  },
+  christianity: {
+    title: 'Christian Mystics & Saints',
+    description: 'Connect with the heart of Christ consciousness through saints and mystics throughout history.',
+    emoji: '✝️',
+    theme: 'from-blue-50 via-white to-purple-50'
+  },
+  islam: {
+    title: 'Sufi Masters & Prophets',
+    description: 'Experience the divine love and wisdom of the Sufi tradition and Islamic spirituality.',
+    emoji: '☪️',
+    theme: 'from-green-50 via-emerald-50 to-teal-50'
+  },
+  judaism: {
+    title: 'Jewish Sages & Mystics',
+    description: 'Engage with the profound wisdom of Kabbalah, Hasidism, and Jewish ethical teachings.',
+    emoji: '✡️',
+    theme: 'from-blue-50 via-indigo-50 to-white'
+  },
+  taoism: {
+    title: 'Taoist Masters',
+    description: 'Flow with the Tao. Discover the way of nature, balance, and wu-wei with ancient sages.',
+    emoji: '☯️',
+    theme: 'from-green-50 via-teal-50 to-blue-50'
+  },
+  universal: {
+    title: 'Universal & Cosmic Guides',
+    description: 'Explore wisdom beyond tradition. Connect with cosmic consciousness, nature, and universal truths.',
+    emoji: '🌌',
+    theme: 'from-purple-900 via-indigo-900 to-black text-white'
+  }
+};
+
+export const DEFAULT_TRADITION_THEME = {
+  title: 'Spiritual Masters',
+  description: 'Connect with universal wisdom from enlightened masters across traditions.',
+  emoji: '✨',
+  theme: 'from-purple-50 via-fuchsia-50 to-pink-50'
+};
+
+
+export const ALL_GURUS: Guru[] = [
+  // Special Agents First
   {
-    id: 'guruji',
-    route: '/guruji',
-    agentName: 'guruji',
-    name: 'Guruji',
-    nameKey: 'gurus.guruji.name',
-    tradition: 'Sanatana Dharma',
-    tagline: 'Your spiritual guide rooted in Hindu and Sanatana Dharma',
-    taglineKey: 'gurus.guruji.tagline',
-    description:
-      'A compassionate spiritual guru specializing in dharma, yoga, meditation, karma, bhakti, and Vedanta. Answers questions from Gita, Vedas, Upanishads, Ramayana, and Mahabharata.',
-    descriptionKey: 'gurus.guruji.description',
-    tags: ['Hindu', 'Dharma', 'Bhakti', 'Yoga', 'Meditation', 'Vedanta'],
-    icon: '🕉️',
-    isFeatured: true,
-    color: '#ff7a00',
+    id: "guruji",
+    name: "Guruji",
+    tradition: "Sanatana Dharma",
+    era: "Timeless",
+    category: "hinduism",
   },
   {
-    id: 'etagent',
-    route: '/et-agent',
-    agentName: 'etagent',
-    name: 'ET Agent',
-    nameKey: 'gurus.etAgent.name',
-    tradition: 'ET/Consciousness',
-    tagline: 'Explore extraterrestrial civilizations and cosmic consciousness',
-    taglineKey: 'gurus.etAgent.tagline',
-    description:
-      'A guide specializing in extraterrestrial civilizations, the Fermi Paradox, and the connection between sound frequencies and universal consciousness.',
-    descriptionKey: 'gurus.etAgent.description',
-    tags: ['ET', 'Fermi Paradox', 'Consciousness', 'Frequencies', 'Cosmic'],
-    icon: '👽',
-    isFeatured: true,
-    color: '#6366f1',
+    id: "etAgent",
+    name: "ET Agent",
+    tradition: "Cosmic Consciousness",
+    era: "Future",
+    category: "universal",
   },
   {
-    id: 'psychedelic_guru',
-    route: '/trance-music-guide',
-    agentName: 'psychedelic-agent',
-    name: 'Trance Music Guide',
-    nameKey: 'gurus.psychedelicGuru.name',
-    tradition: 'ET/Consciousness',
-    tagline: 'Dynamic meditation through Trance Music',
-    taglineKey: 'gurus.psychedelicGuru.tagline',
-    description:
-      'Create your own trance music just by talking to the guide. A guide to higher realms through Trance Music and dynamic meditation.',
-    descriptionKey: 'gurus.psychedelicGuru.description',
-    tags: ['Trance Music', 'Dynamic Meditation', 'Consciousness', 'Higher Realms'],
-    icon: '🎧',
-    isFeatured: true,
-    color: '#8b5cf6',
+    id: "osho",
+    name: "Osho",
+    tradition: "Zen, Meditation",
+    era: "1931-1990",
+    category: "buddhism",
   },
   {
-    id: 'tarot',
-    route: '/tarot',
-    agentName: 'tarot-agent',
-    name: 'Mystic Tarot Reader',
-    nameKey: 'gurus.tarot.name',
-    tradition: 'Universal',
-    tagline: 'Reveal insights about Love, Career, and Finance',
-    taglineKey: 'gurus.tarot.tagline',
-    description:
-      'Connect with the cards to reveal insights about Love, Career, and Finance. The stars impel, they do not compel.',
-    descriptionKey: 'gurus.tarot.description',
-    tags: ['Tarot', 'Divination', 'Guidance', 'Intuition', 'Cards'],
-    icon: '🔮',
-    isFeatured: true,
-    color: '#9333ea',
+    id: "psychedelicGuru",
+    name: "Trance Music Guide",
+    tradition: "Trance, Shamanism",
+    era: "Timeless",
+    category: "universal",
+  },
+  // Standard Gurus Alphabetical
+  {
+    id: "akiva",
+    name: "Rabbi Akiva",
+    tradition: "Judaism (Mishnaic)",
+    era: "c. 50–135 CE",
+    category: "judaism",
+  },
+
+  {
+    id: "al_ghazali",
+    name: "Al-Ghazali",
+    tradition: "Islam (Sufi/Philosopher)",
+    era: "1058–1111",
+    category: "islam",
   },
   {
-    id: 'osho',
-    route: '/osho',
-    agentName: 'osho',
-    name: 'Osho',
-    nameKey: 'gurus.osho.name',
-    tradition: 'Modern',
-    tagline: 'Revolutionary spiritual master of meditation and consciousness',
-    taglineKey: 'gurus.osho.tagline',
-    description:
-      'Osho (Bhagwan Shree Rajneesh) - A revolutionary spiritual guide specializing in meditation, consciousness, Zen philosophy, dynamic meditation, sannyas, and the art of living.',
-    descriptionKey: 'gurus.osho.description',
-    tags: ['Meditation', 'Zen', 'Consciousness', 'Dynamic Meditation', 'Sannyas'],
-    icon: '🧘',
-    isFeatured: true,
-    color: '#f59e0b',
-  },
-  // Hindu Spiritual Masters
-  {
-    id: 'vivekananda',
-    route: '/hinduism/vivekananda',
-    agentName: 'hinduism-agent',
-    name: 'Swami Vivekananda',
-    nameKey: 'gurus.vivekananda.name',
-    tradition: 'Hindu',
-    tagline: 'Bold voice of Vedanta and strength',
-    taglineKey: 'gurus.vivekananda.tagline',
-    description: 'Swami Vivekananda - Champion of practical Vedanta, Karma Yoga, and spiritual strength. "Arise, awake, and stop not till the goal is reached!"',
-    descriptionKey: 'gurus.vivekananda.description',
-    tags: ['Vedanta', 'Karma Yoga', 'Strength', 'Service'],
-    icon: '💪',
-    isFeatured: true,
-    color: '#ff6b35',
+    id: "amma",
+    name: "Mata Amritanandamayi",
+    tradition: "Universal love, Bhakti",
+    era: "1953-present",
+    category: "hinduism",
   },
   {
-    id: 'ramana',
-    route: '/hinduism/ramana',
-    agentName: 'hinduism-agent',
-    name: 'Ramana Maharshi',
-    nameKey: 'gurus.ramana.name',
-    tradition: 'Hindu',
-    tagline: 'Master of Self-inquiry and silence',
-    taglineKey: 'gurus.ramana.tagline',
-    description: 'Ramana Maharshi - Sage of Arunachala teaching direct path to Self through the question "Who am I?"',
-    descriptionKey: 'gurus.ramana.description',
-    tags: ['Self-inquiry', 'Advaita', 'Silence', 'Meditation'],
-    icon: '🙏',
-    isFeatured: true,
-    color: '#8b5cf6',
+    id: "anandamayi_ma",
+    name: "Anandamayi Ma",
+    tradition: "Universal Mother, Bhakti",
+    era: "1896-1982",
+    category: "hinduism",
   },
   {
-    id: 'shankaracharya',
-    route: '/hinduism/shankaracharya',
-    agentName: 'hinduism-agent',
-    name: 'Adi Shankaracharya',
-    nameKey: 'gurus.shankaracharya.name',
-    tradition: 'Hindu',
-    tagline: 'Great philosopher of Advaita Vedanta',
-    taglineKey: 'gurus.shankaracharya.tagline',
-    description: 'Adi Shankaracharya - Ancient philosopher who established Advaita (non-dualism). "Brahma Satyam Jagat Mithya"',
-    descriptionKey: 'gurus.shankaracharya.description',
-    tags: ['Advaita', 'Philosophy', 'Vedanta', 'Non-dualism'],
-    icon: '📿',
-    isFeatured: false,
-    color: '#f97316',
+    id: "aurobindo",
+    name: "Sri Aurobindo",
+    tradition: "Integral Yoga",
+    era: "1872-1950",
+    category: "hinduism",
   },
   {
-    id: 'ramakrishna',
-    route: '/hinduism/ramakrishna',
-    agentName: 'hinduism-agent',
-    name: 'Sri Ramakrishna',
-    nameKey: 'gurus.ramakrishna.name',
-    tradition: 'Hindu',
-    tagline: 'Ecstatic devotee of Divine Mother',
-    taglineKey: 'gurus.ramakrishna.tagline',
-    description: 'Sri Ramakrishna Paramahamsa - Mystic who realized unity of all religions through direct experience of God.',
-    descriptionKey: 'gurus.ramakrishna.description',
-    tags: ['Bhakti', 'Divine Mother', 'Unity', 'Devotion'],
-    icon: '🌺',
-    isFeatured: false,
-    color: '#ec4899',
+    id: "baal_shem_tov",
+    name: "Baal Shem Tov",
+    tradition: "Judaism (Hasidic)",
+    era: "1698–1760",
+    category: "judaism",
   },
   {
-    id: 'aurobindo',
-    route: '/hinduism/aurobindo',
-    agentName: 'hinduism-agent',
-    name: 'Sri Aurobindo',
-    nameKey: 'gurus.aurobindo.name',
-    tradition: 'Hindu',
-    tagline: 'Visionary of Integral Yoga',
-    taglineKey: 'gurus.aurobindo.tagline',
-    description: 'Sri Aurobindo - Pioneer of Integral Yoga and evolutionary spirituality. Envisioned divine life on Earth.',
-    descriptionKey: 'gurus.aurobindo.description',
-    tags: ['Integral Yoga', 'Evolution', 'Consciousness', 'Transformation'],
-    icon: '🌟',
-    isFeatured: false,
-    color: '#3b82f6',
+    id: "bodhidharma",
+    name: "Bodhidharma",
+    tradition: "Buddhism (Zen/Chan)",
+    era: "5th/6th Century CE",
+    category: "buddhism",
   },
   {
-    id: 'anandamayi_ma',
-    route: '/hinduism/anandamayi_ma',
-    agentName: 'hinduism-agent',
-    name: 'Anandamayi Ma',
-    nameKey: 'gurus.anandamayiMa.name',
-    tradition: 'Hindu',
-    tagline: 'Bliss-permeated Divine Mother',
-    taglineKey: 'gurus.anandamayiMa.tagline',
-    description: 'Anandamayi Ma - Spontaneous joy embodied. The bliss-permeated mother who lived in constant God-remembrance.',
-    descriptionKey: 'gurus.anandamayiMa.description',
-    tags: ['Divine Mother', 'Bliss', 'Devotion', 'Spontaneity'],
-    icon: '😇',
-    isFeatured: false,
-    color: '#f472b6',
+    id: "buddha",
+    name: "Gautama Buddha",
+    tradition: "Buddhism",
+    era: "c. 5th to 4th century BCE",
+    category: "buddhism",
   },
   {
-    id: 'neem_karoli_baba',
-    route: '/hinduism/neem_karoli_baba',
-    agentName: 'hinduism-agent',
-    name: 'Neem Karoli Baba',
-    nameKey: 'gurus.neemKaroliBaba.name',
-    tradition: 'Hindu',
-    tagline: 'Saint of unconditional love',
-    taglineKey: 'gurus.neemKaroliBaba.tagline',
-    description: 'Neem Karoli Baba (Maharajji) - Beloved saint radiating unconditional love. "Sub Ek - All is One"',
-    descriptionKey: 'gurus.neemKaroliBaba.description',
-    tags: ['Love', 'Service', 'Hanuman', 'Miracles'],
-    icon: '❤️',
-    isFeatured: true,
-    color: '#ef4444',
+    id: "bulleh_shah",
+    name: "Bulleh Shah",
+    tradition: "Islam (Sufi)",
+    era: "1680–1757",
+    category: "islam",
   },
   {
-    id: 'yogananda',
-    route: '/hinduism/yogananda',
-    agentName: 'hinduism-agent',
-    name: 'Paramahansa Yogananda',
-    nameKey: 'gurus.yogananda.name',
-    tradition: 'Hindu',
-    tagline: 'Bridge between East and West',
-    taglineKey: 'gurus.yogananda.tagline',
-    description: 'Paramahansa Yogananda - Brought Kriya Yoga to the West. Author of "Autobiography of a Yogi"',
-    descriptionKey: 'gurus.yogananda.description',
-    tags: ['Kriya Yoga', 'Self-Realization', 'Joy', 'Science'],
-    icon: '🌏',
-    isFeatured: false,
-    color: '#06b6d4',
+    id: "chinmayananda",
+    name: "Swami Chinmayananda",
+    tradition: "Vedanta teaching movement",
+    era: "1916-1993",
+    category: "hinduism",
   },
   {
-    id: 'krishnamurti',
-    route: '/hinduism/krishnamurti',
-    agentName: 'hinduism-agent',
-    name: 'J. Krishnamurti',
-    nameKey: 'gurus.krishnamurti.name',
-    tradition: 'Hindu',
-    tagline: 'Teacher of radical freedom',
-    taglineKey: 'gurus.krishnamurti.tagline',
-    description: 'Jiddu Krishnamurti - "Truth is a pathless land." Teacher of freedom from all conditioning and authority.',
-    descriptionKey: 'gurus.krishnamurti.description',
-    tags: ['Freedom', 'Inquiry', 'Awareness', 'No-method'],
-    icon: '🦅',
-    isFeatured: false,
-    color: '#64748b',
+    id: "dalai_lama",
+    name: "The Dalai Lama",
+    tradition: "Buddhism",
+    era: "1935–Present",
+    category: "buddhism",
   },
   {
-    id: 'ravi_shankar',
-    route: '/hinduism/ravi_shankar',
-    agentName: 'hinduism-agent',
-    name: 'Sri Sri Ravi Shankar',
-    nameKey: 'gurus.raviShankar.name',
-    tradition: 'Hindu',
-    tagline: 'Founder of Art of Living',
-    taglineKey: 'gurus.raviShankar.tagline',
-    description: 'Sri Sri Ravi Shankar - Global humanitarian teaching stress-free living through Sudarshan Kriya and meditation.',
-    descriptionKey: 'gurus.raviShankar.description',
-    tags: ['Art of Living', 'Pranayama', 'Service', 'Peace'],
-    icon: '😊',
-    isFeatured: false,
-    color: '#10b981',
+    id: "guru_amar_das",
+    name: "Guru Amar Das Ji",
+    tradition: "Sikhism",
+    era: "1479–1574",
+    category: "sikhism",
   },
   {
-    id: 'sadhguru',
-    route: '/hinduism/sadhguru',
-    agentName: 'hinduism-agent',
-    name: 'Sadhguru',
-    nameKey: 'gurus.sadhguru.name',
-    tradition: 'Hindu',
-    tagline: 'Modern yogi and Inner Engineering',
-    taglineKey: 'gurus.sadhguru.tagline',
-    description: 'Sadhguru Jaggi Vasudev - Contemporary mystic making yoga accessible. "This is not philosophy, this is technology"',
-    descriptionKey: 'gurus.sadhguru.description',
-    tags: ['Inner Engineering', 'Yoga', 'Modern', 'Practical'],
-    icon: '🧘‍♂️',
-    isFeatured: true,
-    color: '#f59e0b',
+    id: "guru_angad",
+    name: "Guru Angad Dev Ji",
+    tradition: "Sikhism",
+    era: "1504–1552",
+    category: "sikhism",
   },
   {
-    id: 'amma',
-    route: '/hinduism/amma',
-    agentName: 'hinduism-agent',
-    name: 'Mata Amritanandamayi',
-    nameKey: 'gurus.amma.name',
-    tradition: 'Hindu',
-    tagline: 'The Hugging Saint',
-    taglineKey: 'gurus.amma.tagline',
-    description: 'Mata Amritanandamayi (Amma) - Universal mother embodying compassion. Has hugged millions worldwide.',
-    descriptionKey: 'gurus.amma.description',
-    tags: ['Compassion', 'Service', 'Love', 'Humanitarian'],
-    icon: '🤗',
-    isFeatured: false,
-    color: '#ec4899',
+    id: "guru_arjan",
+    name: "Guru Arjan Dev Ji",
+    tradition: "Sikhism",
+    era: "1563–1606",
+    category: "sikhism",
   },
   {
-    id: 'morari_bapu',
-    route: '/hinduism/morari_bapu',
-    agentName: 'hinduism-agent',
-    name: 'Morari Bapu',
-    nameKey: 'gurus.morariBapu.name',
-    tradition: 'Hindu',
-    tagline: 'Master narrator of Ram Katha',
-    taglineKey: 'gurus.morariBapu.tagline',
-    description: 'Morari Bapu - Beloved storyteller of Ramcharitmanas, spreading Ram\'s message of truth, love, and compassion.',
-    descriptionKey: 'gurus.morariBapu.description',
-    tags: ['Ram Katha', 'Ramayana', 'Storytelling', 'Devotion'],
-    icon: '📖',
-    isFeatured: false,
-    color: '#f97316',
+    id: "guru_gobind_singh",
+    name: "Guru Gobind Singh Ji",
+    tradition: "Sikhism",
+    era: "1666–1708",
+    category: "sikhism",
   },
   {
-    id: 'rakeshbhai',
-    route: '/hinduism/rakeshbhai',
-    agentName: 'hinduism-agent',
-    name: 'Rakeshbhai Jhaveri',
-    nameKey: 'gurus.rakeshbhai.name',
-    tradition: 'Hindu',
-    tagline: 'Modern spirituality for daily life',
-    taglineKey: 'gurus.rakeshbhai.tagline',
-    description: 'Gurudev Shri Rakeshbhai Jhaveri - Contemporary teacher making spirituality practical for modern living.',
-    descriptionKey: 'gurus.rakeshbhai.description',
-    tags: ['Modern', 'Practical', 'Daily Life', 'Balance'],
-    icon: '🌱',
-    isFeatured: false,
-    color: '#84cc16',
+    id: "guru_nanak",
+    name: "Guru Nanak Dev Ji",
+    tradition: "Sikhism",
+    era: "1469–1539",
+    category: "sikhism",
   },
   {
-    id: 'chinmayananda',
-    route: '/hinduism/chinmayananda',
-    agentName: 'hinduism-agent',
-    name: 'Swami Chinmayananda',
-    nameKey: 'gurus.chinmayananda.name',
-    tradition: 'Hindu',
-    tagline: 'Making Vedanta accessible',
-    taglineKey: 'gurus.chinmayananda.tagline',
-    description: 'Swami Chinmayananda - Founder of Chinmaya Mission, making Vedanta and Gita teachings accessible to all.',
-    descriptionKey: 'gurus.chinmayananda.description',
-    tags: ['Vedanta', 'Gita', 'Teaching', 'Knowledge'],
-    icon: '📚',
-    isFeatured: false,
-    color: '#6366f1',
+    id: "guru_ram_das",
+    name: "Guru Ram Das Ji",
+    tradition: "Sikhism",
+    era: "1534–1581",
+    category: "sikhism",
   },
   {
-    id: 'mukundananda',
-    route: '/hinduism/mukundananda',
-    agentName: 'hinduism-agent',
-    name: 'Swami Mukundananda',
-    nameKey: 'gurus.mukundananda.name',
-    tradition: 'Hindu',
-    tagline: 'Bhakti Yoga and mind management',
-    taglineKey: 'gurus.mukundananda.tagline',
-    description: 'Swami Mukundananda - Modern teacher of Bhakti Yoga, combining devotion with practical wisdom.',
-    descriptionKey: 'gurus.mukundananda.description',
-    tags: ['Bhakti Yoga', 'JKYog', 'Mind', 'Devotion'],
-    icon: '💝',
-    isFeatured: false,
-    color: '#a855f7',
+    id: "hemachandra",
+    name: "Acharya Hemachandra",
+    tradition: "Jainism (Shvetambara)",
+    era: "1088–1173",
+    category: "jainism",
   },
   {
-    id: 'kripaluji',
-    route: '/hinduism/kripaluji',
-    agentName: 'hinduism-agent',
-    name: 'Jagadguru Kripaluji',
-    nameKey: 'gurus.kripaluji.name',
-    tradition: 'Hindu',
-    tagline: 'Radha-Krishna divine love',
-    taglineKey: 'gurus.kripaluji.tagline',
-    description: 'Jagadguru Kripaluji Maharaj - Master of Radha-Krishna devotion and divine love. "Radhe Radhe"',
-    descriptionKey: 'gurus.kripaluji.description',
-    tags: ['Radha-Krishna', 'Bhakti', 'Divine Love', 'Prema'],
-    icon: '🌸',
-    isFeatured: false,
-    color: '#ec4899',
+    id: "hillel",
+    name: "Hillel the Elder",
+    tradition: "Judaism",
+    era: "110 BCE – 10 CE",
+    category: "judaism",
   },
   {
-    id: 'prabhupada',
-    route: '/hinduism/prabhupada',
-    agentName: 'hinduism-agent',
-    name: 'A.C. Bhaktivedanta Swami',
-    nameKey: 'gurus.prabhupada.name',
-    tradition: 'Hindu',
-    tagline: 'Founder of ISKCON',
-    taglineKey: 'gurus.prabhupada.tagline',
-    description: 'Bhaktivedanta Swami Prabhupada - Spread Krishna consciousness worldwide. "Hare Krishna Hare Krishna"',
-    descriptionKey: 'gurus.prabhupada.description',
-    tags: ['Krishna Consciousness', 'ISKCON', 'Bhagavad Gita', 'Chanting'],
-    icon: '🎵',
-    isFeatured: false,
-    color: '#fbbf24',
+    id: "ibn_arabi",
+    name: "Ibn Arabi",
+    tradition: "Islam (Sufism)",
+    era: "1165–1240",
+    category: "islam",
+  },
+  {
+    id: "jesus",
+    name: "Jesus Christ",
+    tradition: "Christianity",
+    era: "c. 4 BC – c. 30/33 AD",
+    category: "christianity",
+  },
+  {
+    id: "john_cross",
+    name: "St. John of the Cross",
+    tradition: "Christianity (Mystic)",
+    era: "1542–1591",
+    category: "christianity",
+  },
+  {
+    id: "kripaluji",
+    name: "Jagadguru Kripaluji Maharaj",
+    tradition: "Radha-Krishna Bhakti",
+    era: "1922-2013",
+    category: "hinduism",
+  },
+  {
+    id: "krishnamurti",
+    name: "Jiddu Krishnamurti",
+    tradition: "No tradition - Freedom from all",
+    era: "1895-1986",
+    category: "hinduism",
+  },
+  {
+    id: "kundakunda",
+    name: "Acharya Kundakunda",
+    tradition: "Jainism (Digambara)",
+    era: "1st Century CE",
+    category: "jainism",
+  },
+  {
+    id: "laotzu",
+    name: "Lao Tzu",
+    tradition: "Taoism",
+    era: "c. 6th century BCE",
+    category: "taoism",
+  },
+  {
+    id: "liezi",
+    name: "Liezi",
+    tradition: "Taoism",
+    era: "5th Century BCE",
+    category: "taoism",
+  },
+  {
+    id: "mahavira",
+    name: "Mahavira",
+    tradition: "Jainism",
+    era: "6th century BCE",
+    category: "jainism",
+  },
+  {
+    id: "maimonides",
+    name: "Maimonides",
+    tradition: "Judaism",
+    era: "1138–1204",
+    category: "judaism",
+  },
+  {
+    id: "meister_eckhart",
+    name: "Meister Eckhart",
+    tradition: "Christianity (Mystic)",
+    era: "1260–1328",
+    category: "christianity",
+  },
+  {
+    id: "milarepa",
+    name: "Milarepa",
+    tradition: "Buddhism (Kagyu)",
+    era: "1052–1135",
+    category: "buddhism",
+  },
+  {
+    id: "moinuddin_chishti",
+    name: "Moinuddin Chishti",
+    tradition: "Islam (Chishti Sufi)",
+    era: "1143–1236",
+    category: "islam",
+  },
+  {
+    id: "morari_bapu",
+    name: "Morari Bapu",
+    tradition: "Ram Katha tradition",
+    era: "1946-present",
+    category: "hinduism",
+  },
+  {
+    id: "moses",
+    name: "Moses",
+    tradition: "Judaism",
+    era: "c. 14th–13th century BCE",
+    category: "judaism",
+  },
+  {
+    id: "mother_teresa",
+    name: "Mother Teresa",
+    tradition: "Christianity (Catholic)",
+    era: "1910–1997",
+    category: "christianity",
+  },
+  {
+    id: "mukundananda",
+    name: "Swami Mukundananda",
+    tradition: "Bhakti Yoga, JKYog",
+    era: "1960-present",
+    category: "hinduism",
+  },
+  {
+    id: "nagarjuna",
+    name: "Nagarjuna",
+    tradition: "Buddhism (Madhyamaka)",
+    era: "c. 150–250 CE",
+    category: "buddhism",
+  },
+  {
+    id: "neem_karoli_baba",
+    name: "Neem Karoli Baba",
+    tradition: "Bhakti, Hanuman devotion",
+    era: "1900-1973",
+    category: "hinduism",
+  },
+  {
+    id: "padmasambhava",
+    name: "Padmasambhava",
+    tradition: "Buddhism (Vajrayana)",
+    era: "8th Century CE",
+    category: "buddhism",
+  },
+  {
+    id: "parshvanatha",
+    name: "Parshvanatha",
+    tradition: "Jainism",
+    era: "877–777 BCE",
+    category: "jainism",
+  },
+  {
+    id: "prabhupada",
+    name: "A.C. Bhaktivedanta Swami Prabhupada",
+    tradition: "Gaudiya Vaishnavism, ISKCON",
+    era: "1896-1977",
+    category: "hinduism",
+  },
+  {
+    id: "rabia",
+    name: "Rabia al-Adawiyya",
+    tradition: "Islam (Sufism)",
+    era: "714–801",
+    category: "islam",
+  },
+  {
+    id: "rakeshbhai",
+    name: "Gurudev Shri Rakeshbhai Jhaveri",
+    tradition: "Modern spirituality, Practical wisdom",
+    era: "Contemporary",
+    category: "hinduism",
+  },
+  {
+    id: "ramakrishna",
+    name: "Sri Ramakrishna Paramahamsa",
+    tradition: "Bhakti, Tantra, Vedanta",
+    era: "1836-1886",
+    category: "hinduism",
+  },
+  {
+    id: "ramana",
+    name: "Ramana Maharshi",
+    tradition: "Advaita Vedanta (Self-inquiry)",
+    era: "1879-1950",
+    category: "hinduism",
+  },
+  {
+    id: "ravi_shankar",
+    name: "Sri Sri Ravi Shankar",
+    tradition: "Art of Living, Vedic wisdom",
+    era: "1956-present",
+    category: "hinduism",
+  },
+  {
+    id: "rishabhanatha",
+    name: "Rishabhanatha",
+    tradition: "Jainism",
+    era: "Prehistoric/Ancient",
+    category: "jainism",
+  },
+  {
+    id: "rumi",
+    name: "Rumi",
+    tradition: "Islam (Sufism)",
+    era: "1207–1273",
+    category: "islam",
+  },
+  {
+    id: "sadhguru",
+    name: "Sadhguru Jaggi Vasudev",
+    tradition: "Yoga, Tantric wisdom",
+    era: "1957-present",
+    category: "hinduism",
+  },
+  {
+    id: "shankaracharya",
+    name: "Adi Shankaracharya",
+    tradition: "Advaita Vedanta",
+    era: "788-820 CE",
+    category: "hinduism",
+  },
+  {
+    id: "st_francis",
+    name: "St. Francis of Assisi",
+    tradition: "Christianity (Catholic)",
+    era: "1181–1226",
+    category: "christianity",
+  },
+  {
+    id: "teresa_avila",
+    name: "Teresa of Ávila",
+    tradition: "Christianity (Mystic)",
+    era: "1515–1582",
+    category: "christianity",
+  },
+  {
+    id: "thich_nhat_hanh",
+    name: "Thich Nhat Hanh",
+    tradition: "Buddhism",
+    era: "1926–2022",
+    category: "buddhism",
+  },
+  {
+    id: "thomas_kempis",
+    name: "Thomas à Kempis",
+    tradition: "Christianity (Devotio Moderna)",
+    era: "1380–1471",
+    category: "christianity",
+  },
+  {
+    id: "vivekananda",
+    name: "Swami Vivekananda",
+    tradition: "Vedanta (Ramakrishna lineage)",
+    era: "1863-1902",
+    category: "hinduism",
+  },
+  {
+    id: "yogananda",
+    name: "Paramahansa Yogananda",
+    tradition: "Kriya Yoga",
+    era: "1893-1952",
+    category: "hinduism",
+  },
+  {
+    id: "zhuangzi",
+    name: "Zhuangzi",
+    tradition: "Taoism",
+    era: "369–286 BCE",
+    category: "taoism",
   },
 ];
 
-/**
- * Get guru by ID
- */
-export function getGuruById(id: string): GuruDefinition | undefined {
-  return GURUS.find((guru) => guru.id === id);
+// Enhanced interface for backward compatibility with GuruCard
+export interface GuruDefinition extends Guru {
+  nameKey: string;
+  taglineKey: string;
+  descriptionKey: string;
+  route: string;
+  icon: string;
+  tags: string[];
+  tagline?: string; // Optional because we use keys primarily
+  description?: string;
 }
 
-/**
- * Get guru by route
- */
-export function getGuruByRoute(route: string): GuruDefinition | undefined {
-  return GURUS.find((guru) => guru.route === route);
+export type GuruTradition = string;
+
+export function getAllTraditions(): string[] {
+  const traditions = new Set(ALL_GURUS.map(g => g.tradition));
+  return Array.from(traditions).sort();
 }
 
-/**
- * Get featured gurus
- */
-export function getFeaturedGurus(): GuruDefinition[] {
-  return GURUS.filter((guru) => guru.isFeatured);
-}
-
-/**
- * Get gurus by tradition
- */
-export function getGurusByTradition(tradition: GuruTradition): GuruDefinition[] {
-  return GURUS.filter((guru) => guru.tradition === tradition);
-}
-
-/**
- * Get all unique traditions
- */
-export function getAllTraditions(): GuruTradition[] {
-  return Array.from(new Set(GURUS.map((guru) => guru.tradition)));
-}
-
-/**
- * Get all unique tags
- */
-export function getAllTags(): string[] {
-  const allTags = GURUS.flatMap((guru) => guru.tags);
-  return Array.from(new Set(allTags)).sort();
-}
+// Map the new lightweight Guru objects to the full definition expected by the UI
+export const GURUS: GuruDefinition[] = ALL_GURUS.map(guru => {
+  const traditionConfig = TRADITION_DETAILS[guru.category] || DEFAULT_TRADITION_THEME;
+  return {
+    ...guru,
+    nameKey: `gurus.${guru.id}.name`,
+    taglineKey: `gurus.${guru.id}.tagline`,
+    descriptionKey: `gurus.${guru.id}.description`,
+    route: `/${guru.category}/${guru.id}`,
+    icon: traditionConfig.emoji,
+    // Generate rich tags for the quiz matcher
+    tags: [
+      guru.category, // e.g., 'hinduism'
+      guru.era,
+      // Split tradition string into keywords (e.g. "Bhakti, Tantra" -> ["Bhakti", "Tantra"])
+      ...guru.tradition.split(/[,()\/]+/).map(t => t.trim()).filter(Boolean)
+    ].filter(Boolean),
+    // Default fallbacks (can be removed if we are sure translations exist)
+    tagline: guru.tradition,
+    description: `Connect with ${guru.name}, spiritual master of ${guru.tradition}.`
+  };
+});

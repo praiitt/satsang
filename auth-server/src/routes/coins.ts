@@ -29,30 +29,15 @@ router.post('/deduct-session', async (req: Request, res: Response) => {
         // If we use 'guru_voice_chat' (cost 20), it's fixed.
         // We need a feature that allows variable cost OR we pass amount.
 
-        // Let's assume for now we use 'guru_voice_chat' but we want to specify the amount based on time.
-        // If the coin service logic for 'deduct' endpoint respects the passed 'amount' field (if we send it), great.
-        // If not, we might under/overcharge.
-
-        // For robustness without changing coin-service now, let's assume 'guru_voice_chat' is the closest feature,
-        // but if we can't override cost via API, we might need to rely on 'period_deduction' or similar.
-        // Let's try sending `amount` in default body, most logical services allow override or simply deduct that amount.
-
-        const response = await fetch(`${COIN_SERVICE_URL}/coins/deduct`, {
+        // Call coin service to deduct coins for session (duration based)
+        // Use the specific deduct-satsang endpoint which handles the 2 coins/min logic
+        const response = await fetch(`${COIN_SERVICE_URL}/coins/deduct-satsang`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
                 userId: userId,
-                featureId: 'guru_voice_chat',
-                // We send 'metadata' with the calculated amount, hoping logic uses it or we accept fixed cost for now.
-                // Actually, Step 2652 showed `deductCoins` takes `featureId`.
-                // It checks `FEATURE_COSTS`. It does NOT look like it accepts an override `amount` in the main arguments easily
-                // UNLESS `deductCoins` was modified.
-                // However, `deductCoins` DOES calculate `featureCost.cost`.
-                // There is NO override in `deductCoins(userId, featureId, metadata)`.
-
-                // CRITICAL FINDING: `deductSatsangCoins` exists in `CoinService`. 
                 // Does `rraasi-coin-service` expose it via API?
                 // I need to check `rraasi-coin-service/src/routes/coins.ts`.
 

@@ -19,31 +19,41 @@ interface QuizQuestion {
 
 const QUESTIONS: QuizQuestion[] = [
     {
-        id: 1,
-        textKey: 'quiz.questions.q1',
+        id: 0,
+        textKey: 'quiz.questions.q0',
         options: [
-            { textKey: 'quiz.options.peace', tags: ['Meditation', 'Advaita', 'Self-inquiry'] },
-            { textKey: 'quiz.options.knowledge', tags: ['Vedanta', 'Philosophy', 'Gita'] },
-            { textKey: 'quiz.options.love', tags: ['Bhakti', 'Devotion', 'Kirtan'] },
-            { textKey: 'quiz.options.energy', tags: ['Kriya Yoga', 'Tantra', 'Kundalini'] },
+            { textKey: 'quiz.options.all_traditions', tags: ['All'] },
+            { textKey: 'quiz.options.hindu_vedic', tags: ['hinduism'] },
+            { textKey: 'quiz.options.buddhist_jain', tags: ['buddhism', 'jainism'] },
+            { textKey: 'quiz.options.abrahamic_sufi', tags: ['islam', 'christianity', 'judaism', 'sikhism'] },
+        ],
+    },
+    {
+        id: 1,
+        textKey: 'quiz.questions.q1', // Seeking most?
+        options: [
+            { textKey: 'quiz.options.peace', tags: ['Meditation', 'Peace', 'Zen', 'Vipassana'] },
+            { textKey: 'quiz.options.knowledge', tags: ['Vedanta', 'Jnana', 'Knowledge', 'Advaita', 'Philosophy'] },
+            { textKey: 'quiz.options.love', tags: ['Bhakti', 'Devotion', 'Love', 'Sufi', 'Mystic'] },
+            { textKey: 'quiz.options.energy', tags: ['Kriya Yoga', 'Tantra', 'Kundalini', 'Energy'] },
         ],
     },
     {
         id: 2,
-        textKey: 'quiz.questions.q2',
+        textKey: 'quiz.questions.q2', // Connect preference?
         options: [
             { textKey: 'quiz.options.intellectual', tags: ['Vedanta', 'Philosophy', 'Jnana'] },
-            { textKey: 'quiz.options.emotional', tags: ['Bhakti', 'Devotion', 'Love'] },
-            { textKey: 'quiz.options.practical', tags: ['Karma Yoga', 'Action', 'Service'] },
+            { textKey: 'quiz.options.emotional', tags: ['Bhakti', 'Devotion', 'Love', 'Sufi'] },
+            { textKey: 'quiz.options.practical', tags: ['Karma Yoga', 'Action', 'Service', 'Modern'] },
             { textKey: 'quiz.options.mystical', tags: ['Mysticism', 'Tantra', 'Esoteric'] },
         ],
     },
     {
         id: 3,
-        textKey: 'quiz.questions.q3',
+        textKey: 'quiz.questions.q3', // Vibe?
         options: [
-            { textKey: 'quiz.options.ancient', tags: ['Traditional', 'Vedic', 'Scriptures'] },
-            { textKey: 'quiz.options.modern', tags: ['Modern', 'Psychology', 'Science'] },
+            { textKey: 'quiz.options.ancient', tags: ['Traditional', 'Vedic', 'Scriptures', 'Ancient'] },
+            { textKey: 'quiz.options.modern', tags: ['Modern', 'Psychology', 'Science', 'Contemporary'] },
             { textKey: 'quiz.options.intense', tags: ['Direct', 'Radical', 'Transformation'] },
             { textKey: 'quiz.options.gentle', tags: ['Compassion', 'Mother', 'Healing'] },
         ],
@@ -99,17 +109,40 @@ export function FindYourGuruQuiz({ trigger }: { trigger?: React.ReactNode }) {
     const calculateResult = (finalScores: Record<string, number>) => {
         const guruScores = GURUS.map((guru) => {
             let score = 0;
-            guru.tags.forEach((tag) => {
-                if (finalScores[tag]) {
-                    score += finalScores[tag];
+            // Get all user selected tags
+            const userTags = Object.keys(finalScores);
+
+            userTags.forEach((userTag) => {
+                const userTagLower = userTag.toLowerCase();
+                const weight = finalScores[userTag];
+
+                // If user selected 'All', everyone gets a boost
+                if (userTag === 'All') {
+                    score += weight; // Base score for everyone
+                    return;
+                }
+
+                // Check if guru has a matching tag (case-insensitive partial match for robust logic)
+                // e.g. User tag 'Bhakti' matches guru tag 'Bhakti Yoga'
+                const hasMatch = guru.tags.some(guruTag =>
+                    guruTag.toLowerCase().includes(userTagLower) ||
+                    userTagLower.includes(guruTag.toLowerCase())
+                );
+
+                if (hasMatch) {
+                    score += weight * 2; // Exact/Partial match gets higher weight
                 }
             });
+
             return { guru, score };
         });
 
+        // Debug log to see scoring if needed
+        // console.log('Guru Scores:', guruScores.sort((a, b) => b.score - a.score).map(g => `${g.guru.name}: ${g.score}`));
+
         guruScores.sort((a, b) => b.score - a.score);
-        // Get top 2 recommendations
-        setRecommendations(guruScores.slice(0, 2).map((g) => g.guru));
+        // Get top 3 recommendations (increased from 2)
+        setRecommendations(guruScores.slice(0, 3).map((g) => g.guru));
         setShowResult(true);
     };
 

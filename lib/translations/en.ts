@@ -8,7 +8,7 @@ export const en = {
     freeTrial: 'Free Trial',
     remaining: 'remaining',
     redirecting: 'Redirecting to login...',
-    siteTitle: 'RRAASI.ai',
+    siteTitle: 'RRAASI',
   },
   auth: {
     welcome: 'Welcome to Satsang',
@@ -45,7 +45,7 @@ export const en = {
       'Bhajan or vani is playing — will start listening again when finished or paused.',
   },
   welcome: {
-    title: 'RRAASI.ai — Conscious AI. For Inner Awakening.',
+    title: 'RRAASI — Conscious AI. For Inner Awakening.',
     subtitle: 'Elevating Human Consciousness Through Intelligent Wisdom',
     description:
       'RRAASI brings together all spiritual traditions - connect with your favorite guru, explore different paths, or create your own spiritual guide. Voice-powered satsang in Hindi and English.',
@@ -64,6 +64,7 @@ export const en = {
     findYourGuru: 'Find Your Guru',
     findYourGuruDesc:
       'Choose from our collection of spiritual guides, each specializing in different traditions and teachings.',
+    searchPlaceholder: 'Search by name or tradition...',
     freeTrial: '🎁 15 minutes free trial - No credit card required',
     features: 'Key Features',
     voiceAI: 'Voice-based AI Assistant',
@@ -326,13 +327,13 @@ export const en = {
       description:
         'Sri Aurobindo - Pioneer of Integral Yoga and evolutionary spirituality. Envisioned divine life on Earth.',
     },
-    anandamayiMa: {
+    anandamayi_ma: {
       name: 'Anandamayi Ma',
       tagline: 'Bliss-permeated Divine Mother',
       description:
         'Anandamayi Ma - Spontaneous joy embodied. The bliss-permeated mother who lived in constant God-remembrance.',
     },
-    neemKaroliBaba: {
+    neem_karoli_baba: {
       name: 'Neem Karoli Baba',
       tagline: 'Saint of unconditional love',
       description:
@@ -350,7 +351,7 @@ export const en = {
       description:
         'Jiddu Krishnamurti - "Truth is a pathless land." Teacher of freedom from all conditioning and authority.',
     },
-    raviShankar: {
+    ravi_shankar: {
       name: 'Sri Sri Ravi Shankar',
       tagline: 'Founder of Art of Living',
       description:
@@ -368,7 +369,7 @@ export const en = {
       description:
         'Mata Amritanandamayi (Amma) - Universal mother embodying compassion. Has hugged millions worldwide.',
     },
-    morariBapu: {
+    morari_bapu: {
       name: 'Morari Bapu',
       tagline: 'Master narrator of Ram Katha',
       description:
@@ -415,6 +416,201 @@ export const en = {
       tagline: 'Reveal insights about Love, Career, and Finance',
       description:
         'Connect with the cards to reveal insights about Love, Career, and Finance. The stars impel, they do not compel.',
+    },
+    buddha: {
+      name: 'Gautama Buddha',
+      tagline: 'The Awakened One',
+      description: 'Siddhartha Gautama - The Buddha found the path to end suffering through mindfulness, compassion, and wisdom.',
+    },
+    dalai_lama: {
+      name: 'Dalai Lama',
+      tagline: 'Ocean of Compassion',
+      description: 'Tenzin Gyatso - The 14th Dalai Lama, teaching compassion, non-violence, and secular ethics.',
+    },
+    thich_nhat_hanh: {
+      name: 'Thich Nhat Hanh',
+      tagline: 'Peace is Every Step',
+      description: 'Thich Nhat Hanh - Zen Master teaching mindfulness, interbeing, and engaged Buddhism.',
+    },
+    bodhidharma: {
+      name: 'Bodhidharma',
+      tagline: 'First Patriarch of Zen',
+      description: 'Bodhidharma - The fierce Zen master who brought Buddhism to China. "Direct pointing to the human mind."',
+    },
+    padmasambhava: {
+      name: 'Padmasambhava',
+      tagline: 'The Lotus-Born Guru Rinpoche',
+      description: 'Guru Rinpoche - The tantric master who brought Vajrayana Buddhism to Tibet. Transformer of obstacles.',
+    },
+    milarepa: {
+      name: 'Milarepa',
+      tagline: 'Yogi of the Songs',
+      description: 'Jetsun Milarepa - Tibet\'s great yogi and poet who attained enlightenment in one lifetime through devotion.',
+    },
+    nagarjuna: {
+      name: 'Nagarjuna',
+      tagline: 'Master of Emptiness',
+      description: 'Acharya Nagarjuna - The great philosopher of the Middle Way (Madhyamaka) and Emptiness (Shunyata).',
+    },
+    jesus: {
+      name: 'Jesus Christ',
+      tagline: 'The Essence of Divine Love',
+      description: 'Jesus Christ - Teaching unconditional love, forgiveness, and the Kingdom of Heaven within.',
+    },
+    st_francis: {
+      name: 'St. Francis of Assisi',
+      tagline: 'Instrument of Peace',
+      description: 'St. Francis of Assisi - The humble saint who embraced Lady Poverty and saw all creatures as brothers and sisters.',
+    },
+    mother_teresa: {
+      name: 'Mother Teresa',
+      tagline: 'Saint of the Gutters',
+      description: 'Mother Teresa - Dedicated her life to serving the poorest of the poor with unconditional love.',
+    },
+    teresa_avila: {
+      name: 'Teresa of Ávila',
+      tagline: 'The Interior Castle',
+      description: 'St. Teresa of Ávila - Mystic reformer who taught the path of mental prayer and union with God.',
+    },
+    meister_eckhart: {
+      name: 'Meister Eckhart',
+      tagline: 'Mystic of the Godhead',
+      description: 'Meister Eckhart - Dominican mystic who taught detachment and the birth of the Word in the soul.',
+    },
+    thomas_kempis: {
+      name: 'Thomas à Kempis',
+      tagline: 'The Imitation of Christ',
+      description: 'Thomas à Kempis - Author of The Imitation of Christ, emphasizing humility and inner devotion.',
+    },
+    john_cross: {
+      name: 'St. John of the Cross',
+      tagline: 'Dark Night of the Soul',
+      description: 'St. John of the Cross - Mystic poet who described the journey of the soul through darkness to divine union.',
+    },
+    guru_nanak: {
+      name: 'Guru Nanak Dev Ji',
+      tagline: 'Founder of Sikhism - Oneness',
+      description: 'Guru Nanak Dev Ji - Taught the oneness of God (Ek Onkar), equality of all humans, and selfless service.',
+    },
+    guru_angad: {
+      name: 'Guru Angad Dev Ji',
+      tagline: 'Service and Obedience',
+      description: 'Guru Angad Dev Ji - Second Sikh Guru who formalized Gurmukhi and emphasized physical and spiritual discipline.',
+    },
+    guru_amar_das: {
+      name: 'Guru Amar Das Ji',
+      tagline: 'Equality and Humility',
+      description: 'Guru Amar Das Ji - Third Sikh Guru who championed social equality and established the Langar system.',
+    },
+    guru_ram_das: {
+      name: 'Guru Ram Das Ji',
+      tagline: 'Service and Devotion',
+      description: 'Guru Ram Das Ji - Fourth Sikh Guru, founder of Amritsar and composer of the Lavan wedding hymn.',
+    },
+    guru_arjan: {
+      name: 'Guru Arjan Dev Ji',
+      tagline: 'Prince of Martyrs',
+      description: 'Guru Arjan Dev Ji - Fifth Sikh Guru, compiler of the Adi Granth and builder of the Golden Temple.',
+    },
+    guru_gobind_singh: {
+      name: 'Guru Gobind Singh Ji',
+      tagline: 'Saint-Soldier',
+      description: 'Guru Gobind Singh Ji - Tenth Sikh Guru, creator of the Khalsa and protector of righteousness.',
+    },
+    rumi: {
+      name: 'Rumi',
+      tagline: 'Poet of Divine Love',
+      description: 'Jalal ad-Din Rumi - Sufi mystic and poet whose words ignite the fire of divine love and longing.',
+    },
+    al_ghazali: {
+      name: 'Al-Ghazali',
+      tagline: 'The Proof of Islam',
+      description: 'Abu Hamid al-Ghazali - The great theologian and mystic who reconciled reason with revelation and law with love.',
+    },
+    rabia: {
+      name: 'Rabia al-Adawiyya',
+      tagline: 'Mother of Sufism',
+      description: 'Rabia of Basra - The ascetic saint who taught the doctrine of Divine Love (Ishq-e-Haqiqi) pure of fear or hope.',
+    },
+    ibn_arabi: {
+      name: 'Ibn Arabi',
+      tagline: 'The Greatest Master',
+      description: 'Muhyiddin Ibn Arabi - Visionary mystic who taught the Unity of Being (Wahdat al-Wujud) and the religion of Love.',
+    },
+    moinuddin_chishti: {
+      name: 'Moinuddin Chishti',
+      tagline: 'Benefactor of the Poor',
+      description: 'Khwaja Garib Nawaz - Founder of the Chishti order in India, teaching service to humanity and universal love.',
+    },
+    bulleh_shah: {
+      name: 'Bulleh Shah',
+      tagline: 'Rebel Sufi Poet',
+      description: 'Baba Bulleh Shah - Punjabi Sufi poet who challenged orthodoxy and celebrated the dance of the soul.',
+    },
+    mahavira: {
+      name: 'Mahavira',
+      tagline: 'Ahimsa - Non-violence is the highest duty',
+      description: 'Vardhamana Mahavira - The 24th Tirthankara who taught Ahimsa (non-violence), truth, and self-control.',
+    },
+    rishabhanatha: {
+      name: 'Rishabhanatha',
+      tagline: 'The First Tirthankara',
+      description: 'Bhagwan Adinath - The first Tirthankara who established the path of civilization and spiritual liberation.',
+    },
+    parshvanatha: {
+      name: 'Parshvanatha',
+      tagline: 'Remover of Obstacles',
+      description: 'Bhagwan Parshvanatha - The 23rd Tirthankara who taught the fourfold restraint and is the beloved of the people.',
+    },
+    kundakunda: {
+      name: 'Acharya Kundakunda',
+      tagline: 'Soul-Centric Master',
+      description: 'Acharya Kundakunda - Digambara master who focused on the pure nature of the soul (Samayasara).',
+    },
+    hemachandra: {
+      name: 'Acharya Hemachandra',
+      tagline: 'Omniscient of the Kali Age',
+      description: 'Acharya Hemachandra - Polymath monk who synthesized grammar, yoga, and politics with non-violence.',
+    },
+    moses: {
+      name: 'Moses',
+      tagline: 'Lawgiver and Prophet',
+      description: 'Moses - The great prophet who received the Torah and led his people to freedom.',
+    },
+    maimonides: {
+      name: 'Maimonides',
+      tagline: 'Guide for the Perplexed',
+      description: 'Maimonides (Rambam) - The great philosopher and physician who synthesized Torah with reason.',
+    },
+    baal_shem_tov: {
+      name: 'Baal Shem Tov',
+      tagline: 'Master of the Good Name',
+      description: 'The Baal Shem Tov - Founder of Hasidism who taught serving God with joy (Simcha) and finding holiness everywhere.',
+    },
+    hillel: {
+      name: 'Hillel the Elder',
+      tagline: 'Sage of Patience',
+      description: 'Hillel the Elder - Renowned sage who taught the Golden Rule and the importance of peace and patience.',
+    },
+    akiva: {
+      name: 'Rabbi Akiva',
+      tagline: 'Master of Torah',
+      description: 'Rabbi Akiva - The great scholar and mystic who taught the centrality of love for one\'s neighbor.',
+    },
+    laotzu: {
+      name: 'Lao Tzu',
+      tagline: 'The Way of Nature',
+      description: 'Lao Tzu - Ancient Chinese philosopher and author of the Tao Te Ching. "Nature does not hurry, yet everything is accomplished."',
+    },
+    zhuangzi: {
+      name: 'Zhuangzi',
+      tagline: 'The Wandering Sage',
+      description: 'Zhuangzi (Chuang Tzu) - The playful sage who taught relativity, freedom, and the joy of the simple life.',
+    },
+    liezi: {
+      name: 'Liezi',
+      tagline: 'Riding the Wind',
+      description: 'Liezi (Lieh Tzu) - The Taoist master who accepted fate and rode the wind of emptiness.',
     },
   },
   hinduismGuru: {
@@ -491,10 +687,10 @@ export const en = {
     // Satsang Section
     satsangTitle: 'Satsang',
     satsangSubtitle: 'Your Personal Spiritual Sanctuary',
-    satsangDesc: 'Engage in voice-to-voice conversations with AI avatars of over 20+ enlightened masters. Receive instant guidance rooted in eternal scriptures.',
-    satsangFeature1: 'Connect with 20+ Spiritual Masters',
+    satsangDesc: 'Engage in voice-to-voice conversations with AI avatars of over 50+ enlightened masters. Receive instant guidance rooted in eternal scriptures.',
+    satsangFeature1: 'Connect with 50+ Spiritual Masters',
     satsangFeature2: 'Voice-First Interaction (Hindi & English)',
-    satsangFeature3: 'Wisdom from Gita, Vedas & Upanishads',
+    satsangFeature3: 'Wisdom from Global Spiritual Traditions',
     satsangFeature4: 'Available 24/7 for Guidance',
     satsangAction: 'Start Satsang Now',
 
@@ -585,11 +781,16 @@ export const en = {
     modalTitle: 'Help Me Choose',
     modalTitleResult: 'We Recommend',
     questions: {
+      q0: 'Do you have a specific tradition in mind?',
       q1: 'What are you seeking most right now?',
       q2: 'How do you prefer to connect?',
       q3: 'What vibe resonates with you?',
     },
     options: {
+      all_traditions: 'Open to All Traditions',
+      hindu_vedic: 'Hinduism & Vedic Wisdom',
+      buddhist_jain: 'Buddhism & Jainism',
+      abrahamic_sufi: 'Sufi, Sikh, Christian, Jewish',
       peace: 'Inner Peace & Silence',
       knowledge: 'Knowledge & Wisdom',
       love: 'Love & Devotion',
