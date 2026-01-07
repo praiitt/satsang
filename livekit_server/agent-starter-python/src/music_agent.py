@@ -231,6 +231,7 @@ generate_music(
         """
         Generate healing description, benefits, and SEO tags for the music.
         """
+        logger.info(f"✨ [DEPLOY_CHECK] Generating healing metadata for: {title}")
         prompt = f"""You are a spiritual music curator and SEO expert. A user has created a music track with the following details:
 Title: {title}
 Style: {style}
