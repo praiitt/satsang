@@ -668,17 +668,19 @@ async def entrypoint(ctx: JobContext):
     if participant and user_id == "default_user":
         try:
             # DEBUG LOG
-            logger.info(f"debug_identity_fallback: Participant Identity='{participant.identity}', Name='{participant.name}', Metadata='{participant.metadata}'")
+            logger.info(f"debug_identity_fallback: Participant Identity='{participant.identity}'")
             
-            # If userId is still default, try using identity as userId
-            # This covers cases where frontend sends userId as identity but no metadata
             if participant.identity:
-                # Simple heuristic: if identity looks like a UUID or valid ID (not just "guest")
-                if len(participant.identity) > 5 and "guest" not in participant.identity.lower():
+                # Format: <userId>__<random>
+                if "__" in participant.identity:
+                    parts = participant.identity.split("__")
+                    if parts[0] and len(parts[0]) > 1:
+                        user_id = parts[0]
+                        logger.info(f"✅ Extracted userId from Identity: {user_id}")
+                # Fallback for old identity format or bare IDs
+                elif len(participant.identity) > 5 and "guest" not in participant.identity.lower() and "rraasi_music" not in participant.identity:
                      user_id = participant.identity
-                     logger.info(f"⚠️ Metadata missing/failed. Using Identity as userId: {user_id}")
-                else:
-                    logger.warning(f"Identity '{participant.identity}' looks like a guest/system ID. Ignoring.")
+                     logger.info(f"⚠️ Using raw Identity as userId: {user_id}")
         except Exception as e:
             logger.error(f"Error checking identity fallback: {e}")
     

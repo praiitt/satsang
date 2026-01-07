@@ -867,6 +867,8 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
 
   // Show controls when music is playing or when we have a current video
   if (!showControls && !currentVideoId) {
+    if (agentName === 'music-agent') return null;
+
     // Even if no current video, we may still show the search UI for manual play
     return (
       <div className="mb-3">
@@ -983,112 +985,114 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
       {/* Hidden audio element for MP3 playback */}
       <audio ref={audioRef} preload="auto" />
 
-      {/* Search bar for manual selection (collapsible) */}
-      <div className="mb-3">
-        {searchOpen ? (
-          <div className="border-border bg-card mx-3 mb-2 rounded-lg border p-3">
-            <div className="mb-2 flex items-center justify-between gap-2">
-              <div className="text-foreground text-sm font-semibold">खोजें</div>
-              <div className="flex items-center gap-2">
-                <div className="text-muted-foreground text-xs">
-                  {isReady ? 'Player ready' : 'Player loading…'}
-                </div>
-                {!isReady && !error && (
+      {/* Search bar for manual selection (collapsible) - Hidden for Music Agent */}
+      {agentName !== 'music-agent' && (
+        <div className="mb-3">
+          {searchOpen ? (
+            <div className="border-border bg-card mx-3 mb-2 rounded-lg border p-3">
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <div className="text-foreground text-sm font-semibold">खोजें</div>
+                <div className="flex items-center gap-2">
+                  <div className="text-muted-foreground text-xs">
+                    {isReady ? 'Player ready' : 'Player loading…'}
+                  </div>
+                  {!isReady && !error && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 p-0"
+                      title="Reconnect YouTube player"
+                      onClick={() => {
+                        console.log('[YouTubeBhajanPlayer] Manual YouTube retry clicked');
+                        retry();
+                      }}
+                    >
+                      ↻
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6 p-0"
-                    title="Reconnect YouTube player"
-                    onClick={() => {
-                      console.log('[YouTubeBhajanPlayer] Manual YouTube retry clicked');
-                      retry();
-                    }}
+                    className="h-6 w-6 p-0 text-xs"
+                    onClick={() => setSearchOpen(false)}
                   >
-                    ↻
+                    ✕
                   </Button>
-                )}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && searchQuery.trim()) handleSearch();
+                  }}
+                  placeholder="भजन / मंत्र / कीर्तन खोजें…"
+                  className="border-input bg-background text-foreground flex-1 rounded-lg border px-3 py-2 text-xs sm:text-sm"
+                />
                 <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6 p-0 text-xs"
-                  onClick={() => setSearchOpen(false)}
+                  variant="primary"
+                  size="sm"
+                  onClick={handleSearch}
+                  disabled={!searchQuery.trim() || isSearching}
+                  className="text-xs transition-colors sm:text-sm"
                 >
-                  ✕
+                  {isSearching ? 'खोज रहे…' : 'खोजें'}
                 </Button>
               </div>
+              {searchResults.length > 0 && (
+                <div className="mt-3 max-h-60 space-y-2 overflow-y-auto">
+                  {searchResults.map((video) => (
+                    <div
+                      key={video.videoId}
+                      className="bg-background hover:bg-background/80 flex items-center gap-2 rounded-md border p-2 text-xs transition-colors sm:text-sm"
+                    >
+                      {video.thumbnail && (
+                        <img
+                          src={video.thumbnail}
+                          alt={video.title}
+                          className="h-12 w-20 flex-shrink-0 rounded object-cover"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="line-clamp-2 font-semibold">{video.title}</div>
+                        <div className="text-muted-foreground mt-0.5 text-[10px] sm:text-xs">
+                          {video.channelTitle}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={!isReady}
+                        onClick={() => handlePlayFromSearch(video.videoId, video.title)}
+                        className="text-[10px] sm:text-xs"
+                      >
+                        Play
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="text-muted-foreground mt-2 text-[10px] sm:text-xs">
+                पहले यहाँ से भजन चुन सकते हैं – इससे YouTube प्लेयर को लोड होने का समय मिल जाता है।
+                बाद में {getAgentNameForHelp()} भी अपने आप भजन चला पाएंगे।
+              </div>
             </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && searchQuery.trim()) handleSearch();
-                }}
-                placeholder="भजन / मंत्र / कीर्तन खोजें…"
-                className="border-input bg-background text-foreground flex-1 rounded-lg border px-3 py-2 text-xs sm:text-sm"
-              />
+          ) : (
+            <div className="mx-3 mb-2 flex justify-end">
               <Button
-                variant="primary"
+                variant="outline"
                 size="sm"
-                onClick={handleSearch}
-                disabled={!searchQuery.trim() || isSearching}
-                className="text-xs transition-colors sm:text-sm"
+                onClick={() => setSearchOpen(true)}
+                className="text-xs"
               >
-                {isSearching ? 'खोज रहे…' : 'खोजें'}
+                🔍 खोजें
               </Button>
             </div>
-            {searchResults.length > 0 && (
-              <div className="mt-3 max-h-60 space-y-2 overflow-y-auto">
-                {searchResults.map((video) => (
-                  <div
-                    key={video.videoId}
-                    className="bg-background hover:bg-background/80 flex items-center gap-2 rounded-md border p-2 text-xs transition-colors sm:text-sm"
-                  >
-                    {video.thumbnail && (
-                      <img
-                        src={video.thumbnail}
-                        alt={video.title}
-                        className="h-12 w-20 flex-shrink-0 rounded object-cover"
-                      />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="line-clamp-2 font-semibold">{video.title}</div>
-                      <div className="text-muted-foreground mt-0.5 text-[10px] sm:text-xs">
-                        {video.channelTitle}
-                      </div>
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={!isReady}
-                      onClick={() => handlePlayFromSearch(video.videoId, video.title)}
-                      className="text-[10px] sm:text-xs"
-                    >
-                      Play
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="text-muted-foreground mt-2 text-[10px] sm:text-xs">
-              पहले यहाँ से भजन चुन सकते हैं – इससे YouTube प्लेयर को लोड होने का समय मिल जाता है।
-              बाद में {getAgentNameForHelp()} भी अपने आप भजन चला पाएंगे।
-            </div>
-          </div>
-        ) : (
-          <div className="mx-3 mb-2 flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSearchOpen(true)}
-              className="text-xs"
-            >
-              🔍 खोजें
-            </Button>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       {showMandala && (
         <MeditationMandalaVisualizer

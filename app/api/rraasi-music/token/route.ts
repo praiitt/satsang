@@ -49,7 +49,10 @@ export async function POST(req: Request) {
         // Generate a unique room name for this session to ensure 1:1 interaction with the agent
         const uniqueRoomName = `${RRAASI_MUSIC_ROOM_NAME}_${userId}_${Math.floor(Math.random() * 1000)}`;
 
-        const participantIdentity = `rraasi_music_${role}_${Math.floor(Math.random() * 10_000)}_${Date.now()}`;
+        // Use userId as the prefix for identity to ensure it's immediately available to the agent
+        // format: <userId>__<random>
+        // This avoids metadata sync race conditions
+        const participantIdentity = `${userId}__${Math.floor(Math.random() * 10_000)}_${Date.now()}`;
 
         const participantToken = await createParticipantToken(
             { identity: participantIdentity, name: participantName },
@@ -91,10 +94,14 @@ function createParticipantToken(
 ): Promise<string> {
     console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}`);
 
+    console.log(`[Token Creation] Metadata Object:`, { userId });
+    const metadataStr = JSON.stringify({ userId });
+    console.log(`[Token Creation] Metadata String:`, metadataStr);
+
     const at = new AccessToken(API_KEY!, API_SECRET!, {
         ...userInfo,
         ttl: '2h',
-        metadata: JSON.stringify({ userId }), // Include userId in metadata
+        metadata: metadataStr, // Include userId in metadata
     });
 
     const grant: VideoGrant = {
