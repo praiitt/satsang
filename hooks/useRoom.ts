@@ -48,6 +48,21 @@ export function useRoom(appConfig: AppConfig) {
         const endpoint = appConfig.tokenEndpoint ?? process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
         const url = new URL(endpoint, window.location.origin);
 
+        const currentUser = authRef.current.user;
+        const resolvedUserId = currentUser?.uid || currentUser?.phoneNumber;
+        const isAuthLoading = authRef.current.loading;
+
+        // Strict Debugging
+        if (!resolvedUserId) {
+          if (isAuthLoading) {
+            console.warn('⚠️ [useRoom] Auth is still loading. Token will have default_user.');
+          } else {
+            console.warn('⚠️ [useRoom] User is NOT logged in (or no UID). Token will have default_user.');
+          }
+        } else {
+          console.log('✅ [useRoom] Generating token for User ID:', resolvedUserId);
+        }
+
         try {
           const res = await fetch(endpoint, {
             method: 'POST',
@@ -63,27 +78,17 @@ export function useRoom(appConfig: AppConfig) {
                 }
                 : undefined,
               language: language, // Also send in body for compatibility
-              userId: authRef.current.user?.uid || authRef.current.user?.phoneNumber,
+              userId: resolvedUserId, // Explicitly use the resolved variable
               guruId: appConfig.metadata?.guruId, // Pass guruId if available
             }),
           });
-
-          const resolvedUserId = authRef.current.user?.uid || authRef.current.user?.phoneNumber;
-          if (!resolvedUserId) {
-            console.warn('⚠️ [useRoom] Requesting connection details WITHOUT User ID! Agent will see "default_user". Auth loading:', authRef.current.loading);
-          } else {
-            console.log('✅ [useRoom] Using User ID:', resolvedUserId);
-          }
 
           console.log('🔍 [useRoom] Connection details request sent', {
             agentName: appConfig.agentName,
             language,
             guruId: appConfig.metadata?.guruId,
             userId: resolvedUserId,
-            authState: {
-              isAuthenticated: !!authRef.current.user,
-              uid: authRef.current.user?.uid
-            }
+            authLoaded: !isAuthLoading
           });
 
           const data = await res.json();

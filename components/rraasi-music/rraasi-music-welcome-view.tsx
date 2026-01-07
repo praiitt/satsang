@@ -279,11 +279,21 @@ export const RRaaSiMusicWelcomeView = ({
             variant="primary"
             size="lg"
             onClick={onStartCall}
+            disabled={authLoading}
             className="mt-8 h-14 px-8 text-lg font-semibold shadow-xl hover:scale-105 transition-transform"
           >
-            <Plus className="w-5 h-5 mr-2" />
-            {mt('startButton')}
-            <span className="ml-2 text-xs opacity-75">• 50 coins</span>
+            {authLoading ? (
+              <>
+                <span className="w-5 h-5 mr-2 animate-spin rounded-full border-2 border-white/50 border-t-white"></span>
+                Checking account...
+              </>
+            ) : (
+              <>
+                <Plus className="w-5 h-5 mr-2" />
+                {mt('startButton')}
+                <span className="ml-2 text-xs opacity-75">• 50 coins</span>
+              </>
+            )}
           </Button>
           <p className="text-white/80 mt-3 text-sm font-medium drop-shadow-sm">
             {mt('freeTrial')}
@@ -388,7 +398,7 @@ export const RRaaSiMusicWelcomeView = ({
             <p className="text-gray-500 dark:text-gray-500 mb-6">
               {mt('browse.createFirst')}
             </p>
-            <Button onClick={onStartCall} variant="primary">
+            <Button onClick={onStartCall} variant="primary" disabled={authLoading}>
               <Plus className="w-5 h-5 mr-2" />
               {mt('startButton')}
             </Button>
@@ -438,7 +448,8 @@ export const RRaaSiMusicWelcomeView = ({
       {/* Floating Create Button (Mobile) */}
       <button
         onClick={onStartCall}
-        className="fixed bottom-6 right-6 md:hidden w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-200 z-50"
+        disabled={authLoading}
+        className="fixed bottom-6 right-6 md:hidden w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-200 z-50 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Create music - 50 coins"
         title="Create music - 50 coins"
       >
