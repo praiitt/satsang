@@ -532,55 +532,70 @@ async def entrypoint(ctx: JobContext):
     user_id = "default_user"
     user_language = "hi"  # Default to Hindi for devotional music
     
+    participant = None
+    
+    # 1. Get Participant
     try:
         logger.info("Waiting for participant to join...")
         participant = await ctx.wait_for_participant()
         logger.info(f"Participant joined: {participant.identity}")
-        
-        # Wait a small bit for metadata to sync if needed
-        if not participant.metadata:
-            for _ in range(5):
-                await asyncio.sleep(0.5)
-                if participant.metadata:
-                    break
-        
-        # Helper to extract info from metadata
-        def extract_user_info(metadata_str):
-            u_id = "default_user"
-            lang = "hi"
-            if metadata_str:
-                try:
-                    data = json.loads(metadata_str)
-                    u_id = data.get("userId", "default_user")
-                    lang_raw = str(data.get("language", "")).strip().lower()
-                    if lang_raw in ["hi", "hindi", "hin"]:
-                        lang = "hi"
-                    elif lang_raw in ["en", "english", "eng"]:
-                        lang = "en"
-                    else:
-                        lang = lang_raw if lang_raw else "hi"
-                except Exception as e:
-                    logger.error(f"Failed to parse metadata: {e}")
-            return u_id, lang
-
-        if participant.metadata:
-            logger.info(f"🔍 RAW METADATA RECEIVED: {participant.metadata}")
-            user_id, user_language = extract_user_info(participant.metadata)
-            logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}")
-        else:
-            logger.warning("No metadata found for participant")
-            
-        # FALLBACK: If userId is still default, try using identity as userId
-        # This covers cases where frontend sends userId as identity but no metadata
-        if user_id == "default_user" and participant.identity:
-            # Simple heuristic: if identity looks like a UUID or valid ID (not just "guest")
-            if len(participant.identity) > 5 and "guest" not in participant.identity.lower():
-                 user_id = participant.identity
-                 logger.info(f"⚠️ Metadata missing, using Identity as userId: {user_id}")
-
     except Exception as e:
-        logger.error(f"Error extracting metadata from participant: {e}")
-        logger.warning("Using defaults (hi, default_user)")
+        logger.error(f"Error waiting for participant: {e}")
+
+    # 2. Try Metadata Extraction (Independent Block)
+    if participant:
+        try:
+            # Wait a small bit for metadata to sync if needed
+            if not participant.metadata:
+                for _ in range(5):
+                    await asyncio.sleep(0.5)
+                    if participant.metadata:
+                        break
+            
+            # Helper to extract info from metadata
+            def extract_user_info(metadata_str):
+                u_id = "default_user"
+                lang = "hi"
+                if metadata_str:
+                    try:
+                        data = json.loads(metadata_str)
+                        u_id = data.get("userId", "default_user")
+                        lang_raw = str(data.get("language", "")).strip().lower()
+                        if lang_raw in ["hi", "hindi", "hin"]:
+                            lang = "hi"
+                        elif lang_raw in ["en", "english", "eng"]:
+                            lang = "en"
+                        else:
+                            lang = lang_raw if lang_raw else "hi"
+                    except Exception as e:
+                        logger.error(f"Failed to parse metadata: {e}")
+                return u_id, lang
+
+            if participant.metadata:
+                logger.info(f"🔍 RAW METADATA RECEIVED: {participant.metadata}")
+                user_id, user_language = extract_user_info(participant.metadata)
+                logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}")
+            else:
+                logger.warning("No metadata found for participant")
+                
+        except Exception as e:
+            logger.error(f"Error checking metadata: {e}")
+            # Continue to fallback
+
+    # 3. Fallback to Identity (Independent Block)
+    if participant and user_id == "default_user":
+        try:
+            # If userId is still default, try using identity as userId
+            # This covers cases where frontend sends userId as identity but no metadata
+            if participant.identity:
+                # Simple heuristic: if identity looks like a UUID or valid ID (not just "guest")
+                if len(participant.identity) > 5 and "guest" not in participant.identity.lower():
+                     user_id = participant.identity
+                     logger.info(f"⚠️ Metadata missing/failed. Using Identity as userId: {user_id}")
+                else:
+                    logger.warning(f"Identity '{participant.identity}' looks like a guest/system ID. Ignoring.")
+        except Exception as e:
+            logger.error(f"Error checking identity fallback: {e}")
     
     # Final validation
     if user_language not in {"hi", "en"}:
