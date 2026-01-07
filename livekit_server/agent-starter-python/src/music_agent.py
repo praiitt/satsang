@@ -188,11 +188,89 @@ generate_music(
             logger.info(f"Music generation started. Task ID: {task_id}")
             logger.info(f"Callback webhook will save track automatically")
 
+            # --- METADATA ENHANCEMENT ---
+            # Generate rich metadata immediately
+            # We don't await this if we want to return fast, but for now we'll await to ensure save
+            try:
+                mood_hint = "Spiritual" # Default if not passed, technically style contains mood
+                healing_meta = await self._generate_healing_metadata(title, style, mood_hint, lyrics)
+                
+                # Save pending record to Firebase
+                verify_db = FirebaseDB()
+                track_data = {
+                    "title": title,
+                    "status": "generating",
+                    "taskId": task_id,
+                    "prompt": lyrics or style, # Store the prompt used
+                    "style": style,
+                    "description": healing_meta.get("description"),
+                    "healingBenefits": healing_meta.get("benefits"),
+                    "tags": healing_meta.get("tags"),
+                    "uploadMetadata": {
+                        "title": healing_meta.get("seoTitle"),
+                        "description": healing_meta.get("seoDescription"),
+                        "keywords": healing_meta.get("tags")
+                    },
+                    "category": "rraasi_music"
+                }
+                # Save using taskId as document ID so callback can merge
+                verify_db.save_music_track(self.user_id, track_data, track_id=task_id)
+                logger.info("✅ Saved pending track with rich metadata")
+                
+            except Exception as meta_error:
+                logger.error(f"Failed to save metadata: {meta_error}")
+                # Don't fail the whole request, just log
+
             return f"I have started creating your spiritual track: '{title}'. It usually takes about 60-90 seconds to manifest. I will notify you when it's ready, or you can ask me to 'play my last track' in a minute!"
 
         except Exception as e:
             logger.error(f"Music generation failed: {e}")
             return "I apologize, but I encountered an error while trying to generate the music. Please try again."
+
+    async def _generate_healing_metadata(self, title: str, style: str, mood: str, lyrics: str) -> dict:
+        """
+        Generate healing description, benefits, and SEO tags for the music.
+        """
+        prompt = f"""You are a spiritual music curator and SEO expert. A user has created a music track with the following details:
+Title: {title}
+Style: {style}
+Mood: {mood}
+Lyrics/Prompt: {lyrics}
+
+Generate a rich metadata profile for this track in JSON format:
+1. "description": A beautiful, poetic, healing-focused description (2-3 sentences).
+2. "benefits": A list of 3 short spiritual/emotional benefits (e.g., "Calms the mind").
+3. "tags": A list of 10 relevant SEO hashtags for SoundCloud/YouTube (e.g., #meditation, #healing, #rraasi).
+4. "seoTitle": A catchy, SEO-friendly title for YouTube/SoundCloud (e.g., "Deep Healing Flute Meditation | RRAASI").
+5. "seoDescription": A longer description suitable for YouTube video description, including the benefits.
+
+Respond ONLY with the JSON object.
+"""
+        try:
+            import openai
+            client = openai.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            
+            response = await client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a spiritual music expert."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                temperature=0.7
+            )
+            
+            return json.loads(response.choices[0].message.content)
+        except Exception as e:
+            logger.error(f"Metadata generation failed: {e}")
+            # Fallback
+            return {
+                "description": f"A beautiful {style} track titled '{title}' created with RRAASI AI.",
+                "benefits": ["Relaxation", "Peace", "Joy"],
+                "tags": ["#rraasi", "#music", "#healing"],
+                "seoTitle": f"{title} | RRAASI Music",
+                "seoDescription": f"Listen to {title}, a generated {style} track."
+            }
 
     @function_tool
     async def generate_lyrics(

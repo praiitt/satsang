@@ -46,10 +46,10 @@ export default function LoginPage() {
     <div className="bg-background flex min-h-screen items-center justify-center p-2 sm:p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
-            <span className="text-3xl">🕉️</span>
+          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-primary/20 bg-black shadow-xl">
+            <img src="/branding/logo.png" alt="RRAASI" className="h-full w-full object-cover" />
           </div>
-          <h1 className="text-foreground text-3xl font-bold">RRAASI</h1>
+          <h1 className="text-foreground text-3xl font-bold tracking-tight">RRAASI</h1>
           <p className="text-muted-foreground mt-2 text-sm">{t('auth.loginSuccess')}</p>
         </div>
         <PhoneAuthForm onSuccess={handleLoginSuccess} />

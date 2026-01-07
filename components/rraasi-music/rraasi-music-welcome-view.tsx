@@ -40,6 +40,7 @@ interface MusicTrack {
   audioUrl: string;
   imageUrl?: string; // Add imageUrl
   prompt?: string;
+  description?: string; // Add description
   category?: MusicCategory;
   createdAt: any;
 }
@@ -139,6 +140,7 @@ export const RRaaSiMusicWelcomeView = ({
           audioUrl: t.audioUrl || t.audio_url,
           imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl, // Map image
           prompt: t.prompt,
+          description: t.description || t.caption || t.prompt, // Map description (fallback to prompt)
           category: t.category,
           createdAt: t.createdAt || t.created_at,
         }));
@@ -180,6 +182,7 @@ export const RRaaSiMusicWelcomeView = ({
         audioUrl: t.audioUrl || t.audio_url,
         imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl, // Map image
         prompt: t.prompt,
+        description: t.description || t.caption || t.prompt, // Map description (fallback to prompt)
         category: t.category,
         createdAt: t.createdAt, // Backend should return serialized date or timestamp
       }));
@@ -350,6 +353,7 @@ export const RRaaSiMusicWelcomeView = ({
                 imageUrl={track.imageUrl} // Pass imageUrl
                 category={track.category || 'other'}
                 prompt={track.prompt}
+                description={track.description} // Pass description
                 createdAt={track.createdAt}
                 onPlay={() => handlePlay(track.id)}
               />
@@ -414,6 +418,7 @@ export const RRaaSiMusicWelcomeView = ({
                   imageUrl={track.imageUrl} // Pass imageUrl
                   category={track.category || 'other'}
                   prompt={track.prompt}
+                  description={track.description} // Pass description
                   createdAt={track.createdAt?.toDate?.()?.toISOString() || track.createdAt || new Date().toISOString()}
                   onPlay={() => handlePlay(track.id)}
                 />
