@@ -624,11 +624,13 @@ async def entrypoint(ctx: JobContext):
     # 2. Try Metadata Extraction (Independent Block)
     if participant:
         try:
-            # Wait a small bit for metadata to sync if needed
+            # Wait a bit for metadata to sync if needed
             if not participant.metadata:
-                for _ in range(5):
+                logger.info("Metadata empty, waiting for sync...")
+                for i in range(10):
                     await asyncio.sleep(0.5)
                     if participant.metadata:
+                        logger.info(f"Metadata synced after {i+1} attempts")
                         break
             
             # Helper to extract info from metadata
@@ -638,7 +640,8 @@ async def entrypoint(ctx: JobContext):
                 if metadata_str:
                     try:
                         data = json.loads(metadata_str)
-                        u_id = data.get("userId", "default_user")
+                        # Try multiple keys for userId
+                        u_id = data.get("userId") or data.get("uid") or data.get("user_id") or "default_user"
                         lang_raw = str(data.get("language", "")).strip().lower()
                         if lang_raw in ["hi", "hindi", "hin"]:
                             lang = "hi"
@@ -664,6 +667,9 @@ async def entrypoint(ctx: JobContext):
     # 3. Fallback to Identity (Independent Block)
     if participant and user_id == "default_user":
         try:
+            # DEBUG LOG
+            logger.info(f"debug_identity_fallback: Participant Identity='{participant.identity}', Name='{participant.name}', Metadata='{participant.metadata}'")
+            
             # If userId is still default, try using identity as userId
             # This covers cases where frontend sends userId as identity but no metadata
             if participant.identity:
