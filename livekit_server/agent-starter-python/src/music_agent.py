@@ -544,23 +544,40 @@ async def entrypoint(ctx: JobContext):
                 if participant.metadata:
                     break
         
+        # Helper to extract info from metadata
+        def extract_user_info(metadata_str):
+            u_id = "default_user"
+            lang = "hi"
+            if metadata_str:
+                try:
+                    data = json.loads(metadata_str)
+                    u_id = data.get("userId", "default_user")
+                    lang_raw = str(data.get("language", "")).strip().lower()
+                    if lang_raw in ["hi", "hindi", "hin"]:
+                        lang = "hi"
+                    elif lang_raw in ["en", "english", "eng"]:
+                        lang = "en"
+                    else:
+                        lang = lang_raw if lang_raw else "hi"
+                except Exception as e:
+                    logger.error(f"Failed to parse metadata: {e}")
+            return u_id, lang
+
         if participant.metadata:
             logger.info(f"🔍 RAW METADATA RECEIVED: {participant.metadata}")
-            metadata = json.loads(participant.metadata)
-            user_id = metadata.get("userId", "default_user")
-            
-            # Parse language preference
-            raw_lang = str(metadata.get("language", "")).strip().lower()
-            if raw_lang in ["hi", "hindi", "hin"]:
-                user_language = "hi"
-            elif raw_lang in ["en", "english", "eng"]:
-                user_language = "en"
-            else:
-                user_language = raw_lang if raw_lang else "hi"
-            
+            user_id, user_language = extract_user_info(participant.metadata)
             logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}")
         else:
-            logger.warning("No metadata found for participant, using defaults")
+            logger.warning("No metadata found for participant")
+            
+        # FALLBACK: If userId is still default, try using identity as userId
+        # This covers cases where frontend sends userId as identity but no metadata
+        if user_id == "default_user" and participant.identity:
+            # Simple heuristic: if identity looks like a UUID or valid ID (not just "guest")
+            if len(participant.identity) > 5 and "guest" not in participant.identity.lower():
+                 user_id = participant.identity
+                 logger.info(f"⚠️ Metadata missing, using Identity as userId: {user_id}")
+
     except Exception as e:
         logger.error(f"Error extracting metadata from participant: {e}")
         logger.warning("Using defaults (hi, default_user)")
@@ -705,6 +722,26 @@ async def entrypoint(ctx: JobContext):
             
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")
+
+    # Listen for metadata updates (Late Login Fix)
+    @ctx.room.on("participant_metadata_changed")
+    def on_participant_metadata_changed(participant, prev_metadata, **kwargs):
+        """Update User ID if metadata changes mid-session"""
+        if not participant.metadata:
+            return
+            
+        try:
+            data = json.loads(participant.metadata)
+            new_user_id = data.get("userId")
+            
+            if new_user_id and new_user_id != "default_user" and new_user_id != assistant.user_id:
+                logger.info(f"🔄 User logged in/updated mid-session. Updating ID from {assistant.user_id} to {new_user_id}")
+                assistant.user_id = new_user_id
+                
+                # Verify update
+                logger.info(f"✅ Music Agent now using userId: {assistant.user_id}")
+        except Exception as e:
+            logger.error(f"Error processing metadata update: {e}")
     
     # Send language-appropriate welcome message
     if user_language == "hi":
