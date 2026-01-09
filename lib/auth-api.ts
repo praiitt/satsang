@@ -130,3 +130,24 @@ export async function checkPhoneNumber(
 
   return response.json();
 }
+
+/**
+ * Trigger Marketing Welcome (Eco-Culture)
+ */
+export async function triggerMarketingWelcome(data: {
+  userId: string;
+  phone?: string;
+  email?: string;
+  serviceOfInterest: string;
+  name?: string;
+  zodiacSign?: string;
+}): Promise<void> {
+  // Fire and forget - don't block UI
+  fetch(`${AUTH_SERVER_URL}/marketing/welcome`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  }).catch((err) => console.error('Marketing Trigger Failed:', err));
+}

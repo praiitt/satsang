@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
 import { PhoneAuthForm } from '@/components/auth/phone-auth-form';
 import { useLanguage } from '@/contexts/language-context';
+import { Logo } from '@/components/ui/logo';
 
 export default function LoginPage() {
   const searchParams = useSearchParams();
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const { isAuthenticated, loading } = useAuth();
   const { t } = useLanguage();
   const returnUrl = searchParams.get('returnUrl') || '/';
+  const service = searchParams.get('service') || undefined;
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -46,13 +48,16 @@ export default function LoginPage() {
     <div className="bg-background flex min-h-screen items-center justify-center p-2 sm:p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center overflow-hidden rounded-full border-2 border-primary/20 bg-black shadow-xl">
-            <img src="/branding/logo.png" alt="RRAASI" className="h-full w-full object-cover" />
-          </div>
-          <h1 className="text-foreground text-3xl font-bold tracking-tight">RRAASI</h1>
+          {/* Use the fixed round logo or just the new Logo component? User said global logo.
+                Let's simplify to just the big Logo text for a cleaner look, OR
+                use the Fixed Round Logo + Text.
+                Let's use: Fixed Round Logo + Big Text Component
+            */}
+          {/* Round logo removed as per user request */}
+          <Logo size="lg" className="justify-center mx-auto flex" />
           <p className="text-muted-foreground mt-2 text-sm">{t('auth.loginSuccess')}</p>
         </div>
-        <PhoneAuthForm onSuccess={handleLoginSuccess} />
+        <PhoneAuthForm onSuccess={handleLoginSuccess} service={service} />
         <div className="mt-6 text-center">
           <p className="text-muted-foreground text-xs">{t('auth.loginSuccess')}</p>
         </div>

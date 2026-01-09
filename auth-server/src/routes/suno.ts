@@ -365,4 +365,115 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
     }
 });
 
+/**
+ * POST /api/suno/sync
+ * Manually sync the status of a specific track from Suno API
+ * Use this when callback fails or is delayed.
+ */
+router.post('/sync', async (req: Request, res: Response) => {
+    try {
+        const { taskId, userId } = req.body;
+
+        if (!taskId) {
+            return res.status(400).json({ error: 'taskId is required' });
+        }
+
+        console.log(`[Suno Sync] Manual sync requested for task: ${taskId}`);
+
+        // 1. Get current doc to ensure ownership
+        const db = getDb();
+        const docRef = db.collection('music_tracks').doc(taskId); // We used taskId as docId in agent
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            // Try searching by field if doc ID isn't taskId (legacy compatibility)
+            const querySnapshot = await db.collection('music_tracks').where('sunoId', '==', taskId).limit(1).get();
+            if (querySnapshot.empty) {
+                return res.status(404).json({ error: 'Track not found in database' });
+            }
+            // Found via query
+            const trackDoc = querySnapshot.docs[0];
+            // Update reference
+            // docRef = trackDoc.ref; // const assignment error, we'll handle logical flow below
+
+            // Re-implement flow for queried doc
+            await processSync(trackDoc.ref, taskId, trackDoc.data(), userId);
+            return res.json({ success: true, message: 'Sync processed via query' });
+        }
+
+        // Process for direct doc match
+        await processSync(docRef, taskId, doc.data(), userId);
+        return res.json({ success: true, message: 'Sync processed' });
+
+    } catch (error) {
+        console.error('[Suno Sync] Error syncing track:', error);
+        res.status(500).json({ error: 'Failed to sync track status' });
+    }
+});
+
+/**
+ * Helper to process the sync logic
+ */
+async function processSync(docRef: admin.firestore.DocumentReference, taskId: string, data: any, userId?: string) {
+    // Optional: Verify ownership if userId provided
+    if (userId && data.userId && data.userId !== userId) {
+        throw new Error('Unauthorized: Track belongs to another user');
+    }
+
+    // 2. Call Suno API to get status
+    // Using the unofficial API standard endpoint
+    const sunoUrl = `https://api.sunoapi.org/api/v1/generate/record-info?taskId=${taskId}`;
+    const sunoKey = process.env.SUNO_API_KEY;
+
+    if (!sunoKey) {
+        throw new Error('Server missing SUNO_API_KEY');
+    }
+
+    const response = await fetch(sunoUrl, {
+        headers: {
+            'Authorization': `Bearer ${sunoKey}`
+        }
+    });
+
+    if (!response.ok) {
+        throw new Error(`Suno API responded with ${response.status}`);
+    }
+
+    const result = await response.json();
+    console.log(`[Suno Sync] API Result for ${taskId}:`, JSON.stringify(result));
+
+    // 3. Update Firestore if complete
+    // Unofficial wrapper returns { code: 200, data: { status: 'COMPLETE', response: { ... } } } 
+    // OR directly the data depending on version. Let's handle generic "audio_url" presence.
+
+    // Normalize data structure based on inspection
+    const trackInfo = result.data?.response || result.data || result;
+    // Check various paths where audio_url might be
+    const audioUrl = trackInfo.audio_url || (Array.isArray(trackInfo) ? trackInfo[0]?.audio_url : null);
+
+    if (audioUrl) {
+        const updates: any = {
+            audioUrl: audioUrl,
+            status: 'COMPLETED',
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        };
+
+        // Add other metadata if available
+        if (trackInfo.image_url) updates.imageUrl = trackInfo.image_url;
+        if (trackInfo.title) updates.title = trackInfo.title;
+        if (trackInfo.duration) updates.metadata = { ...data.metadata, duration: trackInfo.duration };
+
+        await docRef.set(updates, { merge: true });
+        console.log(`[Suno Sync] ✅ Updated track ${taskId} with audioUrl`);
+
+        // Trigger Coin Deduction if not already done
+        if (!data.coinsDeducted && data.userId) {
+            await deductMusicCoins(data.userId, taskId, updates.title || data.title || 'Synced Track');
+            await docRef.update({ coinsDeducted: true });
+        }
+    } else {
+        console.log(`[Suno Sync] Track ${taskId} still pending or no audioUrl found`);
+    }
+}
+
 export default router;

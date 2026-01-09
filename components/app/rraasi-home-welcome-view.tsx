@@ -30,7 +30,7 @@ interface FeatureSectionProps {
     features: string[];
     actionText: string;
     actionHref: string;
-    icon: string;
+    icon: React.ReactNode;
     align: 'left' | 'right';
     gradient: string;
     delay?: number;
@@ -62,11 +62,8 @@ function FeatureSection({
         >
             {/* Visual Side */}
             <div className="flex-1 flex justify-center">
-                <div className={`relative flex aspect-square h-40 w-40 sm:h-64 sm:w-64 lg:h-96 lg:w-96 items-center justify-center rounded-full bg-gradient-to-br ${gradient} p-1 shadow-2xl transition-all duration-500`}>
-                    <div className="absolute inset-0 rounded-full bg-white/20 blur-3xl" />
-                    <div className="relative flex h-full w-full items-center justify-center rounded-full bg-background/90 backdrop-blur-sm">
-                        <span className="text-6xl sm:text-8xl lg:text-9xl filter drop-shadow-md select-none">{icon}</span>
-                    </div>
+                <div className="relative flex h-40 w-40 sm:h-64 sm:w-64 lg:h-96 lg:w-96 items-center justify-center transition-all duration-500 hover:scale-105">
+                    {icon}
                 </div>
             </div>
 
@@ -154,8 +151,8 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
         <div ref={ref} className="relative w-full overflow-hidden">
             <SacredGeometryBg />
 
-            {/* Hero Section */}
-            <section className="relative flex min-h-[90vh] flex-col items-center justify-center px-4 py-20 text-center overflow-hidden">
+            {/* Hero Section - Justify End to push content down so face is visible */}
+            <section className="relative flex min-h-[90vh] flex-col items-center justify-end px-4 pb-32 pt-20 text-center overflow-hidden">
                 {/* Bot Video Background */}
                 <div className="absolute inset-0 w-full h-full z-0">
                     <video
@@ -198,11 +195,9 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                     transition={{ duration: 0.8 }}
                     className="relative z-10 max-w-4xl"
                 >
-                    <OmSymbol />
+                    {/* Om symbol removed as per user request */}
 
-                    <h1 className="mb-6 text-5xl font-bold tracking-tight text-foreground sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg">
-                        {t('rraasHome.title')}
-                    </h1>
+                    {/* Title "RRAASI" removed as per user request */}
 
                     <p className="mx-auto mb-8 max-w-2xl text-xl font-medium text-primary sm:text-2xl md:text-3xl drop-shadow-md">
                         {t('rraasHome.tagline')}
@@ -256,8 +251,8 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             t('rraasHome.satsangFeature4'),
                         ]}
                         actionText={t('rraasHome.satsangAction')}
-                        actionHref="/satsang"
-                        icon="🕉️"
+                        actionHref="/login?returnUrl=/satsang&service=guru"
+                        icon={<img src="/services/satsang-icon-fixed.png" alt="Satsang" className="w-full h-full object-contain drop-shadow-xl" />}
                         align="left"
                         gradient="from-orange-500/30 to-amber-500/30"
                     />
@@ -274,8 +269,8 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             t('rraasHome.musicFeature4'),
                         ]}
                         actionText={t('rraasHome.musicAction')}
-                        actionHref="/rraasi-music"
-                        icon="🎵"
+                        actionHref="/login?returnUrl=/rraasi-music&service=music"
+                        icon={<img src="/services/music-icon-fixed.png" alt="Divine Music" className="w-full h-full object-contain drop-shadow-xl" />}
                         align="right"
                         gradient="from-blue-500/30 to-cyan-500/30"
                     />
@@ -292,8 +287,8 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             t('rraasHome.tarotFeature4'),
                         ]}
                         actionText={t('rraasHome.tarotAction')}
-                        actionHref="/tarot"
-                        icon="🔮"
+                        actionHref="/login?returnUrl=/tarot&service=tarot"
+                        icon={<img src="/services/tarot-icon-fixed.png" alt="Mystic Tarot" className="w-full h-full object-contain drop-shadow-xl" />}
                         align="left"
                         gradient="from-purple-500/30 to-indigo-500/30"
                     />
@@ -310,8 +305,8 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             t('rraasHome.astrologyFeature4'),
                         ]}
                         actionText={t('rraasHome.astrologyAction')}
-                        actionHref="/vedic-jyotish"
-                        icon="⭐"
+                        actionHref="/login?returnUrl=/vedic-jyotish&service=astrology"
+                        icon={<img src="/services/astrology-icon-fixed.png" alt="Vedic Astrology" className="w-full h-full object-contain drop-shadow-xl" />}
                         align="left"
                         gradient="from-purple-500/30 to-pink-500/30"
                         badge="Coming Soon — Early Access"

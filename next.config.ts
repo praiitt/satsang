@@ -87,6 +87,11 @@ const nextConfig: NextConfig = {
         source: '/backend/auth/:path*',
         destination: `${AUTH_URL}/auth/:path*`,
       },
+      // Marketing API (Auth Server)
+      {
+        source: '/backend/marketing/:path*',
+        destination: `${AUTH_URL}/marketing/:path*`,
+      },
       // Astrology Backend Proxy (Port 3003)
       // We proxy everything else under /api/ to the main backend if not caught above
       // But we must be careful. Let's list specific major routes or use a fallback.

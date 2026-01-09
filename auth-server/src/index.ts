@@ -11,6 +11,7 @@ import authRoutes from './routes/auth.js';
 import sunoRoutes from './routes/suno.js';
 import tarotRoutes from './routes/tarot.js';
 import coinRoutes from './routes/coins.js';
+import marketingRoutes from './routes/marketing.js';
 
 // Get __dirname equivalent for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -19,10 +20,10 @@ const __dirname = path.dirname(__filename);
 
 // Load .env.local from project root
 const envPaths = [
-  path.resolve(process.cwd(), '../.env.local'),
-  path.resolve(process.cwd(), '.env.local'),
+  path.resolve(process.cwd(), '.env.local'),      // Check local folder FIRST
+  path.resolve(process.cwd(), '../.env.local'),   // Then check parent folder
+  path.resolve(__dirname, '../.env.local'),       // Then relative path
   path.resolve(__dirname, '../../.env.local'),
-  path.resolve(__dirname, '../.env.local'),
 ];
 
 let envLoaded = false;
@@ -66,6 +67,7 @@ app.use('/auth', authRoutes);
 app.use('/suno', sunoRoutes);
 app.use('/tarot', tarotRoutes);
 app.use('/coins', coinRoutes);
+app.use('/marketing', marketingRoutes);
 
 app.get('/test-coins', (req, res) => res.json({ status: 'ok', message: 'Auth Server is running' }));
 

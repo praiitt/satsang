@@ -7,6 +7,7 @@ import { LoginLink } from '@/components/app/login-link';
 import { CoinBalanceBadge } from '@/components/ui/coin-balance-badge';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/components/auth/auth-provider';
+import { Logo } from '@/components/ui/logo';
 
 export function SiteHeader() {
   const { t } = useLanguage();
@@ -17,14 +18,8 @@ export function SiteHeader() {
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
           {/* RRAASI Logo */}
-          {/* RRAASI Horizontal Logo */}
-          <div className="relative h-9 w-auto min-w-[120px] sm:h-12">
-            <img
-              src="/branding/logo-horizontal.png"
-              alt="RRAASI"
-              className="h-full w-auto object-contain"
-            />
-          </div>
+          {/* RRAASI Logo */}
+          <Logo />
         </Link>
         <nav className="flex items-center gap-2 sm:gap-4">
 
@@ -42,7 +37,7 @@ export function SiteHeader() {
           <LanguageSelector />
           <LoginLink />
         </nav>
-      </div>
-    </header>
+      </div >
+    </header >
   );
 }

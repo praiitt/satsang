@@ -1,4 +1,4 @@
-import { Public_Sans } from 'next/font/google';
+import { Public_Sans, Cinzel } from 'next/font/google';
 import localFont from 'next/font/local';
 import { headers } from 'next/headers';
 import Script from 'next/script';
@@ -13,6 +13,11 @@ import '@/styles/globals.css';
 
 const publicSans = Public_Sans({
   variable: '--font-public-sans',
+  subsets: ['latin'],
+});
+
+const cinzel = Cinzel({
+  variable: '--font-cinzel',
   subsets: ['latin'],
 });
 
@@ -60,6 +65,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       className={cn(
         publicSans.variable,
         commitMono.variable,
+        cinzel.variable,
         'scroll-smooth font-sans antialiased'
       )}
     >

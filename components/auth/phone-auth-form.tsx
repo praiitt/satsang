@@ -5,6 +5,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
 import { toastAlert } from '@/components/livekit/alert-toast';
 import { Button } from '@/components/livekit/button';
+import { getFirebaseAuth } from '@/lib/firebase-client';
+import { triggerMarketingWelcome } from '@/lib/auth-api';
 import {
   Select,
   SelectContent,
@@ -20,9 +22,10 @@ import { useAuth } from './auth-provider';
 interface PhoneAuthFormProps {
   onSuccess?: () => void;
   className?: string;
+  service?: string;
 }
 
-export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
+export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormProps) {
   const { sendOTP, verifyOTP } = useAuth();
   const { t, language } = useLanguage();
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
@@ -148,6 +151,18 @@ export function PhoneAuthForm({ onSuccess, className }: PhoneAuthFormProps) {
       if (onSuccess) {
         await onSuccess();
       }
+
+      // Trigger Marketing Welcome (Fire and Forget)
+      const currentUser = getFirebaseAuth().currentUser;
+      if (currentUser && service) {
+        triggerMarketingWelcome({
+          userId: currentUser.uid,
+          phone: currentUser.phoneNumber || undefined,
+          email: currentUser.email || undefined,
+          serviceOfInterest: service,
+        });
+      }
+
       toastAlert({
         title: 'Success!',
         description: 'You have been logged in successfully.',

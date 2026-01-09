@@ -150,8 +150,9 @@ generate_music(
         logger.info(f"Generating music: {title} ({style}) - Instrumental: {is_instrumental}")
         
         # Check if user is logged in
-        if self.user_id == "default_user" or not self.user_id:
-            return "To create music, you need to be logged in. Please log in to the application so I can save your creations to your personal library."
+        # User restriction removed as per user request
+        # if self.user_id == "default_user" or not self.user_id:
+        #    return "To create music, you need to be logged in..."
         
         try:
             # Use specific callback server for webhooks

@@ -2,7 +2,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: [
       'build',
-      '-t', 'gcr.io/rraasi-8a619/satsang-frontend',
+      '-t', 'gcr.io/rraasi-8a619/satsang-frontend:fresh',
       '--build-arg', 'NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBkxVOuhaVrU3Xz5M1_v0iWKKRQUwWd3TU',
       '--build-arg', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=rraasi-8a619.firebaseapp.com',
       '--build-arg', 'NEXT_PUBLIC_FIREBASE_PROJECT_ID=rraasi-8a619',

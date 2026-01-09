@@ -1,12 +1,13 @@
 import Link from 'next/link';
+import { Logo } from '@/components/ui/logo';
 
 export function SiteFooter() {
   return (
     <footer className="bg-background/95 border-border mt-8 w-full border-t">
       <div className="mx-auto w-full max-w-6xl px-4 py-6">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <p className="text-muted-foreground text-xs">
-            © {new Date().getFullYear()} RRAASI. सर्वाधिकार सुरक्षित।
+          <p className="text-muted-foreground text-xs flex items-center gap-1">
+            © {new Date().getFullYear()} <Logo as="span" size="sm" className="text-base sm:text-lg" />. सर्वाधिकार सुरक्षित।
           </p>
           <nav className="flex flex-wrap items-center gap-4 text-xs">
             <Link href="/#faq" className="text-muted-foreground hover:text-foreground">
