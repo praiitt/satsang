@@ -686,6 +686,35 @@ async def entrypoint(ctx: JobContext):
                      logger.info(f"⚠️ Using raw Identity as userId: {user_id}")
         except Exception as e:
             logger.error(f"Error checking identity fallback: {e}")
+
+    # 4. Session Map Lookup (The Robust Fix)
+    if user_id == "default_user":
+        try:
+            import aiohttp
+            room_name = ctx.room.name
+            logger.info(f"🔄 Checking Session Map for room: {room_name}")
+            
+            auth_server_url = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
+            # Local dev fallback if needed, but env var should be set
+            if "localhost" in auth_server_url:
+                 # Ensure we can reach logic from python agent container/env
+                 pass
+
+            map_url = f"{auth_server_url}/livekit/session/{room_name}"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(map_url) as response:
+                    if response.status == 200:
+                        data = await response.json()
+                        mapped_user_id = data.get("userId")
+                        if mapped_user_id:
+                            user_id = mapped_user_id
+                            logger.info(f"✅ FOUND userId via Session Map: {user_id}")
+                    else:
+                        logger.warning(f"Session Map not found (status {response.status})")
+
+        except Exception as e:
+             logger.error(f"Error querying session map: {e}")
     
     # Final validation
     if user_language not in {"hi", "en"}:

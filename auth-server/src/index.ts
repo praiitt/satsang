@@ -11,9 +11,16 @@ import authRoutes from './routes/auth.js';
 import sunoRoutes from './routes/suno.js';
 import tarotRoutes from './routes/tarot.js';
 import coinRoutes from './routes/coins.js';
-import marketingRoutes from './routes/marketing.js';
+import livekitRoutes from './routes/livekit.js';
 
-// Get __dirname equivalent for ES modules
+// ... imports
+
+app.use('/auth', authRoutes);
+app.use('/suno', sunoRoutes);
+app.use('/tarot', tarotRoutes);
+app.use('/coins', coinRoutes);
+app.use('/marketing', marketingRoutes);
+app.use('/livekit', livekitRoutes); // Add this
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

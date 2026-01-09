@@ -160,6 +160,11 @@ const nextConfig: NextConfig = {
         source: '/api/geocoding/:path*',
         destination: `${BACKEND_URL}/api/geocoding/:path*`,
       },
+      // LiveKit Session Mapping (Auth Server)
+      {
+        source: '/api/livekit/map-session',
+        destination: `${AUTH_URL}/livekit/map-session`,
+      },
       {
         source: '/api/livekit/:path*',
         destination: `${BACKEND_URL}/api/livekit/:path*`,

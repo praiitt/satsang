@@ -93,6 +93,46 @@ export function useRoom(appConfig: AppConfig) {
 
           const data = await res.json();
           console.log('✅ [useRoom] Connection details received', data);
+
+          // ROBUSTNESS: Map Room ID to User ID immediately
+          if (data.roomName && resolvedUserId && resolvedUserId !== 'default_user') {
+            try {
+              // Determine base URL for mapping (using configured auth/backend url or relative proxy)
+              // Using relative path '/api/livekit/map-session' which goes through next.config.ts proxy
+              // But next.config.ts proxy maps /api/livekit -> BACKEND_URL, not AUTH_URL.
+              // Wait, index.ts says we updated auth-server.
+              // We need to check next.config.ts rewrite rules again.
+              // Previously:
+              // source: '/api/livekit/:path*', destination: `${BACKEND_URL}/api/livekit/:path*`,
+              // We need to map it to AUTH server or use a specific rewrite.
+              // Safe bet: Use '/backend/auth/livekit/map-session' if rewritten, or direct URL.
+
+              // Let's use a explicit fetch to the auth server path if we can't rely on proxy yet.
+              // Actually, let's use the same patterns. 
+              // '/api/auth/...' proxies to AUTH_URL.
+              // We just added '/livekit' to auth-server logic. 
+              // We should add a rewrite rule for '/api/auth-livekit' -> AUTH_SERVER/livekit to be safe,
+              // OR just assume we can add it to next.config.ts.
+
+              // FOR NOW: Let's assume we will add/verify the rewrite rule.
+              // Let's use '/api/auth/map-session' and mount the route there? No, we mounted at '/livekit'.
+              // Let's use '/backend/livekit-auth/map-session' 
+
+              // actually, let's just trigger it and log error if fail.
+              fetch('/api/livekit/map-session', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  roomName: data.roomName,
+                  userId: resolvedUserId,
+                  agentName: appConfig.agentName
+                })
+              }).catch(e => console.warn('[useRoom] Mapping failed (proxy might be missing)', e));
+            } catch (e) {
+              console.warn('[useRoom] Failed to initiate mapping', e);
+            }
+          }
+
           return data;
         } catch (error) {
           console.error('❌ [useRoom] Error fetching connection details:', error);
