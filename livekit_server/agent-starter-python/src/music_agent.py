@@ -190,37 +190,39 @@ generate_music(
             logger.info(f"Callback webhook will save track automatically")
 
             # --- METADATA ENHANCEMENT ---
-            # Generate rich metadata immediately
-            # We don't await this if we want to return fast, but for now we'll await to ensure save
+            healing_meta = {}
             try:
-                mood_hint = "Spiritual" # Default if not passed, technically style contains mood
+                mood_hint = "Spiritual"
+                # Generate metadata (can fail)
                 healing_meta = await self._generate_healing_metadata(title, style, mood_hint, lyrics)
-                
-                # Save pending record to Firebase
+            except Exception as meta_error:
+                logger.error(f"Failed to generate metadata: {meta_error}")
+                # Continue with empty/basic metadata
+            
+            try:
+                # Save pending record to Firebase (CRITICAL Step)
                 verify_db = FirebaseDB()
                 track_data = {
                     "title": title,
                     "status": "generating",
                     "taskId": task_id,
-                    "prompt": lyrics or style, # Store the prompt used
+                    "prompt": lyrics or style,
                     "style": style,
-                    "description": healing_meta.get("description"),
-                    "healingBenefits": healing_meta.get("benefits"),
-                    "tags": healing_meta.get("tags"),
+                    "description": healing_meta.get("description", f"A beautiful {style} track"),
+                    "healingBenefits": healing_meta.get("benefits", []),
+                    "tags": healing_meta.get("tags", []),
                     "uploadMetadata": {
-                        "title": healing_meta.get("seoTitle"),
-                        "description": healing_meta.get("seoDescription"),
-                        "keywords": healing_meta.get("tags")
+                        "title": healing_meta.get("seoTitle", title),
+                        "description": healing_meta.get("seoDescription", ""),
+                        "keywords": healing_meta.get("tags", [])
                     },
                     "category": "rraasi_music"
                 }
                 # Save using taskId as document ID so callback can merge
                 verify_db.save_music_track(self.user_id, track_data, track_id=task_id)
-                logger.info("✅ Saved pending track with rich metadata")
-                
-            except Exception as meta_error:
-                logger.error(f"Failed to save metadata: {meta_error}")
-                # Don't fail the whole request, just log
+                logger.info("✅ Saved pending track to Firestore")
+            except Exception as db_error:
+                logger.error(f"Failed to save tracking record to DB: {db_error}")
 
             return f"I have started creating your spiritual track: '{title}'. It usually takes about 60-90 seconds to manifest. I will notify you when it's ready, or you can ask me to 'play my last track' in a minute!"
 

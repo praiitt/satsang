@@ -14,8 +14,9 @@ interface MusicPlayerCardProps {
     prompt?: string;
     description?: string; // Add description
     createdAt?: string;
-    onPlay?: () => void;
-    imageUrl?: string; // New prop
+    status?: string; // New prop
+    onSync?: () => void; // New prop
+    isSyncing?: boolean; // New prop
 }
 
 export function MusicPlayerCard({
@@ -25,10 +26,13 @@ export function MusicPlayerCard({
     category = 'Music',
     duration,
     prompt,
-    description, // Add description
+    description,
     createdAt,
     onPlay,
     imageUrl,
+    status = 'COMPLETED', // Default to completed for backward purity
+    onSync,
+    isSyncing = false,
 }: MusicPlayerCardProps) {
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
 
@@ -39,7 +43,12 @@ export function MusicPlayerCard({
     const isCurrentTrack = currentTrack?.id === trackId || currentTrack?.audioUrl === audioUrl;
     const isActuallyPlaying = isCurrentTrack && isPlaying;
 
+    // Check if track is pending/generating
+    const isPending = status === 'generating' || status === 'submitted' || !audioUrl;
+
     const handlePlayClick = () => {
+        if (isPending) return; // Cannot play pending tracks
+
         if (isCurrentTrack) {
             togglePlayPause();
         } else {
@@ -50,9 +59,9 @@ export function MusicPlayerCard({
                 audioUrl,
                 category,
                 prompt,
-                description, // Pass description
+                description,
                 createdAt,
-                imageUrl // Pass image to context if supported
+                imageUrl
             };
             playTrack(track);
             onPlay?.();
@@ -67,7 +76,10 @@ export function MusicPlayerCard({
                     <img
                         src={imageUrl}
                         alt={title}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        className={cn(
+                            "h-full w-full object-cover transition-transform duration-700 group-hover:scale-110",
+                            isPending && "grayscale blur-sm opacity-50"
+                        )}
                     />
                 ) : (
                     <div className="h-full w-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 dark:from-indigo-900/40 dark:to-purple-900/40" />
@@ -75,6 +87,32 @@ export function MusicPlayerCard({
                 {/* Gradient Overlay for Text Readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
             </div>
+
+            {/* Pending Overlay */}
+            {isPending && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                    <div className="flex flex-col items-center gap-3 p-4 text-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-400 mb-1"></div>
+                        <span className="text-amber-400 font-bold text-sm tracking-widest uppercase">
+                            Creating Magic...
+                        </span>
+                        {onSync && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSync();
+                                }}
+                                disabled={isSyncing}
+                                className="mt-2 h-8 text-xs border-white/20 hover:bg-white/10 text-white bg-black/30 backdrop-blur-md"
+                            >
+                                {isSyncing ? 'Syncing...' : 'Refresh Status'}
+                            </Button>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Content Container */}
             <div className="relative z-10 flex h-64 flex-col justify-between p-5 text-white pointer-events-none">
@@ -98,10 +136,12 @@ export function MusicPlayerCard({
                         onClick={handlePlayClick}
                         className={cn(
                             "flex h-12 w-12 items-center justify-center rounded-full shadow-lg backdrop-blur-sm transition-all hover:scale-110 active:scale-95 group/btn",
-                            isActuallyPlaying
+                            isPending && "opacity-50 cursor-not-allowed bg-gray-500",
+                            !isPending && (isActuallyPlaying
                                 ? "bg-amber-500 text-white hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]"
-                                : "bg-white/20 text-white hover:bg-white hover:text-black"
+                                : "bg-white/20 text-white hover:bg-white hover:text-black")
                         )}
+                        disabled={isPending}
                         aria-label={isActuallyPlaying ? "Pause" : "Play"}
                     >
                         {isActuallyPlaying ? (
@@ -118,7 +158,7 @@ export function MusicPlayerCard({
                             {title}
                         </h3>
                         <span className="text-xs font-medium opacity-80">
-                            {isActuallyPlaying ? "Now Playing" : "Play Track"}
+                            {isPending ? "Generating..." : (isActuallyPlaying ? "Now Playing" : "Play Track")}
                         </span>
                     </div>
                 </div>
@@ -147,7 +187,13 @@ export function MusicPlayerCard({
                                 e.stopPropagation();
                                 handlePlayClick();
                             }}
-                            className="bg-amber-500/20 hover:bg-amber-500/40 text-amber-400 p-2 rounded-full transition-colors backdrop-blur-md"
+                            className={cn(
+                                "p-2 rounded-full transition-colors backdrop-blur-md",
+                                isPending
+                                    ? "bg-gray-500/20 text-gray-400 cursor-not-allowed"
+                                    : "bg-amber-500/20 hover:bg-amber-500/40 text-amber-400"
+                            )}
+                            disabled={isPending}
                             aria-label="Play track"
                         >
                             {isActuallyPlaying ? (

@@ -38,11 +38,12 @@ interface MusicTrack {
   id: string;
   title: string;
   audioUrl: string;
-  imageUrl?: string; // Add imageUrl
+  imageUrl?: string;
   prompt?: string;
-  description?: string; // Add description
+  description?: string;
   category?: MusicCategory;
   createdAt: any;
+  status?: string; // Add status
 }
 
 interface RRaaSiMusicWelcomeViewProps {
@@ -66,6 +67,9 @@ export const RRaaSiMusicWelcomeView = ({
   const [myTracksLoading, setMyTracksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+
+  // Sync State
+  const [syncingTrackId, setSyncingTrackId] = useState<string | null>(null);
 
   // Video State
   const [isMuted, setIsMuted] = useState(false);
@@ -143,6 +147,7 @@ export const RRaaSiMusicWelcomeView = ({
           description: t.description || t.caption || t.prompt, // Map description (fallback to prompt)
           category: t.category,
           createdAt: t.createdAt || t.created_at,
+          status: t.status, // Map status
         }));
         setMyTracks(tracks);
       }
@@ -150,6 +155,40 @@ export const RRaaSiMusicWelcomeView = ({
       console.error('Error fetching my music:', error);
     } finally {
       setMyTracksLoading(false);
+    }
+  };
+
+  // Manual Sync Handler
+  const handleSync = async (trackId: string) => {
+    if (!user?.uid) return;
+
+    setSyncingTrackId(trackId);
+    try {
+      // Call the backend sync endpoint
+      const response = await fetch('/api/suno/sync', { // Corrected path to match next.config.ts rewrite
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          taskId: trackId,
+          userId: user.uid
+        })
+      });
+
+      const result = await response.json();
+      if (result.success || result.audioUrl) {
+        // Refresh list to show updated status
+        await fetchMyMusic();
+      } else {
+        // Even if not complete, refreshing might show updated 'Generating' time or partials
+        // But let's just refresh regardless after a delay
+        setTimeout(() => fetchMyMusic(), 1000);
+      }
+    } catch (e) {
+      console.error("Sync failed:", e);
+    } finally {
+      setSyncingTrackId(null);
     }
   };
 
@@ -356,6 +395,9 @@ export const RRaaSiMusicWelcomeView = ({
                 description={track.description} // Pass description
                 createdAt={track.createdAt}
                 onPlay={() => handlePlay(track.id)}
+                status={track.status} // Pass status
+                onSync={() => handleSync(track.id)} // Pass sync handler
+                isSyncing={syncingTrackId === track.id} // Pass specific loading state
               />
             ))}
           </div>
