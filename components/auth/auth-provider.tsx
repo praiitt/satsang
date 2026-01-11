@@ -191,6 +191,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [checkAuth]);
 
+  const signInWithFacebook = useCallback(async (): Promise<void> => {
+    try {
+      const auth = getFirebaseAuth();
+      const { FacebookAuthProvider, signInWithPopup } = await import('firebase/auth');
+      const provider = new FacebookAuthProvider();
+
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+
+      // Exchange for session cookie
+      await sessionLogin(idToken);
+
+      // Refresh user
+      await checkAuth();
+    } catch (error: any) {
+      console.error('Error signing in with Facebook:', error);
+      throw new Error(error.message || 'Failed to sign in with Facebook');
+    }
+  }, [checkAuth]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -200,6 +220,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         sendOTP,
         verifyOTP,
         signInWithGoogle,
+        signInWithFacebook,
         signUpWithEmail,
         signInWithEmail,
         logout,

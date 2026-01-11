@@ -23,7 +23,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       const params = new URLSearchParams(window.location.search);
       const urlLang = params.get('ln');
 
+      console.log('[LanguageProvider] Initializing...', { urlLang, localStorage: localStorage.getItem('language') });
+
       if (urlLang && (urlLang === 'en' || urlLang === 'hi')) {
+        console.log('[LanguageProvider] Setting language from URL:', urlLang);
         setLanguageState(urlLang as Language);
         localStorage.setItem('language', urlLang);
         setHasSelectedLanguage(true);
@@ -31,10 +34,12 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         // Fallback to localStorage
         const saved = localStorage.getItem('language') as Language;
         if (saved && (saved === 'en' || saved === 'hi')) {
+          console.log('[LanguageProvider] Setting language from localStorage:', saved);
           setLanguageState(saved);
           setHasSelectedLanguage(true);
         } else {
           // No preference found, user hasn't selected yet
+          console.log('[LanguageProvider] No preference found, defaulting to Hindi');
           setHasSelectedLanguage(false);
         }
       }

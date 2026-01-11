@@ -22,6 +22,9 @@ export function SiteFooter() {
             <Link href="/terms" className="text-muted-foreground hover:text-foreground">
               Terms
             </Link>
+            <Link href="/data-deletion" className="text-muted-foreground hover:text-foreground">
+              Data Deletion
+            </Link>
           </nav>
         </div>
       </div>
