@@ -93,6 +93,11 @@ export function useRoom(appConfig: AppConfig) {
 
           const data = await res.json();
           console.log('✅ [useRoom] Connection details received', data);
+          if (data.metadata) {
+            console.log('📝 [useRoom] Backend confirmed metadata:', data.metadata);
+          } else {
+            console.warn('⚠️ [useRoom] Backend did NOT return metadata verification.');
+          }
 
           // ROBUSTNESS: Map Room ID to User ID immediately
           if (data.roomName && resolvedUserId && resolvedUserId !== 'default_user') {

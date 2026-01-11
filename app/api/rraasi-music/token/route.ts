@@ -38,7 +38,9 @@ export async function POST(req: Request) {
         const role = body.role || 'participant';
         const agentName = (body.agentName || DEFAULT_AGENT_NAME).trim();
         const userId = body.userId || 'default_user';
-        const language = body.language || 'hi'; // Extract language
+
+        // Check header first (more reliable for some proxies), then body, then default
+        const language = req.headers.get('X-Language') || body.language || 'hi';
 
         if (!agentName) {
             throw new Error('Agent name is required for RRAASI Music');
@@ -65,12 +67,13 @@ export async function POST(req: Request) {
             language
         );
 
-        const data: RRaaSiMusicTokenResponse = {
+        const data: RRaaSiMusicTokenResponse & { metadata: string } = {
             serverUrl: LIVEKIT_URL,
             roomName: uniqueRoomName,
             participantToken,
             participantName,
             agentName,
+            metadata: JSON.stringify({ userId, language }) // Echo metadata for debugging
         };
 
         console.log(
