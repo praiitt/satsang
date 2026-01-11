@@ -830,6 +830,140 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // NATIVE AUDIO MODE (For Music Agent / Direct MP3s)
+  // ---------------------------------------------------------------------------
+  if (mp3Url) {
+    return (
+      <div className="mb-3">
+        {/* Hidden audio element for logic */}
+        <audio ref={audioRef} preload="auto" autoPlay />
+
+        {/* Visualizer */}
+        {showMandala && (
+          <MeditationMandalaVisualizer
+            isActive={isMp3Playing}
+            className="via-background/70 to-background mt-4 mb-4 h-64 w-full overflow-hidden rounded-3xl bg-gradient-to-b from-transparent"
+          />
+        )}
+
+        {/* Improved Native Player Card */}
+        <div className="bg-card/95 border-primary/20 shadow-primary/5 relative overflow-hidden rounded-xl border p-4 shadow-xl backdrop-blur-sm">
+          {/* Subtle background glow */}
+          <div className="bg-primary/5 absolute inset-0 z-0 animate-pulse" />
+
+          <div className="relative z-10 flex items-center justify-between gap-4">
+            {/* Track Info */}
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2">
+                <div className="bg-primary/20 text-primary flex h-8 w-8 items-center justify-center rounded-full">
+                  <MusicNote className="h-4 w-4 animate-bounce" weight="fill" />
+                </div>
+                <div>
+                  <div className="text-foreground truncate text-sm font-bold">
+                    {currentTrackName || 'Spiritual Melody'}
+                  </div>
+                  <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                    {isMp3Playing ? (
+                      <>
+                        <span className="bg-primary h-1.5 w-1.5 animate-pulse rounded-full" />
+                        Playing Now
+                      </>
+                    ) : (
+                      'Paused'
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex items-center gap-3">
+              {/* Volume */}
+              <div className="group relative flex items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="hover:bg-primary/10 h-8 w-8 rounded-full"
+                  onClick={handleMuteToggle}
+                >
+                  {isMuted || volume === 0 ? (
+                    <SpeakerX className="text-muted-foreground h-4 w-4" />
+                  ) : (
+                    <SpeakerHigh className="text-primary h-4 w-4" />
+                  )}
+                </Button>
+                {/* Volume Slider Reveal */}
+                <div className="bg-popover border-border absolute right-0 -top-12 hidden rounded-lg border p-2 shadow-lg group-hover:block">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={isMuted ? 0 : volume}
+                    onChange={(e) => handleVolumeChange(Number(e.target.value))}
+                    className="accent-primary h-1 w-20 cursor-pointer appearance-none rounded-lg bg-gray-200 dark:bg-gray-700"
+                  />
+                </div>
+              </div>
+
+              {/* Play/Pause */}
+              <Button
+                variant="default"
+                size="icon"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 h-10 w-10 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
+                onClick={() => {
+                  if (audioRef.current) {
+                    if (isMp3Playing) {
+                      audioRef.current.pause();
+                      setAgentAudioMuted(false);
+                      void publishAgentControl('wake', 'discourse_paused');
+                    } else {
+                      audioRef.current.play().then(async () => {
+                        await setAgentAudioMuted(true);
+                        if (!agentIsSleeping) {
+                          await publishAgentControl('sleep', 'discourse_resumed');
+                        }
+                      }).catch(console.error);
+                    }
+                  }
+                }}
+              >
+                {isMp3Playing ? (
+                  <PauseIcon className="h-5 w-5" weight="fill" />
+                ) : (
+                  <PlayIcon className="ml-1 h-5 w-5" weight="fill" />
+                )}
+              </Button>
+
+              {/* API/Close Control */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleClose}
+                className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive h-8 w-8 rounded-full transition-colors"
+                title="Close"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          {/* Progress Bar (Visual only for now) */}
+          <div className="bg-primary/10 mt-3 h-1 w-full overflow-hidden rounded-full">
+            <div
+              className={`bg-primary h-full transition-all duration-1000 ${isMp3Playing ? 'w-full animate-[progress_30s_linear_infinite]' : 'w-1/2'}`}
+              style={{ width: isMp3Playing ? '100%' : '0%' }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // YOUTUBE MODE (Legacy / Fallback)
+  // ---------------------------------------------------------------------------
+
   if (error) {
     const isApiError = error.includes('API') || error.includes('timeout') || error.includes('load');
 
@@ -1004,9 +1138,6 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
 
   return (
     <div className="mb-3">
-      {/* Hidden audio element for MP3 playback */}
-      <audio ref={audioRef} preload="auto" />
-
       {/* Search bar for manual selection (collapsible) - Hidden for Music Agent */}
       {agentName !== 'music-agent' && (
         <div className="mb-3">
