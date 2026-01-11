@@ -412,9 +412,20 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
                     });
                     onSuccess?.();
                   } catch (err: unknown) {
-                    const errorMessage = err instanceof Error ? err.message : 'Facebook sign-in failed. Please try again.';
-                    console.error(errorMessage);
-                    setError("Facebook Login is not configured yet. Please try Google.");
+                    console.error('Facebook login error:', err);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const errorCode = (err as any)?.code;
+                    const errorMessage = err instanceof Error ? err.message : 'Facebook sign-in failed.';
+
+                    if (errorCode === 'auth/account-exists-with-different-credential') {
+                      setError("An account already exists with the same email. Please sign in with Google or Email.");
+                    } else if (errorCode === 'auth/popup-closed-by-user') {
+                      // User closed popup, do nothing or show gentle message
+                      setError(null);
+                    } else {
+                      // Show actual technical error or fallback
+                      setError(`Login failed: ${errorMessage}`);
+                    }
                   } finally {
                     setLoading(false);
                   }
