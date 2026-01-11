@@ -836,8 +836,12 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
   if (mp3Url) {
     return (
       <div className="mb-3">
-        {/* Hidden audio element for logic */}
-        <audio ref={audioRef} preload="auto" autoPlay />
+        {/* Audio element is always rendered via the fallback return below, but we keep this ref valid */}
+        {/* To switch to native mode, we return this UI but rely on the audio element that is persistently mounted at the bottom of the component structure if possible, OR we mount it here. 
+            To solve the "audioRef is null" issue, we will actually mount the audio player unconditionally at the end of the component, and just control it here. 
+            Wait, if we return early here, the code below won't run. 
+            So we MUST render the audio element HERE. */}
+        <audio ref={audioRef} preload="auto" />
 
         {/* Visualizer */}
         {showMandala && (
@@ -1138,6 +1142,7 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
 
   return (
     <div className="mb-3">
+      {/* Hidden audio element for fallback cases or if mp3Url was set but component logic flowed here? No, if mp3Url is set we returned early. So this is for NON-MP3 mode. */}
       {/* Search bar for manual selection (collapsible) - Hidden for Music Agent */}
       {agentName !== 'music-agent' && (
         <div className="mb-3">
