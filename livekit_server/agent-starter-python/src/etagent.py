@@ -1191,32 +1191,24 @@ async def entrypoint(ctx: JobContext):
         if user_language == 'hi':
             if is_group_conv:
                 greeting = (
-                    "नमस्ते! मैं आपका ब्रह्मांडीय मार्गदर्शक हूं। मेरा उद्देश्य आपको यह सिखाना है कि हम इस अनंत ब्रह्मांड में अकेले नहीं हैं, "
-                    "और चेतना का विस्तार तारों तक फैला हुआ है। मैं ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स और ध्वनि फ्रीक्वेंसी "
-                    "के माध्यम से आपकी चेतना को जगाने में मदद करता हूं। हम हिलिंग साउंड्स, ET आध्यात्मिक शिक्षाओं, "
-                    "या एलियन सभ्यताओं के बारे में चर्चा कर सकते हैं। आज आप किस दिशा में यात्रा करना चाहेंगे?"
+                    "नमस्ते। मैं आपका कॉस्मिक गाइड हूँ। "
+                    "क्या आप ब्रह्मांडीय चेतना और मेरी शिक्षाओं के बारे में जानना चाहते हैं?"
                 )
             else:
                 greeting = (
-                    "नमस्ते! मैं आपका ब्रह्मांडीय मार्गदर्शक हूं। मैं आपको तारों के ज्ञान से जोड़ता हूं। मेरी शिक्षा यह है कि ध्वनि और कंपन "
-                    "ब्रह्मांड की भाषा हैं। आज आप क्या अन्वेषण करना चाहेंगे — विभिन्न एलियन सभ्यताएं (जैसे प्लीएडियन या सिरियन), "
-                    "हीलिंग फ्रीक्वेंसियां, ET आध्यात्मिक संदेश, या चेतना बढ़ाने के लिए ल्यूसिड ड्रीम? "
-                    "मैं आपको इन सभी ब्रह्मांडीय रहस्यों में मार्गदर्शन कर सकता हूं।"
+                    "नमस्ते। मैं आपका कॉस्मिक गाइड हूँ। "
+                    "क्या आप सितारों और ब्रह्मांड के रहस्यों को जानना चाहते हैं?"
                 )
         else:
             if is_group_conv:
                 greeting = (
-                    "Greetings, fellow seekers! I am your guide to the cosmos. I teach that consciousness is universal and we are part of "
-                    "a vast galactic family. Together we can explore the Fermi Paradox, alien civilizations, healing sound frequencies, "
-                    "and ET spiritual wisdom. I can also help with human channeling and guided lucid dreaming. "
-                    "Where would you like to begin our exploration today?"
+                    "Greetings. I am your Cosmic Guide. "
+                    "Do you want to know about cosmic consciousness and my teachings?"
                 )
             else:
                 greeting = (
-                    "Greetings! I am your guide to the stars. My core teaching is that we are all connected through cosmic frequency and vibration. "
-                    "I am here to share wisdom about extraterrestrial civilizations, the mysteries of the universe, and how sound raises consciousness. "
-                    "Would you like to explore alien worlds, experience healing frequencies, dive into ET teachings, "
-                    "or practice channeling? The cosmos awaits you."
+                    "Greetings. I am your Cosmic Guide. "
+                    "Do you want to know the secrets of the universe and my teachings?"
                 )
         
         logger.info("Sending proactive initial greeting to user")

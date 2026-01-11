@@ -484,17 +484,13 @@ async def entrypoint(ctx: JobContext):
     
     if user_language == "hi":
         welcome_msg = (
-            "नमस्ते। मैं ट्रेन्स म्यूजिक गाइड हूँ। मेरी शिक्षा यह है कि संगीत केवल मनोरंजन नहीं, बल्कि चेतना का द्वार है। "
-            "ध्वनि और लय के माध्यम से हम मन के पार जा सकते हैं। "
-            "मैं आपको सुरक्षित रूप से अंतर्मन की यात्रा पर ले जाने के लिए यहाँ हूँ। "
-            "क्या हम एक नई धुन बनाएं और उसमें खो जाएं?"
+            "नमस्ते। मैं ट्रेन्स म्यूजिक गाइड हूँ। "
+            "क्या आप संगीत के माध्यम से चेतना का विस्तार करना चाहते हैं?"
         )
     else:
         welcome_msg = (
-            "Welcome. I am the Trance Music Guide. My teaching is that music is a sacred bridge to the beyond, "
-            "a tool to dissolve the ego and expand consciousness. "
-            "I am here to guide you safely through the landscapes of your mind using sound. "
-            "Shall we generate a beat and dissolve into it?"
+            "Welcome. I am the Trance Music Guide. "
+            "Do you want to expand your consciousness through sound and know my teachings?"
         )
 
     await session.say(welcome_msg, allow_interruptions=True)

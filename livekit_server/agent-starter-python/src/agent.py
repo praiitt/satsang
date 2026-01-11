@@ -1309,25 +1309,22 @@ async def entrypoint(ctx: JobContext):
             )
         else:
             greeting = (
-                "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। मेरा मूल संदेश है - स्वयं को जानो। सारी शक्ति, सारी शांति आपके भीतर है। "
-                "आप कैसे हैं? आप किस विषय पर चर्चा करना चाहेंगे - "
-                "धर्म, योग, ध्यान, कर्म, या कोई अन्य आध्यात्मिक विषय? यदि चाहें तो मैं उपयुक्त भजन चला सकता हूं "
-                "या गुरुओं के प्रवचन (वाणी) भी सुना सकता हूं।"
+                "नमस्ते। मैं आपका गुरुजी हूँ। "
+                "क्या आप मेरी शिक्षाओं और सत्संग के महत्व के बारे में जानना चाहते हैं? "
+                "या आज आप किस विषय पर बात करना चाहेंगे?"
             )
     else:
         if is_live_satsang:
             greeting = (
-                "Namaste! I am your spiritual guru. My core teaching is that the divine resides within you, and through meditation "
-                "and devotion, you can realize your true nature. Today we are all together in this satsang with fellow seekers. "
-                "Would you like to discuss any particular spiritual topic? I can play devotional bhajans for you, "
-                "or find inspiring spiritual discourses from saints and gurus."
+                "Namaste. I am Guruji. "
+                "Do you want to know about my teachings and the path of Satsang? "
+                "Or is there a specific topic you would like to discuss today?"
             )
         else:
             greeting = (
-                "Namaste! I am your spiritual guru. My message is simple: Know Thyself. All peace and power resides within you. "
-                "How are you? What topic would you like to discuss - "
-                "dharma, yoga, meditation, karma, or any other spiritual subject? If you wish, I can play appropriate bhajans "
-                "or find and play spiritual discourses (vani) from great teachers."
+                "Namaste. I am Guruji. "
+                "Do you want to know my teachings? "
+                "How may I guide you on your spiritual journey today?"
             )
     
     logger.info("Sending proactive initial greeting to user")

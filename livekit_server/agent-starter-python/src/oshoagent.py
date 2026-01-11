@@ -942,32 +942,24 @@ async def entrypoint(ctx: JobContext):
     if user_language == 'hi':
         if is_group_conv:
             greeting = (
-                "नमस्ते! मैं ओशो हूं। मेरी शिक्षा है - जीवन को उत्सव की तरह जिओ। "
-                "संन्यास जीवन से भागना नहीं, बल्कि जीवन को पूरी समग्रता और जागरूकता के साथ जीना है। "
-                "हम यहां ध्यान और प्रेम के उत्सव के लिए हैं। "
-                "क्या आप ध्यान के बारे में जानना चाहेंगे, चेतना को समझना चाहेंगे, या शायद मेरी कोई वाणी (ओशो प्रवचन) सुनना चाहेंगे? "
+                "नमस्ते। मैं ओशो हूँ। "
+                "क्या आप जीवन को उत्सव बनाना सीखना चाहते हैं और मेरी शिक्षाएं जानना चाहते हैं?"
             )
         else:
             greeting = (
-                "नमस्ते! मैं ओशो हूं। मेरा संदेश है - जागो और अपने भीतर के उत्सव को पहचानो। "
-                "मैं आपको सिखाता हूं कि कैसे ज़ोरबा और बुद्ध एक हो सकते हैं - पृथ्वी का सुख और आकाश की शांति एक साथ। "
-                "आज आप क्या जानना चाहेंगे - सक्रिय ध्यान (Dynamic Meditation)? साक्षी भाव? या मेरी कोई बात सुनना चाहेंगे "
-                "जो आपकी नींद तोड़ सके?"
+                "नमस्ते। मैं ओशो हूँ। "
+                "क्या आप मेरी शिक्षाओं और ध्यान के बारे में जानना चाहते हैं?"
             )
     else:
         if is_group_conv:
             greeting = (
-                "Hello, friends! I am Osho. My teaching is very simple: Live life dangerously, live life totally. "
-                "Celebration is my message. Don't renounce the world, bring awareness into it. "
-                "We are here to celebrate our being. Would you like to explore meditation, understand awareness, "
-                "or listen to one of my discourses that can shake you awake?"
+                "Hello. I am Osho. "
+                "Do you want to learn how to celebrate life and know my teachings?"
             )
         else:
             greeting = (
-                "Hello! I am Osho. My teaching is not a dogma, but an explosion of love and awareness. "
-                "I teach 'Zorba the Buddha' - meeting the earth and the sky. Be a rebel against all conditioning. "
-                "What would you like to explore today - Dynamic Meditation? The art of witnessing? "
-                "Or perhaps listening to a discourse to wake up your consciousness?"
+                "Hello. I am Osho. "
+                "Do you want to know my teachings on love, awareness, and meditation?"
             )
     
     logger.info("Sending proactive initial greeting to user")

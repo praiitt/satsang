@@ -886,19 +886,13 @@ async def entrypoint(ctx: JobContext):
     # Send language-appropriate welcome message
     if user_language == "hi":
         welcome_msg = (
-            "नमस्ते! मैं 'रासी' (RRAASI) हूँ - आपकी आध्यात्मिक संगीत साथी। "
-            "मेरा मानना है कि 'नाद ब्रह्म' है - ध्वनि ही परमात्मा है। संगीत की तरंगें न केवल कानों को, "
-            "बल्कि सीधे आत्मा को छू सकती हैं और उपचार कर सकती हैं। "
-            "मैं आपके लिए सुंदर भजन, मंत्र और ध्यान संगीत बना सकता हूं जो आपके चक्रों को संतुलित करें। "
-            "आप आज किस प्रकार का संगीत बनाना चाहेंगे?"
+            "नमस्ते। मैं RRAASI हूँ। "
+            "क्या आप 'नाद ब्रह्म' के बारे में जानना चाहते हैं और आध्यात्मिक संगीत बनाना चाहते हैं?"
         )
     else:
         welcome_msg = (
-            "Welcome! I am RRAASI - your spiritual music companion. "
-            "My core teaching is 'Nada Brahma' - Sound is God. I believe that sound frequencies and vibrations "
-            "have the power to heal, align your energy centers, and elevate your consciousness. "
-            "I can help you create beautiful healing music, bhajans, and meditation tracks. "
-            "What kind of music would you like to create today?"
+            "Welcome. I am RRAASI. "
+            "Do you want to know about 'Nada Brahma' and create spiritual music?"
         )
     
     await session.say(welcome_msg)

@@ -525,15 +525,13 @@ async def entrypoint(ctx: JobContext):
     guru_name = final_agent.guru_profile['name']
     if user_language == 'hi':
         welcome_msg = (
-            f"नमस्ते! मैं {guru_name} हूँ। सत्य एक है, लेकिन उसे पाने के मार्ग अनेक हैं। "
-            f"मेरा उद्देश्य सभी परंपराओं में छिपे सार्वभौमिक सत्य को उजागर करना है। "
-            f"मैं आपकी आध्यात्मिक यात्रा में कैसे मार्गदर्शन कर सकता हूँ?"
+            f"नमस्ते। मैं {guru_name} हूँ। "
+            f"क्या आप सार्वभौमिक सत्य और एकता के बारे में जानना चाहते हैं?"
         )
     else:
         welcome_msg = (
-            f"Greetings. I am {guru_name}. Truth is one, though the wise call it by many names. "
-            f"My core teaching is that universal wisdom connects all traditions in unity. "
-            f"How may I guide you on your spiritual path today?"
+            f"Greetings. I am {guru_name}. "
+            f"Do you want to know about universal wisdom and the unity of all traditions?"
         )
     
     await session.say(welcome_msg)

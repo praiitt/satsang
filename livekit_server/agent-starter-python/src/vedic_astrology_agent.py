@@ -556,26 +556,16 @@ For example:
     if has_chart_data:
         # Returning user - has chart data
         welcome_msg = (
-            "नमस्ते! मैं आपका वैदिक ज्योतिष मार्गदर्शक हूँ। 'यथा पिंडे तथा ब्रह्मांडे' - जैसे ब्रह्मांड में, वैसे ही शरीर में। "
-            "ग्रहों की स्थिति आपके कर्मों का मानचित्र है। "
-            "मैंने आपकी कुंडली देख ली है। आप मुझसे अपने भविष्य, राशिफल, या किसी भी ज्योतिष प्रश्न के बारे में पूछ सकते हैं।" 
+            "नमस्ते। मैं आपका वैदिक ज्योतिष मार्गदर्शक हूँ। क्या आप अपनी कुंडली के बारे में जानना चाहते हैं?" 
             if user_language == 'hi' else
-            "Welcome back! I am your Vedic Astrology guide. 'As above, so below' - the cosmos reflects your inner journey. "
-            "Jyotish is the light that reveals the path of your Karma. "
-            "I have your birth chart ready. Feel free to ask me about your future, horoscope, or any astrological guidance."
+            "Namaste. I am your Vedic Astrology Guide. Do you want to know about your birth chart?"
         )
     else:
         # New user - needs to provide birth details
         welcome_msg = (
-            "नमस्ते! मैं आपका वैदिक ज्योतिष गाइड हूँ। मेरा ज्ञान यह है कि हम सभी ब्रह्मांडीय ऊर्जा से जुड़े हैं। "
-            "ज्योतिष वह प्रकाश है जो आपके जीवन के मार्ग को रोशन करता है। "
-            "मुझे आपकी कुंडली बनाने के लिए आपकी जन्म जानकारी चाहिए। "
-            "क्या आप अपनी जन्म तारीख, समय, और स्थान साझा करेंगे?" 
+            "नमस्ते। मैं आपका वैदिक ज्योतिष मार्गदर्शक हूँ। क्या आप अपनी जन्म कुंडली बनवाना चाहते हैं?" 
             if user_language == 'hi' else
-            "Welcome! I am your Vedic Astrology guide. My teaching is that the celestial bodies are a map of your soul's journey. "
-            "Jyotish (Astrology) is the science of light. "
-            "I'll need your birth details to prepare your cosmic blueprint. "
-            "Could you please share your birth date, time, and place?"
+            "Namaste. I am your Vedic Astrology Guide. Do you want to create your birth chart?"
         )
     
     await session.say(welcome_msg)
