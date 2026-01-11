@@ -27,9 +27,15 @@ export function useUserProfile() {
                 let userProfile = await userService.getUserProfile(user.uid);
 
                 if (!userProfile) {
-                    // Create new user profile with phone from Firebase
+                    // Create new user profile with data from Firebase Auth (Social Login)
                     const phone = user.phoneNumber || '';
-                    userProfile = await userService.createUserProfile(user.uid, phone);
+                    const additionalData = {
+                        email: user.email || undefined,
+                        name: user.displayName || undefined,
+                        profilePhoto: user.photoURL || undefined,
+                    };
+
+                    userProfile = await userService.createUserProfile(user.uid, phone, additionalData);
                     setNeedsOnboarding(true);
                 } else if (!userProfile.onboardingCompleted) {
                     setNeedsOnboarding(true);

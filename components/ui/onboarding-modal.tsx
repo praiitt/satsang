@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { userService } from '@/lib/services/userService';
 import { getFirebaseAuth } from '@/lib/firebase-client';
 import { Button } from '@/components/livekit/button';
@@ -17,6 +17,17 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
     const [language, setLanguage] = useState<'en' | 'hi'>('en');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (isOpen) {
+            const auth = getFirebaseAuth();
+            const user = auth.currentUser;
+            if (user) {
+                if (!name && user.displayName) setName(user.displayName);
+                if (!email && user.email) setEmail(user.email);
+            }
+        }
+    }, [isOpen]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -123,8 +134,8 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
                                 type="button"
                                 onClick={() => setLanguage('en')}
                                 className={`px-4 py-3 rounded-lg border-2 font-medium transition-all ${language === 'en'
-                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-amber-300'
+                                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-amber-300'
                                     }`}
                                 disabled={loading}
                             >
@@ -134,8 +145,8 @@ export function OnboardingModal({ isOpen, onComplete }: OnboardingModalProps) {
                                 type="button"
                                 onClick={() => setLanguage('hi')}
                                 className={`px-4 py-3 rounded-lg border-2 font-medium transition-all ${language === 'hi'
-                                        ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-                                        : 'border-gray-200 dark:border-gray-700 hover:border-amber-300'
+                                    ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
+                                    : 'border-gray-200 dark:border-gray-700 hover:border-amber-300'
                                     }`}
                                 disabled={loading}
                             >
