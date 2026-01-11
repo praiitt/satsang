@@ -1,8 +1,79 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../firebase.js';
 import admin from 'firebase-admin';
+import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 
 const router = Router();
+
+/**
+ * GET /api/suno/my-tracks
+ * Fetch tracks associated with the user's room sessions (extracted Room IDs)
+ */
+router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const uid = req.user!.uid;
+        const db = getDb();
+
+        // 1. Get User's Room IDs
+        const userDoc = await db.collection('users').doc(uid).get();
+        if (!userDoc.exists) {
+            return res.json({ tracks: [] });
+        }
+
+        const userData = userDoc.data();
+        const roomIds: string[] = userData?.room_ids || [];
+
+        if (roomIds.length === 0) {
+            return res.json({ tracks: [] });
+        }
+
+        // 2. Extract Target User IDs from Room Names 
+        // User instruction: "take out middle element from sandwiched between underscore"
+        // Example: "RRraasiMusic_EoZTHz..._919" -> "EoZTHz..."
+        const targetIds = roomIds.map(roomId => {
+            const parts = roomId.split('_');
+            if (parts.length >= 3) {
+                return parts[1]; // The element between the first and last underscores (assuming Prefix_ID_Suffix)
+            }
+            return null;
+        }).filter(id => id); // Remove empty/null
+
+        console.log(`[Suno My Tracks] Found ${roomIds.length} rooms. Extracted IDs: ${JSON.stringify(targetIds)}`);
+
+        if (targetIds.length === 0) {
+            return res.json({ tracks: [] });
+        }
+
+        // 3. Query Music Tracks
+        // Firestore 'in' query supports up to 30 items. 
+        // We take the unique latest 30 room IDs to stay within limits.
+        const uniqueTargetIds = [...new Set(targetIds)].slice(0, 30);
+
+        console.log(`[Suno My Tracks] Querying tracks for IDs: ${JSON.stringify(uniqueTargetIds)}`);
+
+        const snapshot = await db.collection('music_tracks')
+            .where('userId', 'in', uniqueTargetIds)
+            .get();
+
+        // 4. Sort and Return
+        const tracks = snapshot.docs
+            .map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+            }))
+            .sort((a: any, b: any) => {
+                const aTime = a.createdAt?.toMillis?.() || 0;
+                const bTime = b.createdAt?.toMillis?.() || 0;
+                return bTime - aTime; // Descending
+            });
+
+        return res.json({ tracks });
+
+    } catch (error) {
+        console.error('[Suno My Tracks] Error:', error);
+        return res.status(500).json({ error: 'Failed to fetch my tracks' });
+    }
+});
 
 const COIN_SERVICE_URL = process.env.COIN_SERVICE_URL || 'https://us-central1-rraasi-8a619.cloudfunctions.net/rraasi-coin-service';
 
@@ -125,7 +196,8 @@ router.post('/callback', async (req: Request, res: Response) => {
                 (officialPayload.data.callbackType === 'complete' || officialPayload.data.callbackType === 'first')) {
 
                 const tracks = officialPayload.data.data || [];
-                console.log(`[Suno Callback] Processing ${tracks.length} track(s)`);
+                const taskId = officialPayload.data.task_id; // Get task_id from callback payload
+                console.log(`[Suno Callback] Processing ${tracks.length} track(s) for Task ID: ${taskId}`);
 
                 const db = getDb();
                 const musicTracksRef = db.collection('music_tracks');
@@ -134,14 +206,35 @@ router.post('/callback', async (req: Request, res: Response) => {
                 for (const track of tracks) {
                     console.log(`[Suno Callback] Processing track: ${track.id} - ${track.title}`);
                     if (track.audio_url) {
-                        const docRef = musicTracksRef.doc(track.id);
+                        // CHECK FOR DUPLICATES: Check if a track with this sunoId already exists
+                        // This prevents creating duplicate entries or reprocessing the same track
+                        const duplicateCheck = await musicTracksRef.where('sunoId', '==', track.id).limit(1).get();
+
+                        if (!duplicateCheck.empty) {
+                            const existingDoc = duplicateCheck.docs[0];
+                            console.log(`[Suno Callback] ⚠️ Duplicate detected! Track with sunoId ${track.id} already exists at ${existingDoc.id}. Skipping insertion.`);
+                            continue;
+                        }
+
+                        // Use taskId as document ID to merge with pending record created by agent
+                        const docRef = musicTracksRef.doc(taskId);
                         const existingDoc = await docRef.get();
                         const exists = existingDoc.exists;
                         const existingData = exists ? existingDoc.data() : {};
 
+                        // If the document exists but has a different sunoId (e.g. from the OTHER track in this batch),
+                        // and we are trying to overwrite it... 
+                        // Note: Suno sends 2 tracks per task. Using taskId as key implies we only keep ONE (the last one processed).
+                        // To keep both, we would need different keys (e.g. track.id). 
+                        // BUT, the agent creates the generic placeholder at taskId.
+                        // For now, we stick to the taskId key as per current architecture, but warn if overwriting.
+                        if (exists && existingData.sunoId && existingData.sunoId !== track.id) {
+                            console.warn(`[Suno Callback] Overwriting existing track ${existingData.sunoId} with new sibling track ${track.id} at doc ${taskId}`);
+                        }
+
                         const trackData: any = {
                             userId: userId,
-                            sunoId: track.id,
+                            sunoId: track.id, // Store Suno's track ID for reference
                             title: track.title || 'Untitled Track',
                             audioUrl: track.audio_url,
                             sourceAudioUrl: track.source_audio_url || null,
@@ -178,17 +271,17 @@ router.post('/callback', async (req: Request, res: Response) => {
                 // Deduct coins for successful music generation (Idempotent)
                 for (const track of tracks) {
                     if (track.audio_url) {
-                        const docRef = musicTracksRef.doc(track.id);
+                        const docRef = musicTracksRef.doc(taskId); // Use taskId, not track.id
                         const doc = await docRef.get();
                         // Deduct only if NOT already deducted
                         if (!doc.data()?.coinsDeducted) {
-                            await deductMusicCoins(userId, track.id, track.title);
+                            await deductMusicCoins(userId, taskId, track.title); // Use taskId for reference
                             // Verify deduction was attempted (success/fail logged in function) and mark as deducted to prevent double charge
                             // In a stricter system, checking the return value of deductMusicCoins would be better.
                             // For now, we assume we should mark it to avoid endless retries on every callback.
                             await docRef.update({ coinsDeducted: true });
                         } else {
-                            console.log(`[Suno Callback] Coins already deducted for track ${track.id}, skipping.`);
+                            console.log(`[Suno Callback] Coins already deducted for track ${taskId}, skipping.`);
                         }
                     }
                 }
@@ -208,7 +301,16 @@ router.post('/callback', async (req: Request, res: Response) => {
                 for (const clip of legacyPayload.clips) {
                     console.log(`[Suno Callback] Processing clip: ${clip.id} - ${clip.title}`);
                     if (clip.audio_url) {
-                        const docRef = musicTracksRef.doc(clip.id);
+                        // CHECK FOR DUPLICATES (Legacy)
+                        const duplicateCheck = await musicTracksRef.where('sunoId', '==', clip.id).limit(1).get();
+                        if (!duplicateCheck.empty) {
+                            console.log(`[Suno Callback] ⚠️ Duplicate detected (Legacy)! Track ${clip.id} already exists. Skipping.`);
+                            continue;
+                        }
+
+                        // FIX: Use taskId as document ID to match Agent and Official handler behavior
+                        // This prevents creating duplicate docs (one by TaskID, one by ClipID)
+                        const docRef = musicTracksRef.doc(legacyPayload.taskId);
                         const existingDoc = await docRef.get();
                         const exists = existingDoc.exists;
 
@@ -314,35 +416,34 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
     try {
         const query = req.query || {};
         const page = parseInt(query.page as string) || 1;
-        const limit = parseInt(query.limit as string) || 10;
+        const limit = parseInt(query.limit as string) || 30; // Default to 30 as per user request
+        const category = query.category as string;
 
-        console.log(`[Suno Community Tracks] Parsing params: page=${query.page}, limit=${query.limit}`);
+        console.log(`[Suno Community Tracks] Parsing params: page=${page}, limit=${limit}, category=${category}`);
         const offset = (page - 1) * limit;
 
         const db = getDb();
+        let tracksQuery: FirebaseFirestore.Query = db.collection('music_tracks');
+        let countQuery: FirebaseFirestore.Query = db.collection('music_tracks');
 
-        // Note: For large collections, offset is inefficient, but fine for now.
-        // A better approach would be cursor-based pagination (startAfter).
-        // Since we want to sort by creation time, we need an index on createdAt.
-        // If index is missing, this might fail or require one.
-        // For simplicity and to avoid index requirement errors immediately if not set up,
-        // we might fetch a bit more or rely on client-side sorting if volume is low,
-        // but let's try standard orderBy first.
+        // Apply Category Filter
+        if (category && category !== 'all') {
+            tracksQuery = tracksQuery.where('category', '==', category);
+            countQuery = countQuery.where('category', '==', category);
+        }
 
-        // Query for tracks with audioUrl (completed tracks)
-        // Ensure standard query order: orderBy -> offset -> limit
-        const tracksQuery = db.collection('music_tracks')
-            .orderBy('createdAt', 'desc')
+        // Apply Sorting & Pagination
+        // Note: Firestore requires an index for 'category' + 'createdAt' DESC if filtering by category.
+        // Also 'audioUrl' filter + sort might need index.
+        // If index is missing, this will throw an error with a link to create it.
+        tracksQuery = tracksQuery.orderBy('createdAt', 'desc')
             .offset(offset)
             .limit(limit);
 
-        // Log the query construction
-        console.log(`[Suno Community Tracks] Querying: offset=${offset}, limit=${limit}`);
+        console.log(`[Suno Community Tracks] Querying: category=${category || 'all'}, offset=${offset}, limit=${limit}`);
 
-        // Also get total count (approximate or separate query)
-        // Firestore count() aggregation is cost-effective
-        const validTracksQuery = db.collection('music_tracks'); // Count all tracks since list query doesn't filter
-        const countSnapshot = await validTracksQuery.count().get();
+        // Get count
+        const countSnapshot = await countQuery.count().get();
         const total = countSnapshot.data().count;
 
         const snapshot = await tracksQuery.get();
@@ -357,11 +458,14 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
             total,
             page,
             totalPages: Math.ceil(total / limit),
-            hasMore: page * limit < total
+            hasMore: offset + tracks.length < total
         });
     } catch (error) {
         console.error('[Suno Community Tracks] Error fetching community tracks:', error);
-        res.status(500).json({ error: 'Failed to fetch community tracks' });
+        res.status(500).json({
+            error: 'Failed to fetch community tracks',
+            details: error instanceof Error ? error.message : String(error)
+        });
     }
 });
 
@@ -447,7 +551,7 @@ async function processSync(docRef: admin.firestore.DocumentReference, taskId: st
     // OR directly the data depending on version. Let's handle generic "audio_url" presence.
 
     // Normalize data structure based on inspection
-    const trackInfo = result.data?.response || result.data || result;
+    const trackInfo = (result as any).data?.response || (result as any).data || result;
     // Check various paths where audio_url might be
     const audioUrl = trackInfo.audio_url || (Array.isArray(trackInfo) ? trackInfo[0]?.audio_url : null);
 

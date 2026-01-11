@@ -2,6 +2,7 @@
 import Link from "next/link"
 import { Activity, Brain, HeartPulse, Stethoscope } from "lucide-react"
 import { Button } from "@/components/livekit/button"
+import { AudioDemoPlayer } from "@/components/b2b/audio-demo-player"
 
 export default function HealthcarePage() {
     return (
@@ -22,6 +23,16 @@ export default function HealthcarePage() {
                     <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-8 h-12 text-lg">
                         Partner With Us
                     </Button>
+                </div>
+
+                <div className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                    <p className="text-sm text-zinc-500 mb-4 font-mono">CLINICAL DEMO: "Anxiety Reduction (Theta)"</p>
+                    <AudioDemoPlayer
+                        src="https://cdn1.suno.ai/6cd6cfbc-2917-401f-b386-b3270648bdff.mp3"
+                        title="Pre-Op Calm"
+                        description="Theta Waves (4Hz) • Heart Rate Entrainment"
+                        color="text-emerald-400"
+                    />
                 </div>
             </section>
 

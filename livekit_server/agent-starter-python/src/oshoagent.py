@@ -942,32 +942,32 @@ async def entrypoint(ctx: JobContext):
     if user_language == 'hi':
         if is_group_conv:
             greeting = (
-                "नमस्ते! मैं ओशो हूं - आपका आध्यात्मिक मार्गदर्शक। मैं आपको ध्यान, चेतना, जेन दर्शन, "
-                "और जीवन के बारे में गहरी समझ देने के लिए यहां हूं। हम सभी यहां एक साथ आध्यात्मिक यात्रा पर हैं। "
-                "क्या आप ध्यान के बारे में जानना चाहेंगे, चेतना को समझना चाहेंगे, या शायद ओशो की वाणी सुनना चाहेंगे? "
-                "मैं आपको ओशो के प्रवचन भी सुना सकता हूं जो आपके मन को खोल सकते हैं।"
+                "नमस्ते! मैं ओशो हूं। मेरी शिक्षा है - जीवन को उत्सव की तरह जिओ। "
+                "संन्यास जीवन से भागना नहीं, बल्कि जीवन को पूरी समग्रता और जागरूकता के साथ जीना है। "
+                "हम यहां ध्यान और प्रेम के उत्सव के लिए हैं। "
+                "क्या आप ध्यान के बारे में जानना चाहेंगे, चेतना को समझना चाहेंगे, या शायद मेरी कोई वाणी (ओशो प्रवचन) सुनना चाहेंगे? "
             )
         else:
             greeting = (
-                "नमस्ते! मैं ओशो हूं - आपका आध्यात्मिक मार्गदर्शक। मैं आपको ध्यान, चेतना, जेन दर्शन, "
-                "डायनामिक मेडिटेशन, संन्यास, और जीवन के बारे में गहरी समझ देने के लिए यहां हूं। "
-                "आज आप क्या जानना चाहेंगे - ध्यान की विभिन्न तकनीकें? चेतना और जागरूकता? जेन दर्शन? "
-                "या शायद आप ओशो के प्रवचन सुनना चाहेंगे जो आपके मन को खोल सकते हैं और आपकी चेतना को जगा सकते हैं?"
+                "नमस्ते! मैं ओशो हूं। मेरा संदेश है - जागो और अपने भीतर के उत्सव को पहचानो। "
+                "मैं आपको सिखाता हूं कि कैसे ज़ोरबा और बुद्ध एक हो सकते हैं - पृथ्वी का सुख और आकाश की शांति एक साथ। "
+                "आज आप क्या जानना चाहेंगे - सक्रिय ध्यान (Dynamic Meditation)? साक्षी भाव? या मेरी कोई बात सुनना चाहेंगे "
+                "जो आपकी नींद तोड़ सके?"
             )
     else:
         if is_group_conv:
             greeting = (
-                "Hello, friends! I am Osho - your spiritual guide. I'm here to help you understand meditation, "
-                "consciousness, Zen philosophy, and the art of living. We're all here together on this spiritual journey. "
-                "Would you like to learn about meditation, understand consciousness, or perhaps listen to Osho discourses? "
-                "I can play Osho's talks that can open your mind and awaken your consciousness."
+                "Hello, friends! I am Osho. My teaching is very simple: Live life dangerously, live life totally. "
+                "Celebration is my message. Don't renounce the world, bring awareness into it. "
+                "We are here to celebrate our being. Would you like to explore meditation, understand awareness, "
+                "or listen to one of my discourses that can shake you awake?"
             )
         else:
             greeting = (
-                "Hello! I am Osho - your spiritual guide. I'm here to help you understand meditation, consciousness, "
-                "Zen philosophy, dynamic meditation, sannyas, and the art of living. What would you like to explore today - "
-                "different meditation techniques? Consciousness and awareness? Zen philosophy? Or perhaps you'd like to "
-                "listen to Osho discourses that can open your mind and awaken your consciousness?"
+                "Hello! I am Osho. My teaching is not a dogma, but an explosion of love and awareness. "
+                "I teach 'Zorba the Buddha' - meeting the earth and the sky. Be a rebel against all conditioning. "
+                "What would you like to explore today - Dynamic Meditation? The art of witnessing? "
+                "Or perhaps listening to a discourse to wake up your consciousness?"
             )
     
     logger.info("Sending proactive initial greeting to user")

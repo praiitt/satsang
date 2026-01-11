@@ -119,8 +119,14 @@ generate_music(
     is_instrumental=False
 )
 
-**RETRIEVING PAST TRACKS:**
-- If user asks for "last music", "my tracks", or "previous songs", use `list_tracks` tool.
+**RETRIEVING & PLAYING PAST TRACKS:**
+- If user asks for "last music", "my tracks", or "previous songs":
+  - To JUST LIST them: use `list_tracks`.
+  - To PLAY them (e.g. "play my last track"): use `check_song_status`.
+  
+**CAPABILITIES:**
+- You **CAN** play music directly for the user using `check_song_status`. 
+- NEVER say you cannot play music. If the user asks to play, ALWAYS try `check_song_status`.
 """
         )
         self._publish_data_fn = publish_data_fn
@@ -224,7 +230,7 @@ generate_music(
             except Exception as db_error:
                 logger.error(f"Failed to save tracking record to DB: {db_error}")
 
-            return f"I have started creating your spiritual track: '{title}'. It usually takes about 60-90 seconds to manifest. I will notify you when it's ready, or you can ask me to 'play my last track' in a minute!"
+            return f"I have started creating your spiritual track: '{title}'. It usually takes about 60-90 seconds to manifest.\n\n🎵 **Important:** You can find your created tracks in the **My Music** section of the app.\n\nI will notify you when it's ready!"
 
         except Exception as e:
             logger.error(f"Music generation failed: {e}")
@@ -880,14 +886,19 @@ async def entrypoint(ctx: JobContext):
     # Send language-appropriate welcome message
     if user_language == "hi":
         welcome_msg = (
-            "नमस्ते! मैं आपके लिए सुंदर भजन, मंत्र और "
-            "ध्यान संगीत बना सकता हूं। आप आज किस प्रकार का संगीत बनाना चाहेंगे?"
+            "नमस्ते! मैं 'रासी' (RRAASI) हूँ - आपकी आध्यात्मिक संगीत साथी। "
+            "मेरा मानना है कि 'नाद ब्रह्म' है - ध्वनि ही परमात्मा है। संगीत की तरंगें न केवल कानों को, "
+            "बल्कि सीधे आत्मा को छू सकती हैं और उपचार कर सकती हैं। "
+            "मैं आपके लिए सुंदर भजन, मंत्र और ध्यान संगीत बना सकता हूं जो आपके चक्रों को संतुलित करें। "
+            "आप आज किस प्रकार का संगीत बनाना चाहेंगे?"
         )
     else:
         welcome_msg = (
-            "Welcome ,I'm here to help you create beautiful "
-            "healing music, bhajans, and meditation tracks. What kind of music would "
-            "you like to create today?"
+            "Welcome! I am RRAASI - your spiritual music companion. "
+            "My core teaching is 'Nada Brahma' - Sound is God. I believe that sound frequencies and vibrations "
+            "have the power to heal, align your energy centers, and elevate your consciousness. "
+            "I can help you create beautiful healing music, bhajans, and meditation tracks. "
+            "What kind of music would you like to create today?"
         )
     
     await session.say(welcome_msg)

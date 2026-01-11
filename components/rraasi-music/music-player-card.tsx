@@ -4,6 +4,7 @@ import { Play, Pause, BarChart3 } from 'lucide-react';
 import { useMusicPlayer, MusicTrack } from '@/contexts/music-player-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/livekit/button';
+import { AddToPlaylistMenu } from './add-to-playlist-menu';
 
 interface MusicPlayerCardProps {
     id?: string;
@@ -17,6 +18,7 @@ interface MusicPlayerCardProps {
     status?: string; // New prop
     onSync?: () => void; // New prop
     isSyncing?: boolean; // New prop
+    metadata?: any; // Track metadata including tags
 }
 
 export function MusicPlayerCard({
@@ -33,6 +35,7 @@ export function MusicPlayerCard({
     status = 'COMPLETED', // Default to completed for backward purity
     onSync,
     isSyncing = false,
+    metadata,
 }: MusicPlayerCardProps) {
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
 
@@ -51,8 +54,11 @@ export function MusicPlayerCard({
 
         if (isCurrentTrack) {
             togglePlayPause();
+        } else if (onPlay) {
+            // If onPlay is provided, let parent handle it (e.g. for Playlist context)
+            onPlay();
         } else {
-            // Construct the track object
+            // Fallback: Play single track
             const track: MusicTrack = {
                 id: trackId,
                 title,
@@ -64,7 +70,6 @@ export function MusicPlayerCard({
                 imageUrl
             };
             playTrack(track);
-            onPlay?.();
         }
     };
 
@@ -128,6 +133,9 @@ export function MusicPlayerCard({
                             <span className="w-1 bg-amber-400 h-full animate-music-bar-3 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                         </div>
                     )}
+                    <div className="pointer-events-auto ml-2">
+                        <AddToPlaylistMenu trackId={trackId} />
+                    </div>
                 </div>
 
                 {/* Bottom Row: Controls (Always visible) */}
@@ -205,7 +213,7 @@ export function MusicPlayerCard({
                     </div>
 
                     <p className="text-sm font-medium leading-relaxed italic text-white/90 line-clamp-4">
-                        "{description || prompt || "A beautiful spiritual composition created by RRAASI AI."}"
+                        "{description || prompt || (typeof metadata === 'object' && metadata?.tags) || "A beautiful spiritual composition created by RRAASI AI."}"
                     </p>
 
                     {createdAt && (

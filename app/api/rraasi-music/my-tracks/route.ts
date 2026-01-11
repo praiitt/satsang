@@ -23,15 +23,27 @@ export async function GET(request: NextRequest) {
         const searchParams = request.nextUrl.searchParams;
         const limit = parseInt(searchParams.get('limit') || '50');
 
-        // Fetch tracks from auth-server
-        const authServerUrl = process.env.AUTH_SERVER_URL ||
-            'https://satsang-auth-server-6ougd45dya-el.a.run.app';
+        // Fetch tracks from auth-server using new endpoint that handles room IDs
+        const isDev = process.env.NODE_ENV === 'development';
 
-        const url = `${authServerUrl}/suno/tracks?userId=${encodeURIComponent(user.phoneNumber)}&limit=${limit}`;
+        // Force localhost in development to avoid hitting production URL from .env.local
+        const authServerUrl = isDev
+            ? 'http://localhost:4000'
+            : (process.env.AUTH_SERVER_URL || 'https://satsang-auth-server-6ougd45dya-el.a.run.app');
 
-        console.log(`[My Tracks API] Fetching tracks for user: ${user.phoneNumber}`);
+        const url = `${authServerUrl}/suno/my-tracks`;
 
-        const response = await fetch(url);
+        console.log(`[My Tracks API] Fetching tracks for User UID: ${user.uid}, Phone: ${user.phoneNumber}`);
+        console.log(`[My Tracks API] Target URL: ${url}`);
+
+        // Forward cookies for authentication
+        const cookieHeader = headerList.get('cookie') || '';
+
+        const response = await fetch(url, {
+            headers: {
+                'Cookie': cookieHeader
+            }
+        });
 
         if (!response.ok) {
             console.error(`[My Tracks API] Auth server error: ${response.status}`);

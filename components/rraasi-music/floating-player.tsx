@@ -32,7 +32,8 @@ export function FloatingPlayer() {
         isExpanded,
         setExpanded,
         volume,
-        setVolume
+        setVolume,
+        closePlayer
     } = useMusicPlayer();
 
     const [isHovered, setIsHovered] = useState(false);
@@ -209,8 +210,14 @@ export function FloatingPlayer() {
 
                     {/* Right: Actions / Mobile Play */}
                     <div className="flex items-center gap-3">
-                        {/* Mobile Play Button (Replacing Volume) */}
-                        <div className="md:hidden">
+                        {/* Mobile Controls (Prev, Play, Next) */}
+                        <div className="flex items-center gap-3 md:hidden">
+                            <button
+                                onClick={(e) => { e.stopPropagation(); prevTrack(); }}
+                                className="p-2 text-gray-500 dark:text-gray-400"
+                            >
+                                <SkipBack className="w-6 h-6" />
+                            </button>
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
@@ -220,9 +227,22 @@ export function FloatingPlayer() {
                             >
                                 {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current" />}
                             </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); nextTrack(); }}
+                                className="p-2 text-gray-500 dark:text-gray-400"
+                            >
+                                <SkipForward className="w-6 h-6" />
+                            </button>
+                            {/* Mobile Close Button */}
+                            <button
+                                onClick={(e) => { e.stopPropagation(); closePlayer(); }}
+                                className="p-1 text-gray-400 hover:text-red-500 ml-2"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
                         </div>
 
-                        {/* Desktop Volume & Expand */}
+                        {/* Desktop Volume & Expand & Close */}
                         <div className="hidden md:flex items-center gap-3">
                             <div className="flex items-center gap-2 group/vol">
                                 <Volume2 className="w-5 h-5 text-gray-400" />
@@ -241,6 +261,15 @@ export function FloatingPlayer() {
 
                             <button onClick={() => setExpanded(true)} className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
                                 <Maximize2 className="w-5 h-5" />
+                            </button>
+
+                            {/* Desktop Close Button */}
+                            <button
+                                onClick={closePlayer}
+                                className="p-2 text-gray-400 hover:text-red-500 transition-colors border-l border-gray-200 dark:border-gray-700 pl-3 ml-1"
+                                title="Close Player"
+                            >
+                                <X className="w-5 h-5" />
                             </button>
                         </div>
                     </div>

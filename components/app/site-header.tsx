@@ -4,10 +4,11 @@ import Link from 'next/link';
 import { User } from 'lucide-react';
 import { LanguageSelector } from '@/components/app/language-selector';
 import { LoginLink } from '@/components/app/login-link';
-import { CoinBalanceBadge } from '@/components/ui/coin-balance-badge';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Logo } from '@/components/ui/logo';
+import { ServiceNav } from '@/components/app/service-nav';
+import { ThemeToggle } from '@/components/app/theme-toggle';
 
 export function SiteHeader() {
   const { t } = useLanguage();
@@ -16,12 +17,20 @@ export function SiteHeader() {
   return (
     <header className="bg-background/95 border-border supports-[backdrop-filter]:bg-background/75 sticky top-0 z-50 w-full border-b backdrop-blur">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight">
+        <Link href="/" className="flex items-center gap-2 font-extrabold tracking-tight shrink-0">
           {/* RRAASI Logo */}
-          {/* RRAASI Logo */}
-          <Logo />
+          <Logo className="h-8 md:h-10" size="md" />
         </Link>
-        <nav className="flex items-center gap-2 sm:gap-4">
+
+        {/* Desktop: Centered Nav */}
+        <div className="flex-1 hidden md:flex justify-center">
+          <ServiceNav variant="header" />
+        </div>
+
+        {/* Mobile: Vertical Side Dock (Expandable) */}
+        <ServiceNav variant="vertical-dock" className="md:hidden" />
+
+        <nav className="flex items-center gap-2 sm:gap-4 shrink-0">
 
           {isAuthenticated && (
             <Link
@@ -33,7 +42,7 @@ export function SiteHeader() {
               <span className="hidden sm:inline text-sm">Profile</span>
             </Link>
           )}
-          {isAuthenticated && <CoinBalanceBadge />}
+          <ThemeToggle className="w-auto" />
           <LanguageSelector />
           <LoginLink />
         </nav>

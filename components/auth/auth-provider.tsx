@@ -13,6 +13,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   sendOTP: (phoneNumber: string) => Promise<ConfirmationResult>;
   verifyOTP: (confirmationResult: ConfirmationResult, code: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -130,6 +133,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async (): Promise<void> => {
     await checkAuth();
   }, [checkAuth]);
+  const signUpWithEmail = useCallback(async (email: string, password: string): Promise<void> => {
+    try {
+      const auth = getFirebaseAuth();
+      const { createUserWithEmailAndPassword } = await import('firebase/auth');
+
+      const result = await createUserWithEmailAndPassword(auth, email, password);
+      const idToken = await result.user.getIdToken();
+
+      // Exchange for session cookie
+      await sessionLogin(idToken);
+
+      // Refresh user
+      await checkAuth();
+    } catch (error: any) {
+      console.error('Error signing up with email:', error);
+      throw new Error(error.message || 'Failed to sign up');
+    }
+  }, [checkAuth]);
+
+  const signInWithEmail = useCallback(async (email: string, password: string): Promise<void> => {
+    try {
+      const auth = getFirebaseAuth();
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await result.user.getIdToken();
+
+      // Exchange for session cookie
+      await sessionLogin(idToken);
+
+      // Refresh user
+      await checkAuth();
+    } catch (error: any) {
+      console.error('Error signing in with email:', error);
+      throw new Error(error.message || 'Failed to sign in');
+    }
+  }, [checkAuth]);
+
+  const signInWithGoogle = useCallback(async (): Promise<void> => {
+    try {
+      const auth = getFirebaseAuth();
+      const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+      const provider = new GoogleAuthProvider();
+
+      const result = await signInWithPopup(auth, provider);
+      const idToken = await result.user.getIdToken();
+
+      // Exchange for session cookie
+      await sessionLogin(idToken);
+
+      // Refresh user
+      await checkAuth();
+    } catch (error: any) {
+      console.error('Error signing in with Google:', error);
+      throw new Error(error.message || 'Failed to sign in with Google');
+    }
+  }, [checkAuth]);
 
   return (
     <AuthContext.Provider
@@ -139,6 +199,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         sendOTP,
         verifyOTP,
+        signInWithGoogle,
+        signUpWithEmail,
+        signInWithEmail,
         logout,
         refreshUser,
       }}

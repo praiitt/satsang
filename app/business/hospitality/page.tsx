@@ -2,6 +2,7 @@
 import Link from "next/link"
 import { Sun, Moon, MapPin, Hotel, Speaker } from "lucide-react"
 import { Button } from "@/components/livekit/button"
+import { AudioDemoPlayer } from "@/components/b2b/audio-demo-player"
 
 export default function HospitalityPage() {
     return (
@@ -22,6 +23,16 @@ export default function HospitalityPage() {
                     <Button size="lg" className="bg-amber-600 hover:bg-amber-700 text-white rounded-full px-8 h-12 text-lg">
                         Request Consult
                     </Button>
+                </div>
+
+                <div className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                    <p className="text-sm text-zinc-500 mb-4 font-mono">GENERATED EXAMPLE: "Morning Raga (Bhairav)"</p>
+                    <AudioDemoPlayer
+                        src="https://cdn1.suno.ai/6cd6cfbc-2917-401f-b386-b3270648bdff.mp3"
+                        title="Sunrise Lobby Ambience"
+                        description="Raga Bhairav • Water Element • 6am-10am"
+                        color="text-amber-400"
+                    />
                 </div>
             </section>
 

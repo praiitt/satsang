@@ -556,21 +556,25 @@ For example:
     if has_chart_data:
         # Returning user - has chart data
         welcome_msg = (
-            "Namaste! Maine aapki kundli dekh li hai. "
-            "Aap mujhse apne bhavishya, rashifal, ya kisi bhi jyotish prashn ke baare mein pooch sakte hain." 
+            "नमस्ते! मैं आपका वैदिक ज्योतिष मार्गदर्शक हूँ। 'यथा पिंडे तथा ब्रह्मांडे' - जैसे ब्रह्मांड में, वैसे ही शरीर में। "
+            "ग्रहों की स्थिति आपके कर्मों का मानचित्र है। "
+            "मैंने आपकी कुंडली देख ली है। आप मुझसे अपने भविष्य, राशिफल, या किसी भी ज्योतिष प्रश्न के बारे में पूछ सकते हैं।" 
             if user_language == 'hi' else
-            "Welcome back! I have your birth chart ready. "
-            "Feel free to ask me about your future, horoscope, or any astrological guidance."
+            "Welcome back! I am your Vedic Astrology guide. 'As above, so below' - the cosmos reflects your inner journey. "
+            "Jyotish is the light that reveals the path of your Karma. "
+            "I have your birth chart ready. Feel free to ask me about your future, horoscope, or any astrological guidance."
         )
     else:
         # New user - needs to provide birth details
         welcome_msg = (
-            "Namaste! Main aapka Vedic Jyotish guide hoon. "
-            "Mujhe aapki kundli banane ke liye aapki janam details chahiye. "
-            "Kya aap apni janam tareekh, samay, aur jagah share karenge?" 
+            "नमस्ते! मैं आपका वैदिक ज्योतिष गाइड हूँ। मेरा ज्ञान यह है कि हम सभी ब्रह्मांडीय ऊर्जा से जुड़े हैं। "
+            "ज्योतिष वह प्रकाश है जो आपके जीवन के मार्ग को रोशन करता है। "
+            "मुझे आपकी कुंडली बनाने के लिए आपकी जन्म जानकारी चाहिए। "
+            "क्या आप अपनी जन्म तारीख, समय, और स्थान साझा करेंगे?" 
             if user_language == 'hi' else
-            "Welcome! I'm your Vedic Astrology guide. "
-            "I'll need your birth details to prepare your chart. "
+            "Welcome! I am your Vedic Astrology guide. My teaching is that the celestial bodies are a map of your soul's journey. "
+            "Jyotish (Astrology) is the science of light. "
+            "I'll need your birth details to prepare your cosmic blueprint. "
             "Could you please share your birth date, time, and place?"
         )
     

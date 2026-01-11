@@ -7,23 +7,25 @@ interface LogoProps {
     as?: React.ElementType; // Allow changing the root element (e.g., 'span' for footer)
 }
 
-export function Logo({ className, size = 'md', as: Component = 'h1' }: LogoProps) {
-    const sizeClasses = {
-        sm: 'text-2xl',
-        md: 'text-3xl sm:text-4xl',
-        lg: 'text-5xl',
-        xl: 'text-6xl',
+export function Logo({ className, size = 'md' }: LogoProps) {
+    // Logo sizes map to pixel heights (approx)
+    const sizeMap = {
+        sm: 24,
+        md: 40,
+        lg: 64,
+        xl: 80,
     };
 
     return (
-        <Component
+        <img
+            src="/branding/logo-horizontal.png"
+            alt="RRAASI"
+            height={sizeMap[size]}
             className={cn(
-                'font-cinzel font-bold tracking-wide text-gradient-gold drop-shadow-sm',
-                sizeClasses[size],
+                'object-contain',
                 className
             )}
-        >
-            RRAASI
-        </Component>
+            style={{ height: sizeMap[size], width: 'auto' }}
+        />
     );
 }

@@ -8,19 +8,17 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { initFirebaseAdmin } from './firebase.js';
 import authRoutes from './routes/auth.js';
+import userRoutes from './routes/user.js';
 import sunoRoutes from './routes/suno.js';
 import tarotRoutes from './routes/tarot.js';
 import coinRoutes from './routes/coins.js';
 import livekitRoutes from './routes/livekit.js';
+import marketingRoutes from './routes/marketing.js';
+import playlistRoutes from './routes/playlists.js';
+import corporateRoutes from './routes/corporate.js';
 
 // ... imports
 
-app.use('/auth', authRoutes);
-app.use('/suno', sunoRoutes);
-app.use('/tarot', tarotRoutes);
-app.use('/coins', coinRoutes);
-app.use('/marketing', marketingRoutes);
-app.use('/livekit', livekitRoutes); // Add this
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -71,10 +69,14 @@ if (!process.env.FUNCTION_TARGET) {
 app.use(cookieParser());
 
 app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
 app.use('/suno', sunoRoutes);
 app.use('/tarot', tarotRoutes);
 app.use('/coins', coinRoutes);
 app.use('/marketing', marketingRoutes);
+app.use('/livekit', livekitRoutes);
+app.use('/playlists', playlistRoutes);
+app.use('/corporate', corporateRoutes);
 
 app.get('/test-coins', (req, res) => res.json({ status: 'ok', message: 'Auth Server is running' }));
 

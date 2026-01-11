@@ -19,15 +19,28 @@ router.post('/map-session', async (req: Request, res: Response) => {
         console.log(`[LiveKit Map] Mapping Room ${roomName} -> User ${userId}`);
 
         const db = getDb();
-        await db.collection('room_sessions').doc(roomName).set({
+        const batch = db.batch();
+
+        // 1. Save Session Details
+        const sessionRef = db.collection('room_sessions').doc(roomName);
+        batch.set(sessionRef, {
             roomName,
             userId,
             agentName: agentName || 'unknown',
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
-            // Optional: TTL or expiration could be handled by a scheduled function
         }, { merge: true });
 
-        res.json({ success: true, message: 'Session mapped' });
+        // 2. Add Room ID to User's History
+        const userRef = db.collection('users').doc(userId);
+        batch.set(userRef, {
+            room_ids: admin.firestore.FieldValue.arrayUnion(roomName),
+            last_room_id: roomName,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        }, { merge: true });
+
+        await batch.commit();
+
+        res.json({ success: true, message: 'Session mapped and user history updated' });
     } catch (error) {
         console.error('[LiveKit Map] Error mapping session:', error);
         res.status(500).json({ error: 'Failed to map session' });

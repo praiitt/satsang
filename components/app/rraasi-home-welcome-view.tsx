@@ -151,7 +151,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
         <div ref={ref} className="relative w-full overflow-hidden">
             <SacredGeometryBg />
 
-            {/* Hero Section - Justify End to push content down so face is visible */}
+            {/* Hero Section - Tagline at top, rest at bottom */}
             <section className="relative flex min-h-[90vh] flex-col items-center justify-end px-4 pb-32 pt-20 text-center overflow-hidden">
                 {/* Bot Video Background */}
                 <div className="absolute inset-0 w-full h-full z-0">
@@ -170,40 +170,38 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                     <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
                 </div>
 
-                {/* Prominent Sound Control */}
+                {/* Fixed Sound Control - Top Right Corner - Icon Only */}
                 <button
                     onClick={toggleMute}
-                    className="absolute bottom-10 right-10 z-30 flex items-center gap-2 rounded-full bg-primary/90 px-6 py-3 text-primary-foreground shadow-xl backdrop-blur-md transition-all hover:bg-primary hover:scale-105 active:scale-95 group border-2 border-white/20"
+                    className="fixed top-16 right-4 z-50 flex items-center justify-center rounded-full bg-black/80 p-3 text-white shadow-2xl backdrop-blur-md transition-all hover:bg-black/90 hover:scale-105 active:scale-95 border-2 border-white/30"
                     aria-label={isMuted ? "Unmute video" : "Mute video"}
                 >
                     {isMuted ? (
-                        <>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
-                            <span className="font-bold">UNMUTE</span>
-                        </>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
                     ) : (
-                        <>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                            <span className="font-bold">MUTE</span>
-                        </>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
                     )}
                 </button>
 
+                {/* Tagline positioned at top */}
+                <motion.p
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="absolute top-24 left-0 right-0 z-10 mx-auto max-w-2xl text-xl font-medium text-primary sm:text-2xl md:text-3xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)]"
+                    style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.6)' }}
+                >
+                    {t('rraasHome.tagline')}
+                </motion.p>
+
+                {/* Rest of content at bottom */}
                 <motion.div
                     initial={{ opacity: 0, y: 30 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                     className="relative z-10 max-w-4xl"
                 >
-                    {/* Om symbol removed as per user request */}
-
-                    {/* Title "RRAASI" removed as per user request */}
-
-                    <p className="mx-auto mb-8 max-w-2xl text-xl font-medium text-primary sm:text-2xl md:text-3xl drop-shadow-md">
-                        {t('rraasHome.tagline')}
-                    </p>
-
-                    <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-muted-foreground sm:text-xl drop-shadow-sm font-medium">
+                    <p className="mx-auto mb-12 max-w-2xl text-lg leading-relaxed text-foreground sm:text-xl font-medium drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 15px rgba(0,0,0,0.7)' }}>
                         {t('rraasHome.subtitle')} {t('rraasHome.description')}
                     </p>
 
@@ -291,6 +289,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         icon={<img src="/services/tarot-icon-fixed.png" alt="Mystic Tarot" className="w-full h-full object-contain drop-shadow-xl" />}
                         align="left"
                         gradient="from-purple-500/30 to-indigo-500/30"
+                        badge="Coming Soon — Early Access"
                     />
 
                     {/* Vedic Astrology */}

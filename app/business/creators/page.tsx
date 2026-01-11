@@ -2,6 +2,7 @@
 import Link from "next/link"
 import { Check, Music, ShieldCheck, Zap } from "lucide-react"
 import { Button } from "@/components/livekit/button"
+import { AudioDemoPlayer } from "@/components/b2b/audio-demo-player"
 
 export default function CreatorsPage() {
     return (
@@ -25,6 +26,16 @@ export default function CreatorsPage() {
                     <Button variant="outline" size="lg" className="border-white/10 hover:bg-white/5 text-zinc-300 rounded-full h-12">
                         Listen to Samples
                     </Button>
+                </div>
+
+                <div className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                    <p className="text-sm text-zinc-500 mb-4 font-mono">GENERATED EXAMPLE: "Upbeat Lo-Fi intro with sitar"</p>
+                    <AudioDemoPlayer
+                        src="https://cdn1.suno.ai/ad75d82f-c489-4982-a890-87f8dd4e05d1.mp3"
+                        title="Cosmic Lo-Fi Beat"
+                        description="Royalty-Free • Generated in 15s"
+                        color="text-purple-400"
+                    />
                 </div>
             </section>
 

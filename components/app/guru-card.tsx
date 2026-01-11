@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import type { GuruDefinition } from '@/lib/gurus';
+import { Heart, UserCheck, UserPlus } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useUserData } from '@/components/providers/user-data-provider';
 
 interface GuruCardProps {
   guru: GuruDefinition;
@@ -13,6 +16,10 @@ interface GuruCardProps {
 export function GuruCard({ guru, onClick }: GuruCardProps) {
   const { t } = useLanguage();
   const router = useRouter();
+  const { isFavorite, isFollowing, toggleFavorite, toggleFollow } = useUserData();
+
+  const isFav = isFavorite(guru.id);
+  const isFollowingGuru = isFollowing(guru.id);
 
   const handleClick = () => {
     if (onClick) {
@@ -33,11 +40,46 @@ export function GuruCard({ guru, onClick }: GuruCardProps) {
       className="bg-background border-input group relative flex cursor-pointer flex-col rounded-2xl border p-6 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg"
       onClick={handleClick}
     >
-      {/* Icon */}
-      <div className="mb-4 flex items-center gap-3">
+      {/* Favorite Button (Top Right) */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleFavorite(guru.id);
+        }}
+        className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted/50 transition-colors z-10"
+      >
+        <Heart
+          className={cn(
+            "w-6 h-6 transition-colors",
+            isFav ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-red-500"
+          )}
+        />
+      </button>
+
+      {/* Icon & Name */}
+      <div className="mb-4 flex items-center gap-3 pr-8">
         <div className="text-4xl">{guru.icon}</div>
         <div className="flex-1">
-          <h3 className="text-foreground text-xl font-bold">{name}</h3>
+          <h3 className="text-foreground text-xl font-bold flex items-center gap-2">
+            {name}
+            {/* Follow Toggle (Small Icon) */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleFollow(guru.id);
+              }}
+              className={cn(
+                "p-1 rounded-md text-xs border transition-all flex items-center gap-1",
+                isFollowingGuru
+                  ? "bg-primary/10 border-primary text-primary"
+                  : "bg-transparent border-muted hover:border-primary text-muted-foreground"
+              )}
+              title={isFollowingGuru ? "Unfollow" : "Follow"}
+            >
+              {isFollowingGuru ? <UserCheck className="w-3 h-3" /> : <UserPlus className="w-3 h-3" />}
+              {isFollowingGuru ? "Following" : "Follow"}
+            </button>
+          </h3>
           <p className="text-muted-foreground text-sm">{guru.tradition}</p>
         </div>
       </div>

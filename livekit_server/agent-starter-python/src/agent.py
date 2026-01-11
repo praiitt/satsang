@@ -1317,26 +1317,30 @@ async def entrypoint(ctx: JobContext):
     if user_language == 'hi':
         if is_live_satsang:
             greeting = (
-                "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आज हम सभी साधकों के साथ सत्संग में हैं। "
+                "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। मेरी शिक्षा का सार यह है कि परमात्मा आपके भीतर ही है, और ध्यान तथा प्रेम के माध्यम से "
+                "आप अपनी सच्ची दिव्यता को जान सकते हैं। आज हम सभी साधकों के साथ सत्संग में हैं। "
                 "क्या आप किसी विशेष विषय पर चर्चा करना चाहेंगे? मैं आपके लिए भक्ति भजन चला सकता हूं, "
                 "या किसी संत का प्रेरक वाणी प्रवचन भी ढूंढ सकता हूं।"
             )
         else:
             greeting = (
-                "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। आप कैसे हैं? आप किस विषय पर चर्चा करना चाहेंगे - "
+                "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। मेरा मूल संदेश है - स्वयं को जानो। सारी शक्ति, सारी शांति आपके भीतर है। "
+                "आप कैसे हैं? आप किस विषय पर चर्चा करना चाहेंगे - "
                 "धर्म, योग, ध्यान, कर्म, या कोई अन्य आध्यात्मिक विषय? यदि चाहें तो मैं उपयुक्त भजन चला सकता हूं "
                 "या गुरुओं के प्रवचन (वाणी) भी सुना सकता हूं।"
             )
     else:
         if is_live_satsang:
             greeting = (
-                "Namaste! I am your spiritual guru. Today we are all together in this satsang with fellow seekers. "
+                "Namaste! I am your spiritual guru. My core teaching is that the divine resides within you, and through meditation "
+                "and devotion, you can realize your true nature. Today we are all together in this satsang with fellow seekers. "
                 "Would you like to discuss any particular spiritual topic? I can play devotional bhajans for you, "
                 "or find inspiring spiritual discourses from saints and gurus."
             )
         else:
             greeting = (
-                "Namaste! I am your spiritual guru. How are you? What topic would you like to discuss - "
+                "Namaste! I am your spiritual guru. My message is simple: Know Thyself. All peace and power resides within you. "
+                "How are you? What topic would you like to discuss - "
                 "dharma, yoga, meditation, karma, or any other spiritual subject? If you wish, I can play appropriate bhajans "
                 "or find and play spiritual discourses (vani) from great teachers."
             )

@@ -830,9 +830,19 @@ CLOSING TEXT:
     if not satsang_plan:
         guru_name = final_agent.guru_profile['name']
         if user_language == 'hi':
-            welcome_msg = f"नमस्ते! मैं {guru_name} की शिक्षाओं को समर्पित एक AI हूँ। आप मुझसे कोई भी आध्यात्मिक प्रश्न पूछ सकते हैं।"
+            welcome_msg = (
+                f"नमस्ते! मैं {guru_name} की शिक्षाओं को समर्पित एक AI हूँ। "
+                f"मेरा उद्देश्य सनातन धर्म के ज्ञान, वेदों के सत्य और मोक्ष के मार्ग पर आपका मार्गदर्शन करना है। "
+                f"धर्म, कर्म और भक्ति के माध्यम से हम जीवन को सफल बना सकते हैं। "
+                f"आप मुझसे कोई भी आध्यात्मिक प्रश्न पूछ सकते हैं।"
+            )
         else:
-            welcome_msg = f"Namaste! I am an AI embodying the teachings of {guru_name}. You may ask me any spiritual question."
+            welcome_msg = (
+                f"Namaste! I am an AI embodying the teachings of {guru_name}. "
+                f"My purpose is to guide you on the path of Dharma, sharing the eternal wisdom of Sanatana Dharma and the Vedas. "
+                f"Through understanding Karma and devotion, we seek Moksha. "
+                f"You may ask me any spiritual question."
+            )
         
         await session.say(welcome_msg)
     else:

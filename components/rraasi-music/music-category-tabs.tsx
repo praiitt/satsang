@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export type MusicCategory = 'all' | 'bhajan' | 'mantra' | 'meditation' | 'healing' | 'yoga' | 'my-music' | 'other';
+export type MusicCategory = 'all' | 'playlists' | 'bhajan' | 'mantra' | 'meditation' | 'healing' | 'yoga' | 'my-music' | 'other';
 
 interface CategoryTab {
     id: MusicCategory;
@@ -13,6 +13,7 @@ interface CategoryTab {
 
 const categories: CategoryTab[] = [
     { id: 'all', label: 'All Music', labelHi: 'सभी संगीत', icon: '🎵' },
+    { id: 'playlists', label: 'Playlists', labelHi: 'प्लेलिस्ट', icon: '📂' },
     { id: 'bhajan', label: 'Bhajans', labelHi: 'भजन', icon: '🙏' },
     { id: 'mantra', label: 'Mantras', labelHi: 'मंत्र', icon: '🕉️' },
     { id: 'meditation', label: 'Meditation', labelHi: 'ध्यान', icon: '🧘' },

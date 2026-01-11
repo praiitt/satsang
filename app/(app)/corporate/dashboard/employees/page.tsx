@@ -13,25 +13,28 @@ import {
 } from 'lucide-react';
 import type { OrganizationEmployee } from '@/lib/types/corporate';
 import { BulkUploadCsv } from '@/components/app/corporate/bulk-upload-csv';
+import { useCorporateAuth } from '@/contexts/corporate-auth-context';
 
 export default function EmployeesPage() {
+    const { selectedOrg } = useCorporateAuth();
     const [employees, setEmployees] = useState<OrganizationEmployee[]>([]);
     const [loading, setLoading] = useState(true);
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-    // TODO: Get real Org ID from auth context or URL
-    const orgId = 'org_demo';
-
     useEffect(() => {
-        loadEmployees();
-    }, []);
+        if (selectedOrg) {
+            loadEmployees();
+        }
+    }, [selectedOrg]);
 
     const loadEmployees = async () => {
+        if (!selectedOrg) return;
+
         try {
             setLoading(true);
             // Dynamic import to avoid SSR issues with Firestore
             const { CorporateService } = await import('@/lib/services/corporate-service');
-            const data = await CorporateService.getEmployees(orgId);
+            const data = await CorporateService.getEmployees(selectedOrg.id);
             setEmployees(data);
         } catch (err) {
             console.error("Failed to load employees", err);
@@ -41,11 +44,13 @@ export default function EmployeesPage() {
     };
 
     const handleBulkUpload = async (emails: string[]) => {
+        if (!selectedOrg) return;
+
         try {
             const { CorporateService } = await import('@/lib/services/corporate-service');
             // Process invites in parallel
             await Promise.all(emails.map(email =>
-                CorporateService.inviteEmployee(orgId, email)
+                CorporateService.inviteEmployee(selectedOrg.id, email)
             ));
 
             // Refresh list
@@ -54,6 +59,29 @@ export default function EmployeesPage() {
         } catch (err) {
             console.error("Upload failed", err);
             alert("Failed to upload invitations. Please try again.");
+        }
+    };
+
+    const [isInviteOpen, setIsInviteOpen] = useState(false);
+    const [inviteEmail, setInviteEmail] = useState('');
+
+    const handleInvite = async () => {
+        if (!selectedOrg || !inviteEmail) return;
+
+        try {
+            setLoading(true);
+            const { CorporateService } = await import('@/lib/services/corporate-service');
+            await CorporateService.inviteEmployee(selectedOrg.id, inviteEmail);
+
+            setInviteEmail('');
+            setIsInviteOpen(false);
+            loadEmployees();
+            alert(`Invitation sent to ${inviteEmail}`);
+        } catch (err: any) {
+            console.error("Invite failed", err);
+            alert(err.message || "Failed to send invitation.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -72,7 +100,7 @@ export default function EmployeesPage() {
                         <Upload className="w-4 h-4 mr-2" />
                         Bulk Upload CSV
                     </Button>
-                    <Button>
+                    <Button onClick={() => setIsInviteOpen(true)}>
                         <Plus className="w-4 h-4 mr-2" />
                         Add Employee
                     </Button>
@@ -153,6 +181,38 @@ export default function EmployeesPage() {
                         onCancel={() => setIsUploadOpen(false)}
                         onUpload={handleBulkUpload}
                     />
+                </div>
+            )}
+
+            {/* Invite Employee Overlay */}
+            {isInviteOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-card w-full max-w-md p-6 rounded-xl border shadow-xl space-y-4">
+                        <h2 className="text-xl font-bold">Invite Employee</h2>
+                        <p className="text-sm text-muted-foreground">
+                            Send an email invitation to a new team member.
+                        </p>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Email Address</label>
+                            <input
+                                type="email"
+                                placeholder="colleague@company.com"
+                                className="w-full px-3 py-2 rounded-md border bg-background"
+                                value={inviteEmail}
+                                onChange={(e) => setInviteEmail(e.target.value)}
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4">
+                            <Button variant="outline" onClick={() => setIsInviteOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button onClick={handleInvite} disabled={!inviteEmail || loading}>
+                                {loading ? 'Sending...' : 'Send Invite'}
+                            </Button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>

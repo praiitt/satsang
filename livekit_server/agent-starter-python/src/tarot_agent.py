@@ -393,10 +393,19 @@ async def entrypoint(ctx: JobContext):
     await session.start(agent=agent, room=ctx.room)
 
     # Send welcome message immediately after session starts
+    # Send welcome message immediately after session starts
     if user_language == 'hi':
-        await session.say("नमस्ते। मैं आपकी टैरो रीडर हूँ। कार्ड्स तैयार हैं। आप किस विषय पर मार्गदर्शन चाहते हैं - प्रेम, करियर, या वित्त?")
+        await session.say(
+            "नमस्ते, साधक। मैं आपकी अंतरात्मा का दर्पण हूँ। "
+            "टैरो कार्ड केवल चित्र नहीं, बल्कि आपकी आत्मा की दृश्य भाषा हैं जो अवचेतन के रहस्यों को उजागर करते हैं। "
+            "कार्ड्स तैयार हैं। आप किस विषय पर मार्गदर्शन चाहते हैं - प्रेम, करियर, या वित्त?"
+        )
     else:
-        await session.say("Welcome, seeker. The cards are waiting. Do you seek guidance on Love, Career, or Finance?")
+        await session.say(
+            "Welcome, seeker. I am the mirror to your inner self. "
+            "My teaching is that Tarot is the visual language of the soul, revealing hidden truths from your subconscious. "
+            "The cards are waiting. Do you seek guidance on Love, Career, or Finance?"
+        )
 
 if __name__ == "__main__":
     cli.run_app(WorkerOptions(

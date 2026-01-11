@@ -12,22 +12,47 @@ export interface AuthedRequest extends Request {
 
 const SESSION_COOKIE_NAME = '__session';
 
+// Helper to get token from header
+const getBearerToken = (req: Request): string | null => {
+  const authHeader = req.headers.authorization;
+  if (authHeader?.startsWith('Bearer ')) {
+    return authHeader.split('Bearer ')[1];
+  }
+  return null;
+};
+
 export async function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
   try {
-    const sessionCookie = req.cookies?.[SESSION_COOKIE_NAME];
-    if (!sessionCookie) {
-      return res.status(401).json({ error: 'Not authenticated' });
+    const token = getBearerToken(req);
+    if (token) {
+      // Verify ID Token (Bearer)
+      const decoded = await getAuth().verifyIdToken(token);
+      req.user = {
+        uid: decoded.uid,
+        email: decoded.email,
+        phone_number: decoded.phone_number,
+        claims: decoded,
+      };
+      return next();
     }
-    const decoded = await getAuth().verifySessionCookie(sessionCookie, true);
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email,
-      phone_number: decoded.phone_number,
-      claims: decoded,
-    };
-    next();
+
+    // Fallback to Session Cookie
+    const sessionCookie = req.cookies?.[SESSION_COOKIE_NAME];
+    if (sessionCookie) {
+      const decoded = await getAuth().verifySessionCookie(sessionCookie, true);
+      req.user = {
+        uid: decoded.uid,
+        email: decoded.email,
+        phone_number: decoded.phone_number,
+        claims: decoded,
+      };
+      return next();
+    }
+
+    return res.status(401).json({ error: 'Not authenticated' });
   } catch (err) {
-    return res.status(401).json({ error: 'Invalid session' });
+    console.error('Auth Error:', err);
+    return res.status(401).json({ error: 'Invalid session/token' });
   }
 }
 

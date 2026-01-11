@@ -6,7 +6,7 @@ import { THEME_MEDIA_QUERY, THEME_STORAGE_KEY, cn } from '@/lib/utils';
 
 const THEME_SCRIPT = `
   const doc = document.documentElement;
-  const theme = localStorage.getItem("${THEME_STORAGE_KEY}") ?? "system";
+  const theme = localStorage.getItem("${THEME_STORAGE_KEY}") ?? "dark";
 
   if (theme === "system") {
     if (window.matchMedia("${THEME_MEDIA_QUERY}").matches) {
@@ -43,17 +43,18 @@ function applyTheme(theme: ThemeMode) {
 
 interface ThemeToggleProps {
   className?: string;
+  variant?: 'horizontal' | 'vertical';
 }
 
 export function ApplyThemeScript() {
   return <script id="theme-script">{THEME_SCRIPT}</script>;
 }
 
-export function ThemeToggle({ className }: ThemeToggleProps) {
+export function ThemeToggle({ className, variant = 'horizontal' }: ThemeToggleProps) {
   const [theme, setTheme] = useState<ThemeMode | undefined>(undefined);
 
   useEffect(() => {
-    const storedTheme = (localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode) ?? 'system';
+    const storedTheme = (localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode) ?? 'dark';
 
     setTheme(storedTheme);
   }, []);
@@ -63,10 +64,13 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
     setTheme(theme);
   }
 
+  const isVertical = variant === 'vertical';
+
   return (
     <div
       className={cn(
-        'text-foreground bg-background flex w-full flex-row justify-end divide-x overflow-hidden rounded-full border',
+        'text-foreground bg-background flex overflow-hidden rounded-full border',
+        isVertical ? 'w-auto flex-col divide-y' : 'w-full flex-row justify-end divide-x',
         className
       )}
     >
@@ -82,18 +86,10 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
       <button
         type="button"
         onClick={() => handleThemeChange('light')}
-        className="cursor-pointer px-1.5 py-1"
+        className={cn('cursor-pointer p-1 pr-1.5', isVertical ? 'px-1.5' : 'px-1.5')}
       >
         <span className="sr-only">Enable light color scheme</span>
         <SunIcon size={16} weight="bold" className={cn(theme !== 'light' && 'opacity-25')} />
-      </button>
-      <button
-        type="button"
-        onClick={() => handleThemeChange('system')}
-        className="cursor-pointer p-1 pr-1.5"
-      >
-        <span className="sr-only">Enable system color scheme</span>
-        <MonitorIcon size={16} weight="bold" className={cn(theme !== 'system' && 'opacity-25')} />
       </button>
     </div>
   );

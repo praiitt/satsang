@@ -37,6 +37,7 @@ interface MusicPlayerContextType {
     setVolume: (volume: number) => void;
     setExpanded: (expanded: boolean) => void;
     clearQueue: () => void;
+    closePlayer: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -213,6 +214,15 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
         setQueue([]);
     }, []);
 
+    const closePlayer = useCallback(() => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
+        setIsPlaying(false);
+        setCurrentTrack(null);
+    }, []);
+
     return (
         <MusicPlayerContext.Provider
             value={{
@@ -234,7 +244,8 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
                 seek,
                 setVolume,
                 setExpanded,
-                clearQueue
+                clearQueue,
+                closePlayer // Export
             }}
         >
             {children}

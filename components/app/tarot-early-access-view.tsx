@@ -65,9 +65,9 @@ export function TarotEarlyAccessView() {
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ duration: 0.8 }}
-                    className="mb-8 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-indigo-700 shadow-[0_0_40px_rgba(168,85,247,0.6)]"
+                    className="mb-8 flex h-24 w-24 items-center justify-center rounded-full border-4 border-purple-500/30 bg-black/20 backdrop-blur-sm shadow-[0_0_40px_rgba(168,85,247,0.6)] overflow-hidden"
                 >
-                    <span className="text-5xl">🔮</span>
+                    <img src="/services/tarot-icon-fixed.png" alt="Mystic Tarot" className="w-full h-full object-cover" />
                 </motion.div>
 
                 {/* Coming Soon Badge */}

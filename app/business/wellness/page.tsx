@@ -2,6 +2,7 @@
 import Link from "next/link"
 import { Clock, Heart, Sparkles, Wind } from "lucide-react"
 import { Button } from "@/components/livekit/button"
+import { AudioDemoPlayer } from "@/components/b2b/audio-demo-player"
 
 export default function WellnessPage() {
     return (
@@ -22,6 +23,16 @@ export default function WellnessPage() {
                     <Button size="lg" className="bg-rose-600 hover:bg-rose-700 text-white rounded-full px-8 h-12 text-lg">
                         Get Professional Access
                     </Button>
+                </div>
+
+                <div className="pt-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+                    <p className="text-sm text-zinc-500 mb-4 font-mono">GENERATED EXAMPLE: "432Hz Flute Meditation"</p>
+                    <AudioDemoPlayer
+                        src="https://cdn1.suno.ai/ad75d82f-c489-4982-a890-87f8dd4e05d1.mp3"
+                        title="Heart Chakra Flow"
+                        description="432Hz • Key of F • 60 Minutes"
+                        color="text-rose-400"
+                    />
                 </div>
             </section>
 

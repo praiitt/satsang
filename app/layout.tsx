@@ -66,16 +66,16 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         publicSans.variable,
         commitMono.variable,
         cinzel.variable,
-        'scroll-smooth font-sans antialiased'
+        'scroll-smooth font-sans antialiased overflow-x-hidden'
       )}
     >
       <head>
         {styles && <style>{styles}</style>}
-        <title>RRAASI — Conscious AI</title>
-        <meta name="description" content="Elevating Human Consciousness Through Intelligent Wisdom" />
+        <title>RRAASI — Discover Your Spiritual Dimension</title>
+        <meta name="description" content="RRAASI uses AI to help you experience your spiritual dimension. Through focused practices in Satsang, Music, Tarot, and Vedic Astrology, discover the divine intelligence within." />
         <meta name="theme-color" content="#f97316" />
         {/* Primary favicon: Om-in-purple-circle RRAASI icon */}
-        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        <link rel="icon" href="/icon.png" type="image/png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="सत्संग" />

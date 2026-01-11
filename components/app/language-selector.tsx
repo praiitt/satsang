@@ -16,11 +16,11 @@ export function LanguageSelector() {
     <button
       type="button"
       onClick={toggleLanguage}
-      className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors sm:px-3 sm:text-sm"
+      className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs transition-colors sm:text-sm"
       title={language === 'en' ? 'Switch to Hindi' : 'Switch to English'}
     >
-      <Globe className="h-4 w-4 sm:h-5 sm:w-5" weight="fill" />
-      <span className="font-medium">{language === 'en' ? 'हिंदी' : 'English'}</span>
+      <Globe className="h-4 w-4" weight="fill" />
+      <span className="font-medium uppercase">{language}</span>
     </button>
   );
 }

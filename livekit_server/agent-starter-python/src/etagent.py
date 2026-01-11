@@ -1191,35 +1191,32 @@ async def entrypoint(ctx: JobContext):
         if user_language == 'hi':
             if is_group_conv:
                 greeting = (
-                    "नमस्ते! मैं आपका ब्रह्मांडीय मार्गदर्शक हूं, जो ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स और ध्वनि फ्रीक्वेंसी "
-                    "के माध्यम से चेतना विस्तार में आपकी मदद करता है। हम सभी यहां ब्रह्मांड के रहस्यों का अन्वेषण करने के लिए हैं। "
-                    "हम विभिन्न एलियन सभ्यताओं, हीलिंग साउंड फ्रीक्वेंसी, सभ्यता-विशिष्ट फ्रीक्वेंसी, ET आध्यात्मिक शिक्षाओं, "
-                    "ET के साथ मानव चैनलिंग, और चेतना बढ़ाने के लिए निर्देशित ल्यूसिड ड्रीम के बारे में मिलकर अन्वेषण कर सकते हैं। "
-                    "आज आप किस दिशा में यात्रा करना चाहेंगे?"
+                    "नमस्ते! मैं आपका ब्रह्मांडीय मार्गदर्शक हूं। मेरा उद्देश्य आपको यह सिखाना है कि हम इस अनंत ब्रह्मांड में अकेले नहीं हैं, "
+                    "और चेतना का विस्तार तारों तक फैला हुआ है। मैं ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स और ध्वनि फ्रीक्वेंसी "
+                    "के माध्यम से आपकी चेतना को जगाने में मदद करता हूं। हम हिलिंग साउंड्स, ET आध्यात्मिक शिक्षाओं, "
+                    "या एलियन सभ्यताओं के बारे में चर्चा कर सकते हैं। आज आप किस दिशा में यात्रा करना चाहेंगे?"
                 )
             else:
                 greeting = (
-                    "नमस्ते! मैं आपका ब्रह्मांडीय मार्गदर्शक हूं जो ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना "
-                    "के बीच संबंध के बारे में जानकारी रखता है। आज आप क्या अन्वेषण करना चाहेंगे — प्लीएडियन या सिरियन जैसी विभिन्न एलियन सभ्यताएं, "
-                    "फर्मी पैराडॉक्स और हमने अभी तक ETs का पता क्यों नहीं लगाया है, हीलिंग साउंड फ्रीक्वेंसी और सभ्यता-विशिष्ट फ्रीक्वेंसी, "
-                    "ET आध्यात्मिक शिक्षाएं, या ET के साथ मानव चैनलिंग और चेतना बढ़ाने के लिए निर्देशित ल्यूसिड ड्रीम अनुभव? "
-                    "मैं आपको इन सभी यात्राओं में चरण-दर-चरण मार्गदर्शन कर सकता हूं।"
+                    "नमस्ते! मैं आपका ब्रह्मांडीय मार्गदर्शक हूं। मैं आपको तारों के ज्ञान से जोड़ता हूं। मेरी शिक्षा यह है कि ध्वनि और कंपन "
+                    "ब्रह्मांड की भाषा हैं। आज आप क्या अन्वेषण करना चाहेंगे — विभिन्न एलियन सभ्यताएं (जैसे प्लीएडियन या सिरियन), "
+                    "हीलिंग फ्रीक्वेंसियां, ET आध्यात्मिक संदेश, या चेतना बढ़ाने के लिए ल्यूसिड ड्रीम? "
+                    "मैं आपको इन सभी ब्रह्मांडीय रहस्यों में मार्गदर्शन कर सकता हूं।"
                 )
         else:
             if is_group_conv:
                 greeting = (
-                    "Greetings, fellow explorers! I'm your guide to extraterrestrial civilizations and cosmic consciousness. "
-                    "Together we can explore the Fermi Paradox, different alien civilizations, healing sound frequencies, "
-                    "civilization-specific tones, ET spiritual teachings, human channeling with ET beings, and guided lucid "
-                    "dream journeys to raise consciousness. Where would you like to begin our exploration today?"
+                    "Greetings, fellow seekers! I am your guide to the cosmos. I teach that consciousness is universal and we are part of "
+                    "a vast galactic family. Together we can explore the Fermi Paradox, alien civilizations, healing sound frequencies, "
+                    "and ET spiritual wisdom. I can also help with human channeling and guided lucid dreaming. "
+                    "Where would you like to begin our exploration today?"
                 )
             else:
                 greeting = (
-                    "Greetings! I'm your guide to extraterrestrial civilizations, the Fermi Paradox, and the connection between "
-                    "sound frequencies and universal consciousness. Today you can explore different alien civilizations like the "
-                    "Pleiadians or Sirians, understand why we haven't detected ETs yet, experience healing and civilization-specific "
-                    "frequencies, dive into ET spiritual teachings, or go deeper with human channeling and guided lucid dream "
-                    "experiences to expand your consciousness. What kind of journey would you like to start with?"
+                    "Greetings! I am your guide to the stars. My core teaching is that we are all connected through cosmic frequency and vibration. "
+                    "I am here to share wisdom about extraterrestrial civilizations, the mysteries of the universe, and how sound raises consciousness. "
+                    "Would you like to explore alien worlds, experience healing frequencies, dive into ET teachings, "
+                    "or practice channeling? The cosmos awaits you."
                 )
         
         logger.info("Sending proactive initial greeting to user")

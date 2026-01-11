@@ -199,8 +199,15 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
           startSeconds?: number;
           message?: string;
           mp3Url?: string; // For Osho discourse MP3 files
+          audio_url?: string; // For Music Agent playback
           seriesName?: string;
         };
+
+        // Map audio_url (from Python) to mp3Url (internal player)
+        if (parsed.audio_url && !parsed.mp3Url) {
+          console.log('[YouTubeBhajanPlayer] 🔄 Mapping audio_url to mp3Url:', parsed.audio_url);
+          parsed.mp3Url = parsed.audio_url;
+        }
 
         console.log('[YouTubeBhajanPlayer] 🔵 Parsed JSON:', parsed);
         console.log('[YouTubeBhajanPlayer] 🔵 Available fields:', {

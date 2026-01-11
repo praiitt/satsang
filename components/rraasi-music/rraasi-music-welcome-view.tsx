@@ -6,10 +6,12 @@ import { useLanguage } from '@/contexts/language-context';
 import { musicTranslations } from '@/lib/translations/music';
 import { MusicCategoryTabs, type MusicCategory } from '@/components/rraasi-music/music-category-tabs';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
-import { Music, Plus, Headphones } from 'lucide-react';
+import { Music, Plus, Headphones, Shuffle } from 'lucide-react';
 import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase-client';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useMusicPlayer } from '@/contexts/music-player-context';
+import { PlaylistList } from './playlist-list';
 
 function MusicIcon() {
   return (
@@ -56,6 +58,8 @@ export const RRaaSiMusicWelcomeView = ({
 }: React.ComponentProps<'div'> & RRaaSiMusicWelcomeViewProps) => {
   const { language } = useLanguage();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { playPlaylist } = useMusicPlayer();
+
   /* State */
   const [activeCategory, setActiveCategory] = useState<MusicCategory>('all');
   const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
@@ -149,7 +153,13 @@ export const RRaaSiMusicWelcomeView = ({
           createdAt: t.createdAt || t.created_at,
           status: t.status, // Map status
         }));
-        setMyTracks(tracks);
+
+        // De-dupe by Audio URL (fix for backend creating potential duplicates/variations that look identical)
+        const uniqueTracks = tracks.filter((track, index, self) =>
+          index === self.findIndex((t) => (t.audioUrl && t.audioUrl === track.audioUrl))
+        );
+
+        setMyTracks(uniqueTracks);
       }
     } catch (error) {
       console.error('Error fetching my music:', error);
@@ -202,13 +212,8 @@ export const RRaaSiMusicWelcomeView = ({
     setError(null);
 
     try {
-      // Build API URL
-      let url = `/api/rraasi-music/community-tracks?page=${pageNum}&limit=12`;
-      // Note: Backend might not support category filtering yet on this endpoint,
-      // but if it does, we'd add it here. For now, client-side filtering or ignoring category for community tracks
-      // as the backend endpoint provided earlier only supports page/limit.
-      // If category filtering is crucial, we should update the backend endpoint too.
-      // For now, assuming 'all' or relying on backend to return mixed.
+      // Build API URL with category
+      let url = `/api/rraasi-music/community-tracks?page=${pageNum}&limit=30&category=${activeCategory}`;
 
       const response = await fetch(url);
 
@@ -223,27 +228,24 @@ export const RRaaSiMusicWelcomeView = ({
         prompt: t.prompt,
         description: t.description || t.caption || t.prompt, // Map description (fallback to prompt)
         category: t.category,
+        metadata: t.metadata, // Include metadata for tags
         createdAt: t.createdAt, // Backend should return serialized date or timestamp
       }));
 
-      // If filtering by category is needed client-side:
-      const filteredNewTracks = activeCategory === 'all'
-        ? newTracks
-        : newTracks.filter(t => t.category === activeCategory);
-
+      // No client-side filtering needed now (backend handles it)
       if (isNewCategory) {
-        setMusicTracks(filteredNewTracks);
+        setMusicTracks(newTracks);
       } else {
         // Append unique tracks
         setMusicTracks(prev => {
           const existingIds = new Set(prev.map(t => t.id));
-          const uniqueNew = filteredNewTracks.filter(t => !existingIds.has(t.id));
+          const uniqueNew = newTracks.filter(t => !existingIds.has(t.id));
           return [...prev, ...uniqueNew];
         });
       }
 
-      // Check if we have more pages
-      setHasMore(data.hasMore || (data.tracks && data.tracks.length === 12));
+      // Check if we have more pages (Backend returns accurate hasMore)
+      setHasMore(data.hasMore);
 
     } catch (error) {
       console.error('Error fetching music:', error);
@@ -266,10 +268,51 @@ export const RRaaSiMusicWelcomeView = ({
     setCurrentlyPlaying(trackId);
   };
 
+  // Daily Mix Handler
+  const [isShuffling, setIsShuffling] = useState(false);
+
+  const handleDailyMix = async () => {
+    if (!isAuthenticated || !user?.uid) return;
+
+    setIsShuffling(true);
+    try {
+      // Fetch up to 100 tracks for the mix
+      const response = await fetch('/api/rraasi-music/my-tracks?limit=100');
+      if (response.ok) {
+        const data = await response.json();
+        let tracks: MusicTrack[] = (data.tracks || []).map((t: any) => ({
+          id: t.id || t.trackId,
+          title: t.title || t.trackName || 'Untitled',
+          audioUrl: t.audioUrl || t.audio_url,
+          imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
+          prompt: t.prompt,
+          description: t.description || t.caption || t.prompt,
+          category: t.category,
+          createdAt: t.createdAt || t.created_at,
+          status: t.status,
+        }));
+
+        // Fisher-Yates Shuffle
+        for (let i = tracks.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [tracks[i], tracks[j]] = [tracks[j], tracks[i]];
+        }
+
+        if (tracks.length > 0) {
+          playPlaylist(tracks, 0);
+        }
+      }
+    } catch (error) {
+      console.error('Error creating Daily Mix:', error);
+    } finally {
+      setIsShuffling(false);
+    }
+  };
+
   return (
     <div ref={ref} className="w-full pb-24">
       {/* Hero Section with Rraasi Video */}
-      <section className="relative flex min-h-[60vh] flex-col items-center justify-center px-4 py-20 text-center overflow-hidden">
+      <section className="relative flex min-h-[85vh] flex-col items-center justify-end px-4 pt-24 pb-6 text-center overflow-hidden">
         {/* Rraasi Video Background */}
         <div className="absolute inset-0 w-full h-full z-0">
           <video
@@ -278,65 +321,86 @@ export const RRaaSiMusicWelcomeView = ({
             loop={false}
             muted={isMuted}
             playsInline
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-[65%_center] md:object-center"
           >
             <source src="https://storage.googleapis.com/ips_bucket_video/37cfd7f4c0fa4524b99a3beffe68155c.mp4" type="video/mp4" />
           </video>
           {/* Gradient Overlays for Blending */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-background dark:from-background/20 dark:via-background/40 dark:to-background" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          {/* Subtle Gradients for Depth (Video remains bright) */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60" />
+
         </div>
 
         {/* Prominent Sound Control */}
         <button
           onClick={toggleMute}
-          className="absolute bottom-10 right-10 z-30 flex items-center gap-2 rounded-full bg-primary/90 px-6 py-3 text-primary-foreground shadow-xl backdrop-blur-md transition-all hover:bg-primary hover:scale-105 active:scale-95 group border-2 border-white/20"
+          className="absolute top-24 right-6 z-30 flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-4 py-2 text-white shadow-xl hover:bg-white/20 transition-all border border-white/20"
           aria-label={isMuted ? "Unmute video" : "Mute video"}
         >
           {isMuted ? (
             <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
-              <span className="font-bold">UNMUTE</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z" /><line x1="23" y1="9" x2="17" y2="15" /><line x1="17" y1="9" x2="23" y2="15" /></svg>
+              <span className="font-bold text-xs">UNMUTE</span>
             </>
           ) : (
             <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-              <span className="font-bold">MUTE</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+              <span className="font-bold text-xs">MUTE</span>
             </>
           )}
         </button>
 
-        <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <div className="flex justify-center mb-6">
-            <MusicIcon />
-          </div>
-          <h1 className="mb-6 text-4xl font-bold tracking-tight text-white sm:text-5xl md:text-6xl drop-shadow-lg">
+        <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
+          {/* Icon Removed */}
+          <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-7xl drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
             {mt('title')}
           </h1>
-          <p className="text-white/90 font-medium mx-auto mt-4 max-w-2xl text-xl drop-shadow-md">
-            {mt('subtitle')}
-          </p>
+          <div className="inline-block rounded-xl bg-black/30 backdrop-blur-md px-6 py-4 mb-8 border border-white/10">
+            <p className="text-white font-bold text-xl md:text-2xl drop-shadow-md">
+              {mt('subtitle')}
+            </p>
+          </div>
 
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={onStartCall}
-            disabled={authLoading}
-            className="mt-8 h-14 px-8 text-lg font-semibold shadow-xl hover:scale-105 transition-transform"
-          >
-            {authLoading ? (
-              <>
-                <span className="w-5 h-5 mr-2 animate-spin rounded-full border-2 border-white/50 border-t-white"></span>
-                Checking account...
-              </>
-            ) : (
-              <>
-                <Plus className="w-5 h-5 mr-2" />
-                {mt('startButton')}
-                <span className="ml-2 text-xs opacity-75">• 50 coins</span>
-              </>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={onStartCall}
+              disabled={authLoading}
+              className="h-14 px-8 text-lg font-semibold shadow-xl hover:scale-105 transition-transform"
+            >
+              {authLoading ? (
+                <>
+                  <span className="w-5 h-5 mr-2 animate-spin rounded-full border-2 border-white/50 border-t-white"></span>
+                  Checking account...
+                </>
+              ) : (
+                <>
+                  <Plus className="w-5 h-5 mr-2" />
+                  {mt('startButton')}
+                  <span className="ml-2 text-xs opacity-75">• 50 coins</span>
+                </>
+              )}
+            </Button>
+
+            {/* Daily Mix Button (Hero) */}
+            {isAuthenticated && myTracks.length > 0 && (
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={handleDailyMix}
+                disabled={isShuffling}
+                className="h-14 px-8 text-lg font-semibold bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 hover:scale-105 transition-transform"
+              >
+                {isShuffling ? (
+                  <span className="w-5 h-5 mr-2 animate-spin rounded-full border-2 border-white/50 border-t-white"></span>
+                ) : (
+                  <Shuffle className="w-5 h-5 mr-2" />
+                )}
+                Play Daily Mix
+              </Button>
             )}
-          </Button>
+          </div>
           <p className="text-white/80 mt-3 text-sm font-medium drop-shadow-sm">
             {mt('freeTrial')}
           </p>
@@ -345,18 +409,37 @@ export const RRaaSiMusicWelcomeView = ({
 
       {/* My Music Section */}
       <section className="max-w-7xl mx-auto px-4 mt-16 border-b border-gray-100 dark:border-gray-800 pb-16">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl">
-            <Headphones className="w-8 h-8 text-amber-600" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl">
+              <Headphones className="w-8 h-8 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+                My Music
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 text-lg">
+                Your personal spiritual creations
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-              My Music
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-lg">
-              Your personal spiritual creations
-            </p>
-          </div>
+
+          {/* Daily Mix Button (Section Header) */}
+          {isAuthenticated && myTracks.length > 5 && (
+            <Button
+              variant="dotted"
+              onClick={handleDailyMix}
+              disabled={isShuffling}
+              className="hidden md:flex text-amber-500 border-amber-500/20 hover:bg-amber-500/10"
+            >
+              {isShuffling ? (
+                <span className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-amber-500 border-t-transparent"></span>
+              ) : (
+                <Shuffle className="w-4 h-4 mr-2" />
+              )}
+              Shuffle All
+            </Button>
+          )}
         </div>
 
         {authLoading || myTracksLoading ? (
@@ -384,7 +467,7 @@ export const RRaaSiMusicWelcomeView = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myTracks.map((track) => (
+            {myTracks.map((track, index) => (
               <MusicPlayerCard
                 key={track.id}
                 title={track.title || 'Untitled'}
@@ -394,7 +477,7 @@ export const RRaaSiMusicWelcomeView = ({
                 prompt={track.prompt}
                 description={track.description} // Pass description
                 createdAt={track.createdAt}
-                onPlay={() => handlePlay(track.id)}
+                onPlay={() => playPlaylist(myTracks, index)} // Use playlist
                 status={track.status} // Pass status
                 onSync={() => handleSync(track.id)} // Pass sync handler
                 isSyncing={syncingTrackId === track.id} // Pass specific loading state
@@ -425,8 +508,47 @@ export const RRaaSiMusicWelcomeView = ({
           />
         </div>
 
-        {/* Music Grid */}
-        {loading ? (
+        {/* Music Content - Grid or Playlists */}
+        {activeCategory === 'playlists' ? (
+          isAuthenticated ? (
+            <PlaylistList
+              onPlayPlaylist={async (id) => {
+                try {
+                  const res = await fetch(`/api/playlists/details/${id}`); // Ensure this matches backend route
+                  if (res.ok) {
+                    const data = await res.json();
+                    const tracks = (data.tracks || []).map((t: any) => ({
+                      id: t.id || t.trackId,
+                      title: t.title || t.trackName || 'Untitled',
+                      audioUrl: t.audioUrl || t.audio_url,
+                      imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
+                      prompt: t.prompt,
+                      description: t.description || t.caption || t.prompt,
+                      category: t.category,
+                      createdAt: t.createdAt,
+                      status: t.status,
+                    }));
+
+                    if (tracks.length > 0) {
+                      playPlaylist(tracks, 0);
+                    } else {
+                      alert('This playlist is empty!');
+                    }
+                  }
+                } catch (e) {
+                  console.error("Failed to play playlist", e);
+                }
+              }}
+            />
+          ) : (
+            <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+              <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">Please log in to see your playlists</p>
+              <Button onClick={() => window.location.href = '/login'} variant="primary" size="lg">
+                Login to RRAASI
+              </Button>
+            </div>
+          )
+        ) : loading ? (
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
             <p className="text-gray-600 dark:text-gray-400">{mt('browse.loading')}</p>
@@ -452,7 +574,7 @@ export const RRaaSiMusicWelcomeView = ({
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {musicTracks.map((track) => (
+              {musicTracks.map((track, index) => (
                 <MusicPlayerCard
                   key={track.id}
                   title={track.title || 'Untitled'}
@@ -461,8 +583,9 @@ export const RRaaSiMusicWelcomeView = ({
                   category={track.category || 'other'}
                   prompt={track.prompt}
                   description={track.description} // Pass description
+                  metadata={track.metadata} // Pass metadata for tags
                   createdAt={track.createdAt?.toDate?.()?.toISOString() || track.createdAt || new Date().toISOString()}
-                  onPlay={() => handlePlay(track.id)}
+                  onPlay={() => playPlaylist(musicTracks, index)} // Use playlist
                 />
               ))}
             </div>
