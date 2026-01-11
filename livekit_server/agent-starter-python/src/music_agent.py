@@ -615,6 +615,9 @@ def prewarm(proc: JobProcess):
 
 async def entrypoint(ctx: JobContext):
     logger.info(f"Starting Music Agent for room: {ctx.room.name}")
+
+    # Connect to the room explicitly to access participant events/metadata
+    await ctx.connect()
     
     # Wait for participant to join and extract userId AND language from metadata
     user_id = "default_user"
