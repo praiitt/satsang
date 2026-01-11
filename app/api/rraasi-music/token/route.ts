@@ -7,6 +7,7 @@ type RRaaSiMusicTokenRequest = {
     role?: 'host' | 'participant';
     agentName?: string;
     userId?: string;
+    language?: string;
 };
 
 type RRaaSiMusicTokenResponse = {
@@ -37,13 +38,14 @@ export async function POST(req: Request) {
         const role = body.role || 'participant';
         const agentName = (body.agentName || DEFAULT_AGENT_NAME).trim();
         const userId = body.userId || 'default_user';
+        const language = body.language || 'hi'; // Extract language
 
         if (!agentName) {
             throw new Error('Agent name is required for RRAASI Music');
         }
 
         console.log(
-            `[RRAASI Music Token] Generating token for ${participantName} (${role}, userId: ${userId}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
+            `[RRAASI Music Token] Generating token for ${participantName} (${role}, userId: ${userId}, language: ${language}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
         );
 
         // Generate a unique room name for this session to ensure 1:1 interaction with the agent
@@ -59,7 +61,8 @@ export async function POST(req: Request) {
             uniqueRoomName,
             role,
             agentName,
-            userId
+            userId,
+            language
         );
 
         const data: RRaaSiMusicTokenResponse = {
@@ -90,18 +93,19 @@ function createParticipantToken(
     roomName: string,
     role: 'host' | 'participant',
     agentName: string,
-    userId: string
+    userId: string,
+    language: string
 ): Promise<string> {
-    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}`);
+    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}, language: ${language}`);
 
-    console.log(`[Token Creation] Metadata Object:`, { userId });
-    const metadataStr = JSON.stringify({ userId });
+    console.log(`[Token Creation] Metadata Object:`, { userId, language });
+    const metadataStr = JSON.stringify({ userId, language });
     console.log(`[Token Creation] Metadata String:`, metadataStr);
 
     const at = new AccessToken(API_KEY!, API_SECRET!, {
         ...userInfo,
         ttl: '2h',
-        metadata: metadataStr, // Include userId in metadata
+        metadata: metadataStr, // Include userId and language in metadata
     });
 
     const grant: VideoGrant = {
