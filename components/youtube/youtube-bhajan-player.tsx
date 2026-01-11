@@ -385,12 +385,13 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
           }
         }
 
-        // Check for MP3 URL (Osho discourse) - handle this before YouTube
+        // Check for MP3 URL or Audio URL (Music Agent / Osho discourse) - handle this before YouTube
+        // This is CRITICAL for Music Agent playback
         if (parsed.mp3Url && parsed.name) {
-          console.log('[YouTubeBhajanPlayer] 🎵 Found MP3 URL for discourse:', {
+          console.log('[YouTubeBhajanPlayer] 🎵 Found Audio URL:', {
             mp3Url: parsed.mp3Url,
             name: parsed.name,
-            artist: parsed.artist || parsed.seriesName,
+            artist: parsed.artist || parsed.seriesName || 'RRAASI AI',
           });
 
           // Stop any YouTube video that might be playing
@@ -399,26 +400,39 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
           // Set MP3 URL and track name
           setMp3Url(parsed.mp3Url);
           setCurrentTrackName(parsed.name);
-          setShowControls(true);
+          setShowControls(true); // Force controls to show
 
-          // Play MP3 using HTML5 audio
+          // Ensure audioRef is available before playing
           if (audioRef.current) {
             audioRef.current.src = parsed.mp3Url;
             audioRef.current.volume = volume / 100;
-            audioRef.current
-              .play()
-              .then(async () => {
-                console.log('[YouTubeBhajanPlayer] ✅ MP3 playback started');
-                await setAgentAudioMuted(true);
-                if (!agentIsSleeping) {
-                  await publishAgentControl('sleep', 'discourse_playing');
-                }
-              })
-              .catch(async (err) => {
-                console.error('[YouTubeBhajanPlayer] ❌ MP3 play error:', err);
-                await setAgentAudioMuted(false);
-                await publishAgentControl('wake', 'discourse_playback_failed');
-              });
+
+            console.log('[YouTubeBhajanPlayer] ▶️ Attempting to play audio...');
+
+            const playPromise = audioRef.current.play();
+
+            if (playPromise !== undefined) {
+              playPromise
+                .then(async () => {
+                  console.log('[YouTubeBhajanPlayer] ✅ Audio playback started successfully');
+                  await setAgentAudioMuted(true);
+                  if (!agentIsSleeping) {
+                    await publishAgentControl('sleep', 'audio_playing');
+                  }
+                })
+                .catch(async (err) => {
+                  console.error('[YouTubeBhajanPlayer] ❌ Audio play error:', err);
+                  await setAgentAudioMuted(false);
+                  // Don't wake if it was just an autoplay policy error, user can click play
+                  if (err.name !== 'NotAllowedError') {
+                    await publishAgentControl('wake', 'audio_playback_failed');
+                  } else {
+                    console.log('[YouTubeBhajanPlayer] ⚠️ Autoplay blocked. User interaction required.');
+                  }
+                });
+            }
+          } else {
+            console.error('[YouTubeBhajanPlayer] ❌ audioRef is null! Cannot play audio.');
           }
           return;
         }
@@ -431,13 +445,14 @@ export function YouTubeBhajanPlayer({ agentName, forcedVideoId, onEnded }: YouTu
             hasVideoId: !!parsed.videoId,
             hasUrl: !!parsed.url,
             hasMp3Url: !!parsed.mp3Url,
+            hasAudioUrl: !!parsed.audio_url,
             youtubeIdValue: youtubeId,
             parsedKeys: Object.keys(parsed),
           });
           // If there's no YouTube ID but there's a name, log for debugging
           if (parsed.name) {
             console.log(
-              '[YouTubeBhajanPlayer] ℹ️  Received bhajan data but no YouTube ID. Spotify player may handle this.'
+              '[YouTubeBhajanPlayer] ℹ️  Received bhajan data but no YouTube ID.'
             );
           }
           return;
