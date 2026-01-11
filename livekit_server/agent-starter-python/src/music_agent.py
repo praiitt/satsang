@@ -884,15 +884,16 @@ async def entrypoint(ctx: JobContext):
             logger.error(f"Error processing metadata update: {e}")
     
     # Send language-appropriate welcome message
+    # Send language-appropriate welcome message
     if user_language == "hi":
         welcome_msg = (
-            "नमस्ते। मैं RRAASI हूँ। "
-            "क्या आप 'नाद ब्रह्म' के बारे में जानना चाहते हैं और आध्यात्मिक संगीत बनाना चाहते हैं?"
+            "नमस्ते। मैं आध्यात्मिक संगीत बना सकता हूँ। "
+            "आप मुझसे भजन, मंत्र, ध्यान संगीत, या नाद ब्रह्म ध्वनियाँ बनवा सकते हैं। आज आप क्या रचना चाहते हैं?"
         )
     else:
         welcome_msg = (
-            "Welcome. I am RRAASI. "
-            "Do you want to know about 'Nada Brahma' and create spiritual music?"
+            "Hello. I can create spiritual music for you. "
+            "You can ask me to create Bhajans, Mantras, Meditation music, or Sound Healing frequencies. What would you like to create today?"
         )
     
     await session.say(welcome_msg)
