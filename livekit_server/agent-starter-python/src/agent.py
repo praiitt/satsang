@@ -876,22 +876,7 @@ async def entrypoint(ctx: JobContext):
 
         await session.start(agent=agent_instance, room=ctx.room)
 
-                    # Cartesia supports speed: "slow" | "normal" | "fast"
-                    "speed": (os.getenv("TTS_SPEED") or "slow")
-                    if (os.getenv("TTS_SPEED") or "slow") in {"slow", "normal", "fast"}
-                    else "normal",
-                },
-            ),
-            # VAD and turn detection are used to determine when the user is speaking and when the agent should respond
-            # See more at https://docs.livekit.io/agents/build/turns
-            # If turn_detector failed to load, let AgentSession create a default one (lazy)
-            turn_detection=turn_detector,
-            vad=ctx.proc.userdata["vad"],
-            # allow the LLM to generate a response while waiting for the end of turn
-            # See more at https://docs.livekit.io/agents/build/audio/#preemptive-generation
-            # Enable preemptive generation even in group settings for faster responses
-            preemptive_generation=True,
-        )
+
         logger.info("AgentSession created successfully")
     except Exception as e:
         logger.error(f"Failed to create AgentSession: {e}")
