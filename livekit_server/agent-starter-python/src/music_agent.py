@@ -199,7 +199,7 @@ generate_music(
             healing_meta = {}
             try:
                 mood_hint = "Spiritual"
-                # Generate metadata (can fail)
+                # Generate metadata (including category and story)
                 healing_meta = await self._generate_healing_metadata(title, style, mood_hint, lyrics)
             except Exception as meta_error:
                 logger.error(f"Failed to generate metadata: {meta_error}")
@@ -208,6 +208,12 @@ generate_music(
             try:
                 # Save pending record to Firebase (CRITICAL Step)
                 verify_db = FirebaseDB()
+                
+                # Determine category (use generated or system default)
+                # We save 'system_category' as 'rraasi_music' for internal routing,
+                # but 'musicCategory' contains the user-facing type (Meditation, Sleep, etc)
+                music_category = healing_meta.get("category", "Meditation")
+                
                 track_data = {
                     "title": title,
                     "status": "generating",
@@ -215,6 +221,8 @@ generate_music(
                     "prompt": lyrics or style,
                     "style": style,
                     "description": healing_meta.get("description", f"A beautiful {style} track"),
+                    "story": healing_meta.get("story", f"This track was created to bring peace and tranquility. Integrating {style}, it aims to help you disconnect from the noise of the world and find your inner center."),
+                    "musicCategory": music_category,
                     "healingBenefits": healing_meta.get("benefits", []),
                     "tags": healing_meta.get("tags", []),
                     "uploadMetadata": {
@@ -222,7 +230,7 @@ generate_music(
                         "description": healing_meta.get("seoDescription", ""),
                         "keywords": healing_meta.get("tags", [])
                     },
-                    "category": "rraasi_music"
+                    "category": "rraasi_music"  # System category for routing/indexing
                 }
                 # Save using taskId as document ID so callback can merge
                 verify_db.save_music_track(self.user_id, track_data, track_id=task_id)
@@ -238,7 +246,7 @@ generate_music(
 
     async def _generate_healing_metadata(self, title: str, style: str, mood: str, lyrics: str) -> dict:
         """
-        Generate healing description, benefits, and SEO tags for the music.
+        Generate healing description, benefits, category, story, and SEO tags for the music.
         """
         logger.info(f"✨ [DEPLOY_CHECK] Generating healing metadata for: {title}")
         prompt = f"""You are a spiritual music curator and SEO expert. A user has created a music track with the following details:
@@ -248,11 +256,13 @@ Mood: {mood}
 Lyrics/Prompt: {lyrics}
 
 Generate a rich metadata profile for this track in JSON format:
-1. "description": A beautiful, poetic, healing-focused description (2-3 sentences).
-2. "benefits": A list of 3 short spiritual/emotional benefits (e.g., "Calms the mind").
-3. "tags": A list of 10 relevant SEO hashtags for SoundCloud/YouTube (e.g., #meditation, #healing, #rraasi).
-4. "seoTitle": A catchy, SEO-friendly title for YouTube/SoundCloud (e.g., "Deep Healing Flute Meditation | RRAASI").
-5. "seoDescription": A longer description suitable for YouTube video description, including the benefits.
+1. "category": Choose ONE best fit from: [Meditation, Deep Sleep, Concentration, Healing, Devotional, Relaxation, Yoga, Chant].
+2. "story": A detailed, engaging story (3-4 sentences) about this specific track. Describe how it was conceived, the journey it takes the listener on, and why it is useful for the chosen category. Make it sound premium and intentional.
+3. "description": A beautiful, poetic, healing-focused description (2-3 sentences).
+4. "benefits": A list of 3 short spiritual/emotional benefits (e.g., "Calms the mind").
+5. "tags": A list of 10 relevant SEO hashtags for SoundCloud/YouTube (e.g., #meditation, #healing, #rraasi).
+6. "seoTitle": A catchy, SEO-friendly title for YouTube/SoundCloud (e.g., "Deep Healing Flute Meditation | RRAASI").
+7. "seoDescription": A longer description suitable for YouTube video description, including the benefits.
 
 Respond ONLY with the JSON object.
 """
@@ -275,6 +285,8 @@ Respond ONLY with the JSON object.
             logger.error(f"Metadata generation failed: {e}")
             # Fallback
             return {
+                "category": "Meditation",
+                "story": f"Inspired by the need for peace in a chaotic world, '{title}' serves as a sonic sanctuary. Its {style} elements weave together to create a gentle embrace for your soul, guiding you towards deep inner silence.",
                 "description": f"A beautiful {style} track titled '{title}' created with RRAASI AI.",
                 "benefits": ["Relaxation", "Peace", "Joy"],
                 "tags": ["#rraasi", "#music", "#healing"],
