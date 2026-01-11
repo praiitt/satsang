@@ -1,7 +1,7 @@
 export const musicTranslationsEn = {
     // Hero Section
     title: 'Create Healing & Spiritual Music with RRAASI',
-    subtitle: 'Generate bhajans, mantras, meditation music, and healing frequencies instantly',
+    subtitle: 'RRAASI generates bhajans, mantras, meditation music, and healing frequencies instantly',
     startButton: 'Start Creating Music',
     freeTrial: 'Free trial - No credit card required',
 
@@ -24,16 +24,16 @@ export const musicTranslationsEn = {
     yogaDesc: 'Gentle instrumental music perfect for yoga practice, pranayama, and relaxation',
 
     customTitle: 'Custom Creations',
-    customDesc: 'Describe any spiritual or healing music you need and let AI create it for you',
+    customDesc: 'Describe any spiritual or healing music you need and let RRAASI create it for you',
 
     // How It Works Section
     howItWorksTitle: 'How It Works',
 
-    step1Title: 'Tell the AI what you need',
+    step1Title: 'Tell RRAASI what you need',
     step1Desc: 'Use voice or text to describe the music you want - bhajan, mantra, meditation track, or healing frequency',
 
-    step2Title: 'AI generates your music',
-    step2Desc: 'Our advanced AI creates original music based on your request in seconds',
+    step2Title: 'RRAASI generates your music',
+    step2Desc: 'Our advanced RRAASI creates original music based on your request in seconds',
 
     step3Title: 'Listen and refine',
     step3Desc: 'Listen to the generated music and request changes until it is perfect',

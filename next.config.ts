@@ -41,6 +41,15 @@ const nextConfig: NextConfig = {
     }
     return config;
   },
+  async redirects() {
+    return [
+      {
+        source: '/corporate/create',
+        destination: '/business/signup',
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     const AUTH_URL = process.env.NODE_ENV === 'development'
       ? 'http://localhost:4000'
@@ -82,6 +91,11 @@ const nextConfig: NextConfig = {
       {
         source: '/api/suno/:path*',
         destination: `${AUTH_URL}/suno/:path*`,
+      },
+      // User Profile API (Auth Server)
+      {
+        source: '/api/user/:path*',
+        destination: `${AUTH_URL}/user/:path*`,
       },
       {
         source: '/backend/auth/:path*',

@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebase-client';
+import { db, getFirebaseAuth } from '@/lib/firebase-client';
 import {
     collection,
     doc,
@@ -6,19 +6,84 @@ import {
     getDocs,
     query,
     where,
-    addDoc,
-    updateDoc,
     Timestamp,
-    serverTimestamp
+    serverTimestamp,
+    updateDoc
 } from 'firebase/firestore';
 import { Organization, OrganizationEmployee, EmployeeRole } from '@/lib/types/corporate';
 
 const ORGS_COLLECTION = 'organizations';
-const EMPLOYEES_COLLECTION = 'organization_employees';
+const EMPLOYEES_COLLECTION = 'organization_employees'; // Kept for legacy/caching if needed, though mostly using users collection now?
+// Actually, backend uses 'users' collection updates now. 
+// So 'getEmployees' needs to query 'users' collection where organizationId == orgId.
+
+const AUTH_SERVER_URL = process.env.NEXT_PUBLIC_AUTH_SERVER_URL || 'http://localhost:4000';
 
 export class CorporateService {
 
-    // --- Organization Operations ---
+    // --- API Calls (Mutations) ---
+
+    static async createOrganization(name: string, workEmail: string): Promise<Organization> {
+        const auth = getFirebaseAuth();
+        const token = await auth.currentUser?.getIdToken();
+
+        const res = await fetch(`${AUTH_SERVER_URL}/corporate/create`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ name, workEmail })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Failed to create organization');
+        }
+        return await res.json();
+    }
+
+    static async inviteEmployee(orgId: string, email: string, role: string): Promise<{ inviteLink: string, token: string }> {
+        const auth = getFirebaseAuth();
+        const token = await auth.currentUser?.getIdToken();
+
+        const res = await fetch(`${AUTH_SERVER_URL}/corporate/${orgId}/invite`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ email, role })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Failed to invite employee');
+        }
+        return await res.json();
+    }
+
+    static async joinOrganization(token?: string, domainJoin?: boolean): Promise<{ success: boolean, organizationId: string }> {
+        const auth = getFirebaseAuth();
+        const idToken = await auth.currentUser?.getIdToken();
+
+        const res = await fetch(`${AUTH_SERVER_URL}/corporate/join`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${idToken}`
+            },
+            body: JSON.stringify({ token, domainJoin })
+        });
+
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error || 'Failed to join organization');
+        }
+        return await res.json();
+    }
+
+    // --- Read Operations (Firestore Direct) ---
 
     static async getOrganization(orgId: string): Promise<Organization | null> {
         try {
@@ -40,7 +105,7 @@ export class CorporateService {
             if (!db) return [];
             const q = query(
                 collection(db, ORGS_COLLECTION),
-                where('adminUids', 'array-contains', uid)
+                where('adminIds', 'array-contains', uid) // Updated to adminIds
             );
             const snap = await getDocs(q);
             return snap.docs.map(d => ({ id: d.id, ...d.data() } as Organization));
@@ -50,89 +115,70 @@ export class CorporateService {
         }
     }
 
-    // --- Employee Operations ---
+    // --- Employee List ---
 
-    static async getEmployees(orgId: string): Promise<OrganizationEmployee[]> {
+    static async getEmployees(orgId: string): Promise<any[]> {
         try {
             if (!db) return [];
+            // Query 'users' collection directly now
             const q = query(
-                collection(db, EMPLOYEES_COLLECTION),
-                where('orgId', '==', orgId)
+                collection(db, 'users'),
+                where('organizationId', '==', orgId)
             );
             const snap = await getDocs(q);
-            return snap.docs.map(d => ({ id: d.id, ...d.data() } as OrganizationEmployee));
+            return snap.docs.map(d => ({ uid: d.id, ...d.data() }));
         } catch (error) {
             console.error("Error fetching employees:", error);
             return [];
         }
     }
 
-    static async inviteEmployee(
-        orgId: string,
-        email: string,
-        role: EmployeeRole = 'employee'
-    ): Promise<string | null> {
-        try {
-            if (!db) return null;
+    // --- User Organization Lookup ---
 
-            // Check if already exists
-            const q = query(
-                collection(db, EMPLOYEES_COLLECTION),
-                where('orgId', '==', orgId),
-                where('email', '==', email)
-            );
-            const existing = await getDocs(q);
-            if (!existing.empty) {
-                throw new Error('Employee already exists');
+    static async getUserOrganizations(uid: string): Promise<Organization[]> {
+        try {
+            if (!db) return [];
+
+            // 1. Where user is Admin
+            const adminOrgs = await this.getOrganizationByAdmin(uid);
+
+            // 2. Where user is Employee (check user profile)
+            const userDoc = await getDoc(doc(db, 'users', uid));
+            const userData = userDoc.data();
+
+            const employeeOrgs: Organization[] = [];
+            if (userData?.organizationId) {
+                const org = await this.getOrganization(userData.organizationId);
+                if (org) employeeOrgs.push(org);
             }
 
-            const newEmployee: Partial<OrganizationEmployee> = {
-                orgId,
-                email,
-                role,
-                status: 'invited',
-                personalCredits: 0,
-                invitedAt: Timestamp.now(),
-            };
+            // Combine and deduplicate
+            const allOrgs = [...adminOrgs, ...employeeOrgs];
+            const uniqueOrgs = Array.from(
+                new Map(allOrgs.map(org => [org.id, org])).values()
+            );
 
-            const ref = await addDoc(collection(db, EMPLOYEES_COLLECTION), newEmployee);
-            return ref.id;
+            return uniqueOrgs;
         } catch (error) {
-            console.error("Error inviting employee:", error);
-            throw error;
+            console.error("Error getting user organizations:", error);
+            return [];
         }
     }
 
-    // --- Analytics ---
+    // --- Analytics (Mock/Real Mix) ---
 
     static async getOrganizationStats(orgId: string) {
         const org = await this.getOrganization(orgId);
         if (!org) return null;
 
-        // Get real employee count if not cached
-        // In prod, this should be a distributed counter or cloud function trigger
-        const employeesRef = collection(db, EMPLOYEES_COLLECTION);
-        const q = query(employeesRef, where('orgId', '==', orgId));
-        const snapshot = await getDocs(q);
+        const employees = await this.getEmployees(orgId);
 
         return {
-            totalEmployees: snapshot.size,
-            activeEmployees: snapshot.docs.filter(d => d.data().status === 'active').length,
-            credits: org.credits,
-            vibrationScore: 785, // Mock for now, would be an aggregation of sessions
-            vibrationTrend: 5 // Mock %
+            totalEmployees: employees.length,
+            activeEmployees: employees.length, // Placeholder logic
+            credits: org.credits || 0,
+            vibrationScore: 785,
+            vibrationTrend: 12
         };
-    }
-
-    static async getVibrationHistory(orgId: string) {
-        // Return mock data for visualization
-        return [
-            { date: '2024-01-01', score: 720 },
-            { date: '2024-02-01', score: 745 },
-            { date: '2024-03-01', score: 730 },
-            { date: '2024-04-01', score: 780 },
-            { date: '2024-05-01', score: 810 },
-            { date: '2024-06-01', score: 842 },
-        ];
     }
 }

@@ -7,7 +7,7 @@ export interface Organization {
     name: string;
     slug?: string; // e.g. "acme-corp" for URLs
     domains: string[]; // e.g. ["acme.com"]
-    adminUids: string[]; // List of firebase UIDs who are admins
+    adminIds: string[]; // List of firebase UIDs who are admins
 
     // Wellness / Credits
     credits: number; // Available pooled credits

@@ -82,3 +82,6 @@ export async function getRecaptchaVerifier(
     },
   });
 }
+
+// Export db directly for convenience in corporate service
+export { db };

@@ -34,6 +34,10 @@ export interface UserProfile {
     totalSessions: number;
     totalSpent: number;
     lifetimeValue: number;
+
+    // Social
+    following_gurus?: string[];
+    favorite_gurus?: string[];
 }
 
 /**
