@@ -346,7 +346,7 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
               <Button
                 variant="outline"
                 type="button"
@@ -396,6 +396,7 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
                 Google
               </Button>
 
+              {/* Facebook Login - Temporarily Disabled
               <Button
                 variant="outline"
                 type="button"
@@ -441,6 +442,7 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
                 )}
                 Facebook
               </Button>
+              */}
             </div>
           </>
         )}
