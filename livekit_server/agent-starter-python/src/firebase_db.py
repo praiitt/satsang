@@ -41,14 +41,15 @@ class FirebaseDB:
                 potential_paths = [
                     os.getenv("GOOGLE_APPLICATION_CREDENTIALS"),
                     os.getenv("FIREBASE_SERVICE_ACCOUNT_PATH"),
-                    str(repo_root / "satsangServiceAccount.json"), # Best guess based on repo structure
-                    str(agent_dir / "satsangServiceAccount.json"),
+                    str(agent_dir / "satsangServiceAccount.json"), # First priority: agent-starter-python directory
+                    str(repo_root / "satsangServiceAccount.json"), # Second: repo root
                     "satsangServiceAccount.json",
                     "../satsangServiceAccount.json",
                     "../../satsangServiceAccount.json", 
                     "../../../satsangServiceAccount.json",
                     "/home/prakash/satsang/satsangServiceAccount.json",
-                    "/home/prakash/testproj/satsang/satsangServiceAccount.json" # Add the observed VM path
+                    "/home/prakash/testproj/satsang/satsangServiceAccount.json",
+                    "/home/prakash/testproj/prod_v1/satsang/satsangServiceAccount.json" # Explicitly add the prod path
                 ]
                 
                 final_cred_path = None
