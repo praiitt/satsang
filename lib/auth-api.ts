@@ -151,3 +151,56 @@ export async function triggerMarketingWelcome(data: {
     body: JSON.stringify(data),
   }).catch((err) => console.error('Marketing Trigger Failed:', err));
 }
+
+export interface ChatMessage {
+  id: string;
+  userId: string;
+  agentId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string; // ISO string
+}
+
+export interface Recording {
+  id: string;
+  userId: string;
+  status: string;
+  publicUrl?: string;
+  duration?: number;
+  createdAt?: { _seconds: number; _nanoseconds: number } | string;
+  timestamp?: string; // Sometimes flattened
+}
+
+/**
+ * Fetch chat history
+ */
+export async function getChatHistory(userId: string, agentId?: string): Promise<ChatMessage[]> {
+  const params = new URLSearchParams({ userId, limit: '50' });
+  if (agentId) params.append('agentId', agentId);
+
+  const response = await fetch(`${AUTH_SERVER_URL}/chat/history?${params.toString()}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) return [];
+  const data = await response.json();
+  return data.messages || [];
+}
+
+/**
+ * Fetch user recordings
+ */
+export async function getUserRecordings(userId: string): Promise<Recording[]> {
+  const params = new URLSearchParams({ userId, limit: '20' });
+
+  const response = await fetch(`${AUTH_SERVER_URL}/chat/recordings?${params.toString()}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+
+  if (!response.ok) return [];
+  const data = await response.json();
+  return data.recordings || [];
+}
+

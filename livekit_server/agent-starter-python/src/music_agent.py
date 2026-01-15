@@ -11,9 +11,9 @@ from livekit.agents import (
     JobProcess,
     WorkerOptions,
     cli,
-    inference,
     function_tool,
     RunContext,
+    llm,
 )
 try:
     from .suno_client import SunoClient
@@ -834,6 +834,23 @@ async def entrypoint(ctx: JobContext):
     # Create assistant with userId
     assistant = MusicAssistant(user_id=user_id)
     
+    # Load Chat History
+    logger.info(f"📜 Loading chat history for user: {user_id}")
+    verify_db = FirebaseDB()
+    history = verify_db.get_chat_history(user_id, "music_agent", limit=20)
+    
+    initial_chat_ctx = llm.ChatContext()
+    # Add system prompt implicit in instructions, so just add history
+    if history:
+        for msg in history:
+            role = msg.get("role", "user")
+            content = msg.get("content", "")
+            if role == "user":
+                initial_chat_ctx.append(role=llm.ChatRole.USER, text=content)
+            elif role == "assistant":
+                initial_chat_ctx.append(role=llm.ChatRole.ASSISTANT, text=content)
+        logger.info(f"✅ Loaded {len(history)} past messages into context")
+
     # Create session
     session = AgentSession(
         stt=stt,
@@ -841,6 +858,7 @@ async def entrypoint(ctx: JobContext):
         tts=tts,
         turn_detection=None, # Use default VAD
         vad=ctx.proc.userdata["vad"],
+        chat_ctx=initial_chat_ctx,
     )
     
     session.agent = assistant
@@ -874,6 +892,12 @@ async def entrypoint(ctx: JobContext):
             
             # Send the message to the agent session for processing
             asyncio.create_task(session.chat(message))
+            
+            # Save User Message to Firestore
+            try:
+                FirebaseDB().save_chat_message(assistant.user_id, "music_agent", "user", message)
+            except Exception as e:
+                logger.error(f"Failed to save user message: {e}")
             
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")

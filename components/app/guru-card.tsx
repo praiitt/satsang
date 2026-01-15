@@ -7,6 +7,7 @@ import type { GuruDefinition } from '@/lib/gurus';
 import { Heart, UserCheck, UserPlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserData } from '@/components/providers/user-data-provider';
+import { SocialShareMenu } from '@/components/shared/social-share-menu';
 
 interface GuruCardProps {
   guru: GuruDefinition;
@@ -40,21 +41,30 @@ export function GuruCard({ guru, onClick }: GuruCardProps) {
       className="bg-background border-input group relative flex cursor-pointer flex-col rounded-2xl border p-6 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg"
       onClick={handleClick}
     >
-      {/* Favorite Button (Top Right) */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          toggleFavorite(guru.id);
-        }}
-        className="absolute top-4 right-4 p-2 rounded-full hover:bg-muted/50 transition-colors z-10"
-      >
-        <Heart
-          className={cn(
-            "w-6 h-6 transition-colors",
-            isFav ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-red-500"
-          )}
+      {/* Action Buttons (Top Right) */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
+        <SocialShareMenu
+          title={name}
+          text={`Chat with ${name} on RRAASI - ${tagline}`}
+          url={`https://rraasi.com${guru.route}`}
+          className="bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-sm rounded-full"
+          iconClassName="text-muted-foreground hover:text-foreground"
         />
-      </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleFavorite(guru.id);
+          }}
+          className="p-2 rounded-full bg-white/50 hover:bg-white/80 dark:bg-black/20 dark:hover:bg-black/40 backdrop-blur-sm transition-colors"
+        >
+          <Heart
+            className={cn(
+              "w-5 h-5 transition-colors",
+              isFav ? "fill-red-500 text-red-500" : "text-muted-foreground hover:text-red-500"
+            )}
+          />
+        </button>
+      </div>
 
       {/* Icon & Name */}
       <div className="mb-4 flex items-center gap-3 pr-8">

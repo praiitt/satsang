@@ -16,6 +16,9 @@ if [ ! -d "venv" ]; then
     exit 1
 fi
 
+# Set specific agent name as requested ("only chitragupta")
+export LIVEKIT_AGENT_NAME=chitragupta
+
 # Activate virtual environment
 source venv/bin/activate
 

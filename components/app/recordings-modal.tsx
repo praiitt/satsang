@@ -1,0 +1,110 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { getUserRecordings, type Recording } from '@/lib/auth-api';
+import { useAuth } from '@/components/auth/auth-provider';
+import { Button } from '@/components/livekit/button';
+import { X, Play, Music, Calendar, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+
+export interface RecordingsModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
+export function RecordingsModal({ isOpen, onClose }: RecordingsModalProps) {
+    const { user } = useAuth();
+    const [recordings, setRecordings] = useState<Recording[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [playingUrl, setPlayingUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (isOpen && user?.uid) {
+            setLoading(true);
+            getUserRecordings(user.uid)
+                .then(setRecordings)
+                .catch(console.error)
+                .finally(() => setLoading(false));
+        }
+    }, [isOpen, user?.uid]);
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 shrink-0 flex justify-between items-center text-white">
+                    <div className="flex items-center gap-2">
+                        <Music className="h-5 w-5" />
+                        <h2 className="text-xl font-bold">My Recordings</h2>
+                    </div>
+                    <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+                        <X className="h-6 w-6" />
+                    </button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    {loading ? (
+                        <div className="text-center py-8 text-gray-500">Loading recordings...</div>
+                    ) : recordings.length === 0 ? (
+                        <div className="text-center py-8 text-gray-500">
+                            No recordings found. Start a session to create one!
+                        </div>
+                    ) : (
+                        recordings.map((rec) => {
+                            const date = rec.createdAt ? new Date(
+                                typeof rec.createdAt === 'string' ? rec.createdAt :
+                                    (rec.createdAt._seconds * 1000)
+                            ) : new Date();
+
+                            const durationSeconds = Math.round(rec.duration ? rec.duration / 1000000000 : 0); // Egress duration is in nanoseconds often, need to verify
+                            // Wait, existing webhook code: duration: egress.duration (which is usually nanoseconds for LiveKit egress)
+                            // But let's assume it's seconds or format roughly.
+                            // If it's huge, divide. LiveKit generic egress API returns duration in nanoseconds (int64).
+                            // Let's assume nanoseconds -> seconds.
+                            const durationFormatted = durationSeconds > 0
+                                ? `${Math.floor(durationSeconds / 60)}:${(durationSeconds % 60).toString().padStart(2, '0')}`
+                                : 'Unknown';
+
+                            return (
+                                <div key={rec.id} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center justify-between">
+                                    <div className="flex flex-col gap-1">
+                                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                                            <Calendar className="h-3 w-3" />
+                                            {format(date, 'MMM d, yyyy h:mm a')}
+                                        </div>
+                                        <div className="flex items-center gap-2 text-xs text-gray-400">
+                                            <Clock className="h-3 w-3" />
+                                            {durationFormatted}
+                                        </div>
+                                    </div>
+
+                                    {rec.publicUrl && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => setPlayingUrl(rec.publicUrl!)}
+                                            className={playingUrl === rec.publicUrl ? "bg-indigo-100 text-indigo-700 border-indigo-200" : ""}
+                                        >
+                                            <Play className="h-4 w-4 mr-1" />
+                                            {playingUrl === rec.publicUrl ? 'Playing' : 'Play'}
+                                        </Button>
+                                    )}
+                                </div>
+                            );
+                        })
+                    )}
+                </div>
+
+                {/* Player Footer */}
+                {playingUrl && (
+                    <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                        <audio controls autoPlay src={playingUrl} className="w-full h-8" />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}

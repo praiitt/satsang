@@ -42,6 +42,7 @@ export function AddToPlaylistMenu({ trackId }: AddToPlaylistMenuProps) {
             <button
                 onClick={toggleMenu}
                 className="p-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/10"
+                title="Add to Playlist"
             >
                 <MoreVertical className="w-5 h-5" />
             </button>

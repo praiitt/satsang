@@ -270,13 +270,13 @@ router.get('/platforms/soundcloud/callback', async (req, res) => {
             throw new Error(`SoundCloud token exchange failed: ${tokenResponse.status}`);
         }
 
-        const tokens = await tokenResponse.json();
+        const tokens = (await tokenResponse.json()) as any;
 
         // Get user info
         const userResponse = await fetch('https://api.soundcloud.com/me', {
             headers: { 'Authorization': `OAuth ${tokens.access_token}` }
         });
-        const userData = await userResponse.json();
+        const userData = (await userResponse.json()) as any;
 
         await db.collection('users').doc(uid as string).collection('platform_credentials').doc('soundcloud').set({
             platform: 'soundcloud',

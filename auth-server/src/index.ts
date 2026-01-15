@@ -16,6 +16,7 @@ import livekitRoutes from './routes/livekit.js';
 import marketingRoutes from './routes/marketing.js';
 import playlistRoutes from './routes/playlists.js';
 import corporateRoutes from './routes/corporate.js';
+import livekitWebhookRoutes from './routes/livekit-webhook.js';
 
 // ... imports
 
@@ -77,6 +78,9 @@ app.use('/marketing', marketingRoutes);
 app.use('/livekit', livekitRoutes);
 app.use('/playlists', playlistRoutes);
 app.use('/corporate', corporateRoutes);
+app.use('/corporate', corporateRoutes);
+app.use('/livekit-webhook', livekitWebhookRoutes);
+app.use('/chat', (await import('./routes/chat.js')).default);
 
 app.get('/test-coins', (req, res) => res.json({ status: 'ok', message: 'Auth Server is running' }));
 
@@ -95,17 +99,19 @@ http('authServer', (req, res) => {
   }
 
   // Ensure req.query exists (fix for "Cannot read properties of undefined (reading 'page')")
-  if (!req.query) {
-    console.log('[auth-server] ⚠️ req.query was undefined, polyfilling from URL');
+  if (!req.query || Object.keys(req.query).length === 0) {
     try {
       // req.url usually contains the path + query string in GCF/Express
       const queryString = (req.url || '').split('?')[1] || '';
-      const searchParams = new URLSearchParams(queryString);
-      const query: any = {};
-      searchParams.forEach((value, key) => {
-        query[key] = value;
-      });
-      req.query = query;
+      if (queryString) {
+        console.log('[auth-server] ⚠️ req.query was empty, polyfilling from URL: ' + req.url);
+        const searchParams = new URLSearchParams(queryString);
+        const query: any = {};
+        searchParams.forEach((value, key) => {
+          query[key] = value;
+        });
+        req.query = query;
+      }
     } catch (e) {
       console.error('[auth-server] Failed to polyfill req.query', e);
       req.query = {};

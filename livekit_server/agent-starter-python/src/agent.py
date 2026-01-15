@@ -600,6 +600,37 @@ async def entrypoint(ctx: JobContext):
     except Exception as e:
         logger.error(f"Error extracting guruId: {e}")
 
+    # Check for Chitragupta (Enquiry) Agent dispatch
+    # If room name contains "chitragupta", "enquiry", or "admin"
+    if any(keyword in ctx.room.name.lower() for keyword in ["chitragupta", "enquiry", "admin"]):
+        logger.info(f"📜 Detected Enquiry Room ({ctx.room.name}). Dispatching to ChitraguptaAgent...")
+        try:
+            from .chitragupta_agent import ChitraguptaAgent
+            
+            chitragupta_agent = ChitraguptaAgent(
+                publish_data_fn=ctx.room.local_participant.publish_data
+            )
+            
+            # Using standard session configuration
+            session = AgentSession(
+                stt=stt,
+                llm=inference.LLM(model="openai/gpt-4.1-mini"),
+                tts=inference.TTS(model="cartesia/sonic-3", language=user_language, voice="248be419-3632-4f38-9500-05f963c9f743"), # Using Mystical voice for consistency
+                preemptive_generation=True,
+                turn_detection=turn_detector,
+                vad=ctx.proc.userdata.get("vad"),
+            )
+            
+            await session.start(agent=chitragupta_agent, room=ctx.room)
+            await ctx.connect()
+            return # Exit function, we are done
+            
+        except ImportError as e:
+            logger.error(f"Failed to import ChitraguptaAgent: {e}")
+        except Exception as e:
+            logger.error(f"Failed to start ChitraguptaAgent: {e}", exc_info=True)
+
+
     # Check for Universal Wisdom dispatch
     # If guru_id is specific (not 'guruji') and NOT the default fallback
     # We load UniversalWisdomAgent.
@@ -1397,4 +1428,5 @@ if __name__ == "__main__":
         logger.info("Starting agent worker without agent_name restriction (will join any room)")
     
     # Only set agent_name in WorkerOptions if explicitly provided
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=agent_name, max_retry=5))
+    # We default to "" if None to avoid protobuf TypeError
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm, agent_name=agent_name or "", max_retry=5))

@@ -47,7 +47,7 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
         // 3. Query Music Tracks
         // Firestore 'in' query supports up to 30 items. 
         // We take the unique latest 30 room IDs to stay within limits.
-        const uniqueTargetIds = [...new Set(targetIds)].slice(0, 30);
+        const uniqueTargetIds = [...new Set([uid, ...targetIds])].slice(0, 30);
 
         console.log(`[Suno My Tracks] Querying tracks for IDs: ${JSON.stringify(uniqueTargetIds)}`);
 
@@ -228,14 +228,63 @@ router.post('/callback', async (req: Request, res: Response) => {
                         // To keep both, we would need different keys (e.g. track.id). 
                         // BUT, the agent creates the generic placeholder at taskId.
                         // For now, we stick to the taskId key as per current architecture, but warn if overwriting.
-                        if (exists && existingData.sunoId && existingData.sunoId !== track.id) {
+                        if (exists && existingData && existingData.sunoId && existingData.sunoId !== track.id) {
                             console.warn(`[Suno Callback] Overwriting existing track ${existingData.sunoId} with new sibling track ${track.id} at doc ${taskId}`);
                         }
+
+                        // --- VERSIONING LOGIC ---
+                        let baseTitle = track.title || 'Untitled Track';
+                        let finalTitle = baseTitle;
+                        let version = 1;
+                        let isTitleUnique = false;
+                        const MAX_VERSION_CHECKS = 20;
+
+                        // Only check for duplicates if it's a NEW track or title changed
+                        // (Optimization: skip if we are just updating the same track and title hasn't changed? 
+                        //  But here strictly speaking we are overwriting, so safer to check uniqueness against OTHERS)
+
+                        while (!isTitleUnique && version <= MAX_VERSION_CHECKS) {
+                            const checkTitle = version === 1 ? baseTitle : `${baseTitle} (v${version})`;
+
+                            // Check if ANY track exists with this title for this user
+                            const duplicateSnapshot = await musicTracksRef
+                                .where('userId', '==', userId)
+                                .where('title', '==', checkTitle)
+                                .limit(5) // Check multiple to ensure we don't miss duplicates
+                                .get();
+
+                            if (duplicateSnapshot.empty) {
+                                finalTitle = checkTitle;
+                                isTitleUnique = true;
+                            } else {
+                                // Check if ANY document in the results is NOT the current one
+                                const hasConflict = duplicateSnapshot.docs.some(doc => doc.id !== taskId);
+
+                                if (!hasConflict) {
+                                    // Found only myself (or nothing relevant), so safe
+                                    finalTitle = checkTitle;
+                                    isTitleUnique = true;
+                                } else {
+                                    // Conflict found with a DIFFERENT track
+                                    version++;
+                                }
+                            }
+                        }
+
+                        if (!isTitleUnique) {
+                            // Fallback if too many versions
+                            finalTitle = `${baseTitle} (v${Date.now()})`;
+                        }
+
+                        if (finalTitle !== baseTitle) {
+                            console.log(`[Suno Callback] Renaming duplicate title from "${baseTitle}" to "${finalTitle}"`);
+                        }
+                        // ------------------------
 
                         const trackData: any = {
                             userId: userId,
                             sunoId: track.id, // Store Suno's track ID for reference
-                            title: track.title || 'Untitled Track',
+                            title: finalTitle,
                             audioUrl: track.audio_url,
                             sourceAudioUrl: track.source_audio_url || null,
                             streamAudioUrl: track.stream_audio_url || null,

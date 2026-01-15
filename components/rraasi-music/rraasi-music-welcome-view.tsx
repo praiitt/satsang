@@ -309,6 +309,28 @@ export const RRaaSiMusicWelcomeView = ({
     }
   };
 
+  const handleDownload = async (track: MusicTrack) => {
+    if (!track.audioUrl) return;
+
+    try {
+      const response = await fetch(track.audioUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      // Use title for filename, sanitize characters
+      const safeTitle = (track.title || 'track').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      a.download = `${safeTitle}.mp3`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
   return (
     <div ref={ref} className="w-full pb-24">
       {/* Hero Section with Rraasi Video */}
@@ -481,6 +503,7 @@ export const RRaaSiMusicWelcomeView = ({
                 status={track.status} // Pass status
                 onSync={() => handleSync(track.id)} // Pass sync handler
                 isSyncing={syncingTrackId === track.id} // Pass specific loading state
+                onDownload={() => handleDownload(track)} // Enable Download
               />
             ))}
           </div>

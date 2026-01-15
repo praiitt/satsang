@@ -4,7 +4,7 @@ import path from 'node:path';
 
 let initialized = false;
 
-function init() {
+export function initAdmin() {
   // Check if Firebase app is already initialized
   try {
     if (admin.apps.length > 0) {
@@ -45,6 +45,6 @@ function init() {
 }
 
 export function getAdminDb() {
-  init();
+  initAdmin();
   return admin.firestore();
 }

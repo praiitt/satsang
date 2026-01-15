@@ -3,6 +3,7 @@ from firebase_admin import credentials, firestore
 import os
 import logging
 from datetime import datetime
+from pathlib import Path
 
 logger = logging.getLogger("firebase_db")
 
@@ -123,3 +124,51 @@ class FirebaseDB:
         except Exception as e:
             logger.error(f"Failed to get satsang plan: {e}")
             return None
+
+    def save_chat_message(self, user_id: str, agent_name: str, role: str, content: str):
+        """Save a chat message to Firestore."""
+        if not self.db:
+            return
+
+        try:
+            timestamp = datetime.utcnow()
+            message_data = {
+                "userId": user_id,
+                "agentId": agent_name,
+                "role": role,
+                "content": content,
+                "timestamp": timestamp,
+                "createdAt": timestamp
+            }
+            
+            self.db.collection("chat_history").add(message_data)
+            # logger.info(f"Saved {role} message for {user_id}")
+        except Exception as e:
+            logger.error(f"Failed to save chat message: {e}")
+
+    def get_chat_history(self, user_id: str, agent_name: str, limit: int = 20):
+        """Get recent chat history for a user and agent."""
+        if not self.db:
+            return []
+
+        try:
+            docs = (
+                self.db.collection("chat_history")
+                .where("userId", "==", user_id)
+                .where("agentId", "==", agent_name)
+                .order_by("timestamp", direction=firestore.Query.DESCENDING)
+                .limit(limit)
+                .stream()
+            )
+            
+            # Return reversed (oldest first) for context loading
+            history = []
+            for doc in docs:
+                data = doc.to_dict()
+                history.append(data)
+            
+            return list(reversed(history))
+        except Exception as e:
+            logger.error(f"Failed to get chat history: {e}")
+            return []
+

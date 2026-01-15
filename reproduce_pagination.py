@@ -2,7 +2,7 @@
 import requests
 import json
 
-AUTH_SERVER_URL = "http://localhost:4000"
+AUTH_SERVER_URL = "https://satsang-auth-server-469389287554.us-central1.run.app"
 
 def test_pagination():
     print(f"Testing pagination against {AUTH_SERVER_URL}...")
@@ -16,10 +16,12 @@ def test_pagination():
             print(f"FAILED Page 1: {res.status_code} {res.text}")
             return
         
-        data = res.json()
-        print(f"Page 1 Success. Total: {data.get('total')}, Page: {data.get('page')}, Tracks: {len(data.get('tracks'))}")
+        data1 = res.json()
+        tracks1 = data1.get('tracks', [])
+        ids1 = [t.get('id') for t in tracks1]
+        print(f"Page 1: {len(tracks1)} tracks. IDs: {ids1}")
         
-        total = data.get('total', 0)
+        total = data1.get('total', 0)
         if total <= 5:
             print("Not enough tracks to test page 2. Need > 5 tracks.")
             return
@@ -32,10 +34,19 @@ def test_pagination():
             print(f"FAILED Page 2: {res.status_code} {res.text}")
             return
             
-        data = res.json()
-        print(f"Page 2 Success. Total: {data.get('total')}, Page: {data.get('page')}, Tracks: {len(data.get('tracks'))}")
+        data2 = res.json()
+        tracks2 = data2.get('tracks', [])
+        ids2 = [t.get('id') for t in tracks2]
+        print(f"Page 2: {len(tracks2)} tracks. IDs: {ids2}")
         
-        if len(data.get('tracks')) == 0:
+        # Check overlap
+        overlap = set(ids1).intersection(set(ids2))
+        if overlap:
+            print(f"ERROR: Found {len(overlap)} duplicate tracks between Page 1 and Page 2: {overlap}")
+        else:
+            print("SUCCESS: No overlap between Page 1 and Page 2.")
+
+        if len(tracks2) == 0:
             print("WARNING: Page 2 returned 0 tracks despite total count indicating more.")
             
     except Exception as e:

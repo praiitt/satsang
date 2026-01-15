@@ -1,10 +1,11 @@
 'use client';
 
-import { Play, Pause, BarChart3 } from 'lucide-react';
+import { Play, Pause, BarChart3, Download } from 'lucide-react';
 import { useMusicPlayer, MusicTrack } from '@/contexts/music-player-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/livekit/button';
 import { AddToPlaylistMenu } from './add-to-playlist-menu';
+import { SocialShareMenu } from '@/components/shared/social-share-menu';
 
 interface MusicPlayerCardProps {
     id?: string;
@@ -19,6 +20,7 @@ interface MusicPlayerCardProps {
     onSync?: () => void; // New prop
     isSyncing?: boolean; // New prop
     metadata?: any; // Track metadata including tags
+    onDownload?: () => void; // New prop
 }
 
 export function MusicPlayerCard({
@@ -36,6 +38,7 @@ export function MusicPlayerCard({
     onSync,
     isSyncing = false,
     metadata,
+    onDownload,
 }: MusicPlayerCardProps) {
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
 
@@ -74,9 +77,9 @@ export function MusicPlayerCard({
     };
 
     return (
-        <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-gray-800 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-            {/* Background Image with Overlay */}
-            <div className="absolute inset-0 z-0 h-full w-full">
+        <div className="group relative rounded-2xl bg-white dark:bg-gray-800 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+            {/* Background Image with Overlay - Isolate overflow here */}
+            <div className="absolute inset-0 z-0 h-full w-full overflow-hidden rounded-2xl">
                 {imageUrl ? (
                     <img
                         src={imageUrl}
@@ -122,106 +125,79 @@ export function MusicPlayerCard({
             {/* Content Container */}
             <div className="relative z-10 flex h-64 flex-col justify-between p-5 text-white pointer-events-none">
                 {/* Top Row: Category & Status */}
-                <div className="flex items-center justify-between pointer-events-auto">
+                <div className="relative z-30 flex items-center justify-between pointer-events-auto">
                     <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm">
                         {category}
                     </span>
                     {isActuallyPlaying && (
-                        <div className="flex gap-0.5 items-end h-4">
+                        <div className="flex gap-0.5 items-end h-4 absolute left-1/2 -translate-x-1/2 bottom-1">
                             <span className="w-1 bg-amber-400 h-full animate-music-bar-1 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                             <span className="w-1 bg-amber-400 h-2/3 animate-music-bar-2 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                             <span className="w-1 bg-amber-400 h-full animate-music-bar-3 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
                         </div>
                     )}
-                    <div className="pointer-events-auto ml-2">
+                    <div className="flex items-center gap-1">
+                        <SocialShareMenu
+                            title={title}
+                            text={`Check out this AI spiritual track: "${title}"\n${description || ''}`}
+                            url={`https://rraasi.com/suno/track/${trackId}`}
+                            className="bg-black/20 backdrop-blur-md rounded-full pointer-events-auto"
+                        />
                         <AddToPlaylistMenu trackId={trackId} />
-                    </div>
-                </div>
-
-                {/* Bottom Row: Controls (Always visible) */}
-                <div className="flex items-center gap-3 pointer-events-auto transition-transform duration-300 group-hover:-translate-y-2">
-                    <button
-                        onClick={handlePlayClick}
-                        className={cn(
-                            "flex h-12 w-12 items-center justify-center rounded-full shadow-lg backdrop-blur-sm transition-all hover:scale-110 active:scale-95 group/btn",
-                            isPending && "opacity-50 cursor-not-allowed bg-gray-500",
-                            !isPending && (isActuallyPlaying
-                                ? "bg-amber-500 text-white hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]"
-                                : "bg-white/20 text-white hover:bg-white hover:text-black")
-                        )}
-                        disabled={isPending}
-                        aria-label={isActuallyPlaying ? "Pause" : "Play"}
-                    >
-                        {isActuallyPlaying ? (
-                            <Pause className="h-5 w-5 fill-current" />
-                        ) : (
-                            <Play className="h-5 w-5 ml-1 fill-current" />
-                        )}
-                    </button>
-                    <div className="flex flex-col">
-                        <h3 className={cn(
-                            "text-lg font-bold leading-tight tracking-tight text-white shadow-black drop-shadow-md line-clamp-1",
-                            isActuallyPlaying && "text-amber-400"
-                        )}>
-                            {title}
-                        </h3>
-                        <span className="text-xs font-medium opacity-80">
-                            {isPending ? "Generating..." : (isActuallyPlaying ? "Now Playing" : "Play Track")}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Premium Glassmorphism Description Overlay */}
-            <div className="absolute inset-x-0 bottom-0 z-20 translate-y-full transition-transform duration-500 cubic-bezier(0.4, 0, 0.2, 1) group-hover:translate-y-0">
-                <div className="flex flex-col gap-2 bg-black/60 p-5 backdrop-blur-xl border-t border-white/10">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-amber-400">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="currentColor"
-                                className="w-4 h-4 animate-pulse"
+                        {onDownload && !isPending && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onDownload();
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 text-white transition-colors"
+                                title="Download"
                             >
-                                <path fillRule="evenodd" d="M9 4.5a.75.75 0 01.721.544l.813 2.846a3.75 3.75 0 002.576 2.576l2.846.813a.75.75 0 010 1.442l-2.846.813a3.75 3.75 0 00-2.576 2.576l-.813 2.846a.75.75 0 01-1.442 0l-.813-2.846a3.75 3.75 0 00-2.576-2.576l-2.846-.813a.75.75 0 010-1.442l2.846-.813a3.75 3.75 0 002.576-2.576l.813-2.846A.75.75 0 019 4.5zM18 1.5a.75.75 0 01.728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 010 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 01-1.456 0l-.258-1.036a2.625 2.625 0 00-1.91-1.91l-1.036-.258a.75.75 0 010-1.456l1.036-.258a2.625 2.625 0 001.91-1.91l.258-1.036A.75.75 0 0118 1.5zM16.5 15a.75.75 0 01.712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 010 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 01-1.422 0l-.395-1.183a1.5 1.5 0 00-.948-.948l-1.183-.395a.75.75 0 010-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0116.5 15z" clipRule="evenodd" />
-                            </svg>
-                            <span className="text-[10px] font-bold uppercase tracking-widest text-white/80">
-                                Creation Story
-                            </span>
-                        </div>
-                        {/* Overlay Play Button */}
+                                <Download className="h-4 w-4" />
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Bottom Row: Controls & Description */}
+                <div className="flex flex-col gap-2 pointer-events-auto transition-transform duration-300 group-hover:-translate-y-1">
+                    <div className="flex items-center gap-3">
                         <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handlePlayClick();
-                            }}
+                            onClick={handlePlayClick}
                             className={cn(
-                                "p-2 rounded-full transition-colors backdrop-blur-md",
-                                isPending
-                                    ? "bg-gray-500/20 text-gray-400 cursor-not-allowed"
-                                    : "bg-amber-500/20 hover:bg-amber-500/40 text-amber-400"
+                                "flex h-12 w-12 shrink-0 items-center justify-center rounded-full shadow-lg backdrop-blur-sm transition-all hover:scale-110 active:scale-95 group/btn",
+                                isPending && "opacity-50 cursor-not-allowed bg-gray-500",
+                                !isPending && (isActuallyPlaying
+                                    ? "bg-amber-500 text-white hover:bg-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.5)]"
+                                    : "bg-white/20 text-white hover:bg-white hover:text-black")
                             )}
                             disabled={isPending}
-                            aria-label="Play track"
+                            aria-label={isActuallyPlaying ? "Pause" : "Play"}
                         >
                             {isActuallyPlaying ? (
-                                <Pause className="h-4 w-4 fill-current" />
+                                <Pause className="h-5 w-5 fill-current" />
                             ) : (
-                                <Play className="h-4 w-4 fill-current ml-0.5" />
+                                <Play className="h-5 w-5 ml-1 fill-current" />
                             )}
                         </button>
-                    </div>
-
-                    <p className="text-sm font-medium leading-relaxed italic text-white/90 line-clamp-4">
-                        "{description || prompt || (typeof metadata === 'object' && metadata?.tags) || "A beautiful spiritual composition created by RRAASI AI."}"
-                    </p>
-
-                    {createdAt && (
-                        <div className="flex items-center justify-between pt-2 border-t border-white/10 mt-1">
-                            <span className="text-[10px] text-white/50">
-                                Created on {new Date(createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                        <div className="flex flex-col min-w-0">
+                            <h3 className={cn(
+                                "text-lg font-bold leading-tight tracking-tight text-white shadow-black drop-shadow-md truncate",
+                                isActuallyPlaying && "text-amber-400"
+                            )}>
+                                {title}
+                            </h3>
+                            <span className="text-xs font-medium opacity-80">
+                                {isPending ? "Generating..." : (isActuallyPlaying ? "Now Playing" : "Play Track")}
                             </span>
                         </div>
+                    </div>
+
+                    {/* Integrated Description - Always visible */}
+                    {!isPending && (
+                        <p className="text-[10px] text-white/80 line-clamp-2 font-medium leading-relaxed pl-1 drop-shadow-md">
+                            "{description || prompt || (typeof metadata === 'object' && metadata?.tags) || "A beautiful spiritual composition created by RRAASI AI."}"
+                        </p>
                     )}
                 </div>
             </div>

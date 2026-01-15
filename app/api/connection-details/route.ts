@@ -44,6 +44,8 @@ export async function POST(req: Request) {
     let roomPrefix = 'voice_assistant_room';
     if (agentName && agentName.toLowerCase().includes('tarot')) {
       roomPrefix = 'tarot_room';
+    } else if (agentName && (agentName.toLowerCase().includes('chitragupta') || agentName.toLowerCase().includes('enquiry'))) {
+      roomPrefix = 'chitragupta_enquiry';
     }
 
     const roomName = `${roomPrefix}_${Math.floor(Math.random() * 10_000)}`;
