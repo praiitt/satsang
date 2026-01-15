@@ -1,7 +1,11 @@
 import logging
 import os
 import asyncio
+from dotenv import load_dotenv
 from livekit import api
+
+load_dotenv()
+
 from livekit.agents import JobContext, JobProcess, WorkerOptions, cli, tts, stt, llm, AutoSubscribe
 from livekit.plugins import openai, silero
 from typing import Annotated
