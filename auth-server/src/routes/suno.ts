@@ -14,58 +14,19 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
         const uid = req.user!.uid;
         const db = getDb();
 
-        // 1. Get User's Room IDs
-        const userDoc = await db.collection('users').doc(uid).get();
-        if (!userDoc.exists) {
-            return res.json({ tracks: [] });
-        }
+        console.log(`[Suno My Tracks] Fetching tracks for user: ${uid}`);
 
-        const userData = userDoc.data();
-        const roomIds: string[] = userData?.room_ids || [];
-
-        if (roomIds.length === 0) {
-            return res.json({ tracks: [] });
-        }
-
-        // 2. Extract Target User IDs from Room Names 
-        // User instruction: "take out middle element from sandwiched between underscore"
-        // Example: "RRraasiMusic_EoZTHz..._919" -> "EoZTHz..."
-        const targetIds = roomIds.map(roomId => {
-            const parts = roomId.split('_');
-            if (parts.length >= 3) {
-                return parts[1]; // The element between the first and last underscores (assuming Prefix_ID_Suffix)
-            }
-            return null;
-        }).filter(id => id); // Remove empty/null
-
-        console.log(`[Suno My Tracks] Found ${roomIds.length} rooms. Extracted IDs: ${JSON.stringify(targetIds)}`);
-
-        if (targetIds.length === 0) {
-            return res.json({ tracks: [] });
-        }
-
-        // 3. Query Music Tracks
-        // Firestore 'in' query supports up to 30 items. 
-        // We take the unique latest 30 room IDs to stay within limits.
-        const uniqueTargetIds = [...new Set([uid, ...targetIds])].slice(0, 30);
-
-        console.log(`[Suno My Tracks] Querying tracks for IDs: ${JSON.stringify(uniqueTargetIds)}`);
-
+        // Direct query - much more robust than parsing room names
         const snapshot = await db.collection('music_tracks')
-            .where('userId', 'in', uniqueTargetIds)
+            .where('userId', '==', uid)
+            .orderBy('createdAt', 'desc')
+            .limit(50)
             .get();
 
-        // 4. Sort and Return
-        const tracks = snapshot.docs
-            .map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-            }))
-            .sort((a: any, b: any) => {
-                const aTime = a.createdAt?.toMillis?.() || 0;
-                const bTime = b.createdAt?.toMillis?.() || 0;
-                return bTime - aTime; // Descending
-            });
+        const tracks = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
 
         return res.json({ tracks });
 
@@ -178,9 +139,10 @@ router.post('/callback', async (req: Request, res: Response) => {
     try {
         const payload = req.body;
         const query = req.query || {};
-        const userId = (query.userId as string) || 'default_user';
+        // Initial candidate for userId from query param (fallback)
+        let userId = (query.userId as string) || 'default_user';
 
-        console.log(`[Suno Callback] Received for User: ${userId}`);
+        console.log(`[Suno Callback] Received. Query userId: ${userId}`);
         console.log(`[Suno Callback] Full payload:`, JSON.stringify(payload, null, 2));
 
         // Detect payload format
@@ -221,6 +183,14 @@ router.post('/callback', async (req: Request, res: Response) => {
                         const existingDoc = await docRef.get();
                         const exists = existingDoc.exists;
                         const existingData = exists ? existingDoc.data() : {};
+
+                        // TRUST THE INITIATOR: If database already has a valid userId, keep it.
+                        // The Agent creates the record with the most accurate context.
+                        // The callback URL query param is a fallback and might be 'default_user' if agent metadata was slow.
+                        if (existingData && existingData.userId && existingData.userId !== 'default_user') {
+                            console.log(`[Suno Callback] Preserving existing userId: ${existingData.userId} (ignoring query param: ${userId})`);
+                            userId = existingData.userId;
+                        }
 
                         // If the document exists but has a different sunoId (e.g. from the OTHER track in this batch),
                         // and we are trying to overwrite it... 
@@ -287,7 +257,8 @@ router.post('/callback', async (req: Request, res: Response) => {
                             title: finalTitle,
                             audioUrl: track.audio_url,
                             sourceAudioUrl: track.source_audio_url || null,
-                            streamAudioUrl: track.stream_audio_url || null,
+                            stream_audio_url: track.stream_audio_url || null, // corrected casing matching interface? no, interface has stream_audio_url
+                            streamAudioUrl: track.stream_audio_url || null, // normalized camelCase for our DB
                             imageUrl: track.image_url || null,
                             sourceImageUrl: track.source_image_url || null,
                             status: 'COMPLETED',
@@ -323,6 +294,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                         const docRef = musicTracksRef.doc(taskId); // Use taskId, not track.id
                         const doc = await docRef.get();
                         // Deduct only if NOT already deducted
+                        // NOTE: using the 'userId' variable we resolved earlier (Trust the Initator)
                         if (!doc.data()?.coinsDeducted) {
                             await deductMusicCoins(userId, taskId, track.title); // Use taskId for reference
                             // Verify deduction was attempted (success/fail logged in function) and mark as deducted to prevent double charge
@@ -362,6 +334,12 @@ router.post('/callback', async (req: Request, res: Response) => {
                         const docRef = musicTracksRef.doc(legacyPayload.taskId);
                         const existingDoc = await docRef.get();
                         const exists = existingDoc.exists;
+                        const existingData = exists ? existingDoc.data() : {};
+
+                        // TRUST THE INITIATOR (Legacy path)
+                        if (existingData && existingData.userId && existingData.userId !== 'default_user') {
+                            userId = existingData.userId;
+                        }
 
                         const trackData: any = {
                             userId: userId,
@@ -422,7 +400,7 @@ router.post('/callback', async (req: Request, res: Response) => {
 
 /**
  * GET /api/suno/tracks
- * Get music tracks for a user
+ * Get music tracks for a user (Generic endpoint)
  */
 router.get('/tracks', async (req: Request, res: Response) => {
     try {
