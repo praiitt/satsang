@@ -81,9 +81,11 @@ class FirebaseDB:
             return
 
         try:
-            # Add timestamp
+            # Add timestamp and userId
             track_data["createdAt"] = datetime.utcnow()
             track_data["userId"] = user_id
+            track_data["status"] = track_data.get("status", "PENDING")
+            track_data["tracks"] = track_data.get("tracks", [])  # Initialize tracks array for callback
             
             # Save to 'music_tracks' collection
             if track_id:

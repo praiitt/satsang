@@ -192,95 +192,60 @@ router.post('/callback', async (req: Request, res: Response) => {
                             userId = existingData.userId;
                         }
 
-                        // If the document exists but has a different sunoId (e.g. from the OTHER track in this batch),
-                        // and we are trying to overwrite it... 
-                        // Note: Suno sends 2 tracks per task. Using taskId as key implies we only keep ONE (the last one processed).
-                        // To keep both, we would need different keys (e.g. track.id). 
-                        // BUT, the agent creates the generic placeholder at taskId.
-                        // For now, we stick to the taskId key as per current architecture, but warn if overwriting.
-                        if (exists && existingData && existingData.sunoId && existingData.sunoId !== track.id) {
-                            console.warn(`[Suno Callback] Overwriting existing track ${existingData.sunoId} with new sibling track ${track.id} at doc ${taskId}`);
+                        // Get existing tracks array
+                        const existingTracks = (existingData.tracks || []) as any[];
+
+                        // Check if this specific track already exists (prevent duplicate callback processing)
+                        const trackExists = existingTracks.some((t: any) => t.sunoId === track.id);
+                        if (trackExists) {
+                            console.log(`[Suno Callback] Track ${track.id} already exists in document ${taskId}, skipping`);
+                            continue;
                         }
 
-                        // --- VERSIONING LOGIC ---
-                        let baseTitle = track.title || 'Untitled Track';
-                        let finalTitle = baseTitle;
-                        let version = 1;
-                        let isTitleUnique = false;
-                        const MAX_VERSION_CHECKS = 20;
-
-                        // Only check for duplicates if it's a NEW track or title changed
-                        // (Optimization: skip if we are just updating the same track and title hasn't changed? 
-                        //  But here strictly speaking we are overwriting, so safer to check uniqueness against OTHERS)
-
-                        while (!isTitleUnique && version <= MAX_VERSION_CHECKS) {
-                            const checkTitle = version === 1 ? baseTitle : `${baseTitle} (v${version})`;
-
-                            // Check if ANY track exists with this title for this user
-                            const duplicateSnapshot = await musicTracksRef
-                                .where('userId', '==', userId)
-                                .where('title', '==', checkTitle)
-                                .limit(5) // Check multiple to ensure we don't miss duplicates
-                                .get();
-
-                            if (duplicateSnapshot.empty) {
-                                finalTitle = checkTitle;
-                                isTitleUnique = true;
-                            } else {
-                                // Check if ANY document in the results is NOT the current one
-                                const hasConflict = duplicateSnapshot.docs.some(doc => doc.id !== taskId);
-
-                                if (!hasConflict) {
-                                    // Found only myself (or nothing relevant), so safe
-                                    finalTitle = checkTitle;
-                                    isTitleUnique = true;
-                                } else {
-                                    // Conflict found with a DIFFERENT track
-                                    version++;
-                                }
-                            }
-                        }
-
-                        if (!isTitleUnique) {
-                            // Fallback if too many versions
-                            finalTitle = `${baseTitle} (v${Date.now()})`;
-                        }
-
-                        if (finalTitle !== baseTitle) {
-                            console.log(`[Suno Callback] Renaming duplicate title from "${baseTitle}" to "${finalTitle}"`);
-                        }
-                        // ------------------------
-
-                        const trackData: any = {
-                            userId: userId,
-                            sunoId: track.id, // Store Suno's track ID for reference
-                            title: finalTitle,
+                        // Build track object (track-specific fields only)
+                        const newTrack = {
+                            sunoId: track.id,
                             audioUrl: track.audio_url,
                             sourceAudioUrl: track.source_audio_url || null,
-                            stream_audio_url: track.stream_audio_url || null, // corrected casing matching interface? no, interface has stream_audio_url
-                            streamAudioUrl: track.stream_audio_url || null, // normalized camelCase for our DB
+                            streamAudioUrl: track.stream_audio_url || null,
                             imageUrl: track.image_url || null,
                             sourceImageUrl: track.source_image_url || null,
-                            status: 'COMPLETED',
-                            metadata: {
-                                model_name: track.model_name || null,
-                                prompt: track.prompt || null,
-                                tags: track.tags || null,
-                                duration: track.duration || null,
-                                createTime: track.createTime || null
-                            },
-                            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-                            isPublic: false,
-                            category: (query.category as string) || 'rraasi-music' // Default to rraasi-music if not provided
+                            version: existingTracks.length + 1,
+                            duration: track.duration || null,
+                            createTime: track.createTime || null,
+                            model_name: track.model_name || null,
                         };
 
-                        // Only set createdAt if it's a new document
+                        // Prepare document update (preserve agent metadata at root)
+                        const trackData: any = {
+                            userId: userId,
+                            taskId: taskId,
+                            status: 'COMPLETED',
+                            tracks: [...existingTracks, newTrack],
+                            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        };
+
+                        // Preserve or set metadata from agent/track
                         if (!exists) {
+                            // New document - set title and metadata from track
+                            trackData.title = track.title || 'Untitled Track';
+                            trackData.prompt = track.prompt || null;
+                            trackData.tags = track.tags || null;
                             trackData.createdAt = admin.firestore.FieldValue.serverTimestamp();
-                            // Initialize coinsDeducted to false, we'll confirm it after deduction
                             trackData.coinsDeducted = false;
+                            trackData.isPublic = false;
+                            trackData.category = (query.category as string) || 'rraasi-music';
+                        } else {
+                            // Existing document - preserve agent metadata, only update status and tracks
+                            // Keep title, prompt, metadata.healingProperties etc from agent
+                            if (existingData.title) trackData.title = existingData.title;
+                            if (existingData.prompt) trackData.prompt = existingData.prompt;
+                            if (existingData.metadata) trackData.metadata = existingData.metadata;
+                            if (existingData.category) trackData.category = existingData.category;
+                            if (typeof existingData.isPublic !== 'undefined') trackData.isPublic = existingData.isPublic;
                         }
 
+                        console.log(`[Suno Callback] Adding track ${newTrack.version} (${track.id}) to document ${taskId}`);
                         batch.set(docRef, trackData, { merge: true });
                     }
                 }
@@ -288,23 +253,18 @@ router.post('/callback', async (req: Request, res: Response) => {
                 await batch.commit();
                 console.log(`[Suno Callback] ✅ Successfully saved ${tracks.length} track(s) to Firestore`);
 
-                // Deduct coins for successful music generation (Idempotent)
-                for (const track of tracks) {
-                    if (track.audio_url) {
-                        const docRef = musicTracksRef.doc(taskId); // Use taskId, not track.id
-                        const doc = await docRef.get();
-                        // Deduct only if NOT already deducted
-                        // NOTE: using the 'userId' variable we resolved earlier (Trust the Initator)
-                        if (!doc.data()?.coinsDeducted) {
-                            await deductMusicCoins(userId, taskId, track.title); // Use taskId for reference
-                            // Verify deduction was attempted (success/fail logged in function) and mark as deducted to prevent double charge
-                            // In a stricter system, checking the return value of deductMusicCoins would be better.
-                            // For now, we assume we should mark it to avoid endless retries on every callback.
-                            await docRef.update({ coinsDeducted: true });
-                        } else {
-                            console.log(`[Suno Callback] Coins already deducted for track ${taskId}, skipping.`);
-                        }
+                // Deduct coins ONCE per taskId (not per track)
+                const docRef = musicTracksRef.doc(taskId);
+                const doc = await docRef.get();
+                if (!doc.data()?.coinsDeducted) {
+                    const firstTrack = tracks[0];
+                    if (firstTrack?.audio_url) {
+                        await deductMusicCoins(userId, taskId, doc.data()?.title || firstTrack.title);
+                        await docRef.update({ coinsDeducted: true });
+                        console.log(`[Suno Callback] ✅ Coins deducted for task ${taskId}`);
                     }
+                } else {
+                    console.log(`[Suno Callback] Coins already deducted for task ${taskId}, skipping.`);
                 }
             } else {
                 console.log(`[Suno Callback] Skipping - Code: ${officialPayload.code}, Type: ${officialPayload.data?.callbackType}`);
