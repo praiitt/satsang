@@ -7,7 +7,7 @@ from livekit import api
 load_dotenv()
 
 from livekit.agents import JobContext, JobProcess, WorkerOptions, cli, tts, stt, llm, AutoSubscribe
-from livekit.plugins import openai, silero
+from livekit.plugins import openai, silero, deepgram
 from typing import Annotated
 
 from firebase_db import FirebaseDB
@@ -1039,19 +1039,19 @@ async def entrypoint(ctx: JobContext):
                 logger.error(f"❌ Sarvam plugin not installed: {e}")
                 logger.warning("Install with: pip install 'livekit-agents[sarvam]~=1.2'")
                 logger.warning("Falling back to AssemblyAI for Hindi")
-                stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
+                stt = deepgram.STT(model="assemblyai/universal-streaming", language="hi")
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
                 logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
-                stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
+                stt = deepgram.STT(model="assemblyai/universal-streaming", language="hi")
         else:
             # Use configured STT model with Hindi
-            stt = inference.STT(model=stt_model, language="hi")
+            stt = deepgram.STT(model=stt_model, language="hi")
             logger.info(f"Using {stt_model} for Hindi STT")
     else:
         # English STT
         logger.info("Initializing STT for English language")
-        stt = inference.STT(model="assemblyai/universal-streaming", language="en")
+        stt = deepgram.STT(model="assemblyai/universal-streaming", language="en")
     
     # Initialize TTS with language-specific voice
     def select_tts_voice_for_music(lang: str) -> str:
