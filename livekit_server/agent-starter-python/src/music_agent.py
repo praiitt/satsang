@@ -1,7 +1,13 @@
-    # ... (imports)
+import logging
+import os
+import asyncio
 from livekit import api
+from livekit.agents import JobContext, WorkerOptions, cli, tts, stt, llm, AutoSubscribe
+from livekit.plugins import openai, silero
+from typing import Annotated
 
-# ... (existing imports)
+from firebase_db import FirebaseDB
+
 
 async def stop_room_egress(room_name: str):
     """
