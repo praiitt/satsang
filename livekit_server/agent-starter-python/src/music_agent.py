@@ -8,7 +8,8 @@ from typing import Annotated
 
 from firebase_db import FirebaseDB
 
-
+logger = logging.getLogger("music_agent")
+logger.setLevel(logging.INFO)
 async def stop_room_egress(room_name: str):
     """
     Stop all active egress for a specific room.
