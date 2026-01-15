@@ -7,7 +7,7 @@ from livekit import api
 load_dotenv()
 
 from livekit.agents import JobContext, JobProcess, WorkerOptions, cli, tts, stt, llm, AutoSubscribe
-from livekit.plugins import openai, silero, deepgram
+from livekit.plugins import openai, silero, deepgram, cartesia
 from typing import Annotated
 
 from firebase_db import FirebaseDB
@@ -1094,7 +1094,7 @@ async def entrypoint(ctx: JobContext):
             return "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
     
     tts_voice = select_tts_voice_for_music(user_language)
-    tts = inference.TTS(
+    tts = cartesia.TTS(
         model="cartesia/sonic-3",
         voice=tts_voice,
         language=user_language  # Dynamic language!
