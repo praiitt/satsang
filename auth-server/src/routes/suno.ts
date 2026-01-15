@@ -193,7 +193,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                         }
 
                         // Get existing tracks array
-                        const existingTracks = (existingData.tracks || []) as any[];
+                        const existingTracks = (existingData?.tracks || []) as any[];
 
                         // Check if this specific track already exists (prevent duplicate callback processing)
                         const trackExists = existingTracks.some((t: any) => t.sunoId === track.id);
@@ -235,7 +235,7 @@ router.post('/callback', async (req: Request, res: Response) => {
                             trackData.coinsDeducted = false;
                             trackData.isPublic = false;
                             trackData.category = (query.category as string) || 'rraasi-music';
-                        } else {
+                        } else if (existingData) {
                             // Existing document - preserve agent metadata, only update status and tracks
                             // Keep title, prompt, metadata.healingProperties etc from agent
                             if (existingData.title) trackData.title = existingData.title;
