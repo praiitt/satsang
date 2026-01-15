@@ -3,7 +3,7 @@ from firebase_admin import credentials, firestore
 import os
 import logging
 from datetime import datetime
-from pathlib import Path
+import pathlib
 
 logger = logging.getLogger("firebase_db")
 
@@ -32,7 +32,7 @@ class FirebaseDB:
                 # Script is in .../satsang/livekit_server/agent-starter-python/src/firebase_db.py
                 # Root is .../satsang/satsangServiceAccount.json
                 
-                current_file = Path(__file__).resolve()
+                current_file = pathlib.Path(__file__).resolve()
                 src_dir = current_file.parent # src
                 agent_dir = src_dir.parent # agent-starter-python
                 livekit_dir = agent_dir.parent # livekit_server
