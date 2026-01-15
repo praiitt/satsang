@@ -1,19 +1,46 @@
 import logging
+from pathlib import Path
 import os
 import asyncio
+import json
 from dotenv import load_dotenv
 from livekit import api
-
-load_dotenv()
-
-from livekit.agents import JobContext, JobProcess, WorkerOptions, cli, tts, stt, llm, AutoSubscribe
-from livekit.plugins import openai, silero, deepgram, cartesia
-from typing import Annotated
-
+from livekit.agents import (
+    Agent,
+    AgentSession,
+    JobContext,
+    JobProcess,
+    WorkerOptions,
+    cli,
+    inference,
+    function_tool,
+    RunContext,
+)
+try:
+    from .suno_client import SunoClient
+except ImportError:
+    # When running as script, use absolute import
+    from suno_client import SunoClient
 from firebase_db import FirebaseDB
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
 logger = logging.getLogger("music_agent")
-logger.setLevel(logging.INFO)
+
+# Load env
+_ENV_PATHS = [
+    Path(__file__).resolve().parent.parent / ".env.local",
+    Path.cwd() / ".env.local",
+]
+for _env_path in _ENV_PATHS:
+    if _env_path.exists():
+        load_dotenv(str(_env_path), override=True)
+        break
+
 async def stop_room_egress(room_name: str):
     """
     Stop all active egress for a specific room.
@@ -51,267 +78,7 @@ async def stop_room_egress(room_name: str):
     except Exception as e:
         logger.error(f"Failed to stop egress: {e}")
 
-
-async def entrypoint(ctx: JobContext):
-    logger.info(f"Starting Music Agent for room: {ctx.room.name}")
-
-    try:
-        # Connect to the room explicitly to access participant events/metadata
-        await ctx.connect()
-        
-        # Wait for participant to join and extract userId AND language from metadata
-        user_id = "default_user"
-        user_language = "hi"  # Default to Hindi for devotional music
-        
-        participant = None
-        
-        # 1. Get Participant
-        try:
-            logger.info("Waiting for participant to join...")
-            participant = await ctx.wait_for_participant()
-            logger.info(f"Participant joined: {participant.identity}")
-        except Exception as e:
-            logger.error(f"Error waiting for participant: {e}")
-
-        # 2. Try Metadata Extraction (Independent Block)
-        if participant:
-            try:
-                # Wait a bit for metadata to sync if needed
-                if not participant.metadata:
-                    logger.info("Metadata empty, waiting for sync...")
-                    for i in range(10):
-                        await asyncio.sleep(0.5)
-                        if participant.metadata:
-                            logger.info(f"Metadata synced after {i+1} attempts")
-                            break
-                
-                # Helper to extract info from metadata
-                def extract_user_info(metadata_str):
-                    u_id = "default_user"
-                    lang = "hi"
-                    if metadata_str:
-                        try:
-                            data = json.loads(metadata_str)
-                            # Try multiple keys for userId
-                            u_id = data.get("userId") or data.get("uid") or data.get("user_id") or "default_user"
-                            lang_raw = str(data.get("language", "")).strip().lower()
-                            if lang_raw in ["hi", "hindi", "hin"]:
-                                lang = "hi"
-                            elif lang_raw in ["en", "english", "eng"]:
-                                lang = "en"
-                            else:
-                                lang = lang_raw if lang_raw else "hi"
-                        except Exception as e:
-                            logger.error(f"Failed to parse metadata: {e}")
-                    return u_id, lang
-
-                if participant.metadata:
-                    logger.info(f"🔍 RAW METADATA RECEIVED: {participant.metadata}")
-                    user_id, user_language = extract_user_info(participant.metadata)
-                    logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}")
-                else:
-                    logger.warning("No metadata found for participant")
-                    
-            except Exception as e:
-                logger.error(f"Error checking metadata: {e}")
-                # Continue to fallback
-
-        # 3. Fallback to Identity (Independent Block)
-        if participant and user_id == "default_user":
-            try:
-                # DEBUG LOG
-                logger.info(f"debug_identity_fallback: Participant Identity='{participant.identity}'")
-                
-                if participant.identity:
-                    # Format: <userId>__<random>
-                    if "__" in participant.identity:
-                        parts = participant.identity.split("__")
-                        if parts[0] and len(parts[0]) > 1:
-                            user_id = parts[0]
-                            logger.info(f"✅ Extracted userId from Identity: {user_id}")
-                    # Fallback for old identity format or bare IDs
-                    elif len(participant.identity) > 5 and "guest" not in participant.identity.lower() and "rraasi_music" not in participant.identity:
-                         user_id = participant.identity
-                         logger.info(f"⚠️ Using raw Identity as userId: {user_id}")
-            except Exception as e:
-                logger.error(f"Error checking identity fallback: {e}")
-
-        # 4. Session Map Lookup (The Robust Fix)
-        if user_id == "default_user":
-            try:
-                import aiohttp
-                room_name = ctx.room.name
-                logger.info(f"🔄 Checking Session Map for room: {room_name}")
-                
-                auth_server_url = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
-                # Local dev fallback if needed, but env var should be set
-                if "localhost" in auth_server_url:
-                     # Ensure we can reach logic from python agent container/env
-                     pass
-
-                map_url = f"{auth_server_url}/livekit/session/{room_name}"
-                
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(map_url) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            mapped_user_id = data.get("userId")
-                            if mapped_user_id:
-                                user_id = mapped_user_id
-                                logger.info(f"✅ FOUND userId via Session Map: {user_id}")
-                        else:
-                            logger.warning(f"Session Map not found (status {response.status})")
-
-            except Exception as e:
-                 logger.error(f"Error querying session map: {e}")
-        
-        # Final validation
-        if user_language not in {"hi", "en"}:
-            logger.warning(f"Unsupported language '{user_language}', defaulting to Hindi")
-            user_language = "hi"
-        
-        logger.info(f"🌐 Music Agent using language: {user_language}")
-        
-        # Initialize STT based on language preference
-        sarvam_key = os.getenv("SARVAM_API_KEY")
-        stt_model = os.getenv("STT_MODEL", "sarvam")
-        
-        if user_language == "hi":
-            # Use Sarvam for Hindi (best for Indian languages)
-            logger.info("Initializing STT for Hindi language")
-            
-            if stt_model == "sarvam" or stt_model.startswith("sarvam"):
-                try:
-                    from livekit.plugins import sarvam as sarvam_plugin
-                    logger.info("Sarvam plugin imported successfully")
-                    
-                    if not sarvam_key:
-                        logger.warning("SARVAM_API_KEY not set - Sarvam STT may fail. Falling back to AssemblyAI.")
-                        raise ValueError("SARVAM_API_KEY not set")
-                    
-                    logger.info("Creating Sarvam STT instance...")
-                    stt = sarvam_plugin.STT(language="hi")
-                    logger.info("✅ Using Sarvam STT - BEST for Hindi/Indian languages!")
-                except ImportError as e:
-                    logger.error(f"❌ Sarvam plugin not installed: {e}")
-                    logger.warning("Install with: pip install 'livekit-agents[sarvam]~=1.2'")
-                    logger.warning("Falling back to AssemblyAI for Hindi")
-                    stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
-                except Exception as e:
-                    logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
-                    logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
-                    stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
-            else:
-                # Use configured STT model with Hindi
-                stt = inference.STT(model=stt_model, language="hi")
-                logger.info(f"Using {stt_model} for Hindi STT")
-        else:
-            # English STT
-            logger.info("Initializing STT for English language")
-            stt = inference.STT(model="assemblyai/universal-streaming", language="en")
-        
-        # Initialize TTS with language-specific voice
-        def select_tts_voice_for_music(lang: str) -> str:
-            """Select appropriate TTS voice for music agent based on language."""
-            if lang == "hi":
-                # Priority: Music-specific > Global Hindi > Legacy > Hardcoded fallback
-                specific = os.getenv("MUSIC_TTS_VOICE_HI")
-                global_lang = os.getenv("TTS_VOICE_HI")
-                legacy = os.getenv("TTS_VOICE_ID")
-                
-                if specific:
-                    logger.info(f"Using Music TTS voice for Hindi: {specific}")
-                    return specific
-                if global_lang:
-                    logger.info(f"Using global Hindi TTS voice: {global_lang}")
-                    return global_lang
-                if legacy:
-                    logger.info(f"Using legacy TTS voice: {legacy}")
-                    return legacy
-                return "248be419-3632-4f38-9500-05f963c9f743"  # Default Mystical
-            else:
-                # English voice
-                return "248be419-3632-4f38-9500-05f963c9f743"
-                
-        voice_id = select_tts_voice_for_music(user_language)
-        
-        # Initialize Agent
-        assistant = MusicAssistant(
-            publish_data_fn=ctx.room.local_participant.publish_data if ctx.room.local_participant else None,
-            user_id=user_id
-        )
-        
-        # --- NEW: Retrieve Chat History ---
-        # Get history from Firestore
-        db_history = []
-        try:
-            db = FirebaseDB()
-            raw_history = db.get_chat_history(user_id, "music_agent", limit=20)
-            logger.info(f"Fetched {len(raw_history)} previous messages for context")
-            
-            # Convert to llm.ChatMessage
-            for msg in raw_history:
-                role = llm.ChatRole.USER if msg.get("role") == "user" else llm.ChatRole.ASSISTANT
-                content = msg.get("content", "")
-                if content:
-                    db_history.append(llm.ChatMessage(role=role, content=content))
-        except Exception as e:
-            logger.error(f"Failed to load chat history: {e}")
-            db_history = []
-        
-        # Create ChatContext with history
-        chat_ctx = llm.ChatContext()
-        chat_ctx.append(text=assistant.instructions, role=llm.ChatRole.SYSTEM)
-        for msg in db_history:
-            chat_ctx.messages.append(msg)
-            
-        logger.info(f"Initialized ChatContext with {len(chat_ctx.messages)} messages (including system)")
-
-        # Initialize Session
-        session = AgentSession(
-            agent=assistant,
-            llm=llm.LLM(model="openai/gpt-4o"), # Music agent needs creative model
-            stt=stt,
-            tts=inference.TTS(model="cartesia/sonic-3", language=user_language, voice=voice_id),
-            chat_ctx=chat_ctx, # Inject history
-        )
-        
-        # ... (Hooks for saving messages, coin deduction, etc.) ...
-        
-        # Hook for User messages (already in on_data_received in existing code?)
-        # Actually music_agent uses function_tool, so LLM handles conversation?
-        # AgentSession handles the conversation loop.
-        # We need to hook into the conversation to save messages.
-        
-        @session.on("user_speech_committed")
-        def on_user_speech(msg: llm.ChatMessage):
-            if msg.content:
-                logger.info(f"User speech: {msg.content}")
-                try:
-                    FirebaseDB().save_chat_message(user_id, "music_agent", "user", msg.content)
-                except Exception as e:
-                    logger.error(f"Failed to save user speech: {e}")
-
-        @session.on("agent_speech_committed")
-        def on_agent_speech(msg: llm.ChatMessage):
-            if msg.content:
-                logger.info(f"Agent speech: {msg.content}")
-                try:
-                    FirebaseDB().save_chat_message(user_id, "music_agent", "assistant", msg.content)
-                except Exception as e:
-                     logger.error(f"Failed to save agent speech: {e}")
-
-        # Start the session
-        await session.start(ctx=ctx)
-        
-    except Exception as e:
-        logger.error(f"Music agent failed: {e}")
-        raise e
-    finally:
-        # Crucial cleanup: Stop Egress
-        logger.info(f"Music agent session ending for room {ctx.room.name}. Cleaning up...")
-        await stop_room_egress(ctx.room.name)
-
+class MusicAssistant(Agent):
     def __init__(self, publish_data_fn=None, user_id=None):
         super().__init__(
             instructions="""You are RRAASI Music Creator, a specialized AI agent for creating healing, spiritual, and meditative music.
@@ -1039,19 +806,19 @@ async def entrypoint(ctx: JobContext):
                 logger.error(f"❌ Sarvam plugin not installed: {e}")
                 logger.warning("Install with: pip install 'livekit-agents[sarvam]~=1.2'")
                 logger.warning("Falling back to AssemblyAI for Hindi")
-                stt = deepgram.STT(model="assemblyai/universal-streaming", language="hi")
+                stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
             except Exception as e:
                 logger.error(f"❌ Failed to initialize Sarvam STT: {e}")
                 logger.warning("Falling back to AssemblyAI due to Sarvam initialization error")
-                stt = deepgram.STT(model="assemblyai/universal-streaming", language="hi")
+                stt = inference.STT(model="assemblyai/universal-streaming", language="hi")
         else:
             # Use configured STT model with Hindi
-            stt = deepgram.STT(model=stt_model, language="hi")
+            stt = inference.STT(model=stt_model, language="hi")
             logger.info(f"Using {stt_model} for Hindi STT")
     else:
         # English STT
         logger.info("Initializing STT for English language")
-        stt = deepgram.STT(model="assemblyai/universal-streaming", language="en")
+        stt = inference.STT(model="assemblyai/universal-streaming", language="en")
     
     # Initialize TTS with language-specific voice
     def select_tts_voice_for_music(lang: str) -> str:
@@ -1094,7 +861,7 @@ async def entrypoint(ctx: JobContext):
             return "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"
     
     tts_voice = select_tts_voice_for_music(user_language)
-    tts = cartesia.TTS(
+    tts = inference.TTS(
         model="cartesia/sonic-3",
         voice=tts_voice,
         language=user_language  # Dynamic language!
@@ -1105,23 +872,6 @@ async def entrypoint(ctx: JobContext):
     # Create assistant with userId
     assistant = MusicAssistant(user_id=user_id)
     
-    # Load Chat History
-    logger.info(f"📜 Loading chat history for user: {user_id}")
-    verify_db = FirebaseDB()
-    history = verify_db.get_chat_history(user_id, "music_agent", limit=20)
-    
-    initial_chat_ctx = llm.ChatContext()
-    # Add system prompt implicit in instructions, so just add history
-    if history:
-        for msg in history:
-            role = msg.get("role", "user")
-            content = msg.get("content", "")
-            if role == "user":
-                initial_chat_ctx.append(role=llm.ChatRole.USER, text=content)
-            elif role == "assistant":
-                initial_chat_ctx.append(role=llm.ChatRole.ASSISTANT, text=content)
-        logger.info(f"✅ Loaded {len(history)} past messages into context")
-
     # Create session
     session = AgentSession(
         stt=stt,
@@ -1129,7 +879,6 @@ async def entrypoint(ctx: JobContext):
         tts=tts,
         turn_detection=None, # Use default VAD
         vad=ctx.proc.userdata["vad"],
-        chat_ctx=initial_chat_ctx,
     )
     
     session.agent = assistant
@@ -1163,12 +912,6 @@ async def entrypoint(ctx: JobContext):
             
             # Send the message to the agent session for processing
             asyncio.create_task(session.chat(message))
-            
-            # Save User Message to Firestore
-            try:
-                FirebaseDB().save_chat_message(assistant.user_id, "music_agent", "user", message)
-            except Exception as e:
-                logger.error(f"Failed to save user message: {e}")
             
         except Exception as e:
             logger.error(f"Error handling chat message: {e}")
@@ -1227,6 +970,8 @@ async def entrypoint(ctx: JobContext):
     try:
         await disconnect_future
     finally:
+        # Stop all egress for this room to ensure recordings are finalized
+        await stop_room_egress(ctx.room.name)
         end_time = time.time()
         duration_seconds = end_time - start_time
         duration_minutes = duration_seconds / 60.0
