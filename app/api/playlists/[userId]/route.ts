@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-api';
 import { headers } from 'next/headers';
-import { getFirebaseAdmin } from '@/lib/firebase-server';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 /**
  * GET /api/playlists/:userId
@@ -25,7 +25,7 @@ export async function GET(
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
-        const { db } = getFirebaseAdmin();
+        const db = getAdminDb();
         const playlistsSnapshot = await db
             .collection('playlists')
             .where('userId', '==', userId)

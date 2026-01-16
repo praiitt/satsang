@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-api';
 import { headers } from 'next/headers';
-import { getFirebaseAdmin } from '@/lib/firebase-server';
+import { getAdminDb } from '@/lib/firebase-admin';
+import admin from 'firebase-admin';
 
 /**
  * POST /api/playlists
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Playlist name is required' }, { status: 400 });
         }
 
-        const { db, admin } = getFirebaseAdmin();
+        const db = getAdminDb();
 
         const playlistData = {
             userId: user.uid,

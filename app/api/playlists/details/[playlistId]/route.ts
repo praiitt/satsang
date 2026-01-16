@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-api';
 import { headers } from 'next/headers';
-import { getFirebaseAdmin } from '@/lib/firebase-server';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 /**
  * GET /api/playlists/details/:playlistId
- * Get playlist details with  all tracks populated
+ * Get playlist details with all tracks populated
  */
 export async function GET(
     request: NextRequest,
@@ -19,7 +19,7 @@ export async function GET(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { db } = getFirebaseAdmin();
+        const db = getAdminDb();
         const playlistId = params.playlistId;
 
         const playlistDoc = await db.collection('playlists').doc(playlistId).get();
