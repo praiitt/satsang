@@ -14,7 +14,10 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
         const uid = req.user!.uid;
         const db = getDb();
 
-        console.log(`[Suno My Tracks] Fetching tracks for user: ${uid}`);
+        console.log(`[Suno My Tracks] ===== REQUEST START =====`);
+        console.log(`[Suno My Tracks] Authenticated UID: ${uid}`);
+        console.log(`[Suno My Tracks] User email: ${req.user!.email}`);
+        console.log(`[Suno My Tracks] Querying Firestore for userId: ${uid}`);
 
         // Direct query - much more robust than parsing room names
         const snapshot = await db.collection('music_tracks')

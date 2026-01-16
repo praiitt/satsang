@@ -12,7 +12,10 @@ export async function GET(request: NextRequest) {
         const headerList = await headers();
         const user = await getCurrentUser(headerList.get('cookie') || undefined);
 
+        console.log('[My Tracks API] Auth check - User:', user?.uid, 'Phone:', user?.phoneNumber);
+
         if (!user || !user.phoneNumber) {
+            console.error('[My Tracks API] Authentication failed - no user or phone number');
             return NextResponse.json(
                 { error: 'Unauthorized - Please log in to view your music' },
                 { status: 401 }
