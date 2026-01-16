@@ -158,11 +158,11 @@ export const RRaaSiMusicWelcomeView = ({
           status: t.status, // Map status
         }));
 
-        console.log('[My Music] Mapped tracks:', mappedTracks);
-        console.log('[My Music] Tracks with audioUrl:', mappedTracks.filter(t => t.audioUrl).length);
+        console.log('[My Music] Mapped tracks:', tracks);
+        console.log('[My Music] Tracks with audioUrl:', tracks.filter(t => t.audioUrl).length);
 
         // Filter out incomplete tracks without audioUrl
-        const completeTracks = mappedTracks.filter(track => !!track.audioUrl);
+        const completeTracks = tracks.filter(track => !!track.audioUrl);
         console.log('[My Music] Complete tracks after filtering:', completeTracks.length);
 
         // Add version numbers for duplicate titles
