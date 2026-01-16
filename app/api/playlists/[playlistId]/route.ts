@@ -4,7 +4,7 @@ import { headers } from 'next/headers';
 import { getAdminDb } from '@/lib/firebase-admin';
 
 /**
- * GET /api/playlists/details/:playlistId
+ * GET /api/playlists/[playlistId]
  * Get playlist details with all tracks populated
  */
 export async function GET(
@@ -30,7 +30,7 @@ export async function GET(
 
         const playlistData = playlistDoc.data();
 
-        // Verify ownership or public access (for now, owner only)
+        // Verify ownership
         if (playlistData?.userId !== user.uid) {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }

@@ -11,7 +11,7 @@ export function usePlaylists() {
         if (!user?.uid) return;
         setLoading(true);
         try {
-            const res = await fetch(`/api/playlists/${user.uid}`);
+            const res = await fetch('/api/playlists');
             if (res.ok) {
                 const data = await res.json();
                 setPlaylists(data.playlists || []);
