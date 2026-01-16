@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
         const playlistsSnapshot = await db
             .collection('playlists')
             .where('userId', '==', user.uid)
-            .orderBy('createdAt', 'desc')
             .get();
 
         const playlists = playlistsSnapshot.docs.map(doc => ({

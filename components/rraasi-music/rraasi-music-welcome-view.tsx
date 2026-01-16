@@ -12,6 +12,7 @@ import { getFirebaseFirestore } from '@/lib/firebase-client';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useMusicPlayer } from '@/contexts/music-player-context';
 import { PlaylistList } from './playlist-list';
+import { PlaylistQuickAccess } from './playlist-quick-access';
 
 function MusicIcon() {
   return (
@@ -492,50 +493,89 @@ export const RRaaSiMusicWelcomeView = ({
           )}
         </div>
 
-        {authLoading || myTracksLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="h-64 bg-gray-100 dark:bg-gray-800/50 rounded-2xl animate-pulse flex items-center justify-center">
-                <Music className="w-8 h-8 text-gray-300 dark:text-gray-700" />
+        {/* Two-column layout: Tracks + Playlist Sidebar */}
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Main tracks grid */}
+          <div className="flex-1">
+            {authLoading || myTracksLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-64 bg-gray-100 dark:bg-gray-800/50 rounded-2xl animate-pulse flex items-center justify-center">
+                    <Music className="w-8 h-8 text-gray-300 dark:text-gray-700" />
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : !isAuthenticated ? (
+              <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">Please log in to see your personal music creations</p>
+                <Button onClick={() => window.location.href = '/login'} variant="primary" size="lg">
+                  Login to RRAASI
+                </Button>
+              </div>
+            ) : myTracks.length === 0 ? (
+              <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">You haven't created any tracks yet. Let's make something beautiful together!</p>
+                <Button onClick={onStartCall} variant="outline" size="lg" className="border-amber-500 text-amber-600 hover:bg-amber-50">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Your First Spiritual Track
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {myTracks.map((track, index) => (
+                  <MusicPlayerCard
+                    key={track.id}
+                    id={track.id}
+                    title={track.title || 'Untitled'}
+                    audioUrl={track.audioUrl}
+                    imageUrl={track.imageUrl}
+                    category={track.category || 'other'}
+                    prompt={track.prompt}
+                    description={track.description}
+                    createdAt={track.createdAt}
+                    onPlay={() => playPlaylist(myTracks, index)}
+                    status={track.status}
+                    onSync={() => handleSync(track.id)}
+                    isSyncing={syncingTrackId === track.id}
+                    onDownload={() => handleDownload(track)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        ) : !isAuthenticated ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-            <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">Please log in to see your personal music creations</p>
-            <Button onClick={() => window.location.href = '/login'} variant="primary" size="lg">
-              Login to RRAASI
-            </Button>
-          </div>
-        ) : myTracks.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-            <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">You haven't created any tracks yet. Let's make something beautiful together!</p>
-            <Button onClick={onStartCall} variant="outline" size="lg" className="border-amber-500 text-amber-600 hover:bg-amber-50">
-              <Plus className="w-5 h-5 mr-2" />
-              Create Your First Spiritual Track
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myTracks.map((track, index) => (
-              <MusicPlayerCard
-                key={track.id}
-                title={track.title || 'Untitled'}
-                audioUrl={track.audioUrl}
-                imageUrl={track.imageUrl} // Pass imageUrl
-                category={track.category || 'other'}
-                prompt={track.prompt}
-                description={track.description} // Pass description
-                createdAt={track.createdAt}
-                onPlay={() => playPlaylist(myTracks, index)} // Use playlist
-                status={track.status} // Pass status
-                onSync={() => handleSync(track.id)} // Pass sync handler
-                isSyncing={syncingTrackId === track.id} // Pass specific loading state
-                onDownload={() => handleDownload(track)} // Enable Download
+
+          {/* Playlist Quick Access Sidebar */}
+          {isAuthenticated && (
+            <div className="lg:w-80 shrink-0">
+              <PlaylistQuickAccess
+                onSelectPlaylist={async (playlistId) => {
+                  // Navigate to playlists tab and play
+                  setActiveCategory('playlists');
+                  try {
+                    const res = await fetch(`/api/playlists/${playlistId}`);
+                    if (res.ok) {
+                      const data = await res.json();
+                      const tracks = (data.tracks || []).map((t: any) => ({
+                        id: t.id,
+                        title: t.title || 'Untitled',
+                        audioUrl: t.audioUrl,
+                        imageUrl: t.imageUrl,
+                        prompt: t.prompt,
+                        description: t.description,
+                        category: t.category,
+                      }));
+                      if (tracks.length > 0) {
+                        playPlaylist(tracks, 0);
+                      }
+                    }
+                  } catch (e) {
+                    console.error('Failed to play playlist', e);
+                  }
+                }}
               />
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Category Tabs & Music Grid */}

@@ -88,10 +88,36 @@ export function MusicPlayerCard({
                             "h-full w-full object-cover transition-transform duration-700 group-hover:scale-110",
                             isPending && "grayscale blur-sm opacity-50"
                         )}
+                        onError={(e) => {
+                            // Hide broken image and show gradient fallback
+                            e.currentTarget.style.display = 'none';
+                        }}
                     />
-                ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 dark:from-indigo-900/40 dark:to-purple-900/40" />
-                )}
+                ) : null}
+
+                {/* Bold Vibrant Gradient Fallback - always present but hidden if image loads */}
+                <div
+                    className={cn(
+                        "absolute inset-0 h-full w-full",
+                        imageUrl && "opacity-0 group-hover:opacity-100 transition-opacity",
+                        // Random bold gradients based on title hash
+                        (() => {
+                            const gradients = [
+                                "bg-gradient-to-br from-purple-600 via-pink-600 to-red-600",
+                                "bg-gradient-to-br from-blue-600 via-cyan-500 to-teal-500",
+                                "bg-gradient-to-br from-orange-600 via-red-600 to-pink-600",
+                                "bg-gradient-to-br from-green-600 via-emerald-500 to-cyan-600",
+                                "bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600",
+                                "bg-gradient-to-br from-amber-600 via-orange-600 to-red-600",
+                                "bg-gradient-to-br from-rose-600 via-fuchsia-600 to-purple-600",
+                                "bg-gradient-to-br from-violet-600 via-indigo-600 to-blue-600",
+                            ];
+                            const hash = (title || '').split('').reduce((a, b) => ((a << 5) - a) + b.charCodeAt(0), 0);
+                            return gradients[Math.abs(hash) % gradients.length];
+                        })()
+                    )}
+                />
+
                 {/* Gradient Overlay for Text Readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
             </div>
