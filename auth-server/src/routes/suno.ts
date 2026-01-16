@@ -23,10 +23,40 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
             .limit(50)
             .get();
 
-        const tracks = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-        }));
+        // Normalize tracks for backward compatibility
+        const tracks = snapshot.docs.map(doc => {
+            const data = doc.data();
+
+            // NEW FORMAT: Track array structure
+            // If tracks array exists and has items, use first track's data
+            if (data.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
+                const firstTrack = data.tracks[0];
+                return {
+                    id: doc.id,
+                    title: data.title,
+                    prompt: data.prompt,
+                    category: data.category,
+                    metadata: data.metadata,
+                    status: data.status,
+                    createdAt: data.createdAt,
+                    isPublic: data.isPublic,
+                    // Primary track data from array
+                    audioUrl: firstTrack.audioUrl,
+                    imageUrl: firstTrack.imageUrl,
+                    sunoId: firstTrack.sunoId,
+                    duration: firstTrack.duration,
+                    // Include full tracks array for frontend to access versions
+                    tracks: data.tracks,
+                };
+            }
+
+            // OLD FORMAT: Root-level audioUrl (backward compatibility)
+            return {
+                id: doc.id,
+                ...data,
+                tracks: [], // Empty array for consistency
+            };
+        });
 
         return res.json({ tracks });
 
