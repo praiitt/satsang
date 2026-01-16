@@ -265,14 +265,37 @@ export const RRaaSiMusicWelcomeView = ({
         createdAt: t.createdAt, // Backend should return serialized date or timestamp
       }));
 
+      // 1. Filter out incomplete tracks
+      const completeTracks = newTracks.filter(t => !!t.audioUrl);
+
+      // 2. Add version numbers for duplicate titles (within this batch)
+      const titleCounts = new Map<string, number>();
+      // We also need to consider existing tracks to avoid version collisions if possible, 
+      // but for infinite scroll, we can mainly focus on the new batch or just handle simplistic versioning.
+      // A better approach for community is to version numbers based on the *current displayed list* + *new batch*,
+      // but that might be expensive. For now, let's version the current batch to avoid obvious duplicates.
+      // Actually, to be consistent with My Music, we should probably do it on the combined list if possible,
+      // but 'fetchMusic' appends. Let's do it on the new batch for now.
+
+      const tracksWithVersions = completeTracks.map(track => {
+        const baseTitle = track.title;
+        const count = titleCounts.get(baseTitle) || 0;
+        titleCounts.set(baseTitle, count + 1);
+
+        if (count > 0 || completeTracks.filter(t => t.title === baseTitle).length > 1) {
+          return { ...track, title: `${baseTitle} (v${count + 1})` };
+        }
+        return track;
+      });
+
       // No client-side filtering needed now (backend handles it)
       if (isNewCategory) {
-        setMusicTracks(newTracks);
+        setMusicTracks(tracksWithVersions);
       } else {
         // Append unique tracks
         setMusicTracks(prev => {
           const existingIds = new Set(prev.map(t => t.id));
-          const uniqueNew = newTracks.filter(t => !existingIds.has(t.id));
+          const uniqueNew = tracksWithVersions.filter(t => !existingIds.has(t.id));
           return [...prev, ...uniqueNew];
         });
       }
