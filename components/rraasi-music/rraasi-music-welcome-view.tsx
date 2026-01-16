@@ -161,15 +161,19 @@ export const RRaaSiMusicWelcomeView = ({
         console.log('[My Music] Mapped tracks:', mappedTracks);
         console.log('[My Music] Tracks with audioUrl:', mappedTracks.filter(t => t.audioUrl).length);
 
+        // Filter out incomplete tracks without audioUrl
+        const completeTracks = mappedTracks.filter(track => !!track.audioUrl);
+        console.log('[My Music] Complete tracks after filtering:', completeTracks.length);
+
         // Add version numbers for duplicate titles
         const titleCounts = new Map<string, number>();
-        const tracksWithVersions = mappedTracks.map(track => {
+        const tracksWithVersions = completeTracks.map(track => {
           const baseTitle = track.title;
           const count = titleCounts.get(baseTitle) || 0;
           titleCounts.set(baseTitle, count + 1);
 
           // If this title appears multiple times, add version number
-          if (count > 0 || mappedTracks.filter(t => t.title === baseTitle).length > 1) {
+          if (count > 0 || completeTracks.filter(t => t.title === baseTitle).length > 1) {
             return {
               ...track,
               title: `${baseTitle} (v${count + 1})`
