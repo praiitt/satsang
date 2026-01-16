@@ -9,7 +9,7 @@ import { getAdminDb } from '@/lib/firebase-admin';
  */
 export async function GET(
     request: NextRequest,
-    { params }: { params: { playlistId: string } }
+    { params }: { params: Promise<{ playlistId: string }> }
 ) {
     try {
         const headerList = await headers();
@@ -20,7 +20,7 @@ export async function GET(
         }
 
         const db = getAdminDb();
-        const playlistId = params.playlistId;
+        const { playlistId } = await params;
 
         const playlistDoc = await db.collection('playlists').doc(playlistId).get();
 
