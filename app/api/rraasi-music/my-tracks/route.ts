@@ -10,17 +10,29 @@ export async function GET(request: NextRequest) {
     try {
         // Get authenticated user - pass server-side cookies
         const headerList = await headers();
-        const user = await getCurrentUser(headerList.get('cookie') || undefined);
+        const cookieHeader = headerList.get('cookie');
 
-        console.log('[My Tracks API] Auth check - User:', user?.uid, 'Phone:', user?.phoneNumber);
+        console.log('[My Tracks API] ===== AUTH DEBUG =====');
+        console.log('[My Tracks API] Has cookie header:', !!cookieHeader);
+        console.log('[My Tracks API] Cookie header length:', cookieHeader?.length || 0);
 
-        if (!user || !user.phoneNumber) {
-            console.error('[My Tracks API] Authentication failed - no user or phone number');
+        const user = await getCurrentUser(cookieHeader || undefined);
+
+        console.log('[My Tracks API] getCurrentUser result:', user ? 'USER FOUND' : 'NULL');
+        console.log('[My Tracks API] User UID:', user?.uid);
+        console.log('[My Tracks API] User phone:', user?.phoneNumber);
+        console.log('[My Tracks API] User email:', user?.email);
+
+        if (!user) {
+            console.error('[My Tracks API] ❌ No user returned from getCurrentUser');
             return NextResponse.json(
                 { error: 'Unauthorized - Please log in to view your music' },
                 { status: 401 }
             );
         }
+
+        // Phone number not required - Google login users don't have phone numbers
+        console.log('[My Tracks API] ✅ User authenticated, proceeding...');
 
         // Get limit from query params
         const searchParams = request.nextUrl.searchParams;
@@ -36,15 +48,13 @@ export async function GET(request: NextRequest) {
 
         const url = `${authServerUrl}/suno/my-tracks`;
 
-        console.log(`[My Tracks API] Fetching tracks for User UID: ${user.uid}, Phone: ${user.phoneNumber}`);
+        console.log(`[My Tracks API] ✅ Authenticated! Fetching tracks for UID: ${user.uid}`);
         console.log(`[My Tracks API] Target URL: ${url}`);
 
-        // Forward cookies for authentication
-        const cookieHeader = headerList.get('cookie') || '';
-
+        // Forward cookies for authentication (reuse cookieHeader from above)
         const response = await fetch(url, {
             headers: {
-                'Cookie': cookieHeader
+                'Cookie': cookieHeader || ''
             }
         });
 
