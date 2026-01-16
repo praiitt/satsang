@@ -32,6 +32,7 @@ export function AddToPlaylistMenu({ trackId }: AddToPlaylistMenuProps) {
     const handleAddToPlaylist = async (playlistId: string) => {
         setAddingTo(playlistId);
         await addTrackToPlaylist(playlistId, trackId);
+        await fetchPlaylists(); // Refresh to show updated count
         setAddingTo(null);
         setIsOpen(false);
         // Could show a toast here
