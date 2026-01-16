@@ -42,10 +42,10 @@ export function AddToPlaylistMenu({ trackId }: AddToPlaylistMenuProps) {
         <div className="relative">
             <button
                 onClick={toggleMenu}
-                className="p-2 text-zinc-400 hover:text-white transition-colors rounded-full hover:bg-white/10"
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-black/30 backdrop-blur-md hover:bg-black/50 text-white transition-all hover:scale-110"
                 title="Add to Playlist"
             >
-                <MoreVertical className="w-5 h-5" />
+                <MoreVertical className="h-4 w-4" />
             </button>
 
             {isOpen && (
