@@ -161,13 +161,30 @@ export const RRaaSiMusicWelcomeView = ({
         console.log('[My Music] Tracks with audioUrl:', tracks.filter(t => t.audioUrl).length);
         console.log('[My Music] Tracks WITHOUT audioUrl:', tracks.filter(t => !t.audioUrl).length);
 
+        // Add version numbers to tracks with duplicate titles
+        const titleCounts = new Map<string, number>();
+        const tracksWithVersions = tracks.map(track => {
+          const baseTitle = track.title;
+          const count = titleCounts.get(baseTitle) || 0;
+          titleCounts.set(baseTitle, count + 1);
+
+          // If this title appears multiple times, add version number
+          if (count > 0 || tracks.filter(t => t.title === baseTitle).length > 1) {
+            return {
+              ...track,
+              title: `${baseTitle} (v${count + 1})`
+            };
+          }
+          return track;
+        });
+
         // De-dupe by Audio URL (fix for backend creating potential duplicates/variations that look identical)
         // IMPORTANT: Only filter if audioUrl exists, otherwise keep the track
-        const uniqueTracks = tracks.filter((track, index, self) =>
+        const uniqueTracks = tracksWithVersions.filter((track, index, self) =>
           !track.audioUrl || index === self.findIndex((t) => (t.audioUrl && t.audioUrl === track.audioUrl))
         );
 
-        console.log('[My Music] After deduping:', uniqueTracks.length);
+        console.log('[My Music] After versioning and deduping:', uniqueTracks.length);
         setMyTracks(uniqueTracks);
       } else {
         console.error('[My Music] API error:', response.status, response.statusText);
