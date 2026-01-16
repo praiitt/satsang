@@ -142,6 +142,9 @@ export const RRaaSiMusicWelcomeView = ({
       const response = await fetch('/api/rraasi-music/my-tracks');
       if (response.ok) {
         const data = await response.json();
+        console.log('[My Music] Raw API response:', data);
+        console.log('[My Music] Tracks count:', data.tracks?.length);
+
         const tracks: MusicTrack[] = (data.tracks || []).map((t: any) => ({
           id: t.id || t.trackId,
           title: t.title || t.trackName || 'Untitled',
@@ -154,12 +157,20 @@ export const RRaaSiMusicWelcomeView = ({
           status: t.status, // Map status
         }));
 
+        console.log('[My Music] Mapped tracks:', tracks);
+        console.log('[My Music] Tracks with audioUrl:', tracks.filter(t => t.audioUrl).length);
+        console.log('[My Music] Tracks WITHOUT audioUrl:', tracks.filter(t => !t.audioUrl).length);
+
         // De-dupe by Audio URL (fix for backend creating potential duplicates/variations that look identical)
+        // IMPORTANT: Only filter if audioUrl exists, otherwise keep the track
         const uniqueTracks = tracks.filter((track, index, self) =>
-          index === self.findIndex((t) => (t.audioUrl && t.audioUrl === track.audioUrl))
+          !track.audioUrl || index === self.findIndex((t) => (t.audioUrl && t.audioUrl === track.audioUrl))
         );
 
+        console.log('[My Music] After deduping:', uniqueTracks.length);
         setMyTracks(uniqueTracks);
+      } else {
+        console.error('[My Music] API error:', response.status, response.statusText);
       }
     } catch (error) {
       console.error('Error fetching my music:', error);
