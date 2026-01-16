@@ -452,6 +452,11 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
             countQuery = countQuery.where('category', '==', category);
         }
 
+        // Filter by COMPLETED status to ensure we don't return pending/failed tracks
+        // This fixes the "Load More" issue where pages might be full of incomplete tracks
+        tracksQuery = tracksQuery.where('status', '==', 'COMPLETED');
+        countQuery = countQuery.where('status', '==', 'COMPLETED');
+
         // Apply Sorting & Pagination
         // Note: Firestore requires an index for 'category' + 'createdAt' DESC if filtering by category.
         // Also 'audioUrl' filter + sort might need index.
