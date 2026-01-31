@@ -20,7 +20,7 @@ export function initFirebaseAdmin() {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: privateKey,
       }),
-      storageBucket: 'rraasi-8a619-music-storage',
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'rraasi-8a619.firebasestorage.app',
     });
     initialized = true;
     console.log('[auth-server] ✅ Initialized Firebase Admin from environment variables');
