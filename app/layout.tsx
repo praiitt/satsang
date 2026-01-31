@@ -75,7 +75,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         <meta name="description" content="RRAASI uses AI to help you experience your spiritual dimension. Through focused practices in Satsang, Music, Tarot, and Vedic Astrology, discover the divine intelligence within." />
         <meta name="theme-color" content="#f97316" />
         {/* Primary favicon: Om-in-purple-circle RRAASI icon */}
-        <link rel="icon" href="/icon.png" type="image/png" />
+        <link rel="icon" href="/branding/logo.png" type="image/png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="सत्संग" />

@@ -3,7 +3,7 @@
 /* eslint-disable prettier/prettier */
 import { type HTMLAttributes, useCallback, useState } from 'react';
 import { Track } from 'livekit-client';
-import { useChat, useRemoteParticipants } from '@livekit/components-react';
+import { useRemoteParticipants } from '@livekit/components-react';
 import { ChatTextIcon, Moon, PhoneDisconnectIcon, Sun } from '@phosphor-icons/react/dist/ssr';
 import { useSession } from '@/components/app/session-provider';
 import { TrackToggle } from '@/components/livekit/agent-control-bar/track-toggle';
@@ -44,7 +44,7 @@ export function AgentControlBar({
   onChatOpenChange,
   ...props
 }: AgentControlBarProps & HTMLAttributes<HTMLDivElement>) {
-  const { send } = useChat();
+  /* const { send } = useChat(); */
   const participants = useRemoteParticipants();
   const [chatOpen, setChatOpen] = useState(false);
   const publishPermissions = usePublishPermissions();
@@ -64,7 +64,8 @@ export function AgentControlBar({
   } = useInputControls({ onDeviceError, saveUserChoices });
 
   const handleSendMessage = async (message: string) => {
-    await send(message);
+    // await send(message);
+    console.warn("Chat sending disabled in stable mode");
   };
 
   const handleToggleTranscript = useCallback(

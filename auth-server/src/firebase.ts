@@ -20,6 +20,7 @@ export function initFirebaseAdmin() {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: privateKey,
       }),
+      storageBucket: 'rraasi-8a619-music-storage',
     });
     initialized = true;
     console.log('[auth-server] ✅ Initialized Firebase Admin from environment variables');
@@ -59,6 +60,7 @@ export function initFirebaseAdmin() {
       const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'rraasi-8a619.firebasestorage.app',
       });
       initialized = true;
       console.log(`[auth-server] ✅ Initialized Firebase Admin from file: ${serviceAccountPath}`);

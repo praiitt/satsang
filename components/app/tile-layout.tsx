@@ -2,12 +2,13 @@ import React, { useMemo } from 'react';
 import { Track } from 'livekit-client';
 import { AnimatePresence, type Transition, motion } from 'motion/react';
 import {
-  BarVisualizer,
+  /* BarVisualizer, */
   type TrackReference,
   VideoTrack,
   useLocalParticipant,
   useTracks,
-  useVoiceAssistant,
+  useRemoteParticipants,
+  /* useVoiceAssistant, */
 } from '@livekit/components-react';
 import { cn } from '@/lib/utils';
 
@@ -74,11 +75,20 @@ interface TileLayoutProps {
 }
 
 export function TileLayout({ chatOpen }: TileLayoutProps) {
-  const {
-    state: agentState,
-    audioTrack: agentAudioTrack,
-    videoTrack: agentVideoTrack,
-  } = useVoiceAssistant();
+  // const { state: agentState, audioTrack: agentAudioTrack, videoTrack: agentVideoTrack } = useVoiceAssistant();
+  const remoteParticipants = useRemoteParticipants();
+  const agents = remoteParticipants.filter(p => p.isAgent);
+  const agent = agents.length > 0 ? agents[0] : undefined;
+
+  // Get agent tracks manually since useVoiceAssistant is not available
+  const audioTracks = useTracks([Track.Source.Microphone], { onlySubscribed: true }).filter(t => t.participant.isAgent);
+  const videoTracks = useTracks([Track.Source.Camera], { onlySubscribed: true }).filter(t => t.participant.isAgent);
+
+  const agentAudioTrack = audioTracks.length > 0 ? audioTracks[0] : undefined;
+  const agentVideoTrack = videoTracks.length > 0 ? videoTracks[0] : undefined;
+
+  // Use simple state proxy
+  const agentState = agent ? 'connected' : 'disconnected';
   const [screenShareTrack] = useTracks([Track.Source.ScreenShare]);
   const cameraTrack: TrackReference | undefined = useLocalTrackRef(Track.Source.Camera);
 
@@ -127,21 +137,22 @@ export function TileLayout({ chatOpen }: TileLayoutProps) {
                     chatOpen && 'border-input/50 drop-shadow-lg/10 delay-200'
                   )}
                 >
-                  <BarVisualizer
-                    barCount={5}
-                    state={agentState}
-                    options={{ minHeight: 5 }}
-                    trackRef={agentAudioTrack}
-                    className={cn('flex h-full items-center justify-center gap-1')}
-                  >
-                    <span
-                      className={cn([
-                        'bg-muted min-h-2.5 w-2.5 rounded-full',
-                        'origin-center transition-colors duration-250 ease-linear',
-                        'data-[lk-highlighted=true]:bg-foreground data-[lk-muted=true]:bg-muted',
-                      ])}
+                  {/* Visualizer replaced with simple dot for compatibility */}
+                  <div className="flex h-full items-center justify-center gap-1">
+                    <motion.div
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.5, 1, 0.5]
+                      }}
+                      transition={{
+                        duration: 1.5,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className="h-4 w-4 rounded-full bg-primary"
                     />
-                  </BarVisualizer>
+                    {/* <BarVisualizer ... /> removed */}
+                  </div>
                 </MotionContainer>
               )}
 

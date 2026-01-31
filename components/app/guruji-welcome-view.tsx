@@ -3,6 +3,8 @@
 import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
+import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
 
 function GurujiWelcomeImage() {
     return (
@@ -31,6 +33,15 @@ export const GurujiWelcomeView = ({
         <div ref={ref} className="w-full pb-24 md:pb-32">
             {/* Hero Section */}
             <section className="bg-background flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[80vh] md:min-h-screen md:py-12">
+                {/* Exit Button */}
+                <Link
+                    href="/"
+                    className="absolute top-24 left-6 z-30 flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-4 py-2 text-foreground shadow-sm hover:bg-white/20 transition-all border border-foreground/10"
+                >
+                    <ChevronLeft className="w-5 h-5" />
+                    <span className="font-bold text-xs">EXIT</span>
+                </Link>
+
                 <GurujiWelcomeImage />
 
                 <h1 className="text-foreground mt-4 text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl lg:text-5xl">

@@ -31,8 +31,8 @@ const containerVariants: Variants = {
 
 const messageVariants: Variants = {
   hidden: {
-    opacity: 0,
-    translateY: 10,
+    opacity: 1, // FORCE VISIBLE FOR DEBUGGING
+    translateY: 0,
   },
   visible: {
     opacity: 1,

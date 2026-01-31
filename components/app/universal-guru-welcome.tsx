@@ -3,6 +3,7 @@
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
 
 interface UniversalGuruWelcomeViewProps {
     startButtonText?: string;
@@ -71,19 +72,13 @@ export const UniversalGuruWelcomeView = ({
             {/* Hero Section */}
             <section className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[80vh] md:min-h-screen md:py-12">
                 {/* Back button */}
+                {/* Back button */}
                 <Link
-                    href={`/${guruId ? '../' : ''}`} // Assuming relative back or pass backLink
-                    className="absolute top-4 left-4 opacity-70 hover:opacity-100 flex items-center gap-2 font-medium"
-                    onClick={(e) => {
-                        // We might want to go to tradition page. 
-                        // href=".." from /[tradition]/[guruId] goes to /[tradition]
-                        // But we are in a component. We need the tradition slug.
-                        // Let's just use window.history.back() behavior or link to landing 
-                        // Better: Link to `/${traditionSlug}` passed as prop?
-                        // For now let's just make it "Back to Gurus" going to root or parent.
-                    }}
+                    href={`/${guruId ? '../' : ''}`} // Go up one level to tradition
+                    className="absolute top-4 left-4 z-30 flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-4 py-2 text-gray-900 shadow-sm hover:bg-white/20 transition-all border border-gray-900/10"
                 >
-                    ← {t('hinduismGuru.backToGurus')}
+                    <ChevronLeft className="w-5 h-5" />
+                    <span className="font-bold text-xs">{t('hinduismGuru.backToGurus').replace('← ', '') || 'EXIT'}</span>
                 </Link>
 
                 <TraditionIcon emoji={traditionEmoji} />

@@ -456,6 +456,99 @@ export const WelcomeView = ({
           </details>
         </div>
       </section>
+
+      {/* Explore More RRAASI Services */}
+      <section className="mx-auto my-12 max-w-6xl px-4 sm:my-16">
+        <div className="text-center mb-12">
+          <h2 className="text-foreground text-3xl font-bold sm:text-4xl mb-4">
+            Explore More from RRAASI
+          </h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Discover our complete suite of AI-powered spiritual and creative tools, each designed to elevate different aspects of your journey.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* RRAASI Music */}
+          <a
+            href="/rraasi-music"
+            className="group bg-background border-input hover:border-primary rounded-2xl border p-6 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg"
+          >
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-blue-100 to-cyan-100 dark:from-blue-900/30 dark:to-cyan-900/30 group-hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 dark:text-blue-400">
+                <path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" />
+              </svg>
+            </div>
+            <h3 className="text-foreground text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+              RRAASI Music
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+              Create healing frequencies, bhajans, and meditation music powered by AI. Transform your spiritual lyrics into divine melodies.
+            </p>
+            <div className="flex items-center text-primary font-semibold text-sm">
+              Explore Music
+              <svg className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
+          </a>
+
+          {/* Tarot */}
+          <a
+            href="/tarot"
+            className="group relative bg-background border-input hover:border-primary rounded-2xl border p-6 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg overflow-hidden"
+          >
+            <div className="absolute top-3 right-3 rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
+              Coming Soon
+            </div>
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 group-hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 dark:text-purple-400">
+                <rect x="2" y="4" width="20" height="16" rx="2" /><path d="M7 15h10M7 11h10M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="text-foreground text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+              Mystic Tarot
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+              Receive personalized tarot readings with AI-guided interpretations. Gain clarity on your path through ancient wisdom.
+            </p>
+            <div className="flex items-center text-primary font-semibold text-sm opacity-60">
+              Early Access Soon
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
+          </a>
+
+          {/* Vedic Astrology */}
+          <a
+            href="/vedic-jyotish"
+            className="group relative bg-background border-input hover:border-primary rounded-2xl border p-6 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg overflow-hidden"
+          >
+            <div className="absolute top-3 right-3 rounded-full bg-pink-100 dark:bg-pink-900/30 px-3 py-1 text-xs font-semibold text-pink-700 dark:text-pink-300">
+              Coming Soon
+            </div>
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 group-hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-600 dark:text-pink-400">
+                <circle cx="12" cy="12" r="10" /><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+            </div>
+            <h3 className="text-foreground text-xl font-bold mb-2 group-hover:text-primary transition-colors">
+              Vedic Astrology
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed mb-3">
+              Explore your birth chart with authentic Jyotish readings. Discover planetary influences and life patterns through Vedic wisdom.
+            </p>
+            <div className="flex items-center text-primary font-semibold text-sm opacity-60">
+              Early Access Soon
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
+          </a>
+        </div>
+
+        {/* Bottom description */}
+        <div className="mt-8 text-center">
+          <p className="text-muted-foreground text-sm max-w-3xl mx-auto">
+            All RRAASI services integrate seamlessly with your spiritual journey. Each tool is designed with authenticity, powered by cutting-edge AI, and grounded in ancient wisdom.
+          </p>
+        </div>
+      </section>
     </div>
   );
 };

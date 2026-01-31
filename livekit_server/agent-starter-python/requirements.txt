@@ -37,7 +37,7 @@ google-cloud-firestore>=2.11.1
 
 # Utility libraries
 python-dotenv>=1.0.0
-aiohttp>=3.9.0
+aiohttp>=3.10.0
 
 # NOTE: PyTorch is NOT in this file!
 # Install it separately with CPU-only wheels:

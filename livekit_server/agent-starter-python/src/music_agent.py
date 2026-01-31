@@ -200,7 +200,9 @@ generate_music(
         
         try:
             # Use specific callback server for webhooks
-            callback_base = os.getenv("SUNO_CALLBACK_URL", "https://rraasi-music-webhook-6ougd45dya-uc.a.run.app")
+            # Use specific callback server for webhooks
+            # Use AUTH_SERVER_URL to ensure we hit the active server
+            callback_base = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
             callback_url = f"{callback_base}/suno/callback?userId={self.user_id}&category=rraasi_music"
             
             logger.info(f"DEBUG CALLBACK: Using User ID: {self.user_id}")
@@ -684,6 +686,8 @@ async def entrypoint(ctx: JobContext):
         logger.error(f"Error waiting for participant: {e}")
 
     # 2. Try Metadata Extraction (Independent Block)
+    user_intention = None
+    
     if participant:
         try:
             # Wait a bit for metadata to sync if needed
@@ -699,11 +703,13 @@ async def entrypoint(ctx: JobContext):
             def extract_user_info(metadata_str):
                 u_id = "default_user"
                 lang = "hi"
+                intention = None
                 if metadata_str:
                     try:
                         data = json.loads(metadata_str)
                         # Try multiple keys for userId
                         u_id = data.get("userId") or data.get("uid") or data.get("user_id") or "default_user"
+                        intention = data.get("intention")
                         lang_raw = str(data.get("language", "")).strip().lower()
                         if lang_raw in ["hi", "hindi", "hin"]:
                             lang = "hi"
@@ -713,12 +719,12 @@ async def entrypoint(ctx: JobContext):
                             lang = lang_raw if lang_raw else "hi"
                     except Exception as e:
                         logger.error(f"Failed to parse metadata: {e}")
-                return u_id, lang
+                return u_id, lang, intention
 
             if participant.metadata:
                 logger.info(f"🔍 RAW METADATA RECEIVED: {participant.metadata}")
-                user_id, user_language = extract_user_info(participant.metadata)
-                logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}")
+                user_id, user_language, user_intention = extract_user_info(participant.metadata)
+                logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}, intention: {user_intention}")
             else:
                 logger.warning("No metadata found for participant")
                 
@@ -939,15 +945,29 @@ async def entrypoint(ctx: JobContext):
     # Send language-appropriate welcome message
     # Send language-appropriate welcome message
     if user_language == "hi":
-        welcome_msg = (
-            "नमस्ते। मैं आध्यात्मिक संगीत बना सकता हूँ। "
-            "आप मुझसे भजन, मंत्र, ध्यान संगीत, या नाद ब्रह्म ध्वनियाँ बनवा सकते हैं। आज आप क्या रचना चाहते हैं?"
-        )
+        if user_intention == "bhajan":
+            welcome_msg = "नमस्ते। मैं आपके लिए एक सुंदर भजन बनाने के लिए तैयार हूँ। आप किस देवता या भाव के लिए भजन बनाना चाहेंगे?"
+        elif user_intention == "healing":
+            welcome_msg = "नमस्ते। संगीत एक माध्यम है जो हमें परम शांति से जोड़ सकता है। मैं आपके लिए हीलिंग फ्रीक्वेंसी बना सकता हूँ। आप कैसा अनुभव करना चाहते हैं?"
+        elif user_intention == "compose_lyrics":
+            welcome_msg = "नमस्ते। मैं आपके शब्दों को संगीत देने के लिए तैयार हूँ। कृपया अपनी कविता या गीत साझा करें, और बताएं कि आप इसमें कौन सा भाव या राग चाहते हैं।"
+        else:
+            welcome_msg = (
+                "नमस्ते। संगीत वह साधन है जो, यदि सही ढंग से उपयोग किया जाए, तो हमें परम सत्य से जोड़ सकता है। "
+                "मैं आपके लिए भजन, मंत्र, ध्यान संगीत, या हीलिंग फ्रीक्वेंसी बना सकता हूँ। आज आप क्या रचना करके वर्तमान क्षण का हिस्सा बनना चाहेंगे?"
+            )
     else:
-        welcome_msg = (
-            "Hello. I can create spiritual music for you. "
-            "You can ask me to create Bhajans, Mantras, Meditation music, or Sound Healing frequencies. What would you like to create today?"
-        )
+        if user_intention == "bhajan":
+            welcome_msg = "Namaste. I am ready to create a beautiful Bhajan for you. Which deity or sentiment would you like to dedicate this to?"
+        elif user_intention == "healing":
+            welcome_msg = "Namaste. Music is a tool that can connect us to ultimate peace. I can create Healing Frequencies for you. What kind of healing experience are you seeking?"
+        elif user_intention == "compose_lyrics":
+            welcome_msg = "Namaste. I am ready to give voice to your words. Please share your lyrics, poem or ghazal, and tell me the emotion you wish to convey."
+        else:
+            welcome_msg = (
+                "Namaste. Music is a tool which, if used correctly, can be a path to connect to the ultimate. "
+                "I can create Bhajans, Mantras, Meditation music, or Healing Frequencies. What would you like to create today to be part of the present moment?"
+            )
     
     await session.say(welcome_msg)
 

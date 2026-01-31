@@ -34,9 +34,25 @@ router.post('/', async (req: Request, res: Response) => {
         // If req.body is object, we can't easily verify signature without raw.
         // But we can process the event.
 
-        const event = body; // Assuming parser worked
+        console.log(`[LiveKit Webhook] Received request. Content-Type: ${req.headers['content-type']}`);
 
-        console.log(`[LiveKit Webhook] Received event: ${event.event}`);
+        let event = body;
+
+        // Parsing fallback if event is still a string (happens with some proxies)
+        if (typeof body === 'string') {
+            try {
+                event = JSON.parse(body);
+            } catch (e) {
+                console.warn('[LiveKit Webhook] Body is string but failed to parse JSON', e);
+            }
+        }
+
+        if (!event || !event.event) {
+            console.error('[LiveKit Webhook] Invalid event body:', JSON.stringify(body).substring(0, 200));
+            // Don't return yet, let it fail downstream or just log
+        }
+
+        console.log(`[LiveKit Webhook] Processing event: ${event?.event}`);
 
         if (event.event === 'egress_ended') {
             const egress = event.egress;

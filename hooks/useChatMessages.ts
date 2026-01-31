@@ -5,31 +5,53 @@ import {
   type TextStreamData,
   useChat,
   useRoomContext,
-  useTranscriptions,
+  /* useTranscriptions, */
 } from '@livekit/components-react';
 import { getChatHistory } from '@/lib/auth-api';
 import { useAuth } from '@/components/auth/auth-provider';
-
-function transcriptionToChatMessage(textStream: TextStreamData, room: Room): ReceivedChatMessage {
-  return {
-    id: textStream.streamInfo.id,
-    timestamp: textStream.streamInfo.timestamp,
-    message: textStream.text,
-    from:
-      textStream.participantInfo.identity === room.localParticipant.identity
-        ? room.localParticipant
-        : Array.from(room.remoteParticipants.values()).find(
-          (p) => p.identity === textStream.participantInfo.identity
-        ),
-  };
-}
+import { RoomEvent, type TranscriptionSegment, type Participant } from 'livekit-client';
 
 export function useChatMessages() {
   const chat = useChat();
   const room = useRoomContext();
   const { user } = useAuth();
-  const transcriptions: TextStreamData[] = useTranscriptions();
+  const [transcriptionMap, setTranscriptionMap] = useState<Record<string, ReceivedChatMessage>>({});
   const [history, setHistory] = useState<ReceivedChatMessage[]>([]);
+
+  // Listen for transcriptions directly from the room events
+  useEffect(() => {
+    const onTranscription = (
+      segments: TranscriptionSegment[],
+      participant?: Participant,
+      _publication?: unknown // Use underscore to indicate unused
+    ) => {
+      if (!participant) return;
+
+      setTranscriptionMap((prev) => {
+        const next = { ...prev };
+        let hasUpdates = false;
+
+        for (const seg of segments) {
+          // Update the segment in the map with the latest interim or final text
+          // This creates the "continuous stream" effect as text evolves
+          next[seg.id] = {
+            id: seg.id,
+            timestamp: seg.firstReceivedTime || Date.now(),
+            message: seg.text,
+            from: participant,
+          };
+          hasUpdates = true;
+        }
+
+        return hasUpdates ? next : prev;
+      });
+    };
+
+    room.on(RoomEvent.TranscriptionReceived, onTranscription);
+    return () => {
+      room.off(RoomEvent.TranscriptionReceived, onTranscription);
+    };
+  }, [room]);
 
   useEffect(() => {
     async function loadHistory() {
@@ -40,8 +62,7 @@ export function useChatMessages() {
           id: msg.id || `hist-${msg.timestamp}`,
           timestamp: new Date(msg.timestamp).getTime(),
           message: msg.content,
-          from: msg.role === 'user' ? room.localParticipant : undefined, // undefined 'from' usually treated as remote/system
-          // We can add a custom field if needed, but 'from' is optional in some types or we can treat undefined as remote
+          from: msg.role === 'user' ? room.localParticipant : undefined,
         }));
         setHistory(formattedHistory);
       } catch (e) {
@@ -53,16 +74,13 @@ export function useChatMessages() {
 
   const mergedTranscriptions = useMemo(() => {
     const liveMessages: Array<ReceivedChatMessage> = [
-      ...transcriptions.map((transcription) => transcriptionToChatMessage(transcription, room)),
+      ...Object.values(transcriptionMap),
       ...chat.chatMessages,
     ];
 
-    // Filter out duplicates if any (simple check by ID or timestamp fuzzy match could be better)
-    // For now just concat. History is older.
     const combined = [...history, ...liveMessages];
-
     return combined.sort((a, b) => a.timestamp - b.timestamp);
-  }, [transcriptions, chat.chatMessages, room, history]);
+  }, [chat.chatMessages, room, history, transcriptionMap]);
 
   return mergedTranscriptions;
 }

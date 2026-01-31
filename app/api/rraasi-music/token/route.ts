@@ -8,6 +8,7 @@ type RRaaSiMusicTokenRequest = {
     agentName?: string;
     userId?: string;
     language?: string;
+    intention?: string;
 };
 
 type RRaaSiMusicTokenResponse = {
@@ -38,6 +39,7 @@ export async function POST(req: Request) {
         const role = body.role || 'participant';
         const agentName = (body.agentName || DEFAULT_AGENT_NAME).trim();
         const userId = body.userId || 'default_user';
+        const intention = body.intention;
 
         // Check header first (more reliable for some proxies), then body, then default
         const language = req.headers.get('X-Language') || body.language || 'hi';
@@ -47,7 +49,7 @@ export async function POST(req: Request) {
         }
 
         console.log(
-            `[RRAASI Music Token] Generating token for ${participantName} (${role}, userId: ${userId}, language: ${language}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
+            `[RRAASI Music Token] Generating token for ${participantName} (${role}, userId: ${userId}, language: ${language}, intention: ${intention}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
         );
 
         // Generate a unique room name for this session to ensure 1:1 interaction with the agent
@@ -64,7 +66,8 @@ export async function POST(req: Request) {
             role,
             agentName,
             userId,
-            language
+            language,
+            intention
         );
 
         const data: RRaaSiMusicTokenResponse & { metadata: string } = {
@@ -73,7 +76,7 @@ export async function POST(req: Request) {
             participantToken,
             participantName,
             agentName,
-            metadata: JSON.stringify({ userId, language }) // Echo metadata for debugging
+            metadata: JSON.stringify({ userId, language, intention }) // Echo metadata for debugging
         };
 
         console.log(
@@ -97,18 +100,19 @@ function createParticipantToken(
     role: 'host' | 'participant',
     agentName: string,
     userId: string,
-    language: string
+    language: string,
+    intention?: string
 ): Promise<string> {
-    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}, language: ${language}`);
+    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}, language: ${language}, intention: ${intention}`);
 
-    console.log(`[Token Creation] Metadata Object:`, { userId, language });
-    const metadataStr = JSON.stringify({ userId, language });
+    console.log(`[Token Creation] Metadata Object:`, { userId, language, intention });
+    const metadataStr = JSON.stringify({ userId, language, intention });
     console.log(`[Token Creation] Metadata String:`, metadataStr);
 
     const at = new AccessToken(API_KEY!, API_SECRET!, {
         ...userInfo,
         ttl: '2h',
-        metadata: metadataStr, // Include userId and language in metadata
+        metadata: metadataStr, // Include userId, language and intention in metadata
     });
 
     const grant: VideoGrant = {

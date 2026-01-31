@@ -17,6 +17,7 @@ import marketingRoutes from './routes/marketing.js';
 import playlistRoutes from './routes/playlists.js';
 import corporateRoutes from './routes/corporate.js';
 import livekitWebhookRoutes from './routes/livekit-webhook.js';
+import meditationRoutes from './meditation/meditation.controller.js';
 
 // ... imports
 
@@ -80,6 +81,7 @@ app.use('/playlists', playlistRoutes);
 app.use('/corporate', corporateRoutes);
 app.use('/corporate', corporateRoutes);
 app.use('/livekit-webhook', livekitWebhookRoutes);
+app.use('/meditation', meditationRoutes);
 app.use('/chat', (await import('./routes/chat.js')).default);
 
 app.get('/test-coins', (req, res) => res.json({ status: 'ok', message: 'Auth Server is running' }));
@@ -90,11 +92,37 @@ app.get('/', (_req, res) => res.json({ name: 'satsang-auth-server', ok: true }))
 // For Cloud Functions v2, we need to handle the already-parsed body
 http('authServer', (req, res) => {
   // If request has already been parsed by Cloud Functions, attach it to req.body
+  // If request has already been parsed by Cloud Functions, attach it to req.body
   if (req.body === undefined && (req as any).rawBody) {
     try {
-      req.body = JSON.parse((req as any).rawBody.toString());
+      const raw = (req as any).rawBody.toString();
+      if (raw.trim().startsWith('{')) {
+        req.body = JSON.parse(raw);
+      } else {
+        // Fallback for non-JSON or weird content types
+        req.body = raw;
+      }
     } catch {
       req.body = {};
+    }
+  } else if (req.body && Buffer.isBuffer(req.body)) {
+    // Sometimes body comes as Buffer
+    try {
+      req.body = JSON.parse(req.body.toString());
+    } catch (e) {
+      console.warn('[auth-server] Failed to parse Buffer body', e);
+    }
+  }
+
+  // Explicitly handle LiveKit's content-type if express.json() didn't catch it
+  const contentType = req.headers['content-type'] || '';
+  if (contentType.includes('application/webhook+json') && !req.body) {
+    if ((req as any).rawBody) {
+      try {
+        req.body = JSON.parse((req as any).rawBody.toString());
+      } catch (e) {
+        console.warn('[auth-server] Failed to parse webhook+json', e);
+      }
     }
   }
 

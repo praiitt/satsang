@@ -745,6 +745,20 @@ export const en = {
     ctaDesc: 'Every journey to your spiritual dimension begins with a single focused step. Take yours now.',
     ctaStartSatsang: 'Start with Satsang',
     ctaExploreAll: 'Explore All Services',
+
+    // RRAASI Ecosystem Section
+    ecosystemTitle: 'The RRAASI Ecosystem',
+    ecosystemSubtitle: 'Holistic Solutions for Life & Business',
+    ecosystemDesc: 'RRAASI goes beyond spirituality to empower every aspect of your life. From business management to creative expression, explore our interconnected suite of tools designed to help you thrive.',
+
+    fuelAndFlowTitle: 'Fuel and Flow',
+    fuelAndFlowDesc: 'Manage your solar business with ease. Our comprehensive CRM and project management tool helps solar companies streamline operations, track leads, and manage installations.',
+    fuelAndFlowAction: 'Visit Fuel and Flow',
+
+    rraasiComTitle: 'RRAASI.com',
+    rraasiComDesc: 'The central hub for all our cutting-edge technology solutions. Discover how we integrate AI, cloud computing, and user-centric design to build the future.',
+    rraasiComAction: 'Explore RRAASI.com',
+
     music: {
       title: 'RRAASI Music Creator',
       subtitle: 'Create personalized healing frequencies, bhajans, and meditation music with RRAASI',

@@ -8,6 +8,8 @@ import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player'
 import { SatsangSessionView } from './satsang-session-view';
 import { deductSatsangCoins } from '@/lib/services/coinDeduction';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { ChevronLeft } from 'lucide-react';
 
 // Reuse AgentWaitHandler to prevent early speaking
 function AgentWaitHandler({ room, isConnected }: { room: Room | null; isConnected: boolean }) {
@@ -37,9 +39,10 @@ function AgentWaitHandler({ room, isConnected }: { room: Room | null; isConnecte
 interface PrivateSatsangAppProps {
     guruId: string;
     guruName: string;
+    traditionSlug?: string;
 }
 
-export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) {
+export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism' }: PrivateSatsangAppProps) {
     const [topic, setTopic] = useState('');
     const [isTopicSelected, setIsTopicSelected] = useState(false);
     const [room, setRoom] = useState<Room | null>(null);
@@ -218,6 +221,15 @@ export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
 
+                {/* Back Button */}
+                <Link
+                    href={`/${traditionSlug}/${guruId}`}
+                    className="absolute top-6 left-6 z-50 flex items-center gap-2 text-white/70 hover:text-white transition-colors bg-black/20 hover:bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
+                >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Back to {guruName}</span>
+                </Link>
+
                 <div className="relative z-10 w-full max-w-md space-y-8 text-center animate-in fade-in zoom-in duration-500">
                     <div className="space-y-2">
                         <p className="text-orange-400 font-medium tracking-widest text-xs uppercase">Private Session</p>
@@ -291,6 +303,16 @@ export function PrivateSatsangApp({ guruId, guruName }: PrivateSatsangAppProps) 
                     className="absolute inset-0 bg-cover bg-center opacity-30 blur-sm"
                     style={{ backgroundImage: `url('/images/gurus/${guruId}.jpg')` }}
                 />
+
+                {/* Back Button */}
+                <Link
+                    href={`/${traditionSlug}/${guruId}`}
+                    className="absolute top-6 left-6 z-50 flex items-center gap-2 text-white/70 hover:text-white transition-colors bg-black/20 hover:bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
+                >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span className="text-sm font-medium">Back</span>
+                </Link>
+
                 <div className="relative z-10 flex flex-col items-center max-w-md w-full px-6 space-y-6 animate-in fade-in zoom-in duration-300">
 
                     {isPlanReady ? (

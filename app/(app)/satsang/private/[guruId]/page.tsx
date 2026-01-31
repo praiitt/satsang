@@ -15,5 +15,5 @@ export default async function PrivateSatsangPage({
         notFound();
     }
 
-    return <PrivateSatsangApp guruId={guruId} guruName={guruName} />;
+    return <PrivateSatsangApp guruId={guruId} guruName={guruName} traditionSlug={guru.category} />;
 }

@@ -9,8 +9,10 @@ import { SessionView } from '@/components/app/session-view';
 import { Toaster } from '@/components/livekit/toaster';
 import { PWAInstaller } from '@/components/pwa-installer';
 import { RRaaSiMusicWelcomeView } from '@/components/rraasi-music/rraasi-music-welcome-view';
+import { PoetsLandingView } from '@/components/rraasi-music/poets-landing-view';
 
 const MotionWelcomeView = motion.create(RRaaSiMusicWelcomeView);
+const MotionPoetsView = motion.create(PoetsLandingView);
 const MotionSessionView = motion.create(SessionView);
 
 const viewVariants: Variants = {
@@ -35,7 +37,7 @@ const VIEW_MOTION_PROPS = {
     transition: viewTransition,
 } as const;
 
-function RRaaSiMusicViewController() {
+function RRaaSiMusicViewController({ variant = 'default' }: { variant?: 'default' | 'poets' }) {
     const room = useRoomContext();
     const isSessionActiveRef = useRef(false);
     const { appConfig, isSessionActive, startSession } = useSession();
@@ -51,7 +53,11 @@ function RRaaSiMusicViewController() {
     return (
         <AnimatePresence mode="wait">
             {!isSessionActive && (
-                <MotionWelcomeView key="welcome" {...VIEW_MOTION_PROPS} onStartCall={startSession} />
+                variant === 'poets' ? (
+                    <MotionPoetsView key="poets-welcome" {...VIEW_MOTION_PROPS} onStartCall={startSession} />
+                ) : (
+                    <MotionWelcomeView key="welcome" {...VIEW_MOTION_PROPS} onStartCall={startSession} />
+                )
             )}
             {isSessionActive && (
                 <MotionSessionView
@@ -67,13 +73,14 @@ function RRaaSiMusicViewController() {
 
 interface RRaaSiMusicAppProps {
     appConfig: AppConfig;
+    variant?: 'default' | 'poets';
 }
 
-export function RRaaSiMusicApp({ appConfig }: RRaaSiMusicAppProps) {
+export function RRaaSiMusicApp({ appConfig, variant = 'default' }: RRaaSiMusicAppProps) {
     return (
         <SessionProvider appConfig={appConfig}>
             <main className="min-h-svh w-full overflow-y-auto">
-                <RRaaSiMusicViewController />
+                <RRaaSiMusicViewController variant={variant} />
             </main>
             <StartAudio label="Start Audio" />
             <RoomAudioRenderer />

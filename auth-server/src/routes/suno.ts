@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getDb } from '../firebase.js';
 import admin from 'firebase-admin';
 import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
+import { getStorage } from 'firebase-admin/storage';
 
 const router = Router();
 
@@ -68,6 +69,133 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
         return res.status(500).json({ error: 'Failed to fetch my tracks' });
     }
 });
+
+/**
+ * Download audio file from Suno URL and upload to Firebase Storage
+ * Returns permanent Firebase Storage URL
+ */
+async function downloadAndStoreAudio(audioUrl: string, trackId: string): Promise<string> {
+    try {
+        console.log(`[Storage] Downloading audio from: ${audioUrl}`);
+
+        // Download the audio file
+        const response = await fetch(audioUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to download audio: ${response.statusText}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Extract filename from URL or use a default
+        const urlPath = new URL(audioUrl).pathname;
+        const originalFilename = urlPath.split('/').pop() || 'audio.mp3';
+
+        // Determine file extension (default to .mp3 if not found)
+        const ext = originalFilename.includes('.')
+            ? originalFilename.substring(originalFilename.lastIndexOf('.'))
+            : '.mp3';
+
+        const filename = `${trackId}${ext}`;
+        const storagePath = `music-tracks/${trackId}/${filename}`;
+
+        console.log(`[Storage] Uploading to: ${storagePath}`);
+
+        // Get Firebase Storage bucket
+        const bucket = getStorage().bucket();
+        const file = bucket.file(storagePath);
+
+        // Upload the file
+        await file.save(buffer, {
+            metadata: {
+                contentType: 'audio/mpeg',
+                metadata: {
+                    firebaseStorageDownloadTokens: admin.firestore.FieldValue.serverTimestamp()
+                }
+            },
+            public: true, // Make file publicly accessible
+        });
+
+        // Make the file publicly accessible
+        await file.makePublic();
+
+        // Get the public URL
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
+
+        console.log(`[Storage] ✅ Uploaded successfully: ${publicUrl}`);
+        return publicUrl;
+
+    } catch (error) {
+        console.error(`[Storage] ❌ Error downloading/uploading audio:`, error);
+        throw error;
+    }
+}
+
+/**
+ * Download image file from Suno URL and upload to Firebase Storage
+ * Returns permanent Firebase Storage URL
+ */
+async function downloadAndStoreImage(imageUrl: string, trackId: string): Promise<string> {
+    try {
+        console.log(`[Storage] Downloading image from: ${imageUrl}`);
+
+        // Download the image file
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+            throw new Error(`Failed to download image: ${response.statusText}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Extract filename from URL or use a default
+        const urlPath = new URL(imageUrl).pathname;
+        const originalFilename = urlPath.split('/').pop() || 'cover.jpg';
+
+        // Determine file extension (default to .jpg if not found)
+        const ext = originalFilename.includes('.')
+            ? originalFilename.substring(originalFilename.lastIndexOf('.'))
+            : '.jpg';
+
+        const filename = `cover${ext}`;
+        const storagePath = `music-tracks/${trackId}/${filename}`;
+
+        console.log(`[Storage] Uploading image to: ${storagePath}`);
+
+        // Get Firebase Storage bucket
+        const bucket = getStorage().bucket();
+        const file = bucket.file(storagePath);
+
+        // Determine content type based on extension
+        let contentType = 'image/jpeg';
+        if (ext === '.png') contentType = 'image/png';
+        if (ext === '.webp') contentType = 'image/webp';
+
+        // Upload the file
+        await file.save(buffer, {
+            metadata: {
+                contentType: contentType,
+                metadata: {
+                    firebaseStorageDownloadTokens: admin.firestore.FieldValue.serverTimestamp()
+                }
+            },
+            public: true, // Make file publicly accessible
+        });
+
+        // Make the file publicly accessible
+        await file.makePublic();
+
+        // Get the public URL
+        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${storagePath}`;
+
+        console.log(`[Storage] ✅ Uploaded image successfully: ${publicUrl}`);
+        return publicUrl;
+
+    } catch (error) {
+        console.error(`[Storage] ❌ Error downloading/uploading image:`, error);
+        throw error;
+    }
+}
 
 const COIN_SERVICE_URL = process.env.COIN_SERVICE_URL || 'https://us-central1-rraasi-8a619.cloudfunctions.net/rraasi-coin-service';
 
@@ -235,13 +363,35 @@ router.post('/callback', async (req: Request, res: Response) => {
                             continue;
                         }
 
+                        // Download and upload audio to Firebase Storage
+                        let permanentAudioUrl = track.audio_url;
+                        try {
+                            permanentAudioUrl = await downloadAndStoreAudio(track.audio_url, taskId);
+                            console.log(`[Suno Callback] Stored audio in Firebase Storage: ${permanentAudioUrl}`);
+                        } catch (error) {
+                            console.error(`[Suno Callback] Failed to store audio, using original URL:`, error);
+                            // Fall back to original URL if storage fails
+                        }
+
+                        // Download and upload image to Firebase Storage
+                        let permanentImageUrl = track.image_url || null;
+                        if (track.image_url) {
+                            try {
+                                permanentImageUrl = await downloadAndStoreImage(track.image_url, taskId);
+                                console.log(`[Suno Callback] Stored image in Firebase Storage: ${permanentImageUrl}`);
+                            } catch (error) {
+                                console.error(`[Suno Callback] Failed to store image, using original URL:`, error);
+                                // Fall back to original URL if storage fails
+                            }
+                        }
+
                         // Build track object (track-specific fields only)
                         const newTrack = {
                             sunoId: track.id,
-                            audioUrl: track.audio_url,
+                            audioUrl: permanentAudioUrl, // Use Firebase Storage URL
                             sourceAudioUrl: track.source_audio_url || null,
                             streamAudioUrl: track.stream_audio_url || null,
-                            imageUrl: track.image_url || null,
+                            imageUrl: permanentImageUrl, // Use Firebase Storage URL
                             sourceImageUrl: track.source_image_url || null,
                             version: existingTracks.length + 1,
                             duration: track.duration || null,
@@ -334,13 +484,35 @@ router.post('/callback', async (req: Request, res: Response) => {
                             userId = existingData.userId;
                         }
 
+                        // Download and upload audio to Firebase Storage
+                        let permanentAudioUrl = clip.audio_url;
+                        try {
+                            permanentAudioUrl = await downloadAndStoreAudio(clip.audio_url, legacyPayload.taskId);
+                            console.log(`[Suno Callback Legacy] Stored audio in Firebase Storage: ${permanentAudioUrl}`);
+                        } catch (error) {
+                            console.error(`[Suno Callback Legacy] Failed to store audio, using original URL:`, error);
+                            // Fall back to original URL if storage fails
+                        }
+
+                        // Download and upload image to Firebase Storage
+                        let permanentImageUrl = clip.image_url || null;
+                        if (clip.image_url) {
+                            try {
+                                permanentImageUrl = await downloadAndStoreImage(clip.image_url, legacyPayload.taskId);
+                                console.log(`[Suno Callback Legacy] Stored image in Firebase Storage: ${permanentImageUrl}`);
+                            } catch (error) {
+                                console.error(`[Suno Callback Legacy] Failed to store image, using original URL:`, error);
+                                // Fall back to original URL if storage fails
+                            }
+                        }
+
                         const trackData: any = {
                             userId: userId,
                             sunoId: clip.id,
                             title: clip.title || 'Untitled Track',
-                            audioUrl: clip.audio_url,
+                            audioUrl: permanentAudioUrl, // Use Firebase Storage URL
                             videoUrl: clip.video_url || null,
-                            imageUrl: clip.image_url || null,
+                            imageUrl: permanentImageUrl, // Use Firebase Storage URL
                             status: 'COMPLETED',
                             metadata: {
                                 model_name: clip.model_name || null,
@@ -604,5 +776,188 @@ async function processSync(docRef: admin.firestore.DocumentReference, taskId: st
         console.log(`[Suno Sync] Track ${taskId} still pending or no audioUrl found`);
     }
 }
+
+/**
+ * POST /api/suno/generate-video
+ * Trigger MP4 video generation for a track
+ */
+router.post('/generate-video', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const { trackId } = req.body;
+        const userId = req.user!.uid;
+
+        if (!trackId) {
+            return res.status(400).json({ error: 'trackId is required' });
+        }
+
+        console.log(`[Suno Video] Request to generate video for track: ${trackId} by user: ${userId}`);
+
+        const db = getDb();
+
+        // 1. Get the track to find Suno audioId and existing metadata
+        // trackId usually maps to the document ID (which is the creation taskId)
+        let docRef = db.collection('music_tracks').doc(trackId);
+        let trackDoc = await docRef.get();
+
+        if (!trackDoc.exists) {
+            // Try fetching by querying audioUrl or sunoId if trackId is just a legacy ID
+            // This fallback is critical if the frontend passes the audioUrl as ID for legacy tracks
+            const q = await db.collection('music_tracks').where('audioUrl', '==', trackId).limit(1).get();
+            if (!q.empty) {
+                trackDoc = q.docs[0];
+                docRef = trackDoc.ref;
+            } else {
+                return res.status(404).json({ error: 'Track not found' });
+            }
+        }
+
+        const trackData = trackDoc.data();
+        if (!trackData) return res.status(404).json({ error: 'Track data is empty' });
+
+        // Check ownership (optional, strict mode)
+        if (trackData.userId && trackData.userId !== userId) {
+            console.warn(`[Suno Video] User ${userId} attempted to modify track ${trackId} owned by ${trackData.userId}`);
+            // Allow it for now or return 403? "Create Video" could be allowed for public tracks?
+            // Let's enforce ownership for now to save credits
+            return res.status(403).json({ error: 'You do not own this track' });
+        }
+
+        // Get the audioId (sunoId) - This is REQUIRED for video generation
+        const audioId = trackData.sunoId;
+        if (!audioId) {
+            return res.status(400).json({ error: 'Track missing Suno ID (cannot generate video)' });
+        }
+
+        // Check if video already exists or is processing
+        if (trackData.videoUrl) {
+            return res.status(409).json({ error: 'Video already exists', videoUrl: trackData.videoUrl });
+        }
+        if (trackData.videoStatus === 'generating') {
+            return res.status(409).json({ error: 'Video generation already in progress' });
+        }
+
+        // 2. Call Suno API
+        const sunoKey = process.env.SUNO_API_KEY;
+        const callbackUrl = `${process.env.AUTH_SERVER_URL || 'https://rraasi.com'}/api/suno/callback/video`;
+
+        if (!sunoKey) {
+            throw new Error('Server missing SUNO_API_KEY');
+        }
+
+        const generationPayload = {
+            taskId: `video_${trackDoc.id}_${Date.now()}`,
+            audioId: audioId,
+            callBackUrl: callbackUrl,
+            author: "RRAASI Music",
+            domainName: "rraasi.com"
+        };
+
+        console.log(`[Suno Video] calling API with:`, generationPayload);
+
+        const response = await fetch('https://api.sunoapi.org/api/v1/mp4/generate', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${sunoKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(generationPayload)
+        });
+
+        const result: any = await response.json();
+        console.log(`[Suno Video] API Response:`, result);
+
+        if (response.ok && result.code === 200) {
+            // 3. Update Firestore status
+            await docRef.set({
+                videoStatus: 'generating',
+                videoTaskId: generationPayload.taskId, // Save this just in case
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            return res.json({
+                success: true,
+                message: 'Video generation started',
+                videoTaskId: generationPayload.taskId
+            });
+        } else {
+            console.error('[Suno Video] Failed:', result);
+            return res.status(500).json({
+                error: 'Failed to start video generation',
+                details: result.msg || result.error
+            });
+        }
+
+    } catch (error) {
+        console.error('[Suno Video] Error:', error);
+        return res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * POST /api/suno/callback/video
+ * Specific callback handler for MP4 video generation
+ */
+router.post('/callback/video', async (req: Request, res: Response) => {
+    try {
+        const payload = req.body;
+        console.log(`[Suno Video Callback] Received:`, JSON.stringify(payload));
+
+        const { code, msg, data } = payload;
+
+        if (code === 200 && data && data.video_url) {
+            const { task_id, video_url } = data;
+
+            // Note: task_id here corresponds to the `taskId` we sent in the generation request.
+            // Format: video_{trackDocId}_{timestamp}
+
+            // We need to find the track document. 
+            // 1. Try to parse ID from string
+            let docId = task_id;
+            if (task_id.startsWith('video_')) {
+                const parts = task_id.split('_');
+                if (parts.length >= 2) {
+                    docId = parts[1]; // Extract original doc ID
+                }
+            }
+
+            console.log(`[Suno Video Callback] Mapped task ${task_id} to doc ${docId}`);
+
+            const db = getDb();
+            const docRef = db.collection('music_tracks').doc(docId);
+            const doc = await docRef.get();
+
+            if (doc.exists) {
+                await docRef.set({
+                    videoUrl: video_url,
+                    videoStatus: 'completed',
+                    videoGeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+                console.log(`[Suno Video Callback] ✅ Updated track ${docId} with video URL`);
+            } else {
+                // Fallback: search by videoTaskId field
+                const q = await db.collection('music_tracks').where('videoTaskId', '==', task_id).limit(1).get();
+                if (!q.empty) {
+                    await q.docs[0].ref.set({
+                        videoUrl: video_url,
+                        videoStatus: 'completed',
+                        videoGeneratedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true });
+                    console.log(`[Suno Video Callback] ✅ Updated track ${q.docs[0].id} via videoTaskId query`);
+                } else {
+                    console.error(`[Suno Video Callback] ❌ Could not find track for task ${task_id}`);
+                }
+            }
+        } else {
+            console.warn(`[Suno Video Callback] Received unsuccessful or incomplete data:`, payload);
+        }
+
+        res.status(200).json({ status: 'received' });
+    } catch (error) {
+        console.error('[Suno Video Callback] Error:', error);
+        res.status(200).json({ status: 'error' }); // Always 200 to acknowledge
+    }
+});
 
 export default router;

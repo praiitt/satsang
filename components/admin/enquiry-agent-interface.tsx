@@ -6,7 +6,9 @@ import {
     RoomAudioRenderer,
     useLocalParticipant,
     useVoiceAssistant,
+    useChat,
 } from '@livekit/components-react';
+import { ChatTranscript } from '@/components/app/chat-transcript';
 import { Button } from '@/components/livekit/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Database, Server, Info, Terminal, Activity } from 'lucide-react';
@@ -75,7 +77,12 @@ export function EnquiryAgentInterface({ accessToken, url, onDisconnect }: Enquir
             {/* Main Content */}
             <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-8 gap-12">
                 <RoomAudioRenderer />
-                <VisualizerState room={room} />
+
+                <div className="flex flex-col gap-4 w-full max-w-2xl">
+                    <VisualizerState room={room} />
+                    <AgentChat />
+                </div>
+
                 <SampleQueries />
             </main>
 
@@ -169,6 +176,23 @@ function VisualizerState({ room }: { room: Room | null }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+        </div>
+    );
+}
+
+function AgentChat() {
+    const { chatMessages } = useChat({ topic: "lk-chat-topic" });
+
+    return (
+        <div className="h-64 w-full bg-slate-900/50 rounded-xl border border-white/10 overflow-hidden relative">
+            <div className="absolute inset-0 overflow-y-auto p-4 space-y-4">
+                <ChatTranscript messages={chatMessages} />
+            </div>
+            {chatMessages.length === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">
+                    No messages yet...
+                </div>
+            )}
         </div>
     );
 }

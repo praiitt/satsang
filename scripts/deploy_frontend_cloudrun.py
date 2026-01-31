@@ -3,6 +3,30 @@ import subprocess
 
 def main():
     print("Preparing to deploy Frontend to Cloud Run...")
+    
+    # ------------------------------------------------------------------
+    # IMPORTANT SAFETY NOTICE: Dependency Management
+    # ------------------------------------------------------------------
+    # This script deploys the CURRENT, LOCAL codebase to Cloud Build.
+    # The Dockerfile uses `pnpm install --frozen-lockfile` to ensure
+    # that the deployed dependencies MATCH EXACTLY what is in your
+    # local `pnpm-lock.yaml` file.
+    #
+    # CRITICAL:
+    # 1. Do not run `pnpm update` or `pnpm install` blindly before deploying
+    #    unless you have tested the new versions locally.
+    # 2. If `pnpm-lock.yaml` is changed, the deployment WILL use the new versions.
+    # 3. We have pinned pnpm to version 9.15.9 in the Dockerfile to match package.json.
+    # ------------------------------------------------------------------
+
+    if not os.path.exists('pnpm-lock.yaml'):
+        print("❌ CRITICAL ERROR: pnpm-lock.yaml not found!")
+        print("   The build requires a lockfile to ensure stable dependencies.")
+        print("   Please run `pnpm install` locally to generate it, test your app, and then retry.")
+        return
+
+    print("✅ pnpm-lock.yaml found. Deploying with FIXED dependencies from lockfile.")
+
 
     env_local_path = '.env.local'
     env_prod_path = '.env.production'

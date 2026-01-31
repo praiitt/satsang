@@ -1,15 +1,16 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import { musicTranslations } from '@/lib/translations/music';
 import { MusicCategoryTabs, type MusicCategory } from '@/components/rraasi-music/music-category-tabs';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
-import { Music, Plus, Headphones, Shuffle } from 'lucide-react';
-import { collection, query, orderBy, limit, getDocs, where } from 'firebase/firestore';
-import { getFirebaseFirestore } from '@/lib/firebase-client';
+import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
+import Link from 'next/link';
 import { useMusicPlayer } from '@/contexts/music-player-context';
 import { PlaylistList } from './playlist-list';
 import { PlaylistQuickAccess } from './playlist-quick-access';
@@ -50,7 +51,7 @@ interface MusicTrack {
 }
 
 interface RRaaSiMusicWelcomeViewProps {
-  onStartCall: () => void;
+  onStartCall: (options?: { intention?: string }) => void;
 }
 
 export const RRaaSiMusicWelcomeView = ({
@@ -60,6 +61,8 @@ export const RRaaSiMusicWelcomeView = ({
   const { language } = useLanguage();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { playPlaylist } = useMusicPlayer();
+  const searchParams = useSearchParams();
+  const intentionParam = searchParams.get('intention');
 
   /* State */
   const [activeCategory, setActiveCategory] = useState<MusicCategory>('all');
@@ -154,6 +157,7 @@ export const RRaaSiMusicWelcomeView = ({
           prompt: t.prompt,
           description: t.description || t.caption || t.prompt, // Map description (fallback to prompt)
           category: t.category,
+          metadata: t.metadata,
           createdAt: t.createdAt || t.created_at,
           status: t.status, // Map status
         }));
@@ -428,6 +432,15 @@ export const RRaaSiMusicWelcomeView = ({
           )}
         </button>
 
+        {/* Back Button */}
+        <Link
+          href="/"
+          className="absolute top-24 left-6 z-30 flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-4 py-2 text-white shadow-xl hover:bg-white/20 transition-all border border-white/20"
+        >
+          <ChevronLeft className="w-5 h-5" />
+          <span className="font-bold text-xs">EXIT</span>
+        </Link>
+
         <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
           {/* Icon Removed */}
           <h1 className="mb-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl md:text-7xl drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
@@ -439,54 +452,36 @@ export const RRaaSiMusicWelcomeView = ({
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8 px-4 flex-wrap">
             <Button
               variant="primary"
               size="lg"
-              onClick={onStartCall}
+              onClick={() => onStartCall({ intention: intentionParam || 'create_music' })}
               disabled={authLoading}
-              className="h-14 px-8 text-lg font-semibold shadow-xl hover:scale-105 transition-transform"
+              className="h-14 px-8 text-lg font-semibold shadow-xl hover:scale-105 transition-transform bg-gradient-to-r from-amber-500 to-amber-600 border-none"
             >
               {authLoading ? (
                 <>
                   <span className="w-5 h-5 mr-2 animate-spin rounded-full border-2 border-white/50 border-t-white"></span>
-                  Checking account...
+                  Checking...
                 </>
               ) : (
                 <>
                   <Plus className="w-5 h-5 mr-2" />
-                  {mt('startButton')}
-                  <span className="ml-2 text-xs opacity-75">• 50 coins</span>
+                  {intentionParam === 'compose_lyrics' ? mt('composeFromLyrics') : mt('startButton')}
+                  <span className="ml-2 text-xs opacity-75">• {mt('coinsCost')}</span>
                 </>
               )}
             </Button>
-
-            {/* Daily Mix Button (Hero) */}
-            {isAuthenticated && myTracks.length > 0 && (
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={handleDailyMix}
-                disabled={isShuffling}
-                className="h-14 px-8 text-lg font-semibold bg-white/10 backdrop-blur-md border-white/20 text-white hover:bg-white/20 hover:scale-105 transition-transform"
-              >
-                {isShuffling ? (
-                  <span className="w-5 h-5 mr-2 animate-spin rounded-full border-2 border-white/50 border-t-white"></span>
-                ) : (
-                  <Shuffle className="w-5 h-5 mr-2" />
-                )}
-                Play Daily Mix
-              </Button>
-            )}
           </div>
           <p className="text-white/80 mt-3 text-sm font-medium drop-shadow-sm">
             {mt('freeTrial')}
           </p>
         </div>
-      </section>
+      </section >
 
       {/* My Music Section */}
-      <section className="max-w-7xl mx-auto px-4 mt-16 border-b border-gray-100 dark:border-gray-800 pb-16">
+      < section className="max-w-7xl mx-auto px-4 mt-16 border-b border-gray-100 dark:border-gray-800 pb-16" >
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl">
@@ -603,139 +598,237 @@ export const RRaaSiMusicWelcomeView = ({
             </div>
           )}
         </div>
-      </section>
+      </section >
 
       {/* Category Tabs & Music Grid */}
-      <section className="max-w-7xl mx-auto px-4 mt-16">
+      < section className="max-w-7xl mx-auto px-4 mt-16" >
         {/* Browse Header */}
-        <div className="text-center mb-8">
+        < div className="text-center mb-8" >
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             {mt('browse.title')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-lg">
             {mt('browse.subtitle')}
           </p>
-        </div>
+        </div >
 
         {/* Category Filter */}
-        <div className="mb-8">
+        < div className="mb-8" >
           <MusicCategoryTabs
             activeCategory={activeCategory}
             onCategoryChange={setActiveCategory}
             language={language}
           />
-        </div>
+        </div >
 
         {/* Music Content - Grid or Playlists */}
-        {activeCategory === 'playlists' ? (
-          isAuthenticated ? (
-            <PlaylistList
-              onPlayPlaylist={async (id) => {
-                try {
-                  const res = await fetch(`/api/playlists/details/${id}`); // Ensure this matches backend route
-                  if (res.ok) {
-                    const data = await res.json();
-                    const tracks = (data.tracks || []).map((t: any) => ({
-                      id: t.id || t.trackId,
-                      title: t.title || t.trackName || 'Untitled',
-                      audioUrl: t.audioUrl || t.audio_url,
-                      imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
-                      prompt: t.prompt,
-                      description: t.description || t.caption || t.prompt,
-                      category: t.category,
-                      createdAt: t.createdAt,
-                      status: t.status,
-                    }));
+        {
+          activeCategory === 'playlists' ? (
+            isAuthenticated ? (
+              <PlaylistList
+                onPlayPlaylist={async (id) => {
+                  try {
+                    const res = await fetch(`/api/playlists/details/${id}`); // Ensure this matches backend route
+                    if (res.ok) {
+                      const data = await res.json();
+                      const tracks = (data.tracks || []).map((t: any) => ({
+                        id: t.id || t.trackId,
+                        title: t.title || t.trackName || 'Untitled',
+                        audioUrl: t.audioUrl || t.audio_url,
+                        imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
+                        prompt: t.prompt,
+                        description: t.description || t.caption || t.prompt,
+                        category: t.category,
+                        createdAt: t.createdAt,
+                        status: t.status,
+                      }));
 
-                    if (tracks.length > 0) {
-                      playPlaylist(tracks, 0);
-                    } else {
-                      alert('This playlist is empty!');
+                      if (tracks.length > 0) {
+                        playPlaylist(tracks, 0);
+                      } else {
+                        alert('This playlist is empty!');
+                      }
                     }
+                  } catch (e) {
+                    console.error("Failed to play playlist", e);
                   }
-                } catch (e) {
-                  console.error("Failed to play playlist", e);
-                }
-              }}
-            />
-          ) : (
-            <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
-              <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">Please log in to see your playlists</p>
-              <Button onClick={() => window.location.href = '/login'} variant="primary" size="lg">
-                Login to RRAASI
-              </Button>
-            </div>
-          )
-        ) : loading ? (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
-            <p className="text-gray-600 dark:text-gray-400">{mt('browse.loading')}</p>
-          </div>
-        ) : error ? (
-          <div className="text-center py-16 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20">
-            <p className="text-red-600 dark:text-red-400 text-lg mb-4">{error}</p>
-          </div>
-        ) : musicTracks.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-2xl">
-            <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
-              {mt('browse.noResults')}
-            </p>
-            <p className="text-gray-500 dark:text-gray-500 mb-6">
-              {mt('browse.createFirst')}
-            </p>
-            <Button onClick={onStartCall} variant="primary" disabled={authLoading}>
-              <Plus className="w-5 h-5 mr-2" />
-              {mt('startButton')}
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {musicTracks.map((track, index) => (
-                <MusicPlayerCard
-                  key={track.id}
-                  title={track.title || 'Untitled'}
-                  audioUrl={track.audioUrl}
-                  imageUrl={track.imageUrl} // Pass imageUrl
-                  category={track.category || 'other'}
-                  prompt={track.prompt}
-                  description={track.description} // Pass description
-                  metadata={track.metadata} // Pass metadata for tags
-                  createdAt={track.createdAt?.toDate?.()?.toISOString() || track.createdAt || new Date().toISOString()}
-                  onPlay={() => playPlaylist(musicTracks, index)} // Use playlist
-                />
-              ))}
-            </div>
-
-            {/* Load More Button */}
-            {hasMore && (
-              <div className="mt-12 text-center">
-                <Button
-                  onClick={handleLoadMore}
-                  variant="outline"
-                  size="lg"
-                  disabled={loadingMore}
-                  className="min-w-[200px]"
-                >
-                  {loadingMore ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600 mr-2"></div>
-                      Loading...
-                    </>
-                  ) : (
-                    'Load More Tracks'
-                  )}
+                }}
+              />
+            ) : (
+              <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">Please log in to see your playlists</p>
+                <Button onClick={() => window.location.href = '/login'} variant="primary" size="lg">
+                  Login to RRAASI
                 </Button>
               </div>
-            )}
-          </>
-        )}
+            )
+          ) : loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">{mt('browse.loading')}</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-16 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20">
+              <p className="text-red-600 dark:text-red-400 text-lg mb-4">{error}</p>
+            </div>
+          ) : musicTracks.length === 0 ? (
+            <div className="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-2xl">
+              <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
+                {mt('browse.noResults')}
+              </p>
+              <p className="text-gray-500 dark:text-gray-500 mb-6">
+                {mt('browse.createFirst')}
+              </p>
+              <Button onClick={onStartCall} variant="primary" disabled={authLoading}>
+                <Plus className="w-5 h-5 mr-2" />
+                {mt('startButton')}
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {musicTracks.map((track, index) => (
+                  <MusicPlayerCard
+                    key={track.id}
+                    title={track.title || 'Untitled'}
+                    audioUrl={track.audioUrl}
+                    imageUrl={track.imageUrl} // Pass imageUrl
+                    category={track.category || 'other'}
+                    prompt={track.prompt}
+                    description={track.description} // Pass description
+                    metadata={track.metadata} // Pass metadata for tags
+                    createdAt={track.createdAt?.toDate?.()?.toISOString() || track.createdAt || new Date().toISOString()}
+                    onPlay={() => playPlaylist(musicTracks, index)} // Use playlist
+                  />
+                ))}
+              </div>
+
+              {/* Load More Button */}
+              {hasMore && (
+                <div className="mt-12 text-center">
+                  <Button
+                    onClick={handleLoadMore}
+                    variant="outline"
+                    size="lg"
+                    disabled={loadingMore}
+                    className="min-w-[200px]"
+                  >
+                    {loadingMore ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600 mr-2"></div>
+                        Loading...
+                      </>
+                    ) : (
+                      'Load More Tracks'
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
+          )
+        }
       </section>
+
+      {/* Explore More RRAASI Services */}
+      <section className="max-w-7xl mx-auto px-4 mt-16 mb-16">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            Explore More from RRAASI
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
+            Discover our complete suite of AI-powered spiritual and creative tools, each designed to elevate different aspects of your journey.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {/* Satsang */}
+          <a
+            href="/satsang"
+            className="group bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-amber-500 rounded-2xl p-6 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg"
+          >
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-900/30 dark:to-amber-900/30 group-hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-600 dark:text-orange-400">
+                <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /><path d="M20 3v4M22 5h-4" />
+              </svg>
+            </div>
+            <h3 className="text-gray-900 dark:text-white text-xl font-bold mb-2 group-hover:text-amber-600 transition-colors">
+              AI Satsang
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-3">
+              Connect with AI-powered spiritual gurus for personalized guidance. Experience authentic dialogue with masters from various traditions.
+            </p>
+            <div className="flex items-center text-amber-600 font-semibold text-sm">
+              Start Satsang
+              <svg className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
+          </a>
+
+          {/* Tarot */}
+          <a
+            href="/tarot"
+            className="group relative bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-amber-500 rounded-2xl p-6 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg overflow-hidden"
+          >
+            <div className="absolute top-3 right-3 rounded-full bg-purple-100 dark:bg-purple-900/30 px-3 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300">
+              Coming Soon
+            </div>
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-purple-100 to-indigo-100 dark:from-purple-900/30 dark:to-indigo-900/30 group-hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 dark:text-purple-400">
+                <rect x="2" y="4" width="20" height="16" rx="2" /><path d="M7 15h10M7 11h10M7 7h10" />
+              </svg>
+            </div>
+            <h3 className="text-gray-900 dark:text-white text-xl font-bold mb-2 group-hover:text-amber-600 transition-colors">
+              Mystic Tarot
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-3">
+              Receive personalized tarot readings with AI-guided interpretations. Gain clarity on your path through ancient wisdom.
+            </p>
+            <div className="flex items-center text-amber-600 font-semibold text-sm opacity-60">
+              Early Access Soon
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
+          </a>
+
+          {/* Vedic Astrology */}
+          <a
+            href="/vedic-jyotish"
+            className="group relative bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-amber-500 rounded-2xl p-6 shadow-sm transition-all hover:scale-[1.02] hover:shadow-lg overflow-hidden"
+          >
+            <div className="absolute top-3 right-3 rounded-full bg-pink-100 dark:bg-pink-900/30 px-3 py-1 text-xs font-semibold text-pink-700 dark:text-pink-300">
+              Coming Soon
+            </div>
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-pink-100 to-purple-100 dark:from-pink-900/30 dark:to-purple-900/30 group-hover:scale-110 transition-transform">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-600 dark:text-pink-400">
+                <circle cx="12" cy="12" r="10" /><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+            </div>
+            <h3 className="text-gray-900 dark:text-white text-xl font-bold mb-2 group-hover:text-amber-600 transition-colors">
+              Vedic Astrology
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-3">
+              Explore your birth chart with authentic Jyotish readings. Discover planetary influences and life patterns through Vedic wisdom.
+            </p>
+            <div className="flex items-center text-amber-600 font-semibold text-sm opacity-60">
+              Early Access Soon
+              <svg className="ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            </div>
+          </a>
+        </div>
+
+        {/* Bottom description */}
+        <div className="mt-8 text-center">
+          <p className="text-gray-600 dark:text-gray-400 text-sm max-w-3xl mx-auto">
+            All RRAASI services integrate seamlessly with your spiritual journey. Each tool is designed with authenticity, powered by cutting-edge AI, and grounded in ancient wisdom.
+          </p>
+        </div>
+      </section>
+
+
+
 
       {/* Floating Create Button (Mobile) */}
       <button
-        onClick={onStartCall}
+        onClick={() => onStartCall({ intention: intentionParam || 'create_music' })}
         disabled={authLoading}
         className="fixed bottom-6 right-6 md:hidden w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-200 z-50 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Create music - 50 coins"

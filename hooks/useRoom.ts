@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Room, RoomEvent, TokenSource } from 'livekit-client';
+import { Room, RoomEvent } from 'livekit-client';
 import { AppConfig } from '@/app-config';
 import { useAuth } from '@/components/auth/auth-provider';
 import { toastAlert } from '@/components/livekit/alert-toast';
@@ -42,163 +42,192 @@ export function useRoom(appConfig: AppConfig) {
     };
   }, [room]);
 
-  const tokenSource = useMemo(
-    () =>
-      TokenSource.custom(async () => {
-        const endpoint = appConfig.tokenEndpoint ?? process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
-        const url = new URL(endpoint, window.location.origin);
+  // State to hold session-specific options (like intention)
+  const sessionOptionsRef = useRef<{ intention?: string; resumeSessionId?: string }>({});
 
-        const currentUser = authRef.current.user;
-        const resolvedUserId = currentUser?.uid || currentUser?.phoneNumber;
-        const isAuthLoading = authRef.current.loading;
+  const fetchConnectionDetails = useCallback(async () => {
+    const endpoint = appConfig.tokenEndpoint ?? process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
+    const url = new URL(endpoint, window.location.origin);
 
-        // Strict Debugging
-        if (!resolvedUserId) {
-          if (isAuthLoading) {
-            console.warn('⚠️ [useRoom] Auth is still loading. Token will have default_user.');
-          } else {
-            console.warn('⚠️ [useRoom] User is NOT logged in (or no UID). Token will have default_user.');
-          }
-        } else {
-          console.log('✅ [useRoom] Generating token for User ID:', resolvedUserId);
-        }
+    const currentUser = authRef.current.user;
+    const resolvedUserId = currentUser?.uid || currentUser?.phoneNumber;
+    const isAuthLoading = authRef.current.loading;
 
-        try {
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-Sandbox-Id': appConfig.sandboxId ?? '',
-              'X-Language': language, // Send language preference in header
-            },
-            body: JSON.stringify({
-              room_config: appConfig.agentName
-                ? {
-                  agents: [{ agent_name: appConfig.agentName }],
-                }
-                : undefined,
-              language: language, // Also send in body for compatibility
-              userId: resolvedUserId, // Explicitly use the resolved variable
-              guruId: appConfig.metadata?.guruId, // Pass guruId if available
-            }),
-          });
+    // Strict Debugging
+    if (!resolvedUserId) {
+      if (isAuthLoading) {
+        console.warn('⚠️ [useRoom] Auth is still loading. Token will have default_user.');
+      } else {
+        console.warn('⚠️ [useRoom] User is NOT logged in (or no UID). Token will have default_user.');
+      }
+    } else {
+      console.log('✅ [useRoom] Generating token for User ID:', resolvedUserId);
+    }
 
-          console.log('🔍 [useRoom] Connection details request sent', {
-            agentName: appConfig.agentName,
-            language,
-            guruId: appConfig.metadata?.guruId,
-            userId: resolvedUserId,
-            authLoaded: !isAuthLoading
-          });
+    try {
+      // Read intention from Ref
+      const currentIntention = sessionOptionsRef.current.intention;
 
-          const data = await res.json();
-          console.log('✅ [useRoom] Connection details received', data);
-          if (data.metadata) {
-            console.log('📝 [useRoom] Backend confirmed metadata:', data.metadata);
-          } else {
-            console.warn('⚠️ [useRoom] Backend did NOT return metadata verification.');
-          }
-
-          // ROBUSTNESS: Map Room ID to User ID immediately
-          if (data.roomName && resolvedUserId && resolvedUserId !== 'default_user') {
-            try {
-              // Determine base URL for mapping (using configured auth/backend url or relative proxy)
-              // Using relative path '/api/livekit/map-session' which goes through next.config.ts proxy
-              // But next.config.ts proxy maps /api/livekit -> BACKEND_URL, not AUTH_URL.
-              // Wait, index.ts says we updated auth-server.
-              // We need to check next.config.ts rewrite rules again.
-              // Previously:
-              // source: '/api/livekit/:path*', destination: `${BACKEND_URL}/api/livekit/:path*`,
-              // We need to map it to AUTH server or use a specific rewrite.
-              // Safe bet: Use '/backend/auth/livekit/map-session' if rewritten, or direct URL.
-
-              // Let's use a explicit fetch to the auth server path if we can't rely on proxy yet.
-              // Actually, let's use the same patterns. 
-              // '/api/auth/...' proxies to AUTH_URL.
-              // We just added '/livekit' to auth-server logic. 
-              // We should add a rewrite rule for '/api/auth-livekit' -> AUTH_SERVER/livekit to be safe,
-              // OR just assume we can add it to next.config.ts.
-
-              // FOR NOW: Let's assume we will add/verify the rewrite rule.
-              // Let's use '/api/auth/map-session' and mount the route there? No, we mounted at '/livekit'.
-              // Let's use '/backend/livekit-auth/map-session' 
-
-              // actually, let's just trigger it and log error if fail.
-              fetch('/api/livekit/map-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  roomName: data.roomName,
-                  userId: resolvedUserId,
-                  agentName: appConfig.agentName
-                })
-              }).catch(e => console.warn('[useRoom] Mapping failed (proxy might be missing)', e));
-            } catch (e) {
-              console.warn('[useRoom] Failed to initiate mapping', e);
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Sandbox-Id': appConfig.sandboxId ?? '',
+          'X-Language': language, // Send language preference in header
+        },
+        body: JSON.stringify({
+          room_config: appConfig.agentName
+            ? {
+              agents: [{ agent_name: appConfig.agentName }],
             }
-          }
+            : undefined,
+          language: language, // Also send in body for compatibility
+          userId: resolvedUserId, // Explicitly use the resolved variable
+          guruId: appConfig.metadata?.guruId, // Pass guruId if available
+          intention: currentIntention, // Pass intention from Ref
+          resumeSessionId: sessionOptionsRef.current.resumeSessionId, // Pass resumeSessionId if available
+        }),
+      });
 
-          return data;
-        } catch (error) {
-          console.error('❌ [useRoom] Error fetching connection details:', error);
-          throw new Error('Error fetching connection details!');
+      console.log('🔍 [useRoom] Connection details request sent', {
+        agentName: appConfig.agentName,
+        language,
+        guruId: appConfig.metadata?.guruId,
+        userId: resolvedUserId,
+        intention: currentIntention,
+        authLoaded: !isAuthLoading
+      });
+
+      const data = await res.json();
+      console.log('✅ [useRoom] Connection details received', data);
+      if (data.metadata) {
+        console.log('📝 [useRoom] Backend confirmed metadata:', data.metadata);
+      } else {
+        console.warn('⚠️ [useRoom] Backend did NOT return metadata verification.');
+      }
+
+      // ROBUSTNESS: Map Room ID to User ID immediately
+      if (data.roomName && resolvedUserId && resolvedUserId !== 'default_user') {
+        try {
+          fetch('/api/livekit/map-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              roomName: data.roomName,
+              userId: resolvedUserId,
+              agentName: appConfig.agentName
+            })
+          }).catch(e => console.warn('[useRoom] Mapping failed (proxy might be missing)', e));
+        } catch (e) {
+          console.warn('[useRoom] Failed to initiate mapping', e);
         }
-      }),
-    [appConfig, language]
-  );
+      }
+
+      return data;
+    } catch (error) {
+      console.error('❌ [useRoom] Error fetching connection details:', error);
+      throw new Error('Error fetching connection details!');
+    }
+  }, [appConfig, language]);
 
   // Track active egress IDs for this room
   const egressIdsRef = useRef<string[]>([]);
 
-  const startSession = useCallback(() => {
+  const startSession = useCallback((options?: { intention?: string; resumeSessionId?: string }) => {
+    // Update Ref immediately
+    if (options) {
+      sessionOptionsRef.current = options;
+    } else {
+      // Check URL for resumeSessionId if not explicitly passed
+      if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        const resumeId = searchParams.get('resumeSessionId');
+        if (resumeId) {
+          sessionOptionsRef.current = { resumeSessionId: resumeId };
+        } else {
+          sessionOptionsRef.current = {};
+        }
+      } else {
+        sessionOptionsRef.current = {};
+      }
+    }
+
     setIsSessionActive(true);
 
     if (room.state === 'disconnected') {
       const { isPreConnectBufferEnabled } = appConfig;
-      Promise.all([
-        room.localParticipant.setMicrophoneEnabled(true, undefined, {
-          preConnectBuffer: isPreConnectBufferEnabled,
-        }),
-        tokenSource.fetch({ agentName: appConfig.agentName }).then(async (connectionDetails) => {
+      /* Refactored Connection Logic: Connect First, Then Publish */
+      fetchConnectionDetails()
+        .then(async (connectionDetails) => {
           await room.connect(connectionDetails.serverUrl, connectionDetails.participantToken);
+
+          // Enable Microphone after connection
+          await room.localParticipant.setMicrophoneEnabled(true);
+
           // Start audio egress after successful connect
           try {
-            const res = await fetch('/api/egress/start', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ roomName: room.name, userId: authRef.current.user?.uid }),
-            });
-            const data = await res.json();
-            if (res.ok && data?.egressId) {
-              egressIdsRef.current.push(String(data.egressId));
-              console.log('[egress] started', data);
-            } else {
-              console.warn('[egress] start failed or disabled', data);
-            }
-          } catch (e) {
-            console.warn('[egress] start error', e);
-          }
-        }),
-      ]).catch((error) => {
-        if (aborted.current) {
-          // Once the effect has cleaned up after itself, drop any errors
-          //
-          // These errors are likely caused by this effect rerunning rapidly,
-          // resulting in a previous run `disconnect` running in parallel with
-          // a current run `connect`
-          return;
-        }
+            // Ensure we have a valid userId before starting egress
+            let recordingUserId = authRef.current.user?.uid;
 
-        toastAlert({
-          title: 'There was an error connecting to the agent',
-          description: `${error.name}: ${error.message}`,
+            // If defaulting or missing, try to resolve again or use 'guest' tag
+            if (!recordingUserId && connectionDetails.participantName) {
+              // sometimes participantName is used as ID or contains useful info
+            }
+
+            console.log('[egress] Attempting to start egress for room:', room.name, 'User:', recordingUserId);
+
+            const startEgress = async (retries = 3) => {
+              try {
+                const res = await fetch('/api/egress/start', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    roomName: room.name,
+                    userId: recordingUserId || 'anonymous_guest' // Fallback to ensure recording happens
+                  }),
+                });
+                const data = await res.json();
+
+                if (res.ok && data?.egressId) {
+                  egressIdsRef.current.push(String(data.egressId));
+                  console.log('✅ [egress] Started successfully:', data);
+                  toastAlert({ title: 'Recording Started', description: 'Your session is being recorded.' });
+                } else {
+                  console.warn('⚠️ [egress] API returned partial/error:', data);
+                  if (data.disabled) {
+                    console.log('[egress] Recording disabled by server config.');
+                  }
+                }
+              } catch (e) {
+                console.error('❌ [egress] Start failed:', e);
+                if (retries > 0) {
+                  console.log(`[egress] Retrying start... (${retries} left)`);
+                  setTimeout(() => startEgress(retries - 1), 2000);
+                }
+              }
+            };
+
+            // Fire and forget, but with internal retries
+            startEgress();
+
+          } catch (e) {
+            console.warn('[egress] Critical start error', e);
+          }
+        })
+        .catch((error) => {
+          if (aborted.current) return;
+          console.error("Connection failed:", error);
+          toastAlert({
+            title: 'There was an error connecting to the agent',
+            description: `${error.name}: ${error.message}`,
+          });
         });
-      });
     }
-  }, [room, appConfig, tokenSource]);
+  }, [room, appConfig, fetchConnectionDetails]);
 
   const endSession = useCallback(() => {
     setIsSessionActive(false);
+    sessionOptionsRef.current = {}; // Reset options
     // Stop any active egress for this room
     const roomName = room.name;
     const ids = [...egressIdsRef.current];

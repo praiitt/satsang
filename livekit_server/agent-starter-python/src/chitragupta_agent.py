@@ -273,14 +273,33 @@ async def entrypoint(ctx: JobContext):
     # Wait a moment for connection stability
     await asyncio.sleep(1)
     
-    session.on("user_speech_committed", lambda msg: logger.info(f"User speech verified: {msg}"))
-    session.on("agent_speech_committed", lambda msg: logger.info(f"Agent speaking: {msg}"))
+    # Helper to send chat messages
+    async def send_chat(message: str, is_user: bool = False):
+        try:
+            import time
+            msg_data = {
+                "message": message,
+                "timestamp": int(time.time() * 1000)
+            }
+            # If it's a user message, we might want to distinguish, but for now just send to topic
+            await ctx.room.local_participant.publish_data(
+                json.dumps(msg_data).encode('utf-8'),
+                reliable=True,
+                topic="lk-chat-topic"
+            )
+        except Exception as e:
+            logger.error(f"Failed to send chat: {e}")
+
+    session.on("user_speech_committed", lambda msg: asyncio.create_task(send_chat(msg.content if hasattr(msg, 'content') else str(msg), is_user=True)))
+    session.on("agent_speech_committed", lambda msg: asyncio.create_task(send_chat(msg.content if hasattr(msg, 'content') else str(msg), is_user=False)))
     
     await session.start(agent=agent, room=ctx.room)
     
     # Proactive greeting
     await asyncio.sleep(1)
-    await session.say("Namaste. I am Chitragupta, the divine record keeper. What would you like to know about the database?", allow_interruptions=True)
+    greeting = "Namaste. I am Chitragupta, the divine record keeper. What would you like to know about the database?"
+    await session.say(greeting, allow_interruptions=True)
+    await send_chat(greeting)
 
 if __name__ == "__main__":
     logger.info("Starting Chitragupta Agent Standalone...")

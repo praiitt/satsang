@@ -1,9 +1,19 @@
 export const musicTranslationsEn = {
     // Hero Section
-    title: 'Create Healing & Spiritual Music with RRAASI',
-    subtitle: 'RRAASI generates bhajans, mantras, meditation music, and healing frequencies instantly',
-    startButton: 'Start Creating Music',
+    title: 'Music is a Tool to Connect to the Ultimate',
+    subtitle: 'Create your own music exactly as you want, or listen to our community creations and be part of the present moment',
+    startButton: 'Connect to Create',
+    composeFromLyrics: 'Compose from Lyrics',
+    coinsCost: '50 coins',
     freeTrial: 'Free trial - No credit card required',
+
+    // New Features
+    'features_conversational_title': 'Create with Conversation',
+    'features_conversational_desc': 'Just talk or chat to create music. It is as easy as having a one-on-one conversation.',
+    'features_unique_title': '100% Unique AI Music',
+    'features_unique_desc': 'Every track is generative and unique to you. Never worry about copyright strikes.',
+    'features_license_title': 'Full Ownership & License',
+    'features_license_desc': 'Download your tracks with a commercial license to use anywhere - Spotify, YouTube, and more.',
 
     // Features Section
     featuresTitle: 'What You Can Create',
@@ -72,5 +82,33 @@ export const musicTranslationsEn = {
         play: 'Play',
         pause: 'Pause',
         nowPlaying: 'Now Playing',
+    },
+
+    // Poets Landing Page
+    poets: {
+        badge: 'For Poets, Lyricists & Writers',
+        title: 'Your Words, Orchestrated.',
+        title_suffix: 'Orchestrated.',
+        subtitle: 'Compose full musical arrangements just by talking. The AI handles the hard part—melody & production. You simply provide your lyrics and describe the vibe you want.',
+        cta: 'Start Conversation',
+        poweredBy: 'Powered by RRAASI AI Engine',
+        features: {
+            yourWords: {
+                title: 'Your Words',
+                desc: 'Paste your lyrics, poem, or ghazal directly into the chat.',
+            },
+            composition: {
+                title: 'Our Composition',
+                desc: 'The AI understands the emotion (Raag/Mood) and composes instantly.',
+            },
+            eternalArt: {
+                title: 'Eternal Art',
+                desc: 'Transform text into a full musical arrangement with vocals.',
+            },
+            ownership: {
+                title: 'Full Ownership',
+                desc: 'Download your track with a commercial license. Upload to Spotify, YouTube, or anywhere.',
+            },
+        },
     },
 } as const;

@@ -1,11 +1,15 @@
 'use client';
 
-import { Play, Pause, BarChart3, Download } from 'lucide-react';
+import { useState } from 'react';
+import { Play, Pause, BarChart3, Download, Video } from 'lucide-react';
+import { VideoPlayerModal } from './video-player-modal';
 import { useMusicPlayer, MusicTrack } from '@/contexts/music-player-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/livekit/button';
-import { AddToPlaylistMenu } from './add-to-playlist-menu';
+import { TrackActionsMenu } from './add-to-playlist-menu';
 import { SocialShareMenu } from '@/components/shared/social-share-menu';
+
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface MusicPlayerCardProps {
     id?: string;
@@ -21,6 +25,8 @@ interface MusicPlayerCardProps {
     isSyncing?: boolean; // New prop
     metadata?: any; // Track metadata including tags
     onDownload?: () => void; // New prop
+    videoUrl?: string; // New prop
+    videoStatus?: 'generating' | 'completed' | 'failed' | null; // New prop
 }
 
 export function MusicPlayerCard({
@@ -39,8 +45,12 @@ export function MusicPlayerCard({
     isSyncing = false,
     metadata,
     onDownload,
+    videoUrl,
+    videoStatus,
 }: MusicPlayerCardProps) {
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
+    const { profile } = useUserProfile();
+    const [showVideoModal, setShowVideoModal] = useState(false);
 
     // Determine uniqueness (fallback to audioUrl if ID is missing for legacy)
     const trackId = id || audioUrl;
@@ -169,7 +179,13 @@ export function MusicPlayerCard({
                             url={`https://rraasi.com/suno/track/${trackId}`}
                             className="bg-black/20 backdrop-blur-md rounded-full pointer-events-auto"
                         />
-                        <AddToPlaylistMenu trackId={trackId} />
+                        <TrackActionsMenu
+                            trackId={trackId}
+                            trackTitle={title}
+                            trackDate={createdAt}
+                            trackDuration={duration ? parseFloat(duration) : undefined}
+                            userName={profile?.name}
+                        />
                         {onDownload && !isPending && (
                             <button
                                 onClick={(e) => {
@@ -227,6 +243,42 @@ export function MusicPlayerCard({
                     )}
                 </div>
             </div>
+
+            {/* Video Player Modal */}
+            {videoUrl && (
+                <VideoPlayerModal
+                    isOpen={showVideoModal}
+                    onClose={() => setShowVideoModal(false)}
+                    videoUrl={videoUrl}
+                    title={title}
+                />
+            )}
+
+            {/* Video Action Button (Overlay helper) */}
+            {videoUrl && !isPending && (
+                <div className="absolute top-4 right-16 z-30 animate-in fade-in zoom-in duration-300">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowVideoModal(true);
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/10 transition-all hover:scale-105 shadow-lg group/vid"
+                    >
+                        <Video className="w-3.5 h-3.5 text-amber-400 group-hover/vid:text-amber-300" />
+                        <span className="text-[10px] font-bold tracking-wide uppercase">Watch Video</span>
+                    </button>
+                </div>
+            )}
+
+            {/* Video Generating Indicator */}
+            {videoStatus === 'generating' && !isPending && (
+                <div className="absolute top-4 right-16 z-30 animate-pulse">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/20 backdrop-blur-md text-amber-200 border border-amber-500/30">
+                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" />
+                        <span className="text-[10px] font-medium">Making Video...</span>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
