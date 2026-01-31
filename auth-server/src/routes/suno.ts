@@ -103,6 +103,7 @@ async function downloadAndStoreAudio(audioUrl: string, trackId: string): Promise
 
         // Get Firebase Storage bucket
         const bucket = getStorage().bucket();
+        console.log(`[Storage] 🔍 Using bucket: ${bucket.name}`);
         const file = bucket.file(storagePath);
 
         // Upload the file
@@ -125,8 +126,11 @@ async function downloadAndStoreAudio(audioUrl: string, trackId: string): Promise
         console.log(`[Storage] ✅ Uploaded successfully: ${publicUrl}`);
         return publicUrl;
 
-    } catch (error) {
-        console.error(`[Storage] ❌ Error downloading/uploading audio:`, error);
+    } catch (error: any) {
+        console.error(`[Storage] ❌ Error downloading/uploading audio:`, JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+        if (error.response) {
+            console.error(`[Storage] Error Response Data:`, JSON.stringify(error.response.data, null, 2));
+        }
         throw error;
     }
 }
