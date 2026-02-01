@@ -101,8 +101,9 @@ async function downloadAndStoreAudio(audioUrl: string, trackId: string): Promise
 
         console.log(`[Storage] Uploading to: ${storagePath}`);
 
-        // Get Firebase Storage bucket
-        const bucket = getStorage().bucket();
+        // Get Firebase Storage bucket (Explicit string to avoid default bucket issues)
+        const bucketName = 'rraasi-8a619-music-storage';
+        const bucket = getStorage().bucket(bucketName);
         console.log(`[Storage] 🔍 Using bucket: ${bucket.name}`);
         const file = bucket.file(storagePath);
 
@@ -114,7 +115,7 @@ async function downloadAndStoreAudio(audioUrl: string, trackId: string): Promise
                     firebaseStorageDownloadTokens: admin.firestore.FieldValue.serverTimestamp()
                 }
             },
-            public: true, // Make file publicly accessible
+            // public: true, // REMOVED: Causes error with Uniform Bucket-Level Access
         });
 
         // Make the file publicly accessible
@@ -167,7 +168,8 @@ async function downloadAndStoreImage(imageUrl: string, trackId: string): Promise
         console.log(`[Storage] Uploading image to: ${storagePath}`);
 
         // Get Firebase Storage bucket
-        const bucket = getStorage().bucket();
+        const bucketName = 'rraasi-8a619-music-storage';
+        const bucket = getStorage().bucket(bucketName);
         const file = bucket.file(storagePath);
 
         // Determine content type based on extension
@@ -183,7 +185,7 @@ async function downloadAndStoreImage(imageUrl: string, trackId: string): Promise
                     firebaseStorageDownloadTokens: admin.firestore.FieldValue.serverTimestamp()
                 }
             },
-            public: true, // Make file publicly accessible
+            // public: true, // REMOVED: Causes error with Uniform Bucket-Level Access
         });
 
         // Make the file publicly accessible
