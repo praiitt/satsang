@@ -3,10 +3,18 @@
  */
 
 // Use Next.js API routes as proxy (better for cookies and CORS)
-const AUTH_SERVER_URL = process.env.NEXT_PUBLIC_AUTH_API_URL ||
+// Use direct Cloud Function URL in production to avoid rewrite issues
+const PROD_API_URL = 'https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-auth-server';
+
+// Base API URL (e.g. http://localhost:4000 or Cloud Function Root)
+const API_BASE_URL = process.env.NEXT_PUBLIC_AUTH_SERVER_URL ||
   (typeof window === 'undefined'
-    ? ((process.env.AUTH_SERVER_URL || 'http://localhost:4000') + '/auth')
-    : '/backend/auth');
+    ? (process.env.AUTH_SERVER_URL || 'http://localhost:4000')
+    : PROD_API_URL);
+
+// Specific Endpoint Roots
+const AUTH_URL = `${API_BASE_URL}/auth`;
+const CHAT_URL = `${API_BASE_URL}/chat`;
 
 export interface AuthResponse {
   uid: string;
@@ -29,7 +37,7 @@ export interface UserInfo {
  * Exchange Firebase ID token for session cookie
  */
 export async function sessionLogin(idToken: string): Promise<AuthResponse> {
-  const response = await fetch(`${AUTH_SERVER_URL}/sessionLogin`, {
+  const response = await fetch(`${AUTH_URL}/sessionLogin`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -59,7 +67,7 @@ export async function sessionLogin(idToken: string): Promise<AuthResponse> {
  * Logout - clear session cookie
  */
 export async function sessionLogout(): Promise<void> {
-  await fetch(`${AUTH_SERVER_URL}/sessionLogout`, {
+  await fetch(`${AUTH_URL}/sessionLogout`, {
     method: 'POST',
     credentials: 'include',
   });
@@ -98,7 +106,7 @@ export async function getCurrentUser(reqCookies?: string): Promise<UserInfo | nu
     }
   }
 
-  const response = await fetch(`${AUTH_SERVER_URL}/me`, fetchOptions);
+  const response = await fetch(`${AUTH_URL}/me`, fetchOptions);
 
   if (!response.ok) {
     if (response.status === 401) {
@@ -116,7 +124,7 @@ export async function getCurrentUser(reqCookies?: string): Promise<UserInfo | nu
 export async function checkPhoneNumber(
   phoneNumber: string
 ): Promise<{ exists: boolean; uid?: string }> {
-  const response = await fetch(`${AUTH_SERVER_URL}/check-phone`, {
+  const response = await fetch(`${AUTH_URL}/check-phone`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -143,7 +151,7 @@ export async function triggerMarketingWelcome(data: {
   zodiacSign?: string;
 }): Promise<void> {
   // Fire and forget - don't block UI
-  fetch(`${AUTH_SERVER_URL}/marketing/welcome`, {
+  fetch(`${API_BASE_URL}/marketing/welcome`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -178,7 +186,7 @@ export async function getChatHistory(userId: string, agentId?: string): Promise<
   const params = new URLSearchParams({ userId, limit: '50' });
   if (agentId) params.append('agentId', agentId);
 
-  const response = await fetch(`${AUTH_SERVER_URL}/chat/history?${params.toString()}`, {
+  const response = await fetch(`${CHAT_URL}/history?${params.toString()}`, {
     method: 'GET',
     credentials: 'include',
   });
@@ -194,7 +202,7 @@ export async function getChatHistory(userId: string, agentId?: string): Promise<
 export async function getUserRecordings(userId: string): Promise<Recording[]> {
   const params = new URLSearchParams({ userId, limit: '20' });
 
-  const response = await fetch(`${AUTH_SERVER_URL}/chat/recordings?${params.toString()}`, {
+  const response = await fetch(`${CHAT_URL}/recordings?${params.toString()}`, {
     method: 'GET',
     credentials: 'include',
   });
