@@ -42,15 +42,16 @@ export async function POST(req: Request) {
             throw new Error('Agent name is required for Vedic Jyotish');
         }
 
+        const roomName = `${VEDIC_JYOTISH_ROOM_NAME}_${userId}_${Date.now()}`;
         console.log(
-            `[Vedic Jyotish Token] Generating token for ${participantName} (${role}, userId: ${userId}) to join room: ${VEDIC_JYOTISH_ROOM_NAME} with agent "${agentName}"`
+            `[Vedic Jyotish Token] Generating token for ${participantName} (${role}, userId: ${userId}) to join room: ${roomName} with agent "${agentName}"`
         );
 
         const participantIdentity = `vedic_jyotish_${role}_${Math.floor(Math.random() * 10_000)}_${Date.now()}`;
 
         const participantToken = await createParticipantToken(
             { identity: participantIdentity, name: participantName },
-            VEDIC_JYOTISH_ROOM_NAME,
+            roomName,
             role,
             agentName,
             userId
@@ -58,7 +59,7 @@ export async function POST(req: Request) {
 
         const data: VedicJyotishTokenResponse = {
             serverUrl: LIVEKIT_URL,
-            roomName: VEDIC_JYOTISH_ROOM_NAME,
+            roomName: roomName,
             participantToken,
             participantName,
             agentName,

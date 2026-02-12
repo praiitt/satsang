@@ -4,11 +4,11 @@ import { getAdminDb } from '@/lib/firebase-admin';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
 import { Button } from '@/components/livekit/button';
 import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Sparkles, Moon, Atom } from 'lucide-react';
 
 interface Props {
-    params: { id: string };
-    searchParams: { [key: string]: string | string[] | undefined };
+    params: Promise<{ id: string }>;
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 // Fetch track helper
@@ -42,8 +42,9 @@ function tree_metadata_tags(metadata: any): string | null {
 
 // Dynamic Metadata for Social Sharing
 export async function generateMetadata(
-    { params }: Props
+    props: Props
 ): Promise<Metadata> {
+    const params = await props.params;
     // read route params
     const id = params.id;
 
@@ -67,8 +68,9 @@ export async function generateMetadata(
             title: title,
             description: description,
             images: [imageUrl],
-            url: `https://rraasi.com/suno/track/${id}`,
+            url: `https://rraasi.com/track/${id}`,
             type: 'music.song',
+            audio: track.audioUrl,
         },
         twitter: {
             card: 'summary_large_image',
@@ -79,14 +81,15 @@ export async function generateMetadata(
     };
 }
 
-export default async function TrackPage({ params }: Props) {
+export default async function TrackPage(props: Props) {
+    const params = await props.params;
     const track = await getTrack(params.id);
 
     if (!track) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-black text-white">
                 <h1 className="text-2xl font-bold mb-4">Track Not Found</h1>
-                <Link href="/suno">
+                <Link href="/rraasi-music">
                     <Button variant="outline">Return to Music</Button>
                 </Link>
             </div>
@@ -108,7 +111,7 @@ export default async function TrackPage({ params }: Props) {
 
             <div className="relative z-10 w-full max-w-md flex flex-col gap-6">
                 <div className="flex items-center justify-between">
-                    <Link href="/suno" className="text-sm font-medium text-white/60 hover:text-white flex items-center gap-1 transition-colors">
+                    <Link href="/rraasi-music" className="text-sm font-medium text-white/60 hover:text-white flex items-center gap-1 transition-colors">
                         <ChevronLeft className="w-4 h-4" />
                         All Music
                     </Link>
@@ -127,14 +130,57 @@ export default async function TrackPage({ params }: Props) {
                     createdAt={track.createdAt}
                     status={track.status}
                     metadata={track.metadata}
+                    enableDownload={true}
                 />
 
                 <div className="text-center space-y-4">
-                    <Link href="/suno">
+                    <Link href="/rraasi-music">
                         <Button className="bg-white/10 hover:bg-white/20 text-white border-white/10 w-full backdrop-blur-md">
                             Discover More Spiritual AI Music
                         </Button>
                     </Link>
+                </div>
+
+                {/* Cross-Selling Section */}
+                <div className="pt-8 border-t border-white/10">
+                    <h3 className="text-center text-sm font-semibold text-amber-500 uppercase tracking-widest mb-6">Explore Rraasi Universe</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                        <Link href="/meditation" className="group block">
+                            <div className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all hover:scale-[1.02] flex items-center gap-4">
+                                <div className="h-10 w-10 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:text-purple-300">
+                                    <Sparkles className="w-5 h-5" />
+                                </div>
+                                <div className="text-left">
+                                    <div className="text-sm font-bold text-white">AI Guided Meditation</div>
+                                    <div className="text-xs text-white/60">Find your inner peace with AI</div>
+                                </div>
+                            </div>
+                        </Link>
+
+                        <Link href="/vedic-jyotish" className="group block">
+                            <div className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all hover:scale-[1.02] flex items-center gap-4">
+                                <div className="h-10 w-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400 group-hover:text-indigo-300">
+                                    <Moon className="w-5 h-5" />
+                                </div>
+                                <div className="text-left">
+                                    <div className="text-sm font-bold text-white">Vedic Astrology</div>
+                                    <div className="text-xs text-white/60">Ancient wisdom, modern insights</div>
+                                </div>
+                            </div>
+                        </Link>
+
+                        <Link href="/business" className="group block">
+                            <div className="bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl p-4 transition-all hover:scale-[1.02] flex items-center gap-4">
+                                <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 group-hover:text-amber-300">
+                                    <Atom className="w-5 h-5" />
+                                </div>
+                                <div className="text-left">
+                                    <div className="text-sm font-bold text-white">AI for Business</div>
+                                    <div className="text-xs text-white/60">Transform your work with AI Agents</div>
+                                </div>
+                            </div>
+                        </Link>
+                    </div>
                 </div>
             </div>
         </div>

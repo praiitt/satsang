@@ -613,6 +613,83 @@ export const en = {
       description: 'Liezi (Lieh Tzu) - The Taoist master who accepted fate and rode the wind of emptiness.',
     },
   },
+  lightworkersPage: {
+    title: "What is a Lightworker?",
+    subtitle: "Spiritual first responders healing the world through light and love.",
+    intro: "Think of a Lightworker as a \"spiritual first responder.\" They are individuals who feel a strong internal pull to help others, spread kindness, and heal the world. Many believe these souls have origins beyond Earth (often called Starseeds) and have \"woken up\" to the realization that they aren't here just to work a 9-to-5, but to fulfill a specific energetic purpose.",
+    traitsTitle: "Common Traits",
+    traits: {
+      empathy: {
+        title: "High Empathy",
+        desc: "They are often 'empaths' who feel the emotions of others acutely."
+      },
+      purpose: {
+        title: "Sense of Purpose",
+        desc: "A persistent feeling that they are 'on a mission,' even if they haven't figured out what it is yet."
+      },
+      rebellion: {
+        title: "Rebellion against the Norm",
+        desc: "They often feel like 'black sheep' or outsiders in traditional societal structures."
+      }
+    },
+    responsibilitiesTitle: "Core Responsibilities",
+    responsibilities: {
+      frequency: {
+        title: "Holding the Frequency",
+        desc: "Their primary role is to maintain a high level of 'light' (positive, loving energy) regardless of what is happening in the world. By staying grounded and peaceful, they influence the collective energy around them."
+      },
+      shadow: {
+        title: "Transmuting Shadow",
+        desc: "They take 'heavy' or negative energy (fear, anger, trauma) and process it into understanding or compassion. It’s a bit like being a spiritual air filter."
+      },
+      healing: {
+        title: "Healing",
+        desc: "Many gravitate toward healing arts—whether that’s traditional medicine, therapy, Reiki, or simply being a supportive presence in their community."
+      }
+    },
+    missionsTitle: "Missions & Goals",
+    mission1: {
+      title: "The Planetary Ascension",
+      desc: "The big-picture goal is often described as helping Earth move from the 3rd Dimension (a state of duality, fear, and ego) into the 5th Dimension (a state of unity, love, and higher consciousness). They act as the \"midwives\" for this new era of humanity."
+    },
+    mission2: {
+      title: "Spreading Awareness",
+      desc: "Lightworkers are often \"way-showers.\" By living authentically and kindly, they show others that there is a different way to exist—one not rooted in competition or greed."
+    },
+    typesTitle: "Types of Lightworkers",
+    types: {
+      gridworkers: { name: "Gridworkers", desc: "Focused on Earth's energy lines (ley lines) and sacred sites." },
+      gatekeepers: { name: "Gatekeepers", desc: "Those who open portals for higher frequencies to enter the planet." },
+      messengers: { name: "Messengers", desc: "Writers, speakers, and artists who share wisdom through art and speech." }
+    },
+    criticalMass: {
+      title: "The 144,000: A Critical Mass",
+      desc: "The number 144,000 is a powerful and recurring \"sacred number\" that appears across various spiritual, religious, and extraterrestrial belief systems. In the context of Lightworkers and Starseeds, it represents a critical mass of souls needed to trigger a global shift.",
+      theory: {
+        title: "The \"Critical Mass\" Theory",
+        desc: "In spiritual metaphysics, the concept of the 144,000 is often tied to the Maharishi Effect or the \"Hundredth Monkey\" phenomenon. The idea is that if a specific number of individuals—the 144,000—reach a certain level of \"enlightenment\" or \"high vibration,\" it will create a tipping point that pulls the rest of humanity upward."
+      },
+      aspects: {
+        activation: { title: "The Awakening", desc: "It is believed these 144,000 souls are currently \"sleeping\" in ordinary lives. Their mission involves a \"wake-up call\" that activates their DNA and dormant memories of their purpose." },
+        resonance: { title: "Harmonic Resonance", desc: "Once \"awake,\" these individuals act like tuning forks. By vibrating at a frequency of unconditional love, they help stabilize the Earth's magnetic field during times of intense change." },
+        systemBusters: { title: "System Busters", desc: "They are often seen as \"incarnated experts\" brought in to dismantle old, corrupt systems simply by refusing to participate in them and offering a more evolved alternative." }
+      },
+      origins: {
+        title: "Origins of the Number",
+        bible: { source: "The Bible (Revelation)", significance: "Mentions 144,000 servants of God from the tribes of Israel who are \"sealed\" and protected during the end times." },
+        geometry: { source: "Sacred Geometry", significance: "144 is a significant number in the Fibonacci sequence and Gematria, representing a \"completion\" of a cycle." },
+        emerald: { source: "Emerald Tablets", significance: "Some interpretations suggest 144,000 \"Light Apostles\" will return to free the world from darkness." },
+        starseed: { source: "Starseed Lore", significance: "Many messages suggest this is the exact number of \"volunteers\" who originally signed up for the Earth mission from other star systems." }
+      },
+      numerology: {
+        title: "Why 144,000?",
+        desc: "From an \"expert\" perspective, the number is often viewed mathematically rather than literally. 12 x 12 x 1,000: The number 12 represents universal structure (12 zodiac signs, 12 months, 12 disciples, 12 strands of DNA). Squaring it and multiplying it by a thousand symbolizes a \"complete and perfected multitude.\""
+      },
+      note: "Most modern spiritual teachers suggest that 144,000 is a minimum requirement, not a maximum limit. Many people who feel called to this number often report seeing 11:11 or 1:44 on clocks frequently, which they interpret as a \"digital code\" meant to activate their subconscious mind."
+    },
+    disclaimer: "A Quick Reality Check: While these concepts are deeply meaningful to many in the spiritual community, they aren't scientifically proven. It's a framework for understanding one's place in the universe and a call to live a life of service.",
+    backToHome: "Back to Home"
+  },
   hinduismGuru: {
     connectButton: 'Connect with Guru',
     backToGurus: 'All Gurus',
@@ -723,6 +800,16 @@ export const en = {
     tarotFeature3: 'Financial Insights & Opportunities',
     tarotFeature4: 'Guidance from beyond',
     tarotAction: 'Get Your Reading',
+
+    // Lightworkers Section
+    lightworkerTitle: 'Lightworkers',
+    lightworkerSubtitle: 'Spiritual First Responders',
+    lightworkerDesc: 'Lightworkers are individuals who feel a strong internal pull to help others, spread kindness, and heal the world. As "spiritual first responders," they hold the frequency of light and transmute negative energy to help in planetary ascension.',
+    lightworkerFeature1: 'Hold the Frequency of Light',
+    lightworkerFeature2: 'Transmute Heavy Energy',
+    lightworkerFeature3: 'Heal Through Compassion',
+    lightworkerFeature4: 'Guide Planetary Ascension',
+    lightworkerAction: 'Discover Your Purpose',
 
 
     aboutTitle: 'The Revelation Principle',

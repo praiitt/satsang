@@ -53,7 +53,7 @@ export class CoinService {
             name: 'Voice Conversation with Guru',
             category: 'conversations',
             freeTierAvailable: false,
-            subscriptionUnlimited: true
+            subscriptionUnlimited: false
         },
         multi_guru_chat: {
             cost: 10,

@@ -22,11 +22,14 @@ interface MusicPlayerCardProps {
     createdAt?: string;
     status?: string; // New prop
     onSync?: () => void; // New prop
+    onGenerateVideo?: () => void; // New prop
     isSyncing?: boolean; // New prop
     metadata?: any; // Track metadata including tags
     onDownload?: () => void; // New prop
     videoUrl?: string; // New prop
     videoStatus?: 'generating' | 'completed' | 'failed' | null; // New prop
+    enableDownload?: boolean; // New prop for server component usage
+    shareId?: string; // New prop for overriding share link ID
 }
 
 export function MusicPlayerCard({
@@ -40,17 +43,46 @@ export function MusicPlayerCard({
     createdAt,
     onPlay,
     imageUrl,
-    status = 'COMPLETED', // Default to completed for backward purity
+    status = 'COMPLETED',
     onSync,
+    onGenerateVideo,
     isSyncing = false,
     metadata,
     onDownload,
     videoUrl,
     videoStatus,
+    enableDownload = false,
+    shareId,
 }: MusicPlayerCardProps) {
+    // ... existing hooks ...
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
     const { profile } = useUserProfile();
     const [showVideoModal, setShowVideoModal] = useState(false);
+
+    // ... existing logic ...
+
+    const handleDownload = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onDownload) {
+            onDownload();
+        } else if (enableDownload && audioUrl) {
+            window.open(audioUrl, '_blank');
+        }
+    };
+
+    // ... render logic ... 
+
+    // Inside return JSX, update the download button condition:
+    // (This part needs to target the specific button rendering block)
+
+    /* 
+       NOTE: The previous ReplaceFileContent tool requires exact matching. 
+       I will split this into two edits to be safe.
+       1. Update Request Interface and Destructuring.
+       2. Update Button Logic.
+    */
+
+
 
     // Determine uniqueness (fallback to audioUrl if ID is missing for legacy)
     const trackId = id || audioUrl;
@@ -176,7 +208,7 @@ export function MusicPlayerCard({
                         <SocialShareMenu
                             title={title}
                             text={`Check out this AI spiritual track: "${title}"\n${description || ''}`}
-                            url={`https://rraasi.com/suno/track/${trackId}`}
+                            url={`https://rraasi.com/track/${shareId || trackId}`}
                             className="bg-black/20 backdrop-blur-md rounded-full pointer-events-auto"
                         />
                         <TrackActionsMenu
@@ -186,11 +218,15 @@ export function MusicPlayerCard({
                             trackDuration={duration ? parseFloat(duration) : undefined}
                             userName={profile?.name}
                         />
-                        {onDownload && !isPending && (
+                        {(onDownload || enableDownload) && !isPending && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    onDownload();
+                                    if (onDownload) {
+                                        onDownload();
+                                    } else if (enableDownload && audioUrl) {
+                                        window.open(audioUrl, '_blank');
+                                    }
                                 }}
                                 className="flex h-8 w-8 items-center justify-center rounded-full bg-black/20 backdrop-blur-md hover:bg-black/40 text-white transition-colors"
                                 title="Download"
@@ -266,6 +302,23 @@ export function MusicPlayerCard({
                     >
                         <Video className="w-3.5 h-3.5 text-amber-400 group-hover/vid:text-amber-300" />
                         <span className="text-[10px] font-bold tracking-wide uppercase">Watch Video</span>
+                    </button>
+                </div>
+            )}
+
+            {/* Create Video Button */}
+            {!videoUrl && !isPending && videoStatus !== 'generating' && onGenerateVideo && (
+                <div className="absolute top-4 right-16 z-30 animate-in fade-in zoom-in duration-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onGenerateVideo();
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/10 transition-all hover:scale-105 shadow-lg group/vid"
+                        title="Generate Music Video (Cost: Credits)"
+                    >
+                        <Video className="w-3.5 h-3.5 text-white group-hover/vid:text-amber-300" />
+                        <span className="text-[10px] font-bold tracking-wide uppercase">Create Video</span>
                     </button>
                 </div>
             )}

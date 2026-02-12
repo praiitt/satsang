@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { getUserRecordings, type Recording } from '@/lib/auth-api';
 import { useAuth } from '@/components/auth/auth-provider';
 import { Button } from '@/components/livekit/button';
-import { X, Play, Music, Calendar, Clock } from 'lucide-react';
+import { X, Play, Music, Calendar, Clock, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
 export interface RecordingsModalProps {
@@ -82,15 +82,45 @@ export function RecordingsModal({ isOpen, onClose }: RecordingsModalProps) {
                                     </div>
 
                                     {rec.publicUrl && (
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => setPlayingUrl(rec.publicUrl!)}
-                                            className={playingUrl === rec.publicUrl ? "bg-indigo-100 text-indigo-700 border-indigo-200" : ""}
-                                        >
-                                            <Play className="h-4 w-4 mr-1" />
-                                            {playingUrl === rec.publicUrl ? 'Playing' : 'Play'}
-                                        </Button>
+                                        <div className="flex gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    console.log('[RecordingsModal] Play clicked:', rec.publicUrl);
+                                                    setPlayingUrl(rec.publicUrl!);
+                                                }}
+                                                className={playingUrl === rec.publicUrl ? "bg-indigo-100 text-indigo-700 border-indigo-200" : ""}
+                                            >
+                                                <Play className="h-4 w-4 mr-1" />
+                                                {playingUrl === rec.publicUrl ? 'Playing' : 'Play'}
+                                            </Button>
+
+                                            {/* Continue Session Button */}
+                                            <Button
+                                                size="sm"
+                                                variant="dotted"
+                                                onClick={() => {
+                                                    onClose();
+                                                    // Use window event or callback if session provider is not available here?
+                                                    // But we can try to use session context if available
+                                                    // Since we can't easily hook into useSession without checking if we are wrapped...
+                                                    // Let's assume onStartCall generic prop from parent or event dispatch.
+                                                    // Actually, better to dispatch a custom event or use a global store if strictly needed.
+                                                    // But for now, let's try a direct dispatch to the main app controller if accessible.
+                                                    // Or better: dispatch a custom event that the main layout listens to.
+                                                    const event = new CustomEvent('rraasi-start-session', {
+                                                        detail: { intention: rec.intention || 'create_music', resumeSessionId: rec.id }
+                                                    });
+                                                    window.dispatchEvent(event);
+                                                }}
+                                                className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                                                title="Continue this context"
+                                            >
+                                                <Sparkles className="h-4 w-4 mr-1" />
+                                                Continue
+                                            </Button>
+                                        </div>
                                     )}
                                 </div>
                             );

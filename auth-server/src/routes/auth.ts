@@ -33,6 +33,7 @@ router.post('/check-phone', async (req, res) => {
 // Exchange Firebase ID token (from client phone auth) for a secure session cookie
 router.post('/sessionLogin', async (req, res) => {
   const { idToken } = req.body ?? {};
+  console.log('[auth] sessionLogin called. idToken length:', idToken ? idToken.length : 'MISSING');
   if (!idToken) return res.status(400).json({ error: 'idToken required' });
 
   const expiresIn = 1000 * 60 * 60 * 24 * 5; // 5 days

@@ -307,10 +307,31 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         actionHref="/login?returnUrl=/vedic-jyotish&service=astrology"
                         icon={<img src="/services/astrology-icon-fixed.png" alt="Vedic Astrology" className="w-full h-full object-contain drop-shadow-xl" />}
                         align="left"
-                        gradient="from-purple-500/30 to-pink-500/30"
                         badge="Coming Soon — Early Access"
                     />
 
+                </div>
+            </section>
+
+            {/* Lightworkers Section - Separated from Services */}
+            <section className="relative px-4 py-20 bg-gradient-to-b from-background via-amber-500/5 to-background">
+                <div className="mx-auto max-w-7xl">
+                    <FeatureSection
+                        title={t('rraasHome.lightworkerTitle')}
+                        subtitle={t('rraasHome.lightworkerSubtitle')}
+                        description={t('rraasHome.lightworkerDesc')}
+                        features={[
+                            t('rraasHome.lightworkerFeature1'),
+                            t('rraasHome.lightworkerFeature2'),
+                            t('rraasHome.lightworkerFeature3'),
+                            t('rraasHome.lightworkerFeature4'),
+                        ]}
+                        actionText={t('rraasHome.lightworkerAction')}
+                        actionHref="/lightworkers"
+                        icon={<img src="/services/lightworkers-icon.png" alt="Lightworkers" className="w-full h-full object-contain drop-shadow-xl rounded-full" />}
+                        align="right"
+                        gradient="from-amber-500/30 to-yellow-500/30"
+                    />
                 </div>
             </section>
 

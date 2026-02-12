@@ -4,6 +4,19 @@ import json
 import subprocess
 import sys
 
+# ------------------------------------------------------------------
+# MAINTENANCE NOTE: HOSTING REWRITES (Feb 2026)
+# ------------------------------------------------------------------
+# This service is accessed via Firebase Hosting Rewrite at:
+# `https://rraasi.com/satsang-auth-server/**`
+#
+# The rewrite preserves the path prefix `/satsang-auth-server`.
+# Therefore, the Express app in `src/index.ts` MUST mount the router
+# at `/satsang-auth-server` to handle these requests correctly.
+#
+# If you change `index.ts`, ensure this mounting logic remains.
+# ------------------------------------------------------------------
+
 def main():
     print("🚀 Preparing to deploy Auth Server with corrected credentials...")
 
@@ -101,6 +114,16 @@ def main():
     # Write yaml file in the root (where we run gcloud) or dist?
     # gcloud expects path. relative to CWD.
     
+    # Read other env vars from .env.local
+    more_env_vars = {}
+    if os.path.exists(ENV_FILE):
+        with open(ENV_FILE, 'r') as f:
+            for line in f:
+                if '=' in line and not line.strip().startswith('#'):
+                    key, val = line.strip().split('=', 1)
+                    if key in ['SUNO_API_KEY', 'HEYGEN_API_KEY', 'SARVAM_API_KEY', 'OPENAI_API_KEY', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET', 'LIVEKIT_URL']:
+                        more_env_vars[key] = val.strip().strip("'").strip('"')
+
     with open(env_yaml_file, 'w') as yf:
         yf.write(f"FIREBASE_PROJECT_ID: '{firebase_project_id}'\n")
         yf.write(f"FIREBASE_CLIENT_EMAIL: '{firebase_client_email}'\n")
@@ -108,7 +131,11 @@ def main():
         for line in firebase_private_key.splitlines():
              yf.write(f"  {line}\n")
         yf.write(f"NODE_ENV: 'production'\n")
-        yf.write(f"CORS_ORIGIN: 'https://rraasi.com'\n") # Should probably trigger for all or allow dynamic
+        yf.write(f"CORS_ORIGIN: '*'\n") # Allow all origins for testing/production Cloud Run
+        
+        # Add extra vars
+        for k, v in more_env_vars.items():
+            yf.write(f"{k}: '{v}'\n")
     
     print(f"Generated {env_yaml_file}...")
 

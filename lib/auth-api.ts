@@ -177,6 +177,7 @@ export interface Recording {
   duration?: number;
   createdAt?: { _seconds: number; _nanoseconds: number } | string;
   timestamp?: string; // Sometimes flattened
+  intention?: string; // Context for resuming session
 }
 
 /**

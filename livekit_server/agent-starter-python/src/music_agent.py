@@ -998,6 +998,37 @@ async def entrypoint(ctx: JobContext):
         
         logger.info(f"⏱️ Session ended. Duration: {duration_seconds:.2f}s ({duration_minutes:.2f} min)")
         
+        # Save transcript to Firebase
+        try:
+            logger.info("Saving session transcript...")
+            db_instance = FirebaseDB()
+            
+            # Extract messages
+            transcript = []
+            # session.chat_ctx might not be populated if only STT was used?
+            # Music agent uses session.chat() for text input, and standard STT for voice
+            # so chat_ctx should have history.
+            if hasattr(session, 'history'):
+                 for item in session.history.items:
+                    if item.type == "message":
+                        text = item.text_content
+                        if text:
+                            transcript.append({
+                                "role": item.role,
+                                "content": text,
+                                "timestamp": item.created_at
+                            })
+            
+            session_data = {
+                "userId": user_id,
+                "agentName": "music-agent",
+                "roomName": ctx.room.name
+            }
+            
+            db_instance.save_session_transcript(ctx.room.name, session_data, transcript)
+        except Exception as e:
+            logger.error(f"❌ Failed to save transcript: {e}")
+
         # Deduct coins if session was meaningful (> 30s) and user is authenticated
         if duration_seconds > 30 and user_id != "default_user":
             try:

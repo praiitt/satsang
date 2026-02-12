@@ -68,25 +68,31 @@ if (!process.env.FUNCTION_TARGET) {
   app.use(express.json());
 }
 
-app.use(cookieParser());
+// Create a main router to handle path prefixing
+const mainRouter = express.Router();
 
-app.use('/auth', authRoutes);
-app.use('/user', userRoutes);
-app.use('/suno', sunoRoutes);
-app.use('/tarot', tarotRoutes);
-app.use('/coins', coinRoutes);
-app.use('/marketing', marketingRoutes);
-app.use('/livekit', livekitRoutes);
-app.use('/playlists', playlistRoutes);
-app.use('/corporate', corporateRoutes);
-app.use('/corporate', corporateRoutes);
-app.use('/livekit-webhook', livekitWebhookRoutes);
-app.use('/meditation', meditationRoutes);
-app.use('/chat', (await import('./routes/chat.js')).default);
+mainRouter.use(cookieParser());
 
-app.get('/test-coins', (req, res) => res.json({ status: 'ok', message: 'Auth Server is running' }));
+mainRouter.use('/auth', authRoutes);
+mainRouter.use('/user', userRoutes);
+mainRouter.use('/suno', sunoRoutes);
+mainRouter.use('/tarot', tarotRoutes);
+mainRouter.use('/coins', coinRoutes);
+mainRouter.use('/marketing', marketingRoutes);
+mainRouter.use('/livekit', livekitRoutes);
+mainRouter.use('/playlists', playlistRoutes);
+mainRouter.use('/corporate', corporateRoutes);
+// mainRouter.use('/corporate', corporateRoutes); // Removed duplicate
+mainRouter.use('/livekit-webhook', livekitWebhookRoutes);
+mainRouter.use('/meditation', meditationRoutes);
+mainRouter.use('/chat', (await import('./routes/chat.js')).default);
 
-app.get('/', (_req, res) => res.json({ name: 'satsang-auth-server', ok: true }));
+mainRouter.get('/test-coins', (req, res) => res.json({ status: 'ok', message: 'Auth Server is running' }));
+mainRouter.get('/', (_req, res) => res.json({ name: 'satsang-auth-server', ok: true }));
+
+// Mount mainRouter at root AND at the rewrite path
+app.use('/', mainRouter);
+app.use('/satsang-auth-server', mainRouter);
 
 // Register as Cloud Function
 // For Cloud Functions v2, we need to handle the already-parsed body
@@ -126,6 +132,10 @@ http('authServer', (req, res) => {
     }
   }
 
+  // Debug Logging
+  console.log(`[auth-server] Request: ${req.method} ${req.url}`);
+  console.log(`[auth-server] Headers: origin=${req.headers.origin}, content-type=${req.headers['content-type']}`);
+
   // Ensure req.query exists (fix for "Cannot read properties of undefined (reading 'page')")
   if (!req.query || Object.keys(req.query).length === 0) {
     try {
@@ -145,6 +155,12 @@ http('authServer', (req, res) => {
       req.query = {};
     }
   }
+
+  // Debug Body
+  if (req.method === 'POST') {
+    console.log(`[auth-server] Body Keys: ${Object.keys(req.body || {}).join(', ')}`);
+  }
+
   app(req, res);
 });
 

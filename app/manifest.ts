@@ -2,9 +2,9 @@ import { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'सत्संग - लाइव आध्यात्मिक सभा',
-    short_name: 'सत्संग',
-    description: 'लाइव आध्यात्मिक सभा से जुड़ें और समुदाय से कनेक्ट करें',
+    name: 'RRAASI',
+    short_name: 'RRAASI',
+    description: 'Connect with the divine through RRAASI: Spiritual Music, Tarot, and Live Satsang.',
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
@@ -12,26 +12,26 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: 'portrait-primary',
     icons: [
       {
-        src: '/icon-192.png',
+        src: '/mobile-app-icon.png', // Ideally use a high-qual logo if available, falling back to existing or user's preference
         sizes: '192x192',
         type: 'image/png',
-        purpose: 'any',
+        purpose: 'any maskable',
       },
       {
-        src: '/icon-512.png',
+        src: '/mobile-app-icon.png', // Using the same for 512 for now if no other specific file, or keep original?
         sizes: '512x512',
         type: 'image/png',
-        purpose: 'any',
+        purpose: 'any maskable',
       },
     ],
     categories: ['spiritual', 'social', 'entertainment'],
     shortcuts: [
       {
-        name: 'लाइव सत्संग',
-        short_name: 'लाइव',
-        description: 'लाइव सत्संग सत्र जॉइन करें',
+        name: 'Live Satsang',
+        short_name: 'Live',
+        description: 'Join Live Satsang Session',
         url: '/livesatsang',
-        icons: [{ src: '/icon-192.png', sizes: '192x192' }],
+        icons: [{ src: '/mobile-app-icon.png', sizes: '192x192' }],
       },
     ],
   };

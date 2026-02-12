@@ -175,3 +175,22 @@ class FirebaseDB:
             logger.error(f"Failed to get chat history: {e}")
             return []
 
+    
+    def save_session_transcript(self, room_name: str, session_data: dict, transcript: list):
+        """Save the full session transcript to Firestore."""
+        if not self.db:
+            return
+
+        try:
+            doc_data = {
+                "roomName": room_name,
+                "createdAt": datetime.utcnow(),
+                "transcript": transcript,
+                **session_data  # userid, agentName, etc.
+            }
+            
+            # Use room_name as document ID for easy lookup
+            self.db.collection("session_transcripts").document(room_name).set(doc_data, merge=True)
+            logger.info(f"✅ Saved session transcript for room {room_name} ({len(transcript)} messages)")
+        except Exception as e:
+            logger.error(f"❌ Failed to save session transcript: {e}")

@@ -20,8 +20,8 @@ from livekit.agents import (
     function_tool,
     RunContext,
 )
-# from livekit.plugins import noise_cancellation, silero
-from pinecone_kundli_retriever import KundliRetriever
+from livekit.plugins import noise_cancellation, silero
+from firebase_db import FirebaseDB
 
 # Configure logging early
 logging.basicConfig(
@@ -29,6 +29,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
 )
+
+from livekit.plugins import google
+import logging
 
 logger = logging.getLogger("vedic_astrology_agent")
 
@@ -59,13 +62,13 @@ else:
 class VedicAstrologyAgent(Agent):
     def __init__(self, user_id: str = "default_user", publish_data_fn=None) -> None:
         self.user_id = user_id
-        self.kundli_retriever = None
+        # self.kundli_retriever = None # Removed
         self.user_chart_summary = None
         
-        try:
-            self.kundli_retriever = KundliRetriever()
-        except Exception as e:
-            logger.error(f"Failed to initialize KundliRetriever: {e}")
+        # try:
+        #     self.kundli_retriever = KundliRetriever()
+        # except Exception as e:
+        #     logger.error(f"Failed to initialize KundliRetriever: {e}")
         
         super().__init__(
             instructions=self._get_instructions(),
@@ -112,21 +115,36 @@ RESPONSE STYLE:
     async def calculate_kundli(
         self,
         context: RunContext,
+        birth_date: str,
+        birth_time: str,
+        birth_place: str,
     ) -> str:
-        """Get the user's Kundli (birth chart) details.
+        """Calculate the Kundli (birth chart) using the user's birth details.
         
-        Use this when the user asks about their chart, Rashi, Lagna, or planetary positions.
-        No arguments needed as it uses the authenticated user's data.
+        Use this when the user provides their birth details or asks about their chart.
+        The LLM (Gemini) will perform the calculations natively.
+        
+        Args:
+            birth_date: Birth date (e.g., "1990-05-15")
+            birth_time: Birth time (e.g., "14:30")
+            birth_place: Birth place (e.g., "Mumbai, India")
         """
-        logger.info(f"Fetching Kundli for user: {self.user_id}")
+        logger.info(f"Calculating Kundli for user: {self.user_id} with details: {birth_date}, {birth_time}, {birth_place}")
         
-        if not self.kundli_retriever:
-            return "I apologize, but I cannot access the chart database at the moment."
+        # Return a prompt to the LLM to perform the calculation itself
+        try:
+            return f"""
+            Received birth details:
+            Date: {birth_date}
+            Time: {birth_time}
+            Place: {birth_place}
             
-        kundli = await self.kundli_retriever.get_user_kundli(self.user_id)
-        
-        if not kundli:
-            return "I don't have your birth chart data yet. Please ensure your profile is updated with your birth details."
+            Please proceed to calculate the Vedic Birth Chart (Kundli) using Lahiri Ayanamsa based on these exact details. 
+            Tell the user their Lagna, Moon Sign, Nakshatra, and current Dasha.
+            """
+        except Exception as e:
+            logger.error(f"Error in calculation prompt generation: {e}", exc_info=True)
+            return "I apologize, but I encountered an error preparing the calculation."
         
         # Format response from actual data
         response = f"""Based on your birth chart:
@@ -172,8 +190,8 @@ Would you like to know more about any specific aspect?"""
         logger.info(f"Saving birth details for user: {self.user_id}")
         logger.info(f"Birth date: {birth_date}, time: {birth_time}, place: {birth_place}")
         
-        if not self.kundli_retriever:
-            return "I apologize, but I cannot save your chart data at the moment. Please try again later."
+        # if not self.kundli_retriever:
+        #     return "I apologize, but I cannot save your chart data at the moment. Please try again later."
         
         # Prepare basic chart data
         # For now, we save the raw birth details
@@ -187,15 +205,16 @@ Would you like to know more about any specific aspect?"""
         }
         
         try:
-            # Save to Pinecone
-            success = await self.kundli_retriever.save_basic_chart(
-                self.user_id,
-                chart_data
-            )
+            # Save to Pinecone - SKIPPED
+            # success = await self.kundli_retriever.save_basic_chart(
+            #     self.user_id,
+            #     chart_data
+            # )
+            success = True
             
             if success:
                 # Update agent's chart summary
-                self.user_chart_summary = await self.kundli_retriever.get_user_chart_summary(self.user_id)
+                self.user_chart_summary = f"Birth Data: {birth_date} {birth_time} {birth_place}"
                 
                 logger.info(f"✅ Successfully saved birth details for user: {self.user_id}")
                 
@@ -360,6 +379,7 @@ async def entrypoint(ctx: JobContext):
     logger.info(f"Environment check:")
     logger.info(f"  OPENAI_API_KEY: {'SET' if openai_key else 'MISSING'}")
     logger.info(f"  CARTESIA_API_KEY: {'SET' if cartesia_key else 'MISSING'}")
+    logger.info(f"  GOOGLE_API_KEY: {'SET' if os.getenv('GOOGLE_API_KEY') else 'MISSING'}")
     logger.info(f"  STT_MODEL: {stt_model}")
     logger.info(f"  SARVAM_API_KEY: {'SET' if sarvam_key else 'MISSING'}")
     
@@ -449,7 +469,10 @@ async def entrypoint(ctx: JobContext):
         
         session = AgentSession(
             stt=stt,
-            llm=inference.LLM(model="openai/gpt-4.1-mini"),
+            llm=google.LLM(
+                model="gemini-2.5-flash",
+                api_key=os.getenv("GOOGLE_API_KEY")
+            ),
             tts=inference.TTS(
                 model="cartesia/sonic-3",
                 voice=tts_voice_id,
@@ -459,7 +482,7 @@ async def entrypoint(ctx: JobContext):
                 },
             ),
             turn_detection=turn_detector,
-            vad=ctx.proc.userdata["vad"],
+            vad=silero.VAD.load(), # Explicitly use Silero VAD
             preemptive_generation=True,
         )
         logger.info("AgentSession created successfully")
@@ -474,6 +497,26 @@ async def entrypoint(ctx: JobContext):
     def _on_metrics_collected(ev: MetricsCollectedEvent):
         metrics.log_metrics(ev.metrics)
         usage_collector.collect(ev.metrics)
+
+    @session.on("user_started_speaking")
+    def _on_user_started_speaking():
+        logger.info("🗣️ User started speaking")
+
+    @session.on("user_stopped_speaking")
+    def _on_user_stopped_speaking():
+        logger.info("🛑 User stopped speaking")
+
+    @session.on("input_speech_transcribed")
+    def _on_input_speech_transcribed(ev):
+        logger.info(f"📝 Transcribed: '{ev.text}' (is_final: {ev.is_final})")
+    
+    @session.on("agent_started_speaking")
+    def _on_agent_started_speaking():
+        logger.info("🤖 Agent started speaking")
+        
+    @session.on("agent_stopped_speaking")
+    def _on_agent_stopped_speaking():
+        logger.info("🤐 Agent stopped speaking")
 
     async def log_usage():
         summary = usage_collector.get_summary()
@@ -517,26 +560,26 @@ async def entrypoint(ctx: JobContext):
     # Create Vedic Astrology agent instance with user ID
     vedic_agent = VedicAstrologyAgent(user_id=user_id, publish_data_fn=_publish_data_bytes)
     
-    # Fetch user's Kundli data from Pinecone
-    if vedic_agent.kundli_retriever:
-        try:
-            logger.info(f"🔮 Fetching chart data for user: {user_id}")
-            vedic_agent.user_chart_summary = await vedic_agent.kundli_retriever.get_user_chart_summary(user_id)
-            logger.info(f"✅ Loaded Kundli data")
+    # Fetch user's Kundli data from Pinecone - DISABLED for Gemini 3 Pro
+    # if vedic_agent.kundli_retriever:
+    #     try:
+    #         logger.info(f"🔮 Fetching chart data for user: {user_id}")
+    #         vedic_agent.user_chart_summary = await vedic_agent.kundli_retriever.get_user_chart_summary(user_id)
+    #         logger.info(f"✅ Loaded Kundli data")
             
-            # Update agent instructions with user's chart
-            vedic_agent.instructions = f"""{vedic_agent.instructions}
+    #         # Update agent instructions with user's chart
+    #         vedic_agent.instructions = f"""{vedic_agent.instructions}
 
-🔮 USER'S PERSONAL CHART DATA (Use this to give personalized answers):
-{vedic_agent.user_chart_summary}
+    # 🔮 USER'S PERSONAL CHART DATA (Use this to give personalized answers):
+    # {vedic_agent.user_chart_summary}
 
-IMPORTANT: When answering questions, refer to the user's actual chart data above. 
-For example:
-- "Based on your chart, your Moon is in [Sign] in the [House]th house..."
-- "Currently you are in [Mahadasha] Mahadasha..."
-"""
-        except Exception as e:
-            logger.error(f"Failed to load Kundli data: {e}")
+    # IMPORTANT: When answering questions, refer to the user's actual chart data above. 
+    # For example:
+    # - "Based on your chart, your Moon is in [Sign] in the [House]th house..."
+    # - "Currently you are in [Mahadasha] Mahadasha..."
+    # """
+    #     except Exception as e:
+    #         logger.error(f"Failed to load Kundli data: {e}")
     
     await session.start(
         agent=vedic_agent,
@@ -569,6 +612,48 @@ For example:
         )
     
     await session.say(welcome_msg)
+
+    # Wait for disconnection
+    disconnect_future = asyncio.Future()
+    
+    @ctx.room.on("disconnected")
+    def on_disconnected(reason):
+        logger.info(f"🔌 Disconnected: {reason}")
+        if not disconnect_future.done():
+            disconnect_future.set_result(True)
+    
+    try:
+        await disconnect_future
+    finally:
+        logger.info("⏱️ Session ended, saving transcript...")
+        try:
+            # Save transcript to Firebase
+            firebase_db = FirebaseDB()
+            
+            # Extract messages
+            transcript = []
+            if hasattr(session, 'history'):
+                 for item in session.history.items:
+                    if item.type == "message":
+                        text = item.text_content
+                        if text:
+                            transcript.append({
+                                "role": item.role,
+                                "content": text,
+                                "timestamp": item.created_at
+                            })
+            else:
+                 logger.warning("Session has no history attribute")
+            
+            session_data = {
+                "userId": user_id,
+                "agentName": "vedic-astrology-agent",
+                "roomName": ctx.room.name
+            }
+            
+            firebase_db.save_session_transcript(ctx.room.name, session_data, transcript)
+        except Exception as e:
+            logger.error(f"❌ Failed to save transcript: {e}")
 
 
 if __name__ == "__main__":

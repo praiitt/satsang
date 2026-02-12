@@ -182,6 +182,29 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
     confirmationResultRef.current = null;
   };
 
+  const handleResendOTP = async () => {
+    setError(null);
+    setLoading(true);
+
+    try {
+      // Re-construct full phone number
+      const fullPhoneNumber = `${selectedCountry.dialCode}${phoneNumber.replace(/\D/g, '')}`;
+
+      const result = await sendOTP(fullPhoneNumber);
+      confirmationResultRef.current = result;
+
+      toastAlert({
+        title: t('auth.codeResent') || 'Code sent',
+        description: t('auth.codeResentDesc') || 'A new verification code has been sent to your phone.',
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to resend OTP';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className={cn('mx-auto w-full max-w-md px-4', className)}>
       <div className="bg-card border-border rounded-2xl border p-4 shadow-xl sm:p-6">
@@ -321,11 +344,19 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
               >
                 {t('auth.back')}
               </Button>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="h-12 flex-1"
+              >
+                {loading ? (t('auth.verifying') || 'Verifying...') : (t('auth.verify') || 'Verify')}
+              </Button>
             </div>
             <button
               type="button"
-              onClick={handleBack}
-              className="text-muted-foreground hover:text-foreground w-full text-sm underline"
+              onClick={handleResendOTP}
+              disabled={loading}
+              className="text-muted-foreground hover:text-foreground w-full text-sm underline disabled:opacity-50"
             >
               {t('auth.resend')}
             </button>

@@ -3,6 +3,13 @@
     "public": "public",
     "rewrites": [
       {
+        "source": "/satsang-auth-server/**",
+        "run": {
+          "serviceId": "satsang-auth-server",
+          "region": "asia-south1"
+        }
+      },
+      {
         "source": "**",
         "run": {
           "serviceId": "satsang-frontend",

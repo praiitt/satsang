@@ -8,6 +8,18 @@ export function SiteFooter() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <p className="text-muted-foreground text-xs flex items-center gap-1">
             © {new Date().getFullYear()} <Logo as="span" size="sm" className="text-base sm:text-lg" />. सर्वाधिकार सुरक्षित।
+            <span className="hidden sm:inline">|</span>
+            <span className="block sm:inline">
+              A Product of{' '}
+              <a
+                href="https://absolutedimension.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground underline underline-offset-4"
+              >
+                Absolute Dimension Pvt Ltd
+              </a>
+            </span>
           </p>
           <nav className="flex flex-wrap items-center gap-4 text-xs">
             <Link href="/#faq" className="text-muted-foreground hover:text-foreground">

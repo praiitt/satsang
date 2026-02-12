@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Button } from '@/components/livekit/button';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/language-context';
 import { useAuth } from './auth-provider';
 
@@ -18,12 +19,14 @@ export function LogoutButton({
 }: LogoutButtonProps) {
   const { logout, loading } = useAuth();
   const { t } = useLanguage();
+  const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
       await logout();
+      router.push('/');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

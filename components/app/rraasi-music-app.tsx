@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { AnimatePresence, type Transition, type Variants, motion } from 'motion/react';
 import { RoomAudioRenderer, StartAudio, useRoomContext } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
@@ -41,6 +41,20 @@ function RRaaSiMusicViewController({ variant = 'default' }: { variant?: 'default
     const room = useRoomContext();
     const isSessionActiveRef = useRef(false);
     const { appConfig, isSessionActive, startSession } = useSession();
+
+    // Listen for custom start session events (e.g. from RecordingsModal)
+    useEffect(() => {
+        const handleStartSession = (event: CustomEvent) => {
+            const { intention, resumeSessionId } = event.detail;
+            console.log("[RRaaSiMusicApp] Starting session from event:", { intention, resumeSessionId });
+            startSession({ intention, resumeSessionId });
+        };
+
+        window.addEventListener('rraasi-start-session', handleStartSession as EventListener);
+        return () => {
+            window.removeEventListener('rraasi-start-session', handleStartSession as EventListener);
+        };
+    }, [startSession]);
 
     isSessionActiveRef.current = isSessionActive;
 

@@ -8,7 +8,7 @@ import { useRoom } from '@/hooks/useRoom';
 const SessionContext = createContext<{
   appConfig: AppConfig;
   isSessionActive: boolean;
-  startSession: (options?: { intention?: string }) => void;
+  startSession: (options?: { intention?: string; resumeSessionId?: string }) => void;
   endSession: () => void;
 }>({
   appConfig: APP_CONFIG_DEFAULTS,

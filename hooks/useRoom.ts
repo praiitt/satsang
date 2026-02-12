@@ -174,7 +174,9 @@ export function useRoom(appConfig: AppConfig) {
               // sometimes participantName is used as ID or contains useful info
             }
 
-            console.log('[egress] Attempting to start egress for room:', room.name, 'User:', recordingUserId);
+            // Using connectionDetails.roomName directly is safer than room.name immediately after connect
+            const targetRoomName = connectionDetails.roomName || room.name;
+            console.log('[egress] Attempting to start egress for room:', targetRoomName, 'User:', recordingUserId);
 
             const startEgress = async (retries = 3) => {
               try {
@@ -182,7 +184,7 @@ export function useRoom(appConfig: AppConfig) {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
-                    roomName: room.name,
+                    roomName: targetRoomName,
                     userId: recordingUserId || 'anonymous_guest' // Fallback to ensure recording happens
                   }),
                 });
@@ -208,7 +210,8 @@ export function useRoom(appConfig: AppConfig) {
             };
 
             // Fire and forget, but with internal retries
-            startEgress();
+            // Wait 1s just to be safe that room state is settled
+            setTimeout(() => startEgress(), 1000);
 
           } catch (e) {
             console.warn('[egress] Critical start error', e);

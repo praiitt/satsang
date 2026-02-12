@@ -101,10 +101,11 @@ router.post('/', async (req: Request, res: Response) => {
                     const file = egress.fileResults[0];
                     if (file.location) {
                         updates.filePath = file.location;
+                        // Reconstruct publicUrl with correct bucket name
+                        const correctBucket = 'satsangrecordings'; // Use the actual GCS bucket
+                        updates.publicUrl = `https://storage.googleapis.com/${correctBucket}/${file.location}`;
                     }
-                    if (file.url) {
-                        updates.publicUrl = file.url;
-                    }
+                    // Don't use file.url directly as it may have wrong bucket name
                 }
 
                 await docRef.set(updates, { merge: true });

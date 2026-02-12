@@ -20,9 +20,49 @@ from livekit.agents import (
     RunContext,
 )
 # from livekit.plugins import noise_cancellation, silero
-# Lazy import MultilingualModel to avoid blocking during module import
-# Model loading can take time and cause initialization timeout
-_MultilingualModel = None
+from firebase_db import FirebaseDB
+
+async def wait_for_disconnect_and_save_transcript(ctx: JobContext, session: AgentSession, agent_name: str, user_id: str = "unknown"):
+    """Waits for room disconnection and saves the session transcript to Firebase."""
+    disconnect_future = asyncio.Future()
+    
+    @ctx.room.on("disconnected")
+    def on_disconnected(reason):
+        logger.info(f"🔌 Disconnected: {reason}")
+        if not disconnect_future.done():
+            disconnect_future.set_result(True)
+    
+    try:
+        await disconnect_future
+    finally:
+        logger.info(f"⏱️ Session ended for {agent_name}, saving transcript...")
+        try:
+            firebase_db = FirebaseDB()
+            
+            transcript = []
+            if hasattr(session, 'history'):
+                 for item in session.history.items:
+                    if item.type == "message":
+                        text = item.text_content
+                        if text:
+                            transcript.append({
+                                "role": item.role,
+                                "content": text,
+                                "timestamp": item.created_at
+                            })
+            else:
+                 logger.warning("Session has no history attribute")
+            
+            session_data = {
+                "userId": user_id,
+                "agentName": agent_name,
+                "roomName": ctx.room.name
+            }
+            
+            firebase_db.save_session_transcript(ctx.room.name, session_data, transcript)
+        except Exception as e:
+            logger.error(f"❌ Failed to save transcript: {e}")
+
 
 # Import bhajan search - use absolute import to avoid issues in worker process
 # Defer import to avoid initialization issues
@@ -623,6 +663,9 @@ async def entrypoint(ctx: JobContext):
             
             await session.start(agent=chitragupta_agent, room=ctx.room)
             await ctx.connect()
+            
+            # Wait for disconnect and save transcript
+            await wait_for_disconnect_and_save_transcript(ctx, session, "chitragupta-agent")
             return # Exit function, we are done
             
         except ImportError as e:
@@ -797,6 +840,9 @@ async def entrypoint(ctx: JobContext):
             
             await session.start(agent=tarot_agent, room=ctx.room)
             await ctx.connect()
+            
+            # Wait for disconnect and save transcript
+            await wait_for_disconnect_and_save_transcript(ctx, session, "tarot-agent")
             return # Exit function, we are done
             
         except ImportError as e:
@@ -1409,6 +1455,27 @@ async def entrypoint(ctx: JobContext):
                     except Exception as e2:
                         logger.error(f"Error sending fallback greeting: {e2}")
                         # Don't raise - just log and continue, the agent will still work
+
+    # Wait for disconnect and save transcript (for Guruji/Universal Wisdom)
+    # Try to extract user_id if available (not easily available in this scope, defaulting to unknown or extracting from metadata again)
+    current_user_id = "unknown"
+    try:
+        for p in ctx.room.remote_participants.values():
+            if p.metadata:
+                import json
+                try:
+                    md = json.loads(p.metadata)
+                    if "userId" in md:
+                        current_user_id = md["userId"]
+                        break
+                except:
+                    pass
+    except:
+        pass
+
+    agent_type_name = "universal-wisdom-agent" if 'is_universal_guru' in locals() and is_universal_guru else "guruji-agent"
+    await wait_for_disconnect_and_save_transcript(ctx, session, agent_type_name, current_user_id)
+
 
 
 if __name__ == "__main__":

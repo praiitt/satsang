@@ -1,6 +1,39 @@
 import os
 import subprocess
 
+# ------------------------------------------------------------------
+# MAINTENANCE NOTE: AUTHENTICATION & LOGIN FIX (Feb 2026)
+# ------------------------------------------------------------------
+# Issue:
+#   Login was failing because the Frontend (rraasi.com) and Backend
+#   (cloudfunctions.net) were on different domains. Browsers block
+#   "Third-Party Cookies" in this scenario, preventing the session
+#   cookie from being set.
+#
+# Fix:
+#   We use "First-Party" cookies by routing backend requests through
+#   the same domain as the frontend.
+#
+# Configuration:
+#   1. Firebase Hosting Rewrite:
+#      In `firebase.json`, we rewrite `/satsang-auth-server/**` to
+#     the `satsang-auth-server` Cloud Run service.
+#
+#   2. Backend Router:
+#      The backend `index.ts` mounts the main router at `/satsang-auth-server`
+#      to handle the path prefix that is preserved by the rewrite.
+#
+#   3. Frontend Environment Variable:
+#      `NEXT_PUBLIC_AUTH_SERVER_URL` MUST be set to:
+#      `https://rraasi.com/satsang-auth-server` (or current domain).
+#
+#   4. Deployment Script (THIS SCRIPT):
+#      We MUST pass `AUTH_SERVER_URL` and `NEXT_PUBLIC_AUTH_SERVER_URL`
+#      as build arguments (`--build-arg`) to the Docker build.
+#      The `Dockerfile` consumes these ARGs to bake the URL into the
+#      client-side bundle.
+# ------------------------------------------------------------------
+
 def main():
     print("Preparing to deploy Frontend to Cloud Run...")
     
@@ -28,12 +61,12 @@ def main():
     print("✅ pnpm-lock.yaml found. Deploying with FIXED dependencies from lockfile.")
 
 
-    env_local_path = '.env.local'
+    env_local_path = '.env'  # Use .env for production deployment
     env_prod_path = '.env.production'
 
     public_vars = {}
     
-    # 1. Read .env.local
+    # 1. Read .env (production environment variables)
     if os.path.exists(env_local_path):
         with open(env_local_path, 'r') as f:
             for line in f:
@@ -47,7 +80,7 @@ def main():
                         
                         if key.startswith('NEXT_PUBLIC_'):
                             public_vars[key] = val
-                        elif key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL', 'LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET']:
+                        elif key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL', 'LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET', 'LIVEKIT_EGRESS_ENABLED', 'LIVEKIT_EGRESS_GCP_BUCKET', 'LIVEKIT_EGRESS_GCP_CREDENTIALS']:
                              public_vars[key] = val
 
     # Hardcode/Fallback for Backend if missing
@@ -88,7 +121,7 @@ steps:
 """
     
     for key, val in public_vars.items():
-        if key.startswith('NEXT_PUBLIC_'):
+        if key.startswith('NEXT_PUBLIC_') or key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL']:
             # Append to yaml args
             # We use substitutions for values: --build-arg KEY=$_KEY
             sub_key = f"_{key}"
@@ -141,10 +174,25 @@ images:
     
     # Force ASSET_PREFIX to be the Service URL (since we know it after previous deployment or can predict/construct it)
     # Actually, we can just use the predictable Cloud Run URL format
-    project_hash = "rraasi-8a619" 
     # Hardcoding the known URL for stability in this fix
     cloud_run_url = "https://satsang-frontend-469389287554.asia-south1.run.app"
     public_vars['NEXT_PUBLIC_ASSET_PREFIX'] = cloud_run_url
+
+    # ------------------------------------------------------------------
+    # Inject Service Account for Egress/Admin SDK
+    # ------------------------------------------------------------------
+    # The frontend needs this to initialize Firebase Admin in API routes (e.g. /api/egress/start)
+    import base64
+    service_account_file = 'rraasiServiceAccount.json'
+    if os.path.exists(service_account_file):
+        print(f"🔑 Injecting {service_account_file} into env vars...")
+        with open(service_account_file, 'rb') as f:
+            sa_content = f.read()
+            # We use base64 to avoid issues with newlines in env vars
+            sa_b64 = base64.b64encode(sa_content).decode('utf-8')
+            public_vars['FIREBASE_SERVICE_ACCOUNT_JSON'] = sa_b64
+    else:
+        print(f"⚠️  WARNING: {service_account_file} not found. Admin SDK functionalities might fail.")
     
     # Add runtime environment variables
     for key, val in public_vars.items():

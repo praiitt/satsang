@@ -51,18 +51,27 @@ router.get('/recordings', async (req: Request, res: Response) => {
         }
 
         const db = getDb();
+        console.log('[Recordings] Fetching for userId:', userId);
+
         const snapshot = await db.collection('recordings')
             .where('userId', '==', userId)
-            .where('status', '==', 'completed') // Only show completed recordings
-            .orderBy('createdAt', 'desc') // Use createdAt or endedAt
-            .limit(Number(limit))
+            .orderBy('startedAt', 'desc')  // Changed from createdAt to startedAt
+            .limit(Number(limit) * 2)
             .get();
 
-        const recordings = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        console.log('[Recordings] Found', snapshot.size, 'documents');
 
+        // Filter for completed/stopped recordings in code
+        const recordings = snapshot.docs
+            .map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                createdAt: doc.data().startedAt  // Map startedAt to createdAt for frontend compatibility
+            }))
+            .filter((rec: any) => rec.status === 'completed' || rec.status === 'stopped')
+            .slice(0, Number(limit));
+
+        console.log('[Recordings] After filtering:', recordings.length, 'recordings');
         res.json({ recordings });
     } catch (error) {
         console.error('[Chat Recordings] Error:', error);

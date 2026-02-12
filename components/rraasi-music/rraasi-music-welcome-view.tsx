@@ -8,12 +8,13 @@ import { useLanguage } from '@/contexts/language-context';
 import { musicTranslations } from '@/lib/translations/music';
 import { MusicCategoryTabs, type MusicCategory } from '@/components/rraasi-music/music-category-tabs';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
-import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft } from 'lucide-react';
+import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import Link from 'next/link';
 import { useMusicPlayer } from '@/contexts/music-player-context';
 import { PlaylistList } from './playlist-list';
 import { PlaylistQuickAccess } from './playlist-quick-access';
+import { RecordingsModal } from '@/components/app/recordings-modal';
 
 function MusicIcon() {
   return (
@@ -48,6 +49,9 @@ interface MusicTrack {
   category?: MusicCategory;
   createdAt: any;
   status?: string; // Add status
+  shareId?: string; // Add shareId
+  videoUrl?: string; // Add videoUrl
+  videoStatus?: 'generating' | 'completed' | 'failed' | null; // Add videoStatus
 }
 
 interface RRaaSiMusicWelcomeViewProps {
@@ -83,6 +87,9 @@ export const RRaaSiMusicWelcomeView = ({
   const [isMuted, setIsMuted] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
+  // Recordings Modal State
+  const [showRecordings, setShowRecordings] = useState(false);
+
   const toggleMute = () => {
     setIsMuted(prev => !prev);
     if (videoRef.current) {
@@ -90,7 +97,31 @@ export const RRaaSiMusicWelcomeView = ({
     }
   };
 
-  // Attempt to handle autoplay policy
+  // Infinite Scroll Observer
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+          handleLoadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => {
+      if (observerTarget.current) {
+        observer.unobserve(observerTarget.current);
+      }
+    };
+  }, [hasMore, loadingMore, loading]);
+
+  // Handle Video Autoplay
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = isMuted;
@@ -149,18 +180,41 @@ export const RRaaSiMusicWelcomeView = ({
         console.log('[My Music] Raw API response:', data);
         console.log('[My Music] Tracks count:', data.tracks?.length);
 
-        const tracks: MusicTrack[] = (data.tracks || []).map((t: any) => ({
-          id: t.id || t.trackId,
-          title: t.title || t.trackName || 'Untitled',
-          audioUrl: t.audioUrl || t.audio_url,
-          imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl, // Map image
-          prompt: t.prompt,
-          description: t.description || t.caption || t.prompt, // Map description (fallback to prompt)
-          category: t.category,
-          metadata: t.metadata,
-          createdAt: t.createdAt || t.created_at,
-          status: t.status, // Map status
-        }));
+        const tracks: MusicTrack[] = (data.tracks || []).flatMap((t: any) => {
+          if (t.tracks && Array.isArray(t.tracks) && t.tracks.length > 0) {
+            return t.tracks.map((sub: any, idx: number) => ({
+              id: sub.sunoId || `${t.id}_${idx}`,
+              shareId: t.id,
+              title: `${t.title || t.trackName || 'Untitled'} (${idx + 1})`,
+              audioUrl: sub.audioUrl || sub.audio_url,
+              imageUrl: sub.imageUrl || sub.sourceImageUrl || t.imageUrl || t.image_url || t.thumbnailUrl,
+              prompt: t.prompt,
+              description: t.description || t.caption || t.prompt,
+              category: t.category,
+              metadata: t.metadata,
+              createdAt: t.createdAt || t.created_at,
+              status: t.status,
+              videoUrl: t.videoUrl,
+              videoStatus: t.videoStatus,
+            }));
+          }
+          return [{
+            id: t.id || t.trackId,
+            shareId: t.id || t.trackId,
+            title: t.title || t.trackName || 'Untitled',
+            audioUrl: t.audioUrl || t.audio_url,
+            imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
+            prompt: t.prompt,
+            description: t.description || t.caption || t.prompt,
+            category: t.category,
+            metadata: t.metadata,
+            createdAt: t.createdAt || t.created_at,
+            createdAt: t.createdAt || t.created_at,
+            status: t.status,
+            videoUrl: t.videoUrl,
+            videoStatus: t.videoStatus,
+          }];
+        });
 
         console.log('[My Music] Mapped tracks:', tracks);
         console.log('[My Music] Tracks with audioUrl:', tracks.filter(t => t.audioUrl).length);
@@ -239,6 +293,53 @@ export const RRaaSiMusicWelcomeView = ({
     }
   };
 
+  // Video Generation Handler
+  const handleGenerateVideo = async (sunoId: string, trackDocId?: string) => {
+    if (!user?.uid) return;
+    if (!trackDocId) {
+      console.error("Missing Track Document ID for video generation");
+      alert("Cannot generate video: Track ID missing");
+      return;
+    }
+
+    // Optimistic update
+    setMyTracks(prev => prev.map(t =>
+      t.id === sunoId ? { ...t, videoStatus: 'generating' } : t
+    ));
+
+    try {
+      const response = await fetch('/api/suno/generate-video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          trackId: trackDocId,
+          sunoId: sunoId
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        // Success - status remains generating until callback or refresh
+        console.log("Video generation started:", result);
+      } else {
+        // Revert on failure
+        console.error("Video generation failed:", result.error);
+        alert(`Failed to start video generation: ${result.error}`);
+        setMyTracks(prev => prev.map(t =>
+          t.id === sunoId ? { ...t, videoStatus: null } : t
+        ));
+      }
+    } catch (e) {
+      console.error("Video generation error:", e);
+      setMyTracks(prev => prev.map(t =>
+        t.id === sunoId ? { ...t, videoStatus: null } : t
+      ));
+    }
+  };
+
   // Updated fetchMusic to use API
   const fetchMusic = async (pageNum: number, isNewCategory = false) => {
     if (pageNum === 1) {
@@ -257,17 +358,45 @@ export const RRaaSiMusicWelcomeView = ({
       if (!response.ok) throw new Error('Failed to fetch tracks');
 
       const data = await response.json();
-      const newTracks: MusicTrack[] = (data.tracks || []).map((t: any) => ({
-        id: t.id,
-        title: t.title || 'Untitled',
-        audioUrl: t.audioUrl || t.audio_url,
-        imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl, // Map image
-        prompt: t.prompt,
-        description: t.description || t.caption || t.prompt, // Map description (fallback to prompt)
-        category: t.category,
-        metadata: t.metadata, // Include metadata for tags
-        createdAt: t.createdAt, // Backend should return serialized date or timestamp
-      }));
+      const newTracks: MusicTrack[] = (data.tracks || []).flatMap((t: any) => {
+        // If the track has multiple versions/generations inside
+        if (t.tracks && Array.isArray(t.tracks) && t.tracks.length > 0) {
+          return t.tracks.map((sub: any, idx: number) => ({
+            id: sub.sunoId || `${t.id}_${idx}`, // Unique ID for player
+            shareId: t.id, // Parent Document ID for sharing
+            title: `${t.title || 'Untitled'} (${idx + 1})`,
+            audioUrl: sub.audioUrl,
+            imageUrl: sub.imageUrl || sub.sourceImageUrl || t.imageUrl || t.image_url || t.thumbnailUrl,
+            prompt: t.prompt,
+            description: t.description || t.caption || t.prompt,
+            category: t.category,
+            metadata: t.metadata,
+            createdAt: t.createdAt,
+            createdAt: t.createdAt,
+            status: t.status,
+            videoUrl: t.videoUrl,
+            videoStatus: t.videoStatus,
+          }));
+        }
+
+        // Fallback for single tracks or legacy structure
+        return [{
+          id: t.id,
+          shareId: t.id,
+          title: t.title || 'Untitled',
+          audioUrl: t.audioUrl || t.audio_url,
+          imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
+          prompt: t.prompt,
+          description: t.description || t.caption || t.prompt,
+          category: t.category,
+          metadata: t.metadata,
+          createdAt: t.createdAt,
+          createdAt: t.createdAt,
+          status: t.status,
+          videoUrl: t.videoUrl,
+          videoStatus: t.videoStatus,
+        }];
+      });
 
       // 1. Filter out incomplete tracks
       const completeTracks = newTracks.filter(t => !!t.audioUrl);
@@ -497,21 +626,48 @@ export const RRaaSiMusicWelcomeView = ({
             </div>
           </div>
 
-          {/* Daily Mix Button (Section Header) */}
-          {isAuthenticated && myTracks.length > 5 && (
-            <Button
-              variant="dotted"
-              onClick={handleDailyMix}
-              disabled={isShuffling}
-              className="hidden md:flex text-amber-500 border-amber-500/20 hover:bg-amber-500/10"
-            >
-              {isShuffling ? (
-                <span className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-amber-500 border-t-transparent"></span>
-              ) : (
-                <Shuffle className="w-4 h-4 mr-2" />
+          {/* Action Buttons (Section Header) */}
+          {isAuthenticated && (
+            <div className="flex gap-2">
+              {/* Refresh Button */}
+              <Button
+                variant="dotted"
+                onClick={fetchMyMusic}
+                disabled={myTracksLoading}
+                className="text-amber-500 border-amber-500/20 hover:bg-amber-500/10"
+                title="Refresh My Music"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${myTracksLoading ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">Refresh</span>
+              </Button>
+
+              {/* Session Recordings Button */}
+              <Button
+                variant="dotted"
+                onClick={() => setShowRecordings(true)}
+                className="text-amber-500 border-amber-500/20 hover:bg-amber-500/10"
+              >
+                <History className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Session Recordings</span>
+              </Button>
+
+              {/* Daily Mix Button */}
+              {myTracks.length > 5 && (
+                <Button
+                  variant="dotted"
+                  onClick={handleDailyMix}
+                  disabled={isShuffling}
+                  className="hidden md:flex text-amber-500 border-amber-500/20 hover:bg-amber-500/10"
+                >
+                  {isShuffling ? (
+                    <span className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-amber-500 border-t-transparent"></span>
+                  ) : (
+                    <Shuffle className="w-4 h-4 mr-2" />
+                  )}
+                  Shuffle All
+                </Button>
               )}
-              Shuffle All
-            </Button>
+            </div>
           )}
         </div>
 
@@ -557,6 +713,9 @@ export const RRaaSiMusicWelcomeView = ({
                     createdAt={track.createdAt}
                     onPlay={() => playPlaylist(myTracks, index)}
                     status={track.status}
+                    videoUrl={track.videoUrl}
+                    videoStatus={track.videoStatus}
+                    onGenerateVideo={() => handleGenerateVideo(track.id, track.shareId)}
                     onSync={() => handleSync(track.id)}
                     isSyncing={syncingTrackId === track.id}
                     onDownload={() => handleDownload(track)}
@@ -691,6 +850,7 @@ export const RRaaSiMusicWelcomeView = ({
                 {musicTracks.map((track, index) => (
                   <MusicPlayerCard
                     key={track.id}
+                    id={track.id}
                     title={track.title || 'Untitled'}
                     audioUrl={track.audioUrl}
                     imageUrl={track.imageUrl} // Pass imageUrl
@@ -699,32 +859,25 @@ export const RRaaSiMusicWelcomeView = ({
                     description={track.description} // Pass description
                     metadata={track.metadata} // Pass metadata for tags
                     createdAt={track.createdAt?.toDate?.()?.toISOString() || track.createdAt || new Date().toISOString()}
+                    videoUrl={track.videoUrl}
+                    videoStatus={track.videoStatus}
+                    onGenerateVideo={() => handleGenerateVideo(track.id, track.shareId)}
                     onPlay={() => playPlaylist(musicTracks, index)} // Use playlist
                   />
                 ))}
               </div>
 
-              {/* Load More Button */}
-              {hasMore && (
-                <div className="mt-12 text-center">
-                  <Button
-                    onClick={handleLoadMore}
-                    variant="outline"
-                    size="lg"
-                    disabled={loadingMore}
-                    className="min-w-[200px]"
-                  >
-                    {loadingMore ? (
-                      <>
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600 mr-2"></div>
-                        Loading...
-                      </>
-                    ) : (
-                      'Load More Tracks'
-                    )}
-                  </Button>
-                </div>
-              )}
+              <div ref={observerTarget} className="mt-12 text-center h-20 flex items-center justify-center">
+                {hasMore && (
+                  <div className="flex items-center gap-2 text-amber-600">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600"></div>
+                    <span className="text-sm font-medium">Loading more spiritual tracks...</span>
+                  </div>
+                )}
+                {!hasMore && musicTracks.length > 0 && (
+                  <p className="text-gray-500 text-sm">You've reached the end of the collection.</p>
+                )}
+              </div>
             </>
           )
         }
@@ -823,8 +976,11 @@ export const RRaaSiMusicWelcomeView = ({
         </div>
       </section>
 
-
-
+      {/* Recordings Modal */}
+      <RecordingsModal
+        isOpen={showRecordings}
+        onClose={() => setShowRecordings(false)}
+      />
 
       {/* Floating Create Button (Mobile) */}
       <button
