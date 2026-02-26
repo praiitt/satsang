@@ -7,9 +7,10 @@
 const PROD_API_URL = 'https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-auth-server';
 
 // Base API URL (e.g. http://localhost:4000 or Cloud Function Root)
+// Base API URL (e.g. http://localhost:4000 or Cloud Function Root)
 const API_BASE_URL = process.env.NEXT_PUBLIC_AUTH_SERVER_URL ||
-  (typeof window === 'undefined'
-    ? (process.env.AUTH_SERVER_URL || 'http://localhost:4000')
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:4000'
     : PROD_API_URL);
 
 // Specific Endpoint Roots

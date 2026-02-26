@@ -895,32 +895,76 @@ async def entrypoint(ctx: JobContext):
     # Now that we're connected, set the publish function
     assistant._publish_data_fn = ctx.room.local_participant.publish_data
     
-    # Handle chat messages
-    @ctx.room.on("data_received")
-    def on_data_received(data_packet):
-        """Handle incoming chat messages from the frontend."""
+    # Handle chat messages from the frontend
+    from livekit import rtc
+    
+    async def _on_data_received(data, participant=None, kind=None, topic=None):
+        """Handle incoming data channel messages from the frontend."""
         try:
-            # Decode the message
-            message = data_packet.data.decode('utf-8')
-            logger.info(f"📩 Received chat message: {message}")
+            logger.info(f"📩 [DATA_RECEIVED] type={type(data)}, participant={participant.identity if participant else 'None'}, topic={topic}")
             
-            # Parse JSON if it's structured data
+            # Extract raw bytes from the data argument
+            data_bytes = None
+            if isinstance(data, bytes):
+                data_bytes = data
+            elif isinstance(data, rtc.DataPacket):
+                data_bytes = data.data
+            elif hasattr(data, 'data'):
+                data_bytes = data.data
+            elif isinstance(data, str):
+                data_bytes = data.encode('utf-8')
+            else:
+                logger.warning(f"Unexpected data type: {type(data)}")
+                return
+            
+            if data_bytes is None:
+                logger.warning("No data bytes extracted")
+                return
+            
+            payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+            logger.info(f"📩 Decoded payload: {payload_str[:200]}")
+            
+            # Parse JSON
             try:
-                data = json.loads(message)
-                # Extract the actual message text
-                if isinstance(data, dict) and 'message' in data:
-                    message = data['message']
-                elif isinstance(data, dict) and 'text' in data:
-                    message = data['text']
+                payload = json.loads(payload_str)
             except json.JSONDecodeError:
-                # It's plain text, use as-is
-                pass
+                # Plain text message, use directly
+                logger.info(f"📩 Plain text message, sending to agent: {payload_str[:100]}")
+                asyncio.create_task(session.chat(payload_str))
+                return
             
-            # Send the message to the agent session for processing
-            asyncio.create_task(session.chat(message))
+            # Handle chat messages (from useChat hook, topic = "lk-chat-topic")
+            if isinstance(payload, dict) and 'message' in payload:
+                chat_text = payload['message']
+                logger.info(f"📩 Chat message received: {chat_text}")
+                asyncio.create_task(session.chat(chat_text))
+                return
+            
+            # Handle text field as fallback
+            if isinstance(payload, dict) and 'text' in payload:
+                chat_text = payload['text']
+                logger.info(f"📩 Text message received: {chat_text}")
+                asyncio.create_task(session.chat(chat_text))
+                return
+            
+            logger.debug(f"Ignoring non-chat data: {payload_str[:100]}")
             
         except Exception as e:
-            logger.error(f"Error handling chat message: {e}")
+            logger.error(f"Error handling data message: {e}", exc_info=True)
+    
+    def _handle_room_data(data, participant=None, kind=None, topic=None):
+        """Synchronous callback for data_received event - schedules async handler."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                asyncio.create_task(_on_data_received(data, participant, kind, topic))
+            else:
+                loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+        except Exception as e:
+            logger.error(f"Error scheduling _on_data_received: {e}", exc_info=True)
+    
+    ctx.room.on("data_received", _handle_room_data)
+    logger.info("✅ Data channel listener registered for chat messages")
 
     # Listen for metadata updates (Late Login Fix)
     @ctx.room.on("participant_metadata_changed")

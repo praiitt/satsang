@@ -4,6 +4,7 @@ export interface Guru {
   tradition: string; // The display tradition from JSON
   era: string;
   category: string; // The URL slug (e.g. 'hinduism', 'buddhism')
+  image?: string;
 }
 
 export const TRADITION_DETAILS: Record<string, { title: string; description: string; emoji: string; theme: string }> = {
@@ -130,6 +131,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Universal Mother, Bhakti",
     era: "1896-1982",
     category: "hinduism",
+    image: "/images/gurus/real/anandamayi.jpg",
   },
   {
     id: "aurobindo",
@@ -368,6 +370,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Bhakti, Hanuman devotion",
     era: "1900-1973",
     category: "hinduism",
+    image: "/images/gurus/real/neemkaroli.jpg",
   },
   {
     id: "padmasambhava",
@@ -410,6 +413,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Bhakti, Tantra, Vedanta",
     era: "1836-1886",
     category: "hinduism",
+    image: "/images/gurus/real/ramakrishna.jpg",
   },
   {
     id: "ramana",
@@ -417,6 +421,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Advaita Vedanta (Self-inquiry)",
     era: "1879-1950",
     category: "hinduism",
+    image: "/images/gurus/real/ramana.jpg",
   },
   {
     id: "ravi_shankar",
@@ -424,6 +429,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Art of Living, Vedic wisdom",
     era: "1956-present",
     category: "hinduism",
+    image: "/images/gurus/real/srisri.jpg",
   },
   {
     id: "rishabhanatha",
@@ -445,6 +451,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Yoga, Tantric wisdom",
     era: "1957-present",
     category: "hinduism",
+    image: "/images/gurus/real/sadhguru.jpg",
   },
   {
     id: "shankaracharya",
@@ -452,6 +459,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Advaita Vedanta",
     era: "788-820 CE",
     category: "hinduism",
+    image: "/images/gurus/real/shankaracharya.jpg",
   },
   {
     id: "st_francis",
@@ -487,6 +495,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Vedanta (Ramakrishna lineage)",
     era: "1863-1902",
     category: "hinduism",
+    image: "/images/gurus/real/vivekananda.jpg",
   },
   {
     id: "yogananda",
@@ -494,6 +503,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Kriya Yoga",
     era: "1893-1952",
     category: "hinduism",
+    image: "/images/gurus/real/yogananda.jpg",
   },
   {
     id: "zhuangzi",

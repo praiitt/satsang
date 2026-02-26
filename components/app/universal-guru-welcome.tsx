@@ -11,6 +11,7 @@ interface UniversalGuruWelcomeViewProps {
     guruId: string;
     guruName: string;
     // Add new props
+    guruImage?: string;
     traditionName?: string;
     traditionEmoji?: string;
     theme?: string; // Tailwind bg class
@@ -30,6 +31,7 @@ export const UniversalGuruWelcomeView = ({
     onStartCall,
     guruId,
     guruName,
+    guruImage,
     traditionName = 'Hinduism',
     traditionEmoji = '🕉️',
     theme = 'from-orange-50 via-yellow-50 to-red-50',
@@ -81,7 +83,17 @@ export const UniversalGuruWelcomeView = ({
                     <span className="font-bold text-xs">{t('hinduismGuru.backToGurus').replace('← ', '') || 'EXIT'}</span>
                 </Link>
 
-                <TraditionIcon emoji={traditionEmoji} />
+                {guruImage ? (
+                    <div className="flex items-center justify-center size-32 rounded-full border-4 border-white/30 shadow-2xl overflow-hidden mb-6 bg-white/10 backdrop-blur-sm">
+                        <img
+                            src={guruImage}
+                            alt={guruName}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                ) : (
+                    <TraditionIcon emoji={traditionEmoji} />
+                )}
 
                 <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl drop-shadow-sm">
                     {guruName}

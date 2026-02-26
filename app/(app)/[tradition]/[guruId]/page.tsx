@@ -51,6 +51,7 @@ export default async function TraditionGuruPage({
             traditionName={traditionConfig.title.replace(' Masters', '').replace(' Gurus', '')} // Simple cleanup to get "Buddhist" or "Sikh"
             traditionEmoji={traditionConfig.emoji}
             theme={traditionConfig.theme}
+            guruImage={guru.image}
         />
     );
 }

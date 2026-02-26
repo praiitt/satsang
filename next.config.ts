@@ -53,6 +53,21 @@ const nextConfig: NextConfig = {
         hostname: 'firebasestorage.googleapis.com',
         pathname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn1.suno.ai',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'musicfile.removeai.ai',
+        pathname: '**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'storage.googleapis.com',
+        pathname: '**',
+      },
     ],
   },
   async redirects() {

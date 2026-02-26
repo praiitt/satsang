@@ -68,10 +68,24 @@ export function GuruCard({ guru, onClick }: GuruCardProps) {
 
       {/* Icon & Name */}
       <div className="mb-4 flex items-center gap-3 pr-8">
-        <div className="text-4xl">{guru.icon}</div>
-        <div className="flex-1">
-          <h3 className="text-foreground text-xl font-bold flex items-center gap-2">
-            {name}
+        <div className="text-4xl flex-shrink-0">
+          {guru.image ? (
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-primary/20">
+              <img
+                src={guru.image}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          ) : (
+            guru.icon
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-foreground text-xl font-bold truncate">
+              {name}
+            </h3>
             {/* Follow Toggle (Small Icon) */}
             <button
               onClick={(e) => {
@@ -79,7 +93,7 @@ export function GuruCard({ guru, onClick }: GuruCardProps) {
                 toggleFollow(guru.id);
               }}
               className={cn(
-                "p-1 rounded-md text-xs border transition-all flex items-center gap-1",
+                "p-1 rounded-md text-xs border transition-colors flex items-center gap-1 flex-shrink-0",
                 isFollowingGuru
                   ? "bg-primary/10 border-primary text-primary"
                   : "bg-transparent border-muted hover:border-primary text-muted-foreground"
@@ -87,10 +101,9 @@ export function GuruCard({ guru, onClick }: GuruCardProps) {
               title={isFollowingGuru ? "Unfollow" : "Follow"}
             >
               {isFollowingGuru ? <UserCheck className="w-3 h-3" /> : <UserPlus className="w-3 h-3" />}
-              {isFollowingGuru ? "Following" : "Follow"}
             </button>
-          </h3>
-          <p className="text-muted-foreground text-sm">{guru.tradition}</p>
+          </div>
+          <p className="text-muted-foreground text-sm truncate">{guru.tradition}</p>
         </div>
       </div>
 

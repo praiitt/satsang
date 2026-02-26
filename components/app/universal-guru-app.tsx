@@ -41,13 +41,15 @@ function UniversalGuruViewController({
     guruName,
     traditionName,
     traditionEmoji,
-    theme
+    theme,
+    guruImage
 }: {
     guruId: string;
     guruName: string;
     traditionName?: string;
     traditionEmoji?: string;
     theme?: string;
+    guruImage?: string;
 }) {
     const room = useRoomContext();
     const isSessionActiveRef = useRef(false);
@@ -75,7 +77,9 @@ function UniversalGuruViewController({
                     guruName={guruName}
                     traditionName={traditionName}
                     traditionEmoji={traditionEmoji}
+                    traditionEmoji={traditionEmoji}
                     theme={theme}
+                    guruImage={guruImage}
                 />
             )}
             {/* Session view */}
@@ -97,10 +101,12 @@ interface UniversalGuruAppProps {
     guruName: string;
     traditionName?: string;
     traditionEmoji?: string;
+    traditionEmoji?: string;
     theme?: string;
+    guruImage?: string;
 }
 
-export function UniversalGuruApp({ appConfig, guruId, guruName, traditionName, traditionEmoji, theme }: UniversalGuruAppProps) {
+export function UniversalGuruApp({ appConfig, guruId, guruName, traditionName, traditionEmoji, theme, guruImage }: UniversalGuruAppProps) {
     return (
         <SessionProvider appConfig={appConfig}>
             <main className="min-h-svh w-full overflow-y-auto">
@@ -109,7 +115,9 @@ export function UniversalGuruApp({ appConfig, guruId, guruName, traditionName, t
                     guruName={guruName}
                     traditionName={traditionName}
                     traditionEmoji={traditionEmoji}
+                    traditionEmoji={traditionEmoji}
                     theme={theme}
+                    guruImage={guruImage}
                 />
             </main>
             <StartAudio label="Start Audio" />
