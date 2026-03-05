@@ -18,7 +18,26 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // 1. Generate Script using LLM (removed bhajan_query — using internal music now)
+        const db = getAdminDb();
+
+        // 1. Check for existing plan with same topic and guruId to avoid redundant generation
+        const existingPlans = await db.collection('satsang_plans')
+            .where('guruId', '==', guruId)
+            .where('topic', '==', topic.trim())
+            .limit(1)
+            .get();
+
+        if (!existingPlans.empty) {
+            const doc = existingPlans.docs[0];
+            const plan = doc.data();
+            console.log('[Satsang Generate] Reusing existing plan for topic:', topic, 'id:', doc.id);
+            return NextResponse.json({
+                planId: doc.id,
+                plan: plan
+            });
+        }
+
+        // 2. Generate Script using LLM (removed bhajan_query — using internal music now)
         const prompt = `
       You are an expert Hindu Satsang planner and Spiritual Guide.
             Topic: "${topic}"
