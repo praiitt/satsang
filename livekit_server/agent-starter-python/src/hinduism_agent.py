@@ -849,7 +849,6 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
     @ctx.room.on("chat_message")
     def on_chat_message(msg: rtc.ChatMessage):
         # The frontend sends phase prompts via useChat
-        # We need to handle both the msg object and its text
         content = getattr(msg, 'message', None) or getattr(msg, 'text', None) or str(msg)
         
         # If it's a ChatMessage object from RTC
@@ -862,16 +861,34 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
             # Remove the identifier for the LLM
             clean_content = content.replace("[PHASE_PROMPT]", "").strip()
             
-            # Force the agent to speak the new instruction immediately, interrupting if necessary
-            # We use a task to avoid blocking the event loop
-            async def trigger_speech():
+            # Use the LLM to generate a response based on the new phase instruction
+            async def trigger_guru_speech():
                 try:
-                    logger.info(f"🗣️ Agent is now speaking phase instruction: {clean_content[:50]}...")
-                    await session.say(clean_content, allow_interruptions=True)
+                    # 1. Add as a system message to session history for context
+                    if hasattr(session, 'history'):
+                        session.history.push(rtc.ChatMessage(role='system', content=clean_content))
+                    
+                    # 2. Use the LLM to generate a response (Discourse/Pravachan)
+                    logger.info("🧠 Asking Guru Brain to generate phase discourse...")
+                    response = await session.llm.chat(
+                        history=session.history.items if hasattr(session, 'history') else [],
+                        prompt="Guru, the phase has changed. Based on your instructions and themes, please deliver your discourse or guidance for this phase now. Speak directly to the seeker with warmth.",
+                    )
+                    
+                    # 3. Speak the generated response, allowing interruptions
+                    if response and response.choices:
+                        text = response.choices[0].message.content
+                        logger.info(f"🗣️ Guru is now delivering discourse: {text[:50]}...")
+                        await session.say(text, allow_interruptions=True)
                 except Exception as e:
-                    logger.error(f"❌ Error in session.say for phase prompt: {e}")
+                    logger.error(f"❌ Error in guru brain for phase prompt: {e}")
+                    # Fallback: speak the prompt if generation fails
+                    try:
+                        await session.say("Namaste. Let us proceed with the next part of our satsang.", allow_interruptions=True)
+                    except:
+                        pass
             
-            asyncio.create_task(trigger_speech())
+            asyncio.create_task(trigger_guru_speech())
     
     # Send welcome message ONLY IF NOT IN HOSTED MODE
     if not satsang_plan:
