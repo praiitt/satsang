@@ -57,9 +57,9 @@ if not _ENV_LOADED:
     logger.warning("⚠️  .env.local not found")
 
 
-class HinduismAgent(Agent):
+class SpiritualMasterAgent(Agent):
     """
-    Multi-guru Hinduism Agent that dynamically embodies different spiritual masters.
+    Multi-guru Spiritual Agent that dynamically embodies different spiritual masters.
     """
     
     def __init__(
@@ -695,9 +695,23 @@ async def entrypoint(ctx: JobContext):
             guru_profile = {}
 
         guru_name_display = guru_profile.get('name', guru_id.replace('_', ' ').title())
+        guru_tradition = guru_profile.get('tradition', 'Hindu')
         guru_tone = guru_profile.get('personality', {}).get('tone', 'Wise and compassionate')
         guru_philosophy = guru_profile.get('teachings', {}).get('core_philosophy', 'Spiritual wisdom')
         guru_signature = guru_profile.get('personality', {}).get('signature_phrases', ["Om Shanti"])[0]
+
+        # Tradition-specific terminology
+        music_label = "Bhajan"
+        if any(t in guru_tradition.lower() for t in ["christian", "sufi", "islam", "judaism"]):
+            music_label = "Hymn / Music"
+        elif any(t in guru_tradition.lower() for t in ["buddhism", "zen", "taoism"]):
+            music_label = "Chant / Meditation Music"
+        
+        session_label = "Satsang"
+        if "christian" in guru_tradition.lower():
+            session_label = "Service"
+        elif "buddhism" in guru_tradition.lower():
+            session_label = "Meditation Session"
 
         intro_text = satsang_plan.get('intro_text', '')
         bhajan_query = satsang_plan.get('bhajan_query', '')
@@ -709,11 +723,12 @@ async def entrypoint(ctx: JobContext):
         pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
 
         hosted_instructions = f"""
-IMPORTANT: YOU ARE IN **HOSTED SATSANG MODE**.
+IMPORTANT: YOU ARE IN **HOSTED {session_label.upper()} MODE**.
 You are NOT a general assistant. You are executing a formal spiritual session.
 
 IDENTITY & PERSONA (MAINTAIN AT ALL TIMES):
 - You are **{guru_name_display}**.
+- Tradition: {guru_tradition}
 - Core Philosophy: {guru_philosophy}
 - Tone: {guru_tone}
 - Speak as {guru_name_display} would, using first-person perspective.
@@ -726,8 +741,8 @@ SESSION TOPIC: {satsang_plan.get('topic', 'Satsang')}
 1. **SILENCE ON CONNECT**: Do NOT say "Namaste" or "Hello" when you join. Wait specifically for the 'START' signal from the host.
 2. **STRICT PHASE EXECUTION**:
    - **INTRO**: When the session starts (you receive START signal), read the INTRO text below with warmth.
-   - **BHAJAN**: When asked for bhajan, play exactly: "{bhajan_title}" (ID: {bhajan_vid}).
-   - **PRAVACHAN**: Deliver the discourse points below. Expand on them using your unique persona ({guru_name_display}) and philosophy.
+   - **{music_label.upper()}**: When asked for music/bhajan, play exactly: "{bhajan_title}" (ID: {bhajan_vid}).
+   - **PRAVACHAN / DISCOURSE**: Deliver the discourse points below. Expand on them using your unique persona ({guru_name_display}) and philosophy.
    - **CLOSING**: End with the closing message.
 3. **NO SMALL TALK**: Do not ask "How are you?" or "What else can I do?". You are the Guru delivering a sermon.
 
@@ -740,6 +755,9 @@ PRAVACHAN POINTS (Discourse) - EXPAND ON THESE AS {guru_name_display}:
 
 CLOSING TEXT:
 "{closing_text}"
+
+--- RECORDING STATUS ---
+NOTE: A full text transcript of this session is being saved to the database. Audio/video recording is not currently active.
 """
     else:
          pass # No instructions needed for non-hosted mode yet, or logic handled elsewhere
@@ -784,7 +802,7 @@ CLOSING TEXT:
 
 
     # Create agent with the correct guru and instructions
-    final_agent = HinduismAgent(
+    final_agent = SpiritualMasterAgent(
         guru_id=guru_id,
         user_id=user_id,
         publish_data_fn=ctx.room.local_participant.publish_data,
@@ -825,6 +843,22 @@ CLOSING TEXT:
         agent=final_agent,
         room=ctx.room,
     )
+
+    # Add Chat Message Listener for Phase Transitions
+    @session.on("chat_message")
+    def on_chat_message(msg):
+        # Check if the message is from our known "Satsang App" system
+        # The frontend sends phase prompts via useChat
+        content = msg.text_content
+        if content and "[PHASE_PROMPT]" in content:
+            logger.info(f"🚀 Received Phase Prompt from frontend: {content[:50]}...")
+            
+            # Remove the identifier for the LLM
+            clean_content = content.replace("[PHASE_PROMPT]", "").strip()
+            
+            # Inject as a high-priority system instruction and trigger a response
+            asyncio.create_task(session.say(clean_content, allow_interruptions=True))
+            logger.info("🗣️ Triggered immediate agent response for new phase")
     
     # Send welcome message ONLY IF NOT IN HOSTED MODE
     if not satsang_plan:
@@ -850,18 +884,6 @@ CLOSING TEXT:
             # 2. Auto-play Bhajan
             if 'bhajan_vid' in locals() and bhajan_vid:
                 logger.info(f"🎶 Auto-playing Bhajan: {bhajan_vid}")
-                # We can trigger the tool-like behavior directly or instruct the agent
-                # Direct trigger is safer for hosted mode
-                
-                # Construct a fake search result or just play it if we had a direct play method
-                # Since we rely on the frontend to play based on tool output/events, 
-                # let's try to simulate what the tool does: publish data to frontend.
-                
-                # The 'search_guru_teachings' tool usually creates a track. 
-                # But here we want to ensure the agent 'knows' it played it.
-                # Simplest way: Append a user-like message "Play the bhajan now" to the chat context? 
-                # No, better to directly publish the event like the tool would.
-                
                 if final_agent._publish_data_fn:
                      payload = json.dumps({
                         "type": "video_result",
@@ -875,6 +897,44 @@ CLOSING TEXT:
         else:
             await session.say("Namaste. I am ready to begin our satsang.")
 
+    # Wait for disconnection
+    disconnect_future = asyncio.Future()
+
+    @ctx.room.on("disconnected")
+    def on_disconnected(reason):
+        logger.info(f"🔌 Disconnected: {reason}")
+        if not disconnect_future.done():
+            disconnect_future.set_result(True)
+
+    try:
+        await disconnect_future
+    finally:
+        logger.info("⏱️ Session ended, saving transcript...")
+        try:
+            db = FirebaseDB()
+            transcript = []
+            if hasattr(session, 'history'):
+                for item in session.history.items:
+                    if item.type == "message":
+                        text = item.text_content
+                        if text:
+                            transcript.append({
+                                "role": item.role,
+                                "content": text,
+                                "timestamp": item.created_at
+                            })
+            else:
+                logger.warning("Session has no history attribute")
+
+            session_data = {
+                "userId": user_id,
+                "agentName": f"hinduism-{guru_id}",
+                "roomName": ctx.room.name
+            }
+            db.save_session_transcript(ctx.room.name, session_data, transcript)
+        except Exception as e:
+            logger.error(f"❌ Failed to save transcript: {e}")
+
 
 if __name__ == "__main__":
     agent_name = os.getenv("LIVEKIT_AGENT_NAME", "hinduism-agent")
@@ -886,3 +946,4 @@ if __name__ == "__main__":
         agent_name=agent_name,
         max_retry=5
     ))
+

@@ -379,7 +379,19 @@ async def entrypoint(ctx: JobContext):
     
     # Connect to room first
     await ctx.connect()
-    
+
+    # Extract user_id from participant metadata
+    user_id = "default_user"
+    try:
+        await asyncio.sleep(1)
+        for p in ctx.room.remote_participants.values():
+            if p.metadata:
+                meta = json.loads(p.metadata)
+                user_id = meta.get("userId", "default_user")
+                break
+    except Exception as e:
+        logger.warning(f"Could not extract userId: {e}")
+
     agent = TarotAgent(publish_data_fn=_publish_data)
     
     session = AgentSession(
@@ -393,7 +405,6 @@ async def entrypoint(ctx: JobContext):
     await session.start(agent=agent, room=ctx.room)
 
     # Send welcome message immediately after session starts
-    # Send welcome message immediately after session starts
     if user_language == 'hi':
         await session.say(
             "नमस्ते। मैं टैरो रीडर हूँ। "
@@ -405,9 +416,49 @@ async def entrypoint(ctx: JobContext):
             "Do you want to know how Tarot reveals hidden truths and hear my teachings?"
         )
 
+    # Wait for disconnection
+    disconnect_future = asyncio.Future()
+
+    @ctx.room.on("disconnected")
+    def on_disconnected(reason):
+        logger.info(f"🔌 Disconnected: {reason}")
+        if not disconnect_future.done():
+            disconnect_future.set_result(True)
+
+    try:
+        await disconnect_future
+    finally:
+        logger.info("⏱️ Session ended, saving transcript...")
+        try:
+            try:
+                from .firebase_db import FirebaseDB
+            except ImportError:
+                from firebase_db import FirebaseDB
+            db = FirebaseDB()
+            transcript = []
+            if hasattr(session, 'history'):
+                for item in session.history.items:
+                    if item.type == "message":
+                        text = item.text_content
+                        if text:
+                            transcript.append({
+                                "role": item.role,
+                                "content": text,
+                                "timestamp": item.created_at
+                            })
+            session_data = {
+                "userId": user_id,
+                "agentName": "tarot-agent",
+                "roomName": ctx.room.name
+            }
+            db.save_session_transcript(ctx.room.name, session_data, transcript)
+        except Exception as e:
+            logger.error(f"❌ Failed to save transcript: {e}")
+
 if __name__ == "__main__":
     cli.run_app(WorkerOptions(
         entrypoint_fnc=entrypoint, 
         prewarm_fnc=prewarm,
         agent_name=os.getenv("LIVEKIT_AGENT_NAME", "tarot-agent"),
     ))
+

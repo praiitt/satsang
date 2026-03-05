@@ -14,8 +14,10 @@ export interface Durations {
 
 export interface SatsangConfig {
     topic: string;
-    introBhajanVideoId?: string;
-    closingBhajanVideoId?: string;
+    /** rraasi audio URL for bhajan phase */
+    introBhajanAudioUrl?: string;
+    /** rraasi audio URL for closing phase */
+    closingBhajanAudioUrl?: string;
 }
 
 export function useSatsangLogic({
@@ -65,15 +67,7 @@ export function useSatsangLogic({
     const getDuration = (key: PhaseName) => durations[key];
     const currentPhase = phases[currentIndex];
 
-    // Helper to extract YouTube ID
-    const extractYouTubeVideoId = useCallback((input: string | undefined): string | null => {
-        if (!input) return null;
-        if (/^[a-zA-Z0-9_-]{11}$/.test(input)) return input;
-        const match = input.match(
-            /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/
-        );
-        return match ? match[1] : null;
-    }, []);
+    // (YouTube helper removed — now using rraasi audio directly)
 
     // Helper to publish messages to agent
     const publishToAgent = useCallback(
@@ -155,28 +149,20 @@ export function useSatsangLogic({
                     3. Welcome the seekers.
                     4. Keep this brief (approx 2 mins).`;
                     break;
-                case 'bhajan':
-                    // Instruct to find popular/community appreciated music
-                    const videoId = config.introBhajanVideoId || '';
-                    if (!videoId) {
-                        console.warn('[SatsangLogic] No specific bhajan video ID found in config');
-                    } else {
-                        console.log('[SatsangLogic] Using specific bhajan video ID:', videoId);
-                    }
-
-                    const specificInstruction = videoId
-                        ? `3. CRITICAL: Use tool 'play_bhajan' with video_id="${videoId}"`
-                        : `3. Use tool 'play_bhajan' to play a popular bhajan related to "${topic}"`;
+                case 'bhajan': {
+                    const hasBhajan = !!config.introBhajanAudioUrl;
+                    console.log('[SatsangLogic] Bhajan phase — rraasi audio available:', hasBhajan);
 
                     prompt = `STARTING PHASE: BHAJAN
                     Topic: "${topic}"
                     
                     Instructions for Agent:
-                    1. Announce: "अब हम भजन सुनेंगे" (Now we will listen to a bhajan).
-                    2. You MUST play music now.
-                    ${specificInstruction}
-                    4. Remain silent while the music plays.`;
+                    1. Announce gently: "अब हम भजन सुनेंगे" (Now we will listen to a bhajan).
+                    2. The music is playing automatically in the app. You do NOT need to use any tool.
+                    3. Remain completely silent while the music plays. Do not speak.
+                    4. When the music ends, the next phase will begin automatically.`;
                     break;
+                }
                 case 'pravachan':
                     // Enforce duration more strictly
                     const durationMins = mins(durations.pravachan);
@@ -197,27 +183,24 @@ export function useSatsangLogic({
                     1. Invite the seekers to ask questions about the discourse.
                     2. Answer their questions with wisdom and patience.`;
                     break;
-                case 'closing':
-                    const closingVideoId = config.closingBhajanVideoId || '';
-                    const closingInstruction = closingVideoId
-                        ? `3. Use tool 'play_bhajan' with video_id="${closingVideoId}" for the closing Aarti/Bhajan`
-                        : `3. Use tool 'play_bhajan' to play a closing Aarti or peaceful chant`;
-
+                case 'closing': {
                     prompt = `STARTING PHASE: CLOSING
                     Topic: "${topic}"
                     
                     Instructions for Agent:
-                    1. Bring the session to a gentle close.
-                    2. Offer final blessings.
-                    ${closingInstruction}
-                    4. Bid farewell.`;
+                    1. Bring the session to a gentle close with warmth and grace.
+                    2. Offer final blessings (Ashirwad) to the seeker.
+                    3. Closing music is playing automatically in the app. You do NOT need to use any tool.
+                    4. Remain silent while the closing music plays, then bid a peaceful farewell.`;
                     break;
+                }
             }
 
             if (prompt) {
                 // Ensure we catch any errors if send fails due to connection
                 try {
-                    await send(prompt);
+                    // Add identifier so agent knows this is a phase instruction to speak immediately
+                    await send(`[PHASE_PROMPT] ${prompt}`);
                     console.log(`[SatsangLogic] Sent prompt for ${phase}`);
                 } catch (e) {
                     console.warn(`[SatsangLogic] Failed to send prompt for ${phase}`, e);
@@ -228,7 +211,7 @@ export function useSatsangLogic({
                 publishToAgent({ type: 'bhajan', action: 'pause' });
             }
         },
-        [config.topic, config.introBhajanVideoId, config.closingBhajanVideoId, durations, publishToAgent, send]
+        [config.topic, config.introBhajanAudioUrl, config.closingBhajanAudioUrl, durations, publishToAgent, send]
     );
 
     // Phase transition effect
@@ -239,6 +222,12 @@ export function useSatsangLogic({
             void sendPromptForPhase(currentPhase.key);
             onPhaseChange?.(currentPhase.key);
             lastPhaseRef.current = currentPhase.key;
+
+            // For bhajan and closing phases, the agent remains silent and won't send phase_start.
+            // We must start the timer manually to ensure auto-advance works.
+            if (currentPhase.key === 'bhajan' || currentPhase.key === 'closing') {
+                setTimeout(() => setIsRunning(true), 150);
+            }
         }
     }, [currentPhase, config.topic, sendPhaseMessage, sendPromptForPhase, onPhaseChange]);
 
@@ -282,9 +271,14 @@ export function useSatsangLogic({
 
     // Auto-advance
     useEffect(() => {
-        if (remaining === 0 && isRunning) {
+        if (remaining <= 0 && isRunning) {
+            setIsRunning(false);
             if (currentIndex < phases.length - 1) {
-                setCurrentIndex(prev => prev + 1);
+                const nextIndex = currentIndex + 1;
+                setCurrentIndex(nextIndex);
+                // Important: Wait for next tick so `remaining` has time to update to the new duration
+                // before we set isRunning back to true, otherwise we infinite loop instantly skipping all phases.
+                setTimeout(() => setIsRunning(true), 100);
             } else {
                 setIsRunning(false); // End of session
             }

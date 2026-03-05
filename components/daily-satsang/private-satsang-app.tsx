@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { Room, RoomEvent } from 'livekit-client';
 import { RoomAudioRenderer, RoomContext, StartAudio, useChat } from '@livekit/components-react';
 import { Toaster } from '@/components/livekit/toaster';
-import { YouTubeBhajanPlayer } from '@/components/youtube/youtube-bhajan-player';
 import { SatsangSessionView } from './satsang-session-view';
 import { deductSatsangCoins } from '@/lib/services/coinDeduction';
 import { useRouter } from 'next/navigation';
@@ -48,14 +47,19 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
     const [room, setRoom] = useState<Room | null>(null);
     const [participantName, setParticipantName] = useState<string>('');
     const [isConnected, setIsConnected] = useState(false);
-    const [isGenerating, setIsGenerating] = useState(false); // Add generating state
+    const [isGenerating, setIsGenerating] = useState(false);
     const sessionStartTimeRef = useRef<number | null>(null);
     const router = useRouter();
 
     const [generatedPlanId, setGeneratedPlanId] = useState<string | null>(null);
-    const [satsangPlan, setSatsangPlan] = useState<any>(null); // Store full plan
+    const [satsangPlan, setSatsangPlan] = useState<any>(null);
     const [isPlanReady, setIsPlanReady] = useState(false);
     const [recentTopics, setRecentTopics] = useState<string[]>([]);
+
+    // Rraasi music fields (replaces YouTube video ID)
+    const bhajanAudioUrl = satsangPlan?.bhajan_audio_url ?? null;
+    const bhajanTitle = satsangPlan?.bhajan_title ?? null;
+    const bhajanImageUrl = satsangPlan?.bhajan_image_url ?? null;
 
     // Fetch recent topics
     useEffect(() => {
@@ -375,15 +379,12 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
                 durations={{ intro: 120, bhajan: 300, pravachan: 600, qa: 900, closing: 180 }}
                 onLeave={handleLeave}
                 initialTopic={topic}
-                bhajanVideoId={satsangPlan?.bhajan_video_id}
+                bhajanAudioUrl={bhajanAudioUrl}
+                bhajanTitle={bhajanTitle}
+                bhajanImageUrl={bhajanImageUrl}
             />
 
-            {/* Hidden Components */}
-            <div className="hidden">
-                {/* YouTube player handles bhajan playback via data channel */}
-                <YouTubeBhajanPlayer />
-            </div>
-
+            {/* Toaster for notifications */}
             <Toaster />
         </RoomContext.Provider>
     );

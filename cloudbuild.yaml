@@ -11,6 +11,8 @@ steps:
       '--build-arg', 'NEXT_PUBLIC_FIREBASE_APP_ID=1:469389287554:web:4482647b3c865a9d2b949b',
       '--build-arg', 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-KNZ2VKQ9BH',
       '--build-arg', 'NEXT_PUBLIC_ASSET_PREFIX=https://satsang-frontend-469389287554.asia-south1.run.app',
+      '--build-arg', 'NEXT_PUBLIC_AUTH_SERVER_URL=https://rraasi.com/satsang-auth-server',
+      '--build-arg', 'AUTH_SERVER_URL=https://rraasi.com/satsang-auth-server',
       '.'
     ]
 images:

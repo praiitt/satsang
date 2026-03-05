@@ -4,6 +4,11 @@ import os
 import asyncio
 import signal
 
+try:
+    from .firebase_db import FirebaseDB
+except ImportError:
+    from firebase_db import FirebaseDB
+
 from dotenv import load_dotenv
 from livekit.agents import (
     Agent,
@@ -666,7 +671,28 @@ async def entrypoint(ctx: JobContext):
     
     # Create Osho agent instance
     osho_agent = OshoAgent(is_group_conversation=is_group_conv, publish_data_fn=_publish_sound_bytes)
-    
+
+    # Load previous conversation context for continuity
+    try:
+        prev_db = FirebaseDB()
+        prev_msgs = prev_db.get_last_transcript(user_id, "osho")
+        if prev_msgs:
+            logger.info(f"📜 Loaded {len(prev_msgs)} messages from last session for Osho context")
+            osho_agent.instructions += (
+                "\n\n---\n"
+                "PREVIOUS SESSION CONTEXT (for conversation continuity):\n"
+                "This user has spoken with you before. Here is the conversation from the last session:\n"
+                + "\n".join(
+                    f"{m['role'].title()}: {m['content'][:200]}"
+                    for m in prev_msgs[-10:]
+                )
+                + "\n---\n"
+                "If the user refers to a previous discussion, use this context naturally. "
+                "Do NOT say you are reading session logs."
+            )
+    except Exception as e:
+        logger.warning(f"Could not load previous transcript for Osho: {e}")
+
     await session.start(
         agent=osho_agent,
         room=ctx.room,
@@ -674,6 +700,7 @@ async def entrypoint(ctx: JobContext):
 
     # Join the room and connect to the user
     await ctx.connect()
+
 
     # Subscribe to data channel messages from frontend for agent.control commands
     from livekit import rtc
@@ -962,6 +989,7 @@ async def entrypoint(ctx: JobContext):
                 "Do you want to know my teachings on love, awareness, and meditation?"
             )
     
+
     logger.info("Sending proactive initial greeting to user")
     
     # Send greeting without interruptions to ensure it completes
@@ -1015,6 +1043,46 @@ async def entrypoint(ctx: JobContext):
                         logger.info("Fallback greeting sent successfully")
                     except Exception as e2:
                         logger.error(f"Error sending fallback greeting: {e2}")
+
+    # Wait for disconnection
+    disconnect_future = asyncio.Future()
+
+    @ctx.room.on("disconnected")
+    def on_disconnected(reason):
+        logger.info(f"🔌 Disconnected: {reason}")
+        if not disconnect_future.done():
+            disconnect_future.set_result(True)
+
+    try:
+        await disconnect_future
+    finally:
+        logger.info("⏱️ Session ended, saving transcript...")
+        try:
+            firebase_db = FirebaseDB()
+            transcript = []
+            if hasattr(session, 'history'):
+                for item in session.history.items:
+                    if item.type == "message":
+                        text = item.text_content
+                        if text:
+                            transcript.append({
+                                "role": item.role,
+                                "content": text,
+                                "timestamp": item.created_at
+                            })
+            else:
+                logger.warning("Session has no history attribute")
+
+            session_data = {
+                "userId": user_id,
+                "agentName": "osho",
+                "roomName": ctx.room.name
+            }
+            firebase_db.save_session_transcript(ctx.room.name, session_data, transcript)
+        except Exception as e:
+            logger.error(f"❌ Failed to save transcript: {e}")
+
+
 
 
 if __name__ == "__main__":

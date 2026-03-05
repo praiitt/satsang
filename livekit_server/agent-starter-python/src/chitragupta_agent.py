@@ -301,6 +301,53 @@ async def entrypoint(ctx: JobContext):
     await session.say(greeting, allow_interruptions=True)
     await send_chat(greeting)
 
+    # Extract user_id from participant metadata
+    user_id = "default_user"
+    try:
+        for p in ctx.room.remote_participants.values():
+            if p.metadata:
+                meta = json.loads(p.metadata)
+                user_id = meta.get("userId", "default_user")
+                break
+    except Exception as e:
+        logger.warning(f"Could not extract userId: {e}")
+
+    # Wait for disconnection and save transcript
+    disconnect_future = asyncio.Future()
+
+    @ctx.room.on("disconnected")
+    def on_disconnected(reason):
+        logger.info(f"🔌 Disconnected: {reason}")
+        if not disconnect_future.done():
+            disconnect_future.set_result(True)
+
+    try:
+        await disconnect_future
+    finally:
+        logger.info("⏱️ Session ended, saving transcript...")
+        try:
+            db = agent.db_helper
+            transcript = []
+            if hasattr(session, 'history'):
+                for item in session.history.items:
+                    if item.type == "message":
+                        text = item.text_content
+                        if text:
+                            transcript.append({
+                                "role": item.role,
+                                "content": text,
+                                "timestamp": item.created_at
+                            })
+            session_data = {
+                "userId": user_id,
+                "agentName": "chitragupta",
+                "roomName": ctx.room.name
+            }
+            db.save_session_transcript(ctx.room.name, session_data, transcript)
+        except Exception as e:
+            logger.error(f"❌ Failed to save transcript: {e}")
+
 if __name__ == "__main__":
     logger.info("Starting Chitragupta Agent Standalone...")
     cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, agent_name="chitragupta"))
+

@@ -186,7 +186,7 @@ class FirebaseDB:
                 "roomName": room_name,
                 "createdAt": datetime.utcnow(),
                 "transcript": transcript,
-                **session_data  # userid, agentName, etc.
+                **session_data  # userId, agentName, etc.
             }
             
             # Use room_name as document ID for easy lookup
@@ -194,3 +194,53 @@ class FirebaseDB:
             logger.info(f"✅ Saved session transcript for room {room_name} ({len(transcript)} messages)")
         except Exception as e:
             logger.error(f"❌ Failed to save session transcript: {e}")
+
+    def save_recording_ref(self, room_name: str, recording_url: str, agent_name: str, user_id: str):
+        """Save a reference to an OGG audio recording in Firestore 'recordings' collection."""
+        if not self.db:
+            return
+        try:
+            doc_data = {
+                "roomName": room_name,
+                "recordingUrl": recording_url,
+                "agentName": agent_name,
+                "userId": user_id,
+                "format": "ogg",
+                "createdAt": datetime.utcnow(),
+            }
+            self.db.collection("recordings").document(room_name).set(doc_data, merge=True)
+            logger.info(f"✅ Saved recording ref for room {room_name}: {recording_url}")
+        except Exception as e:
+            logger.error(f"❌ Failed to save recording ref: {e}")
+
+    def get_last_transcript(self, user_id: str, agent_name: str) -> list:
+        """
+        Retrieve the transcript messages from the user's most recent session with this agent.
+        Returns a list of {role, content} dicts ordered oldest-first, ready for LLM context injection.
+        Returns [] if nothing found.
+        """
+        if not self.db or not user_id or user_id == "default_user":
+            return []
+        try:
+            docs = (
+                self.db.collection("session_transcripts")
+                .where("userId", "==", user_id)
+                .where("agentName", "==", agent_name)
+                .order_by("createdAt", direction=firestore.Query.DESCENDING)
+                .limit(1)
+                .stream()
+            )
+            for doc in docs:
+                data = doc.to_dict()
+                raw = data.get("transcript", [])
+                # Return only role+content for context injection
+                return [
+                    {"role": m.get("role", "user"), "content": m.get("content", "")}
+                    for m in raw
+                    if m.get("content")
+                ]
+            return []
+        except Exception as e:
+            logger.error(f"❌ Failed to get last transcript: {e}")
+            return []
+

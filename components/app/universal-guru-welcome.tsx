@@ -112,20 +112,15 @@ export const UniversalGuruWelcomeView = ({
                     >
                         🙏 {buttonText}
                     </Button>
-                    <div className="relative w-full sm:w-auto">
+                    <Link href={`/satsang/private/${guruId}`} className="w-full sm:w-auto">
                         <Button
                             variant="outline"
                             size="lg"
-                            disabled
-                            className={`h-14 w-full text-lg font-semibold shadow-lg sm:w-auto sm:min-w-[240px] ${secondaryBtnClass} opacity-70 cursor-not-allowed`}
-                            title="Feature coming soon"
+                            className={`h-14 w-full text-lg font-semibold shadow-lg sm:min-w-[240px] ${secondaryBtnClass}`}
                         >
                             🧘 Private Satsang
                         </Button>
-                        <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm animate-pulse">
-                            COMING SOON
-                        </span>
-                    </div>
+                    </Link>
                 </div>
                 <p className="mt-3 text-sm opacity-75">{t('hinduismGuru.voiceEnabled')}</p>
             </section>

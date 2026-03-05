@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { google } from 'googleapis';
 import { getAdminDb } from '@/lib/firebase-admin';
+import { getRandomMeditationTrack } from '@/lib/services/musicService';
 
-// Initialize clients lazily to prevent build-time errors when env vars are missing
+// Initialize OpenAI client lazily
 const getOpenAI = () => new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
-});
-
-const getYouTube = () => google.youtube({
-    version: 'v3',
-    auth: process.env.YOUTUBE_API_KEY,
 });
 
 export const maxDuration = 60; // Allow 60 seconds for generation
@@ -23,28 +18,27 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        // 1. Generate Script and Bhajan Query using LLM
+        // 1. Generate Script using LLM (removed bhajan_query — using internal music now)
         const prompt = `
       You are an expert Hindu Satsang planner and Spiritual Guide.
             Topic: "${topic}"
-        Language: ${language} (Output must be in this language.If 'hi', use high - quality Hindi with Sanskrit terms where appropriate).
+        Language: ${language} (Output must be in this language. If 'hi', use high-quality Hindi with Sanskrit terms where appropriate).
       
       Generate a structured, profound, and spiritually deep plan for a "Private Satsang" session.
-      The content should be philosophical, meditative, and reference ancient wisdom(Vedas, Upanishads, Gita) where applicable.
-      AVOID superficial or generic advice.Dive deep into the essence of the topic.
+      The content should be philosophical, meditative, and reference ancient wisdom (Vedas, Upanishads, Gita) where applicable.
+      AVOID superficial or generic advice. Dive deep into the essence of the topic.
       
       The output must be valid JSON with the following fields:
 
-        1. "intro_text": A warm, spiritual introduction(Parichay) setting a sacred atmosphere. (approx 4 - 5 sentences).
-      2. "bhajan_query": A specific YouTube search query for a classic, devotional bhajan related to the topic.Prefer classical renditions or famous artists(e.g., "Pt. Bhimsen Joshi", "Lata Mangeshkar", "Jagjit Singh", "M.S. Subbulakshmi").
-      3. "pravachan_points": An array of strings.Each string is a substantial paragraph of the discourse. 
-         - Generate 5 - 6 detailed paragraphs.
-         - Start with the nature of the problem / topic.
-         - Move to the spiritual / philosophical perspective.
+        1. "intro_text": A warm, spiritual introduction (Parichay) setting a sacred atmosphere. (approx 4-5 sentences).
+      2. "pravachan_points": An array of strings. Each string is a substantial paragraph of the discourse. 
+         - Generate 5-6 detailed paragraphs.
+         - Start with the nature of the problem/topic.
+         - Move to the spiritual/philosophical perspective.
          - Include a relevant story or metaphor if fitting.
          - Conclude with practical spiritual application.
-         - (Total reading time ~8 - 12 mins).
-        4. "closing_text": A formal, blessing - filled closing statement(Ashirwad).
+         - (Total reading time ~8-12 mins).
+        3. "closing_text": A formal, blessing-filled closing statement (Ashirwad).
       
       JSON Output:
         `;
@@ -61,37 +55,35 @@ export async function POST(req: Request) {
 
         const planData = JSON.parse(content);
 
-        // 2. Search for Bhajan on YouTube
-        let bhajanVideoId = null;
-        let bhajanTitle = null;
+        // 2. Fetch a rraasi music track (meditation or healing category)
+        let bhajanTrackId: string | null = null;
+        let bhajanAudioUrl: string | null = null;
+        let bhajanTitle: string | null = null;
+        let bhajanImageUrl: string | null = null;
 
-        if (planData.bhajan_query) {
-            try {
-                const youtube = getYouTube();
-                const searchRes = await youtube.search.list({
-                    part: ['snippet'],
-                    q: planData.bhajan_query,
-                    maxResults: 1,
-                    type: ['video'],
-                    videoEmbeddable: 'true',
-                });
+        try {
+            // Use the shared service instead of fetching from the API route over HTTP
+            // This prevents issues when running the dev server on different ports (like 3001)
+            const musicData = await getRandomMeditationTrack();
 
-                const items = searchRes.data.items;
-                if (items && items.length > 0) {
-                    bhajanVideoId = items[0].id?.videoId;
-                    bhajanTitle = items[0].snippet?.title;
-                }
-            } catch (err) {
-                console.error('YouTube Search Error:', err);
-                // Fallback or ignore, plan will have null bhajan
+            if (musicData) {
+                bhajanTrackId = musicData.id;
+                bhajanAudioUrl = musicData.audioUrl;
+                bhajanTitle = musicData.title;
+                bhajanImageUrl = musicData.imageUrl;
+                console.log('[Satsang Generate] Found rraasi track:', bhajanTitle, bhajanTrackId);
+            } else {
+                console.warn('[Satsang Generate] No rraasi track available, bhajan will be skipped');
             }
+        } catch (err) {
+            console.error('[Satsang Generate] Failed to fetch rraasi music via service:', err);
+            // Non-fatal — session will run without bhajan music
         }
 
         // 3. Store Plan in Firestore
         const db = getAdminDb();
         const planRef = db.collection('satsang_plans').doc();
 
-        // Add audio/speech markers if needed, strictly text for now
         const finalPlan = {
             id: planRef.id,
             userId,
@@ -100,17 +92,18 @@ export async function POST(req: Request) {
             createdAt: new Date().toISOString(),
             status: 'ready',
             ...planData,
-            bhajan_video_id: bhajanVideoId,
+            // Rraasi music (replaces YouTube)
+            bhajan_track_id: bhajanTrackId,
+            bhajan_audio_url: bhajanAudioUrl,
             bhajan_title: bhajanTitle,
+            bhajan_image_url: bhajanImageUrl,
         };
-
-        await planRef.set(finalPlan);
 
         await planRef.set(finalPlan);
 
         return NextResponse.json({
             planId: finalPlan.id,
-            plan: finalPlan // Return full plan details to frontend
+            plan: finalPlan
         });
 
     } catch (error: any) {

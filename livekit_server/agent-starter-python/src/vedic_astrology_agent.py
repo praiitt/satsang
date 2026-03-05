@@ -559,28 +559,30 @@ async def entrypoint(ctx: JobContext):
 
     # Create Vedic Astrology agent instance with user ID
     vedic_agent = VedicAstrologyAgent(user_id=user_id, publish_data_fn=_publish_data_bytes)
-    
-    # Fetch user's Kundli data from Pinecone - DISABLED for Gemini 3 Pro
-    # if vedic_agent.kundli_retriever:
-    #     try:
-    #         logger.info(f"🔮 Fetching chart data for user: {user_id}")
-    #         vedic_agent.user_chart_summary = await vedic_agent.kundli_retriever.get_user_chart_summary(user_id)
-    #         logger.info(f"✅ Loaded Kundli data")
-            
-    #         # Update agent instructions with user's chart
-    #         vedic_agent.instructions = f"""{vedic_agent.instructions}
 
-    # 🔮 USER'S PERSONAL CHART DATA (Use this to give personalized answers):
-    # {vedic_agent.user_chart_summary}
+    # Load previous conversation context for continuity
+    try:
+        firebase_db = FirebaseDB()
+        prev_msgs = firebase_db.get_last_transcript(user_id, "vedic-astrology-agent")
+        if prev_msgs:
+            logger.info(f"📜 Loaded {len(prev_msgs)} messages from last session for context")
+            # Append a system note so the agent knows this is continuation context
+            vedic_agent.instructions += (
+                "\n\n---\n"
+                "PREVIOUS SESSION CONTEXT (for conversation continuity):\n"
+                "The user has spoken with you before. Here is the summary of the last conversation "
+                "to help you remember them:\n"
+                + "\n".join(
+                    f"{m['role'].title()}: {m['content'][:200]}"
+                    for m in prev_msgs[-10:]  # last 10 messages max
+                )
+                + "\n---\n"
+                "If the user says 'continue', 'remember', or refers to something from before, "
+                "use this context. Do NOT mention you are reading logs — speak naturally."
+            )
+    except Exception as e:
+        logger.warning(f"Could not load previous transcript: {e}")
 
-    # IMPORTANT: When answering questions, refer to the user's actual chart data above. 
-    # For example:
-    # - "Based on your chart, your Moon is in [Sign] in the [House]th house..."
-    # - "Currently you are in [Mahadasha] Mahadasha..."
-    # """
-    #     except Exception as e:
-    #         logger.error(f"Failed to load Kundli data: {e}")
-    
     await session.start(
         agent=vedic_agent,
         room=ctx.room,

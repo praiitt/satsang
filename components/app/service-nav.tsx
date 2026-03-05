@@ -38,6 +38,12 @@ const services: ServiceItem[] = [
         iconPath: '/services/astrology-icon-fixed.png',
         color: 'border-pink-500 shadow-pink-500/50',
     },
+    {
+        name: 'History',
+        href: '/conversations',
+        iconPath: '/services/history-icon.png',
+        color: 'border-green-400 shadow-green-400/50',
+    },
 ];
 
 interface ServiceNavProps {

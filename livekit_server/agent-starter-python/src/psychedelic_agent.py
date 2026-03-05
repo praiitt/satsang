@@ -521,7 +521,34 @@ async def entrypoint(ctx: JobContext):
         
         logger.info(f"⏱️ Session ended. Duration: {duration_seconds:.2f}s ({duration_minutes:.2f} min)")
         
-        # Deduct coins if session was meaningful (> 30s) and user is authenticated
+        # Save session transcript
+        try:
+            try:
+                from .firebase_db import FirebaseDB
+            except ImportError:
+                from firebase_db import FirebaseDB
+            db = FirebaseDB()
+            transcript = []
+            if hasattr(session, 'history'):
+                for item in session.history.items:
+                    if item.type == "message":
+                        text = item.text_content
+                        if text:
+                            transcript.append({
+                                "role": item.role,
+                                "content": text,
+                                "timestamp": item.created_at
+                            })
+            session_data = {
+                "userId": user_id,
+                "agentName": "psychedelic-agent",
+                "roomName": ctx.room.name
+            }
+            db.save_session_transcript(ctx.room.name, session_data, transcript)
+        except Exception as e:
+            logger.error(f"❌ Failed to save transcript: {e}")
+        
+        # Deduct coins if session was meaningful (>30s) and user is authenticated
         if duration_seconds > 30 and user_id != "default_user":
             try:
                 auth_url = os.getenv("AUTH_SERVER_URL", "https://satsang-auth-server-6ougd45dya-el.a.run.app")
@@ -561,4 +588,4 @@ if __name__ == "__main__":
             agent_name=agent_name,
         )
     )
-# Force push update
+
