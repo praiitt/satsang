@@ -19,6 +19,7 @@ from livekit.agents import (
     metrics,
     function_tool,
     RunContext,
+    ChatMessage,
 )
 from livekit import rtc
 try:
@@ -847,7 +848,7 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
 
     # Add Chat Message Listener for Phase Transitions on the ROOM
     @ctx.room.on("chat_message")
-    def on_chat_message(msg: rtc.ChatMessage):
+    def on_chat_message(msg):
         # The frontend sends phase prompts via useChat
         content = getattr(msg, 'message', None) or getattr(msg, 'text', None) or str(msg)
         
@@ -866,7 +867,7 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
                 try:
                     # 1. Add as a system message to session history for context
                     if hasattr(session, 'history'):
-                        session.history.push(rtc.ChatMessage(role='system', content=clean_content))
+                        session.history.push(ChatMessage(role='system', content=clean_content))
                     
                     # 2. Use the LLM to generate a response (Discourse/Pravachan)
                     logger.info("🧠 Asking Guru Brain to generate phase discourse...")
