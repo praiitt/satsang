@@ -100,7 +100,6 @@ export async function POST(req: Request) {
         }
 
         // 3. Store Plan in Firestore
-        const db = getAdminDb();
         const planRef = db.collection('satsang_plans').doc();
 
         const finalPlan = {
