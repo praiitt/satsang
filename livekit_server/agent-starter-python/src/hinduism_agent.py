@@ -20,6 +20,7 @@ from livekit.agents import (
     function_tool,
     RunContext,
 )
+from livekit import rtc
 try:
     from .firebase_db import FirebaseDB
 except ImportError:
@@ -844,21 +845,33 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
         room=ctx.room,
     )
 
-    # Add Chat Message Listener for Phase Transitions
-    @session.on("chat_message")
-    def on_chat_message(msg):
-        # Check if the message is from our known "Satsang App" system
+    # Add Chat Message Listener for Phase Transitions on the ROOM
+    @ctx.room.on("chat_message")
+    def on_chat_message(msg: rtc.ChatMessage):
         # The frontend sends phase prompts via useChat
-        content = msg.text_content
+        # We need to handle both the msg object and its text
+        content = getattr(msg, 'message', None) or getattr(msg, 'text', None) or str(msg)
+        
+        # If it's a ChatMessage object from RTC
+        if hasattr(msg, 'message'):
+            content = msg.message
+            
         if content and "[PHASE_PROMPT]" in content:
-            logger.info(f"🚀 Received Phase Prompt from frontend: {content[:50]}...")
+            logger.info(f"🚀 Received Phase Prompt: {content[:100]}...")
             
             # Remove the identifier for the LLM
             clean_content = content.replace("[PHASE_PROMPT]", "").strip()
             
-            # Inject as a high-priority system instruction and trigger a response
-            asyncio.create_task(session.say(clean_content, allow_interruptions=True))
-            logger.info("🗣️ Triggered immediate agent response for new phase")
+            # Force the agent to speak the new instruction immediately, interrupting if necessary
+            # We use a task to avoid blocking the event loop
+            async def trigger_speech():
+                try:
+                    logger.info(f"🗣️ Agent is now speaking phase instruction: {clean_content[:50]}...")
+                    await session.say(clean_content, allow_interruptions=True)
+                except Exception as e:
+                    logger.error(f"❌ Error in session.say for phase prompt: {e}")
+            
+            asyncio.create_task(trigger_speech())
     
     # Send welcome message ONLY IF NOT IN HOSTED MODE
     if not satsang_plan:
