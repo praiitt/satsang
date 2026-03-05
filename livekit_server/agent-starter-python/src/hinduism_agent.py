@@ -721,6 +721,8 @@ async def entrypoint(ctx: JobContext):
         closing_text = satsang_plan.get('closing_text', '')
         bhajan_title = satsang_plan.get('bhajan_title', bhajan_query)
         bhajan_vid = satsang_plan.get('bhajan_video_id', '')
+        bhajan_audio_url = satsang_plan.get('bhajan_audio_url', '')
+        bhajan_image_url = satsang_plan.get('bhajan_image_url', '')
 
         pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
 
@@ -871,16 +873,15 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
                     
                     # 2. Use the LLM to generate a response (Discourse/Pravachan)
                     logger.info("🧠 Asking Guru Brain to generate phase discourse...")
-                    response = await session.llm.chat(
-                        history=session.history.items if hasattr(session, 'history') else [],
-                        prompt="Guru, the phase has changed. Based on your instructions and themes, please deliver your discourse or guidance for this phase now. Speak directly to the seeker with warmth.",
-                    )
+                    chat_ctx = session.history
+                    # We add a special instruction for this phase
+                    chat_ctx.push(ChatMessage(role='system', content=f"Deliver your guidance for the phase: {clean_content}. Speak directly to the seeker."))
                     
-                    # 3. Speak the generated response, allowing interruptions
-                    if response and response.choices:
-                        text = response.choices[0].message.content
-                        logger.info(f"🗣️ Guru is now delivering discourse: {text[:50]}...")
-                        await session.say(text, allow_interruptions=True)
+                    stream = session.llm.chat(chat_ctx=chat_ctx)
+                    
+                    # 3. Speak the generated response stream, allowing interruptions
+                    logger.info(f"🗣️ Guru is now delivering discourse via stream...")
+                    await session.say(stream, allow_interruptions=True)
                 except Exception as e:
                     logger.error(f"❌ Error in guru brain for phase prompt: {e}")
                     # Fallback: speak the prompt if generation fails
@@ -913,8 +914,20 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
             await session.say(intro_text)
             
             # 2. Auto-play Bhajan
-            if 'bhajan_vid' in locals() and bhajan_vid:
-                logger.info(f"🎶 Auto-playing Bhajan: {bhajan_vid}")
+            if 'bhajan_audio_url' in locals() and bhajan_audio_url:
+                logger.info(f"🎶 Auto-playing Rraasi Bhajan: {bhajan_audio_url}")
+                if final_agent._publish_data_fn:
+                     payload = json.dumps({
+                        "type": "video_result",
+                        "audioUrl": bhajan_audio_url,
+                        "title": bhajan_title or "Bhajan",
+                        "imageUrl": bhajan_image_url or "",
+                        "autoplay": True
+                    })
+                     await final_agent._publish_data_fn(payload, reliable=True)
+                     logger.info("📡 Sent Play Bhajan signal (Rraasi) to frontend")
+            elif 'bhajan_vid' in locals() and bhajan_vid:
+                logger.info(f"🎶 Auto-playing YouTube Bhajan: {bhajan_vid}")
                 if final_agent._publish_data_fn:
                      payload = json.dumps({
                         "type": "video_result",
@@ -923,7 +936,7 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
                         "autoplay": True
                     })
                      await final_agent._publish_data_fn(payload, reliable=True)
-                     logger.info("📡 Sent Play Bhajan signal to frontend")
+                     logger.info("📡 Sent Play Bhajan signal (YouTube) to frontend")
             
         else:
             await session.say("Namaste. I am ready to begin our satsang.")
