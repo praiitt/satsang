@@ -35,7 +35,7 @@ router.get('/audio-files', requireAuth, async (_req: AuthedRequest, res) => {
 
     // Provide more helpful error messages
     let errorMessage = error?.message || String(error);
-    const GCS_BUCKET_NAME = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings';
+    const GCS_BUCKET_NAME = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'rraasi-agent-recordings';
 
     if (errorMessage.includes('credentials') || errorMessage.includes('Credential')) {
       errorMessage =

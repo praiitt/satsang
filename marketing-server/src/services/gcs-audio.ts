@@ -2,7 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { Storage } from '@google-cloud/storage';
 
-const GCS_BUCKET_NAME = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings';
+const GCS_BUCKET_NAME = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'rraasi-agent-recordings';
 
 function getGcsBucket() {
   // Try multiple credential sources (matching other scripts)

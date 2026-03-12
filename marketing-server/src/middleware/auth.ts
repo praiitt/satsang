@@ -14,10 +14,20 @@ const SESSION_COOKIE_NAME = '__session';
 
 export async function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
   try {
+    const internalToken = req.headers['x-internal-token'];
+    if (internalToken && internalToken === process.env.INTERNAL_SERVICE_TOKEN) {
+      req.user = {
+        uid: (req.headers['x-internal-user-id'] as string) || 'system',
+        claims: { role: 'admin' },
+      };
+      return next();
+    }
+
     const sessionCookie = req.cookies?.[SESSION_COOKIE_NAME];
     if (!sessionCookie) {
       return res.status(401).json({ error: 'Not authenticated' });
     }
+
     const decoded = await getAuth().verifySessionCookie(sessionCookie, true);
     req.user = {
       uid: decoded.uid,
