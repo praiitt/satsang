@@ -944,26 +944,7 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
         
         await session.say(welcome_msg)
     else:
-        logger.info("🤫 Hosted Mode active: Starting session with Intro Text.")
-        if 'intro_text' in locals() and intro_text:
-            # 1. Speak Intro
-            await session.say(intro_text)
-            
-            # 2. Auto-play Bhajan
-            if 'bhajan_audio_url' in locals() and bhajan_audio_url:
-                logger.info(f"🎶 Auto-playing Rraasi Bhajan: {bhajan_audio_url}")
-                if final_agent._publish_data_fn:
-                     payload = json.dumps({
-                        "type": "video_result",
-                        "audioUrl": bhajan_audio_url,
-                        "title": bhajan_title or "Bhajan",
-                        "imageUrl": bhajan_image_url or "",
-                        "autoplay": True
-                    })
-                     await final_agent._publish_data_fn(payload, reliable=True)
-                     logger.info("📡 Sent Play Bhajan signal (Rraasi) to frontend")
-        else:
-            await session.say("Namaste. I am ready to begin our satsang.")
+        logger.info("🤫 Hosted Mode active: Waiting for frontend to start session.")
 
     # Wait for disconnection
     disconnect_future = asyncio.Future()
