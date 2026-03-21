@@ -27,9 +27,22 @@ function AgentWaitHandler({ room, isConnected }: { room: Room | null; isConnecte
 
 जब मैं (होस्ट) "शुरू करें" बटन दबाऊंगा, तभी आपको बोलना शुरू करना होगा। तब तक चुप रहें।`;
 
-        void send(waitMessage);
+        const sendMessage = async () => {
+            try {
+                if (room && room.localParticipant) {
+                    const strData = new TextEncoder().encode(waitMessage);
+                    await room.localParticipant.publishData(strData, { reliable: true, topic: "satsang_control" });
+                    console.log('[PrivateSatsang] Published WAIT message to agent via data channel');
+                } else {
+                    await send(waitMessage);
+                    console.log('[PrivateSatsang] Sent fallback lk-chat WAIT message to agent');
+                }
+            } catch (e) {
+                console.warn('[PrivateSatsang] Failed to send wait message', e);
+            }
+        };
+        void sendMessage();
         waitSentRef.current = true;
-        console.log('[PrivateSatsang] Sent wait message to agent');
     }, [room, isConnected, send, waitSentRef]);
 
     return null;

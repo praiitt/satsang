@@ -199,9 +199,17 @@ export function useSatsangLogic({
             if (prompt) {
                 // Ensure we catch any errors if send fails due to connection
                 try {
-                    // Add identifier so agent knows this is a phase instruction to speak immediately
-                    await send(`[PHASE_PROMPT] ${prompt}`);
-                    console.log(`[SatsangLogic] Sent prompt for ${phase}`);
+                    // Send directly over standard data-channel to bypass lk-chat abstraction
+                    const fullPrompt = `[PHASE_PROMPT] ${prompt}`;
+                    if (room && room.localParticipant) {
+                        const strData = new TextEncoder().encode(fullPrompt);
+                        await room.localParticipant.publishData(strData, { reliable: true, topic: "satsang_control" });
+                        console.log(`[SatsangLogic] Published control prompt for ${phase}`);
+                    } else {
+                        // Fallback
+                        await send(fullPrompt);
+                        console.log(`[SatsangLogic] Sent fallback lk-chat prompt for ${phase}`);
+                    }
                 } catch (e) {
                     console.warn(`[SatsangLogic] Failed to send prompt for ${phase}`, e);
                 }
