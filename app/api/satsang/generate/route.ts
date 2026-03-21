@@ -24,17 +24,20 @@ export async function POST(req: Request) {
         const existingPlans = await db.collection('satsang_plans')
             .where('guruId', '==', guruId)
             .where('topic', '==', topic.trim())
-            .limit(1)
             .get();
 
         if (!existingPlans.empty) {
-            const doc = existingPlans.docs[0];
-            const plan = doc.data();
-            console.log('[Satsang Generate] Reusing existing plan for topic:', topic, 'id:', doc.id);
-            return NextResponse.json({
-                planId: doc.id,
-                plan: plan
-            });
+            // Find a plan that actually has the new Rraasi audio integration
+            const validPlan = existingPlans.docs.find(doc => !!doc.data().bhajan_audio_url);
+            
+            if (validPlan) {
+                const plan = validPlan.data();
+                console.log('[Satsang Generate] Reusing existing plan for topic:', topic, 'id:', validPlan.id);
+                return NextResponse.json({
+                    planId: validPlan.id,
+                    plan: plan
+                });
+            }
         }
 
         // 2. Generate Script using LLM (removed bhajan_query — using internal music now)
