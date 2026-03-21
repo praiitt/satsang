@@ -864,13 +864,47 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
             try:
                 payload = json.loads(payload_str)
             except Exception:
-                asyncio.create_task(session.chat(payload_str))
-                return
+                payload = None
+                
+            content = None
             if isinstance(payload, dict):
                 if 'message' in payload:
-                    asyncio.create_task(session.chat(payload['message']))
+                    content = payload['message']
                 elif 'text' in payload:
-                    asyncio.create_task(session.chat(payload['text']))
+                    content = payload['text']
+            else:
+                content = payload_str
+                
+            if content:
+                # Intercept Phase Prompts
+                if "[PHASE_PROMPT]" in content:
+                    logger.info(f"🚀 Received Phase Prompt: {content[:100]}...")
+                    clean_content = content.replace("[PHASE_PROMPT]", "").strip()
+                    
+                    # Store context and manually trigger reply
+                    if hasattr(session, 'history'):
+                        session.history.push(ChatMessage(role='system', content=f"Phase Instruction: {clean_content}"))
+                    
+                    logger.info("🧠 Asking Guru Brain to generate phase discourse...")
+                    session.generate_reply(
+                        instructions=f"Deliver your guidance for the phase: {clean_content}. Speak directly to the seeker.",
+                        chat_ctx=session.history if hasattr(session, 'history') else None
+                    )
+                    logger.info(f"🗣️ Guru is now delivering discourse...")
+                    return
+                    
+                # Intercept Wait Prompt
+                elif "[WAIT MODE" in content:
+                    logger.info("⏸️ Received Wait Mode prompt. Staying silent.")
+                    return
+                    
+                elif "[Daily Satsang Mode - START]" in content:
+                    logger.info("▶️ Received Start prompt.")
+                    # Pass the generic start instructions to the agent gracefully
+                    pass
+                
+                # Standard chat
+                asyncio.create_task(session.chat(content))
         except Exception:
             pass
     def _handle_room_data(data, participant=None, kind=None, topic=None):
@@ -881,52 +915,6 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
         except Exception:
             pass
     ctx.room.on("data_received", _handle_room_data)
-
-    # Add Chat Message Listener for Phase Transitions on the ROOM
-    @ctx.room.on("chat_message")
-    def on_chat_message(msg):
-        # The frontend sends phase prompts via useChat
-        content = getattr(msg, 'message', None) or getattr(msg, 'text', None) or str(msg)
-        
-        # If it's a ChatMessage object from RTC
-        if hasattr(msg, 'message'):
-            content = msg.message
-            
-        if content and "[PHASE_PROMPT]" in content:
-            logger.info(f"🚀 Received Phase Prompt: {content[:100]}...")
-            
-            # Remove the identifier for the LLM
-            clean_content = content.replace("[PHASE_PROMPT]", "").strip()
-            
-            # Use the LLM to generate a response based on the new phase instruction
-            async def trigger_guru_speech():
-                try:
-                    # 1. Add as a system message to session history for context
-                    if hasattr(session, 'history'):
-                        session.history.push(ChatMessage(role='system', content=f"Phase Instruction: {clean_content}"))
-                    
-                    # 2. Use generate_reply to create and speak the response properly
-                    logger.info("🧠 Asking Guru Brain to generate phase discourse...")
-                    
-                    # session.history is the ChatContext
-                    chat_ctx = session.history
-                    
-                    # Request the LLM to deliver the discourse for this phase
-                    session.generate_reply(
-                        instructions=f"Deliver your guidance for the phase: {clean_content}. Speak directly to the seeker.",
-                        chat_ctx=chat_ctx
-                    )
-                    
-                    logger.info(f"🗣️ Guru is now delivering discourse...")
-                except Exception as e:
-                    logger.error(f"❌ Error in guru brain for phase prompt: {e}")
-                    # Fallback: speak the prompt if generation fails
-                    try:
-                        await session.say("Namaste. Let us proceed with the next part of our satsang.", allow_interruptions=True)
-                    except:
-                        pass
-            
-            asyncio.create_task(trigger_guru_speech())
     
     # Send welcome message ONLY IF NOT IN HOSTED MODE
     if not satsang_plan:
