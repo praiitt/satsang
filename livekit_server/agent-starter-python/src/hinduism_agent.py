@@ -962,18 +962,6 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
                     })
                      await final_agent._publish_data_fn(payload, reliable=True)
                      logger.info("📡 Sent Play Bhajan signal (Rraasi) to frontend")
-            elif 'bhajan_vid' in locals() and bhajan_vid:
-                logger.info(f"🎶 Auto-playing YouTube Bhajan: {bhajan_vid}")
-                if final_agent._publish_data_fn:
-                     payload = json.dumps({
-                        "type": "video_result",
-                        "videoId": bhajan_vid,
-                        "title": bhajan_title or "Bhajan",
-                        "autoplay": True
-                    })
-                     await final_agent._publish_data_fn(payload, reliable=True)
-                     logger.info("📡 Sent Play Bhajan signal (YouTube) to frontend")
-            
         else:
             await session.say("Namaste. I am ready to begin our satsang.")
 
