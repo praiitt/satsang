@@ -571,6 +571,8 @@ async def entrypoint(ctx: JobContext):
     logger.info("✅ Connected to room, now extracting metadata from participants...")
     
     # NOW extract metadata from participant (after connection)
+    satsang_plan = None
+    plan_id = None
     try:
         # Retry loop: wait for remote participants to appear
         max_retries = 10
@@ -618,7 +620,16 @@ async def entrypoint(ctx: JobContext):
                                     user_language = "en"
                                 logger.info(f"🌐 Language: {user_language}")
                             
-                            # Metadata found, break out of retry loop
+                            # Extract plan metadata here to ensure we wait for it!
+                            if 'satsang_plan' in metadata and metadata['satsang_plan']:
+                                satsang_plan = metadata['satsang_plan']
+                                plan_id = metadata.get('planId') or satsang_plan.get('id')
+                                logger.info(f"📜 Found FULL satsang plan in metadata! (ID: {plan_id})")
+                            elif 'planId' in metadata:
+                                plan_id = metadata['planId']
+                                logger.info(f"📜 Found Satsang Plan ID in metadata: {plan_id}")
+
+                            # Metadata found, break out of participant loop
                             break
                         except Exception as e:
                             logger.error(f"❌ Failed to parse metadata: {e}")
@@ -627,9 +638,15 @@ async def entrypoint(ctx: JobContext):
                     else:
                         logger.warning(f"⚠️  Participant {participant.identity} has no metadata!")
                 
-                # Break out of retry loop if we found participants
-                if guru_id != 'vivekananda' or participant_count > 0:
-                    break
+                # Break out of retry loop only if we found guru_id AND (if private satsang, the plan)
+                # If they connect with NO plan intentionally, plan_id will be None but guru_id is found.
+                # To prevent endless waiting for a chat session, we break if guru_id is found and we waited at least 1 tick
+                if guru_id != 'vivekananda':
+                    # If it's a private satsang room, ensure we waited for plan
+                    if "Satsang_" in ctx.room.name and not satsang_plan and attempt < max_retries - 2:
+                        logger.info("⏳ Found guruId but no satsang_plan yet in Private mode, waiting...")
+                    else:
+                        break
             
             # Wait before retrying
             if attempt < max_retries - 1:
@@ -643,31 +660,6 @@ async def entrypoint(ctx: JobContext):
         import traceback
         logger.error(f"Traceback: {traceback.format_exc()}")
     
-    # Check for Satsang Plan
-    satsang_plan = None
-    plan_id = None
-    
-    # Try to extract plan from metadata
-    for p in ctx.room.remote_participants.values():
-        if p.metadata:
-            try:
-                md = json.loads(p.metadata)
-                
-                # Check for FULL PLAN embedded in metadata (Best method avoids DB call)
-                if 'satsang_plan' in md and md['satsang_plan']:
-                    satsang_plan = md['satsang_plan']
-                    plan_id = md.get('planId') or satsang_plan.get('id')
-                    logger.info(f"📜 Found FULL satsang plan in metadata! (ID: {plan_id})")
-                    break
-                
-                # Fallback to just ID
-                if 'planId' in md:
-                    plan_id = md['planId']
-                    logger.info(f"📜 Found Satsang Plan ID in metadata: {plan_id}")
-                    break
-            except:
-                pass
-
     hosted_instructions = None
 
     # If we have ID but no full plan, try DB (Fallback)
@@ -881,14 +873,9 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
                     logger.info(f"🚀 Received Phase Prompt: {content[:100]}...")
                     clean_content = content.replace("[PHASE_PROMPT]", "").strip()
                     
-                    # Store context and manually trigger reply
-                    if hasattr(session, 'history'):
-                        session.history.push(ChatMessage(role='system', content=f"Phase Instruction: {clean_content}"))
-                    
                     logger.info("🧠 Asking Guru Brain to generate phase discourse...")
                     session.generate_reply(
-                        instructions=f"Deliver your guidance for the phase: {clean_content}. Speak directly to the seeker.",
-                        chat_ctx=session.history if hasattr(session, 'history') else None
+                        user_input=f"[SYSTEM NOTIFICATION: You are now moving to a new phase. {clean_content}. Speak directly to the seeker now based on your hosted instructions.]"
                     )
                     logger.info(f"🗣️ Guru is now delivering discourse...")
                     return
