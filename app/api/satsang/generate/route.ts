@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { getAdminDb } from '@/lib/firebase-admin';
 import { getRandomMeditationTrack } from '@/lib/services/musicService';
+import { ALL_GURUS } from '@/lib/gurus';
 
 // Initialize OpenAI client lazily
 const getOpenAI = () => new OpenAI({
@@ -40,27 +41,32 @@ export async function POST(req: Request) {
             }
         }
 
-        // 2. Generate Script using LLM (removed bhajan_query — using internal music now)
+        const guru = ALL_GURUS.find(g => g.id === guruId);
+        const guruName = guru?.name || 'Spiritual Master';
+        const guruTradition = guru?.tradition || 'Eastern Philosophy';
+
+        // 2. Generate Script using LLM
         const prompt = `
-      You are an expert Hindu Satsang planner and Spiritual Guide.
-            Topic: "${topic}"
-        Language: ${language} (Output must be in this language. If 'hi', use high-quality Hindi with Sanskrit terms where appropriate).
+      You are the architect of a discourse for ${guruName}, a renowned master of ${guruTradition}.
+      The Satsang must perfectly reflect the distinct tone, vocabulary, philosophical style, and teachings of ${guruName}.
+      - DO NOT use generic Hindu text unless appropriate for this specific master.
+      - If ${guruName} is known for specific concepts (like self-inquiry, radical Zen, devotion, integral yoga, etc.), use them heavily.
+      - The linguistic style and phrasing must match how ${guruName} actually spoke.
+
+      Topic: "${topic}"
+      Language: ${language} (Output must be in this language. Match the guru's authentic tone exactly).
       
-      Generate a structured, profound, and spiritually deep plan for a "Private Satsang" session.
-      The content should be philosophical, meditative, and reference ancient wisdom (Vedas, Upanishads, Gita) where applicable.
-      AVOID superficial or generic advice. Dive deep into the essence of the topic.
+      Generate a structured, profound, and spiritually deep plan for a "Private Satsang" session led by ${guruName}.
       
       The output must be valid JSON with the following fields:
 
-        1. "intro_text": A warm, spiritual introduction (Parichay) setting a sacred atmosphere. (approx 4-5 sentences).
+      1. "intro_text": A warm, characteristic introduction by ${guruName} setting a sacred atmosphere. (approx 4-5 sentences).
       2. "pravachan_points": An array of strings. Each string is a substantial paragraph of the discourse. 
          - Generate 5-6 detailed paragraphs.
-         - Start with the nature of the problem/topic.
-         - Move to the spiritual/philosophical perspective.
-         - Include a relevant story or metaphor if fitting.
-         - Conclude with practical spiritual application.
-         - (Total reading time ~8-12 mins).
-        3. "closing_text": A formal, blessing-filled closing statement (Ashirwad).
+         - Address the topic exclusively through the lens of ${guruName}.
+         - Include a story, metaphor, or famous quote associated with ${guruName} if fitting.
+         - Conclude with practical spiritual application in their style.
+      3. "closing_text": A final blessing or provocative closing thought typical of ${guruName}.
       
       JSON Output:
         `;
