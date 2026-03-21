@@ -847,6 +847,40 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
         agent=final_agent,
         room=ctx.room,
     )
+    
+    # Handle chat messages from the frontend
+    from livekit import rtc
+    
+    async def _on_data_received(data, participant=None, kind=None, topic=None):
+        try:
+            data_bytes = None
+            if isinstance(data, bytes): data_bytes = data
+            elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+            elif hasattr(data, 'data'): data_bytes = data.data
+            elif isinstance(data, str): data_bytes = data.encode('utf-8')
+            else: return
+            if data_bytes is None: return
+            payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+            try:
+                payload = json.loads(payload_str)
+            except Exception:
+                asyncio.create_task(session.chat(payload_str))
+                return
+            if isinstance(payload, dict):
+                if 'message' in payload:
+                    asyncio.create_task(session.chat(payload['message']))
+                elif 'text' in payload:
+                    asyncio.create_task(session.chat(payload['text']))
+        except Exception:
+            pass
+    def _handle_room_data(data, participant=None, kind=None, topic=None):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+            else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+        except Exception:
+            pass
+    ctx.room.on("data_received", _handle_room_data)
 
     # Add Chat Message Listener for Phase Transitions on the ROOM
     @ctx.room.on("chat_message")
@@ -869,19 +903,21 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
                 try:
                     # 1. Add as a system message to session history for context
                     if hasattr(session, 'history'):
-                        session.history.push(ChatMessage(role='system', content=clean_content))
+                        session.history.push(ChatMessage(role='system', content=f"Phase Instruction: {clean_content}"))
                     
-                    # 2. Use the LLM to generate a response (Discourse/Pravachan)
+                    # 2. Use generate_reply to create and speak the response properly
                     logger.info("🧠 Asking Guru Brain to generate phase discourse...")
+                    
+                    # session.history is the ChatContext
                     chat_ctx = session.history
-                    # We add a special instruction for this phase
-                    chat_ctx.push(ChatMessage(role='system', content=f"Deliver your guidance for the phase: {clean_content}. Speak directly to the seeker."))
                     
-                    stream = session.llm.chat(chat_ctx=chat_ctx)
+                    # Request the LLM to deliver the discourse for this phase
+                    session.generate_reply(
+                        instructions=f"Deliver your guidance for the phase: {clean_content}. Speak directly to the seeker.",
+                        chat_ctx=chat_ctx
+                    )
                     
-                    # 3. Speak the generated response stream, allowing interruptions
-                    logger.info(f"🗣️ Guru is now delivering discourse via stream...")
-                    await session.say(stream, allow_interruptions=True)
+                    logger.info(f"🗣️ Guru is now delivering discourse...")
                 except Exception as e:
                     logger.error(f"❌ Error in guru brain for phase prompt: {e}")
                     # Fallback: speak the prompt if generation fails

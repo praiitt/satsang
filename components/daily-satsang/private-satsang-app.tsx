@@ -55,6 +55,7 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
     const [satsangPlan, setSatsangPlan] = useState<any>(null);
     const [isPlanReady, setIsPlanReady] = useState(false);
     const [recentTopics, setRecentTopics] = useState<string[]>([]);
+    const [userId] = useState(() => 'user_' + Math.floor(Math.random() * 10000));
 
     // Rraasi music fields (replaces YouTube video ID)
     const bhajanAudioUrl = satsangPlan?.bhajan_audio_url ?? null;
@@ -112,7 +113,7 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
                 body: JSON.stringify({
                     topic: selectedTopic,
                     guruId,
-                    userId: 'user_' + Math.floor(Math.random() * 10000),
+                    userId,
                     language: 'hi'
                 }),
             });
@@ -145,6 +146,7 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     guruId,
+                    userId,
                     role: 'host',
                     planId: generatedPlanId
                 }),
