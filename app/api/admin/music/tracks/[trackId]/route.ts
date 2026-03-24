@@ -2,16 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
 import { initAdmin } from '@/lib/firebase-admin';
+export const dynamic = 'force-dynamic';
 
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { trackId: string } }
+    { params }: { params: Promise<{ trackId: string }> }
 ) {
     try {
         await initAdmin();
         const db = getFirestore();
         const storage = getStorage().bucket();
-        const { trackId } = params;
+        const { trackId } = await params;
 
         if (!trackId) {
             return NextResponse.json(

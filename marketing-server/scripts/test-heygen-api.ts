@@ -310,7 +310,7 @@ function getGcsBucket() {
   }
 
   const storage = new Storage({ credentials });
-  const bucketName = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings';
+  const bucketName = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'rraasi-agent-recordings';
   return storage.bucket(bucketName);
 }
 

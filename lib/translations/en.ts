@@ -309,6 +309,12 @@ export const en = {
       description:
         'Ramana Maharshi - Sage of Arunachala teaching direct path to Self through the question "Who am I?"',
     },
+    shiva: {
+      name: 'Mahadev (Shiva)',
+      tagline: 'The Supreme Yogi - Destroyer of Maya',
+      description:
+        'Lord Shiva, Mahadev - The timeless ascetic of the Himalayas. Discover profound detachment (Vairagya), infinite stillness, and teachings from the Shiva Puran.',
+    },
     shankaracharya: {
       name: 'Adi Shankaracharya',
       tagline: 'Great philosopher of Advaita Vedanta',
@@ -761,6 +767,16 @@ export const en = {
     explorePath: 'Explore Your Spiritual Path',
     explorePathDesc: 'Choose your journey into consciousness through focused AI-guided practices',
 
+    // Elevate Your Vibe Section
+    elevateVibeTitle: 'Elevate Your Vibe. Awaken Your Spirit.',
+    elevateVibeDesc: 'RRAASI is your AI-powered companion for spiritual growth. Here is how our tools work together to raise your daily frequency.',
+    elevateStep1Title: '1. Seek Wisdom',
+    elevateStep1Desc: 'Connect with our Divine AI Gurus in Satsang. Ask life\'s hardest questions, seek guidance, and absorb ancient wisdom to instantly elevate your mindset.',
+    elevateStep2Title: '2. Tune Frequency',
+    elevateStep2Desc: 'Generate personalized high-frequency chants and Bhajans with Divine Music. Cleanse your environment and tune your inner soul.',
+    elevateStep3Title: '3. Find Clarity',
+    elevateStep3Desc: 'Consult the stars and cards through Astrology & Tarot. Discover profound clarity on your life path to remove energetic blocks forever.',
+
     // Satsang Section
     satsangTitle: 'Satsang',
     satsangSubtitle: 'The Intellectual Path to Spirit',
@@ -988,5 +1004,32 @@ export const en = {
     totalSpent: 'Total Spent',
     totalCoins: 'Total Coins',
     lifetimeValue: 'Lifetime Value',
+  },
+  privateSatsang: {
+    sessionLabel: 'Private Session',
+    topicPrompt: 'What topic would you like guidance on?',
+    topicPlaceholder: 'Enter topic (e.g. Peace of Mind)',
+    startBtn: 'Start Satsang',
+    suggestTopic: '✨ Suggest a Topic',
+    recentlyDiscussed: 'Recently Discussed',
+    backBtn: 'Back',
+    satsangReady: 'Satsang is Ready',
+    preparedOn: 'Your spiritual session on',
+    hasBeen: 'has been prepared.',
+    enterSession: 'Start Satsang',
+    guruWaiting: 'Click to connect. The Guru is waiting.',
+    preparing: 'Preparing your spiritual journey on',
+    creating: 'Creating custom discourse and selecting meditation...',
+    connecting: 'Connecting...',
+    songTitle: 'Musical Crux of Your Satsang 🎵',
+    songDesc: 'Guruji has distilled the entire essence of today\'s satsang on',
+    songDesc2: 'into this song. Every teaching, every moment of stillness, lives within its melody.',
+    returnPortal: 'Return to Portal →',
+    liveSatsang: 'Live Satsang',
+    inProgress: 'In Progress',
+    of: 'of',
+    phaseLabel: 'Phase',
+    endSatsang: 'End Satsang',
+    micLabel: 'Mic',
   },
 } as const;

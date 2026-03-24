@@ -25,7 +25,7 @@ router.post('/briefs', requireAuth, async (req: AuthedRequest, res) => {
       tags: Array.isArray(body.tags) ? body.tags.slice(0, 12) : [],
       channels: Array.isArray(body.channels) ? body.channels : [],
       tone: body.tone ?? 'inspirational',
-      language: body.language ?? 'english',
+      languages: Array.isArray(body.languages) ? body.languages : [body.language ?? 'english'],
       proposition: body.proposition ?? '',
       status: body.status ?? 'draft',
       createdBy: req.user!.uid,
@@ -79,7 +79,8 @@ router.get('/briefs', requireAuth, async (req, res) => {
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     return res.json({ items });
   } catch (e) {
-    return res.status(500).json({ error: 'failed to list briefs' });
+    console.error('[ads] list briefs error:', e);
+    return res.status(500).json({ error: 'failed to list briefs', details: e instanceof Error ? e.message : String(e) });
   }
 });
 
@@ -100,7 +101,7 @@ router.delete('/briefs/:id', requireAuth, async (req, res) => {
 router.get('/briefs/:id/variants', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const snap = await db.collection(COLLECTION).doc(req.params.id).collection('variants').orderBy('createdAt', 'desc').get();
+    const snap = await db.collection(COLLECTION).doc(req.params.id).collection('variants').orderBy('createdAt', 'desc').limit(50).get();
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     return res.json({ items });
   } catch (e) {
@@ -153,33 +154,39 @@ router.post('/briefs/:id/generate', requireAuth, async (req: AuthedRequest, res)
     const brief = briefDoc.data() as Record<string, any>;
 
     const platform = req.body.platform || (Array.isArray(brief.channels) && brief.channels[0]) || 'instagram';
+    const targetLanguages = brief.languages || [brief.language || 'english'];
 
-    const content = await generateAdContent({
-      topic: brief.topic || brief.title || 'Spiritual Satsang',
-      objective: brief.objective || 'Awareness',
-      audience: brief.audience || 'Spiritual seekers',
-      cta: brief.cta || 'Download the Rraasi app',
-      platform,
-      tone: brief.tone || 'inspirational',
-      language: brief.language || 'english',
-    });
+    const variants = [];
+    for (const lang of targetLanguages) {
+      const content = await generateAdContent({
+        topic: brief.topic || brief.title || 'Spiritual Satsang',
+        objective: brief.objective || 'Awareness',
+        audience: brief.audience || 'Spiritual seekers',
+        cta: brief.cta || 'Download the Rraasi app',
+        platform,
+        tone: brief.tone || 'inspirational',
+        language: lang,
+      });
 
-    // Save as a variant
-    const now = Date.now();
-    const variantRef = await db.collection(COLLECTION).doc(briefId).collection('variants').add({
-      type: 'text',
-      platform,
-      caption: content.caption,
-      hashtags: content.hashtags,
-      hooks: content.hooks,
-      imagePrompt: content.imagePrompt,
-      status: 'ready',
-      createdAt: now,
-      generatedBy: 'gemini',
-    });
+      // Save as a variant
+      const now = Date.now();
+      const variantRef = await db.collection(COLLECTION).doc(briefId).collection('variants').add({
+        type: 'text',
+        platform,
+        language: lang,
+        caption: content.caption,
+        hashtags: content.hashtags,
+        hooks: content.hooks,
+        imagePrompt: content.imagePrompt,
+        status: 'ready',
+        createdAt: now,
+        generatedBy: 'gemini',
+      });
+      const snap = await variantRef.get();
+      variants.push({ id: variantRef.id, ...snap.data() });
+    }
 
-    const snap = await variantRef.get();
-    return res.json({ success: true, variant: { id: variantRef.id, ...snap.data() } });
+    return res.json({ success: true, variants });
   } catch (e: any) {
     console.error('[ads] generate content error:', e);
     const status = e.status || 500;
@@ -354,7 +361,7 @@ router.post('/briefs/:id/generate-video', requireAuth, async (req: AuthedRequest
   try {
     const db = getDb();
     const briefId = req.params.id;
-    const { variantId, avatarId, voiceId, customScript } = req.body ?? {};
+    const { variantId, avatarId, avatarType, voiceId, customScript } = req.body ?? {};
 
     // Get the brief
     const briefSnap = await db.collection(COLLECTION).doc(briefId).get();
@@ -411,10 +418,16 @@ router.post('/briefs/:id/generate-video', requireAuth, async (req: AuthedRequest
     const { createAvatarClip } = await import('../services/heygen.js');
     const result = await createAvatarClip({
       avatarId: resolvedAvatarId,
+      avatarType: avatarType || 'avatar',
       text: script,
       voiceId: resolvedVoiceId,
       ratio: '16:9',
       resolution: '720p',
+      metadata: {
+        type: 'ad',
+        briefId,
+        variantId: targetVariantId
+      }
     });
 
     if (!result.success || !result.videoId) {
@@ -461,16 +474,47 @@ router.get('/briefs/:id/video-status', requireAuth, async (req: AuthedRequest, r
 
     if (!videoId) return res.status(400).json({ error: 'videoId query param required' });
 
+    // Check Firestore first to see if the webhook already updated it
+    const briefDoc = await db.collection(COLLECTION).doc(briefId).get();
+    if (variantId) {
+      const varDoc = await db.collection(COLLECTION).doc(briefId).collection('variants').doc(variantId).get();
+      const varData = varDoc.data() as any;
+      if (varDoc.exists && varData?.videoId === videoId && (varData?.videoStatus === 'ready' || varData?.videoStatus === 'failed')) {
+        return res.json({
+          videoId,
+          status: varData.videoStatus,
+          videoUrl: varData.videoUrl || null,
+          thumbnailUrl: varData.videoThumbnailUrl || null,
+        });
+      }
+    } else if (briefDoc.exists) {
+      const briefData = briefDoc.data() as any;
+      if (briefData?.latestVideoId === videoId && (briefData?.latestVideoStatus === 'ready' || briefData?.latestVideoStatus === 'failed')) {
+        return res.json({
+          videoId,
+          status: briefData.latestVideoStatus,
+          videoUrl: briefData.latestVideoUrl || null,
+          thumbnailUrl: null, // Brief level might not have thumb
+        });
+      }
+    }
+
     const { getAvatarClipStatus } = await import('../services/heygen.js');
     const status = await getAvatarClipStatus(videoId);
 
-    // If ready, update Firestore
+    // If ready or failed, update Firestore
     if (status.status === 'ready' && status.videoUrl) {
-      const updateData = { videoStatus: 'ready', videoUrl: status.videoUrl, videoThumbnailUrl: status.thumbnailUrl || null };
+      const updateData = { videoStatus: 'ready', videoUrl: status.videoUrl, videoThumbnailUrl: status.thumbnailUrl || null, videoError: null };
       if (variantId) {
         await db.collection(COLLECTION).doc(briefId).collection('variants').doc(variantId).set(updateData, { merge: true });
       }
       await db.collection(COLLECTION).doc(briefId).set({ latestVideoStatus: 'ready', latestVideoUrl: status.videoUrl }, { merge: true });
+    } else if (status.status === 'failed') {
+      const updateData = { videoStatus: 'failed', videoError: status.error || 'Unknown error' };
+      if (variantId) {
+        await db.collection(COLLECTION).doc(briefId).collection('variants').doc(variantId).set(updateData, { merge: true });
+      }
+      await db.collection(COLLECTION).doc(briefId).set({ latestVideoStatus: 'failed' }, { merge: true });
     }
 
     return res.json({
@@ -478,6 +522,7 @@ router.get('/briefs/:id/video-status', requireAuth, async (req: AuthedRequest, r
       status: status.status,
       videoUrl: status.videoUrl || null,
       thumbnailUrl: status.thumbnailUrl || null,
+      error: status.error, // Pass through the error message
     });
 
   } catch (e: any) {

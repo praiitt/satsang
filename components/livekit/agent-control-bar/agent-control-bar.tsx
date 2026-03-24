@@ -16,6 +16,7 @@ import { ChatInput } from './chat-input';
 import { UseInputControlsProps, useInputControls } from './hooks/use-input-controls';
 import { usePublishPermissions } from './hooks/use-publish-permissions';
 import { TrackSelector } from './track-selector';
+import { ChatSuggestions } from '@/components/app/chat-suggestions';
 
 export interface ControlBarControls {
   leave?: boolean;
@@ -196,7 +197,8 @@ export function AgentControlBar({
       )}
 
       {/* Chat Input - Prominent overlay when chat is open */}
-      <div className="w-full max-w-lg mb-4">
+      <div className="w-full max-w-lg mb-4 flex flex-col items-center">
+        {chatOpen && <ChatSuggestions className="mb-2 max-w-[90%]" />}
         <ChatInput
           chatOpen={chatOpen}
           isAgentAvailable={isAgentAvailable}

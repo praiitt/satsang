@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { HeroVideoPlayer } from '@/components/app/hero-video-player';
 import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
+import { RecordingsModal } from '@/components/app/recordings-modal';
 import Link from 'next/link';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, Music } from 'lucide-react';
 
 function GurujiWelcomeImage() {
     return (
@@ -25,6 +27,7 @@ export const GurujiWelcomeView = ({
     ref,
 }: React.ComponentProps<'div'> & GurujiWelcomeViewProps) => {
     const { t } = useLanguage();
+    const [showRecordings, setShowRecordings] = useState(false);
 
     // Use translation if startButtonText is not provided
     const buttonText = startButtonText || t('guruji.startButton') || 'गुरूजी से बात करें';
@@ -67,6 +70,15 @@ export const GurujiWelcomeView = ({
                     >
                         {buttonText}
                     </Button>
+                    <Button
+                        variant="secondary"
+                        size="lg"
+                        onClick={() => setShowRecordings(true)}
+                        className="h-14 w-full text-lg font-semibold shadow-lg sm:w-auto sm:min-w-[240px] flex items-center gap-2"
+                    >
+                        <Music className="w-5 h-5" />
+                        My Recordings
+                    </Button>
                 </div>
                 <p className="text-muted-foreground mt-3 text-sm">निःशुल्क परीक्षण • कोई क्रेडिट कार्ड की आवश्यकता नहीं</p>
             </section>
@@ -79,8 +91,8 @@ export const GurujiWelcomeView = ({
                     </h2>
                     <div className="overflow-hidden rounded-2xl shadow-2xl">
                         <HeroVideoPlayer
-                            src="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4"
-                            poster="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4#t=0.1"
+                            src="https://storage.googleapis.com/rraasi-public-assets/Raassi_Intro.mp4"
+                            poster="https://storage.googleapis.com/rraasi-public-assets/product-video-poster.jpg"
                             autoPlay
                             loop
                             className="w-full"
@@ -191,6 +203,11 @@ export const GurujiWelcomeView = ({
                     </div>
                 </div>
             </section>
+
+            <RecordingsModal
+                isOpen={showRecordings}
+                onClose={() => setShowRecordings(false)}
+            />
         </div>
     );
 };

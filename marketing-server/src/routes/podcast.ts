@@ -4,7 +4,7 @@ import https from 'node:https';
 import path from 'node:path';
 import { getDb } from '../firebase.js';
 import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
-import { createAvatarClip, getAvatarClipStatus, healthCheck } from '../services/heygen.js';
+import { createAvatarClip, getAvatarClipStatus, healthCheck, listAvatars } from '../services/heygen.js';
 import { stitchVideos } from '../services/video-stitcher.js';
 
 const router = Router();
@@ -163,11 +163,15 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
     const {
       hostAvatarId,
       guestAvatarId,
+      hostAvatarType,
+      guestAvatarType,
       turns,
       options,
     }: {
       hostAvatarId?: string;
       guestAvatarId?: string;
+      hostAvatarType?: 'avatar' | 'talking_photo';
+      guestAvatarType?: 'avatar' | 'talking_photo';
       turns?: TurnInput[];
       options?: {
         ratio?: string;
@@ -220,22 +224,24 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
     await docRef.set(baseJob);
 
     // Kick off HeyGen clip creation for each turn (in parallel)
-    const ratio = options?.ratio;
-    const resolution = options?.resolution;
-    const voiceIdHost = options?.voiceIdHost;
-    const voiceIdGuest = options?.voiceIdGuest;
 
     const createdTurns: TurnRecord[] = [];
     for (const turn of normalizedTurns) {
       const avatarId = mapSpeakerToAvatar(turn.speaker, hostAvatarId, guestAvatarId);
+      const avatarType = turn.speaker === 'host' ? hostAvatarType : guestAvatarType;
       const voiceId = turn.speaker === 'host' ? voiceIdHost : voiceIdGuest;
 
       const result = await createAvatarClip({
         avatarId,
+        avatarType: avatarType || 'avatar',
         text: turn.text,
-        ratio,
         resolution,
         voiceId,
+        metadata: {
+          type: 'podcast',
+          jobId,
+          turnIndex: turn.index
+        }
       });
 
       // Only include heygenVideoId if it exists (Firestore doesn't allow undefined)

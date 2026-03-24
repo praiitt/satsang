@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { AnimatePresence, type Transition, type Variants, motion } from 'motion/react';
 import { RoomAudioRenderer, StartAudio, useRoomContext } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
@@ -55,6 +55,54 @@ function UniversalGuruViewController({
     const isSessionActiveRef = useRef(false);
     const { appConfig, isSessionActive, startSession } = useSession();
 
+    // Prasad State
+    const [lastRoomName, setLastRoomName] = useState<string | null>(null);
+    const [prasadText, setPrasadText] = useState<string | null>(null);
+
+    // Track active room name
+    useEffect(() => {
+        if (isSessionActive && room?.name) {
+            setLastRoomName(room.name);
+            setPrasadText(null); // Clear previous
+        }
+    }, [isSessionActive, room?.name]);
+
+    // Fetch Prasad when session ends
+    useEffect(() => {
+        if (!isSessionActive && lastRoomName && !prasadText) {
+            let attempts = 0;
+            let pollingInterval: any = null;
+
+            const fetchPrasad = async () => {
+                try {
+                    attempts++;
+                    if (attempts > 10) { // Try for 40 sec
+                        clearInterval(pollingInterval);
+                        return;
+                    }
+                    const res = await fetch(`/api/satsang/summary?roomName=${lastRoomName}&guruId=${guruId}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.summary) {
+                            setPrasadText(data.summary);
+                            clearInterval(pollingInterval);
+                            setLastRoomName(null); // Cleanup
+                        } else if (!data.pending) {
+                            clearInterval(pollingInterval);
+                        }
+                    }
+                } catch (e) { }
+            };
+
+            pollingInterval = setInterval(fetchPrasad, 4000);
+            fetchPrasad();
+
+            return () => {
+                if (pollingInterval) clearInterval(pollingInterval);
+            };
+        }
+    }, [isSessionActive, lastRoomName, prasadText, guruId]);
+
     // animation handler holds a reference to stale isSessionActive value
     isSessionActiveRef.current = isSessionActive;
 
@@ -80,6 +128,7 @@ function UniversalGuruViewController({
                     traditionEmoji={traditionEmoji}
                     theme={theme}
                     guruImage={guruImage}
+                    prasadText={prasadText}
                 />
             )}
             {/* Session view */}

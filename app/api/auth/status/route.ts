@@ -28,7 +28,11 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ connected: false });
         }
 
-        return NextResponse.json({ connected: true });
+        return NextResponse.json({ 
+            connected: true, 
+            userEmail: data.userEmail, 
+            displayName: data.displayName 
+        });
     } catch (error) {
         console.error('Error checking auth status:', error);
         return NextResponse.json({ error: 'Failed to check status' }, { status: 500 });

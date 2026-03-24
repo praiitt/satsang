@@ -47,7 +47,7 @@ async function graphqlRequest(query: string, variables: any = {}) {
         body: JSON.stringify({ query, variables }),
     });
 
-    const result = await response.json();
+    const result = (await response.json()) as any;
     if (!response.ok) {
         throw new Error(`Buffer GraphQL error: ${response.status} ${JSON.stringify(result.errors || result)}`);
     }

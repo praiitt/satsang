@@ -21,21 +21,26 @@ export async function GET(req: Request) {
             .limit(20)
             .get();
 
-        const topics = new Set<string>();
+        const topicsMap = new Map<string, string>(); // topic -> planId
 
         snapshot.forEach(doc => {
             const data = doc.data();
             if (data.topic) {
-                // Capitalize first letter and trim
                 const cleanTopic = data.topic.trim();
-                if (cleanTopic.length > 3 && cleanTopic.length < 50) { // basic validation
-                    topics.add(cleanTopic);
+                if (cleanTopic.length > 3 && cleanTopic.length < 50) {
+                    // Only add if not already present (keeps newest due to order)
+                    if (!topicsMap.has(cleanTopic)) {
+                        topicsMap.set(cleanTopic, doc.id);
+                    }
                 }
             }
         });
 
-        // Convert to array and limit
-        const distinctTopics = Array.from(topics).slice(0, 8);
+        // Convert to array of objects
+        const distinctTopics = Array.from(topicsMap.entries()).map(([topic, planId]) => ({
+            topic,
+            planId
+        })).slice(0, 8);
 
         return NextResponse.json({ topics: distinctTopics });
 

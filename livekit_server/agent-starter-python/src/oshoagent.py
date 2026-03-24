@@ -697,6 +697,40 @@ async def entrypoint(ctx: JobContext):
         agent=osho_agent,
         room=ctx.room,
     )
+    
+    # Handle chat messages from the frontend
+    from livekit import rtc
+    
+    async def _on_data_received(data, participant=None, kind=None, topic=None):
+        try:
+            data_bytes = None
+            if isinstance(data, bytes): data_bytes = data
+            elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+            elif hasattr(data, 'data'): data_bytes = data.data
+            elif isinstance(data, str): data_bytes = data.encode('utf-8')
+            else: return
+            if data_bytes is None: return
+            payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+            try:
+                payload = json.loads(payload_str)
+            except Exception:
+                asyncio.create_task(session.chat(payload_str))
+                return
+            if isinstance(payload, dict):
+                if 'message' in payload:
+                    asyncio.create_task(session.chat(payload['message']))
+                elif 'text' in payload:
+                    asyncio.create_task(session.chat(payload['text']))
+        except Exception:
+            pass
+    def _handle_room_data(data, participant=None, kind=None, topic=None):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+            else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+        except Exception:
+            pass
+    ctx.room.on("data_received", _handle_room_data)
 
     # Join the room and connect to the user
     await ctx.connect()
@@ -967,27 +1001,16 @@ async def entrypoint(ctx: JobContext):
     # Send a warm, proactive greeting focused on Osho's teachings
     # Greeting language matches user's language preference
     if user_language == 'hi':
-        if is_group_conv:
-            greeting = (
-                "नमस्ते। मैं ओशो हूँ। "
-                "क्या आप जीवन को उत्सव बनाना सीखना चाहते हैं और मेरी शिक्षाएं जानना चाहते हैं?"
-            )
-        else:
-            greeting = (
-                "नमस्ते। मैं ओशो हूँ। "
-                "क्या आप मेरी शिक्षाओं और ध्यान के बारे में जानना चाहते हैं?"
-            )
+        greeting = (
+            "प्रणाम। मैं ओशो का AI स्वरूप हूँ। मेरी मूल शिक्षाएं ध्यान, पूर्ण जागरूकता, "
+            "आंतरिक स्वतंत्रता और वर्तमान क्षण के आनंद पर केंद्रित हैं। आज मैं आपकी कैसे सहायता कर सकता हूँ?"
+        )
     else:
-        if is_group_conv:
-            greeting = (
-                "Hello. I am Osho. "
-                "Do you want to learn how to celebrate life and know my teachings?"
-            )
-        else:
-            greeting = (
-                "Hello. I am Osho. "
-                "Do you want to know my teachings on love, awareness, and meditation?"
-            )
+        greeting = (
+            "Namaste. I am the AI reflection of Osho. My core teachings focus on meditation, "
+            "total awareness, inner freedom, and discovering the joy of the present moment. "
+            "How may I guide your journey today?"
+        )
     
 
     logger.info("Sending proactive initial greeting to user")

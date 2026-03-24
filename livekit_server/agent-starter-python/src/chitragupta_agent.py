@@ -71,6 +71,7 @@ You strictly operate ONLY on these collections:
 
 **MARKETING ADVISORY BEHAVIOR:**
 - **Default workflow for "create a post":** Use `draft_post_for_review` first so the user can approve before publishing! Only use `create_and_publish_campaign` if the user explicitly says "publish now" or "no need to review".
+- **Multi-Platform Support:** By default, if the user doesn't specify a platform, suggest or use 'all' platforms. All connected Buffer channels will be targeted.
 - Once a post is drafted, suggest: "Would you like me to generate a talking avatar video for this post to make it more engaging?"
 - When a user asks for marketing ideas, first use `fetch_company_knowledge` to remind yourself of Rraasi's core services. 
 - Use your tools to query `ad_briefs` and see what topics have already been covered recently so you don't suggest duplicates.
@@ -315,7 +316,7 @@ You strictly operate ONLY on these collections:
         context: RunContext, 
         topic: str,
         cta: str,
-        platform: str = "instagram",
+        platform: str = "all",
         objective: str = "Awareness",
         tone: str = "inspirational"
     ) -> str:
@@ -347,7 +348,7 @@ You strictly operate ONLY on these collections:
                     "topic": topic,
                     "objective": objective,
                     "cta": cta,
-                    "channels": [platform],
+                    "channels": [platform] if platform != "all" else ["instagram", "facebook", "twitter", "linkedin"],
                     "tone": tone
                 }
                 async with session.post(f"{base_url}/briefs", json=brief_payload) as resp:
@@ -381,9 +382,9 @@ You strictly operate ONLY on these collections:
                         
                     channels = channel_data.get("channels", [])
                     # Match platform to service if possible
-                    matching_channels = [c for c in channels if c.get('service') == platform]
-                    # Fallback to all if platform not found
-                    if not matching_channels:
+                    matching_channels = [c for c in channels if c.get('service') == platform] if platform != "all" else channels
+                    # Fallback to all if matching not found but not requested 'all'
+                    if not matching_channels and platform != "all":
                         matching_channels = channels
                         
                     if not matching_channels:
@@ -413,7 +414,7 @@ You strictly operate ONLY on these collections:
         context: RunContext,
         topic: str,
         cta: str,
-        platform: str = "instagram",
+        platform: str = "all",
         objective: str = "Awareness",
         tone: str = "inspirational"
     ) -> str:
@@ -447,7 +448,7 @@ You strictly operate ONLY on these collections:
                     "topic": topic,
                     "objective": objective,
                     "cta": cta,
-                    "channels": [platform],
+                    "channels": [platform] if platform != "all" else ["instagram", "facebook", "twitter", "linkedin"],
                     "tone": tone,
                     "status": "draft"
                 }
@@ -601,9 +602,47 @@ async def entrypoint(ctx: JobContext):
     
     await session.start(agent=agent, room=ctx.room)
     
+    # Handle chat messages from the frontend
+    from livekit import rtc
+    
+    async def _on_data_received(data, participant=None, kind=None, topic=None):
+        try:
+            # Ignore messages from ourselves to prevent feedback loops
+            if participant and participant.identity == ctx.room.local_participant.identity:
+                return
+
+            data_bytes = None
+            if isinstance(data, bytes): data_bytes = data
+            elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+            elif hasattr(data, 'data'): data_bytes = data.data
+            elif isinstance(data, str): data_bytes = data.encode('utf-8')
+            else: return
+            if data_bytes is None: return
+            payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+            try:
+                payload = json.loads(payload_str)
+            except Exception:
+                asyncio.create_task(session.chat(payload_str))
+                return
+            if isinstance(payload, dict):
+                if 'message' in payload:
+                    asyncio.create_task(session.chat(payload['message']))
+                elif 'text' in payload:
+                    asyncio.create_task(session.chat(payload['text']))
+        except Exception:
+            pass
+    def _handle_room_data(data, participant=None, kind=None, topic=None):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+            else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+        except Exception:
+            pass
+    ctx.room.on("data_received", _handle_room_data)
+    
     # Proactive greeting
     await asyncio.sleep(1)
-    greeting = "Namaste. I am Chitragupta, the divine record keeper and marketing advisor. How can I help you today?"
+    greeting = "Namaste. I am the AI manifestation of Chitragupta. My core teachings focus on cosmic recordkeeping, analyzing the karmic balance of actions, and translating spiritual wisdom into modern strategic guidance. How may I review your ledgers today?"
     await session.say(greeting, allow_interruptions=True)
     await send_chat(greeting)
 

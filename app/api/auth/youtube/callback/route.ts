@@ -1,37 +1,49 @@
-
 import { google } from 'googleapis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getAdminDb, initAdmin } from '@/lib/firebase-admin';
 import { IntegrationToken, INTEGRATION_TOKENS_COLLECTION } from '@/lib/types/integrations';
 
-// Force dynamic since we use searchParams
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
-    const userId = searchParams.get('state'); // We passed userId as state
+    const state = searchParams.get('state'); 
     const error = searchParams.get('error');
 
     if (error) {
         return NextResponse.json({ error: `OAuth Error: ${error}` }, { status: 400 });
     }
 
-    if (!code || !userId) {
-        return NextResponse.json({ error: 'Missing code or state (userId)' }, { status: 400 });
+    if (!code || !state) {
+        return NextResponse.json({ error: 'Missing code or state' }, { status: 400 });
+    }
+
+    let userId = '';
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+    try {
+        const decoded = JSON.parse(Buffer.from(state, 'base64').toString('utf8'));
+        if (decoded.userId) {
+            userId = decoded.userId;
+            appUrl = decoded.appUrl || appUrl;
+        } else {
+            userId = state;
+        }
+    } catch {
+        userId = state;
     }
 
     try {
         const oauth2Client = new google.auth.OAuth2(
             process.env.YOUTUBE_CLIENT_ID,
             process.env.YOUTUBE_CLIENT_SECRET,
-            `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/auth/youtube/callback`
+            `${appUrl}/api/auth/youtube/callback`
         );
 
         const { tokens } = await oauth2Client.getToken(code);
         oauth2Client.setCredentials(tokens);
 
-        // Get user profile info
         const oauth2 = google.oauth2({
             auth: oauth2Client,
             version: 'v2'
@@ -39,7 +51,6 @@ export async function GET(request: NextRequest) {
 
         const { data: userInfo } = await oauth2.userinfo.get();
 
-        // Initialize Firebase Admin
         initAdmin();
         const db = getAdminDb();
 
@@ -47,7 +58,7 @@ export async function GET(request: NextRequest) {
             userId,
             provider: 'youtube',
             accessToken: tokens.access_token!,
-            refreshToken: tokens.refresh_token!, // Important: might be undefined if not first consent or prompt not forced
+            refreshToken: tokens.refresh_token!, 
             expiryDate: tokens.expiry_date!,
             scope: tokens.scope!,
             createdAt: Date.now(),
@@ -57,12 +68,9 @@ export async function GET(request: NextRequest) {
             displayName: userInfo.name!
         };
 
-        // Use a composite ID or just query by userId + provider
-        // Using userId_provider as doc ID for easy overwriting
         await db.collection(INTEGRATION_TOKENS_COLLECTION).doc(`${userId}_youtube`).set(tokenData, { merge: true });
 
-        // Redirect to the distribution dashboard
-        const successUrl = new URL('/business/creators/music/distribution', request.url);
+        const successUrl = new URL(`${appUrl}/business/creators/music/distribution`);
         successUrl.searchParams.set('connected', 'youtube');
         return NextResponse.redirect(successUrl);
 

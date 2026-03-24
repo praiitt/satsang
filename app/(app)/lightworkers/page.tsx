@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import Link from 'next/link';
 import { SacredGeometryBg } from '@/components/app/sacred-geometry-bg';
 import { useLanguage } from '@/contexts/language-context';
+import { LightworkerAssessment } from '@/components/lightworkers/lightworker-assessment';
 
 export default function LightworkersPage() {
     const { t } = useLanguage();
@@ -39,11 +40,21 @@ export default function LightworkersPage() {
                     viewport={{ once: true }}
                     className="space-y-6 text-center sm:text-left"
                 >
-                    <div className="rounded-3xl bg-card/30 p-8 backdrop-blur-md border border-border/50 shadow-xl">
+                    <div className="rounded-3xl bg-card/30 p-8 backdrop-blur-md border border-border/50 shadow-xl mb-16">
                         <p className="text-lg leading-loose text-foreground/90">
                             {t('lightworkersPage.intro')}
                         </p>
                     </div>
+                </motion.section>
+
+                {/* Assessment Form */}
+                <motion.section 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    className="mb-24"
+                >
+                    <LightworkerAssessment />
                 </motion.section>
 
                 {/* Common Traits */}

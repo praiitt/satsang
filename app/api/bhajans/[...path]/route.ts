@@ -77,6 +77,8 @@ export async function GET(
         'Content-Length': fileBuffer.length.toString(),
         'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
         'Accept-Ranges': 'bytes', // Support range requests for audio streaming
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
       },
     });
   } catch (error) {

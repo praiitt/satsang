@@ -167,16 +167,6 @@ function VisualizerState({ room }: { room: Room | null }) {
         .filter((t) => t.participant.isAgent);
     const audioTrack = audioTracks.length > 0 ? audioTracks[0] : undefined;
     const state = !agent ? 'idle' : (agent.isSpeaking ? 'speaking' : 'listening');
-    const [, setVolume] = useState(0);
-
-    useEffect(() => {
-        if (!audioTrack) return;
-        const interval = setInterval(() => {
-            const base = state === 'speaking' ? 0.4 : 0.05;
-            setVolume(Math.random() * 0.3 + base);
-        }, 100);
-        return () => clearInterval(interval);
-    }, [state, audioTrack]);
 
     return (
         <div className="relative flex items-center justify-center w-full h-48">
@@ -198,8 +188,8 @@ function VisualizerState({ room }: { room: Room | null }) {
                         <div className="flex items-center gap-1 h-16">
                             {[...Array(8)].map((_, i) => (
                                 <motion.div key={i} className="w-2 bg-gradient-to-t from-indigo-500 to-indigo-300 rounded-full"
-                                    animate={{ height: [10, Math.random() * 50 + 15, 10] }}
-                                    transition={{ duration: 0.4, repeat: Infinity, delay: i * 0.05 }} />
+                                    animate={{ height: [10, 40 + (i % 3) * 10, 10] }}
+                                    transition={{ duration: 0.5 + (i * 0.1), repeat: Infinity, ease: "easeInOut" }} />
                             ))}
                         </div>
                         <p className="mt-4 text-xs text-indigo-400 font-medium tracking-wide flex items-center gap-1.5">
@@ -413,19 +403,28 @@ function PostPreviewModal({ preview, onClose }: { preview: PostPreview; onClose:
         }
     };
 
+    const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        };
+    }, []);
+
     const startPollingVideo = (vId: string) => {
-        const interval = setInterval(async () => {
+        if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = setInterval(async () => {
             try {
                 const res = await fetch(`${API}/briefs/${preview.briefId}/video-status?videoId=${vId}&variantId=${preview.variantId}`, {
                     credentials: 'include'
                 });
                 const data = await res.json();
                 if (data.status === 'ready') {
-                    clearInterval(interval);
+                    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
                     setVideoUrl(data.videoUrl);
                     setVideoStatus('ready');
                 } else if (data.status === 'failed') {
-                    clearInterval(interval);
+                    if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
                     setVideoStatus('failed');
                     setError('Video generation failed');
                 }
@@ -599,7 +598,7 @@ function PostPreviewModal({ preview, onClose }: { preview: PostPreview; onClose:
                                     
                                     {videoUrl ? (
                                         <div className="relative w-full h-full group">
-                                            <video src={videoUrl} className="w-full h-full object-cover" />
+                                            <video src={videoUrl} preload="none" className="w-full h-full object-cover" />
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors cursor-pointer"
                                                  onClick={() => window.open(videoUrl, '_blank')}>
                                                 <div className="h-10 w-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">

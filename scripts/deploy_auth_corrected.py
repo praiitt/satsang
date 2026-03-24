@@ -121,7 +121,7 @@ def main():
             for line in f:
                 if '=' in line and not line.strip().startswith('#'):
                     key, val = line.strip().split('=', 1)
-                    if key in ['SUNO_API_KEY', 'HEYGEN_API_KEY', 'SARVAM_API_KEY', 'OPENAI_API_KEY', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET', 'LIVEKIT_URL']:
+                    if key in ['SUNO_API_KEY', 'HEYGEN_API_KEY', 'SARVAM_API_KEY', 'OPENAI_API_KEY', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET', 'LIVEKIT_URL', 'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'NEXT_PUBLIC_APP_URL']:
                         more_env_vars[key] = val.strip().strip("'").strip('"')
 
     with open(env_yaml_file, 'w') as yf:

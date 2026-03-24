@@ -24,7 +24,7 @@
     "googleapis": "^170.0.0",
     "livekit-server-sdk": "^2.15.0",
     "openai": "^6.15.0",
-    "twilio": "^5.11.2"
+    "twilio": "^5.13.0"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.7",

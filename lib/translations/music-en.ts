@@ -15,6 +15,15 @@ export const musicTranslationsEn = {
     'features_license_title': 'Full Ownership & License',
     'features_license_desc': 'Download your tracks with a commercial license to use anywhere - Spotify, YouTube, and more.',
 
+    // How to Manifest Section
+    howToManifestTitle: 'How to Manifest Divine Frequencies',
+    manifestStep1Title: 'Type Your Intention',
+    manifestStep1Desc: 'Share what you seek—peace, energy, or devotion. The AI listens to your soul\'s request.',
+    manifestStep2Title: 'AI Manifestation',
+    manifestStep2Desc: 'Within moments, RRAASI weaves ancient musical structures to create your unique Bhajan or Chant.',
+    manifestStep3Title: 'Elevate Your Space',
+    manifestStep3Desc: 'Play these high-vibe frequencies to cleanse your aura, environment, and elevate your vibration.',
+
     // Features Section
     featuresTitle: 'What You Can Create',
 

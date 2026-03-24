@@ -12,55 +12,55 @@ export const TRADITION_DETAILS: Record<string, { title: string; description: str
     title: 'Hindu Spiritual Masters',
     description: "Connect with the wisdom of India's greatest spiritual teachers. Each master offers unique guidance on the path to enlightenment.",
     emoji: '🕉️',
-    theme: 'from-orange-50 via-yellow-50 to-red-50'
+    theme: 'from-orange-950/40 via-orange-900/20 to-background'
   },
   buddhism: {
     title: 'Buddhist Masters',
     description: 'Discover the path of awakening with enlightened masters from the Buddhist tradition. Find peace, compassion, and mindfulness.',
     emoji: '☸️',
-    theme: 'from-amber-50 via-yellow-50 to-orange-50'
+    theme: 'from-amber-950/40 via-yellow-900/20 to-background'
   },
   jainism: {
     title: 'Jain Tirthankaras & Acharyas',
     description: 'Explore the path of Ahimsa and self-realization with the great teachers of Jainism.',
     emoji: '✋',
-    theme: 'from-yellow-50 via-white to-green-50'
+    theme: 'from-green-950/40 via-emerald-900/20 to-background'
   },
   sikhism: {
     title: 'Sikh Gurus',
     description: 'Connect with the divine wisdom of the Sikh Gurus. One God, equality, and service to humanity.',
     emoji: '☬',
-    theme: 'from-orange-50 via-yellow-50 to-blue-50'
+    theme: 'from-amber-950/40 via-yellow-900/20 to-background'
   },
   christianity: {
     title: 'Christian Mystics & Saints',
     description: 'Connect with the heart of Christ consciousness through saints and mystics throughout history.',
     emoji: '✝️',
-    theme: 'from-blue-50 via-white to-purple-50'
+    theme: 'from-blue-950/40 via-indigo-900/20 to-background'
   },
   islam: {
     title: 'Sufi Masters & Prophets',
     description: 'Experience the divine love and wisdom of the Sufi tradition and Islamic spirituality.',
     emoji: '☪️',
-    theme: 'from-green-50 via-emerald-50 to-teal-50'
+    theme: 'from-emerald-950/40 via-teal-900/20 to-background'
   },
   judaism: {
     title: 'Jewish Sages & Mystics',
     description: 'Engage with the profound wisdom of Kabbalah, Hasidism, and Jewish ethical teachings.',
     emoji: '✡️',
-    theme: 'from-blue-50 via-indigo-50 to-white'
+    theme: 'from-blue-950/40 via-cyan-900/20 to-background'
   },
   taoism: {
     title: 'Taoist Masters',
     description: 'Flow with the Tao. Discover the way of nature, balance, and wu-wei with ancient sages.',
     emoji: '☯️',
-    theme: 'from-green-50 via-teal-50 to-blue-50'
+    theme: 'from-teal-950/40 via-emerald-900/20 to-background'
   },
   universal: {
     title: 'Universal & Cosmic Guides',
     description: 'Explore wisdom beyond tradition. Connect with cosmic consciousness, nature, and universal truths.',
     emoji: '🌌',
-    theme: 'from-purple-900 via-indigo-900 to-black text-white'
+    theme: 'from-purple-950/40 via-indigo-900/20 to-background'
   }
 };
 
@@ -68,7 +68,7 @@ export const DEFAULT_TRADITION_THEME = {
   title: 'Spiritual Masters',
   description: 'Connect with universal wisdom from enlightened masters across traditions.',
   emoji: '✨',
-  theme: 'from-purple-50 via-fuchsia-50 to-pink-50'
+  theme: 'from-purple-950/40 via-fuchsia-900/20 to-background'
 };
 
 
@@ -94,6 +94,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Zen, Meditation",
     era: "1931-1990",
     category: "buddhism",
+    image: "/images/gurus/real/osho.jpg",
   },
   {
     id: "psychedelicGuru",
@@ -109,6 +110,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Judaism (Mishnaic)",
     era: "c. 50–135 CE",
     category: "judaism",
+    image: "/images/gurus/real/akiva.jpg",
   },
 
   {
@@ -117,6 +119,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Islam (Sufi/Philosopher)",
     era: "1058–1111",
     category: "islam",
+    image: "/images/gurus/real/al_ghazali.jpg",
   },
   {
     id: "amma",
@@ -124,6 +127,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Universal love, Bhakti",
     era: "1953-present",
     category: "hinduism",
+    image: "/images/gurus/real/amma.jpg",
   },
   {
     id: "anandamayi_ma",
@@ -139,6 +143,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Integral Yoga",
     era: "1872-1950",
     category: "hinduism",
+    image: "/images/gurus/real/aurobindo.jpg",
   },
   {
     id: "baal_shem_tov",
@@ -146,6 +151,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Judaism (Hasidic)",
     era: "1698–1760",
     category: "judaism",
+    image: "/images/gurus/real/baal_shem_tov.jpg",
   },
   {
     id: "bodhidharma",
@@ -153,6 +159,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Buddhism (Zen/Chan)",
     era: "5th/6th Century CE",
     category: "buddhism",
+    image: "/images/gurus/real/bodhidharma.jpg",
   },
   {
     id: "buddha",
@@ -160,6 +167,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Buddhism",
     era: "c. 5th to 4th century BCE",
     category: "buddhism",
+    image: "/images/gurus/real/buddha.jpg",
   },
   {
     id: "bulleh_shah",
@@ -181,6 +189,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Buddhism",
     era: "1935–Present",
     category: "buddhism",
+    image: "/images/gurus/real/dalai_lama.jpg",
   },
   {
     id: "guru_amar_das",
@@ -216,6 +225,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Sikhism",
     era: "1469–1539",
     category: "sikhism",
+    image: "/images/gurus/real/guru_nanak.jpg",
   },
   {
     id: "guru_ram_das",
@@ -251,6 +261,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Christianity",
     era: "c. 4 BC – c. 30/33 AD",
     category: "christianity",
+    image: "/images/gurus/real/jesus.jpg",
   },
   {
     id: "john_cross",
@@ -286,6 +297,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Taoism",
     era: "c. 6th century BCE",
     category: "taoism",
+    image: "/images/gurus/real/laotzu.jpg",
   },
   {
     id: "liezi",
@@ -300,6 +312,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Jainism",
     era: "6th century BCE",
     category: "jainism",
+    image: "/images/gurus/real/mahavira.jpg",
   },
   {
     id: "maimonides",
@@ -392,6 +405,7 @@ export const ALL_GURUS: Guru[] = [
     tradition: "Gaudiya Vaishnavism, ISKCON",
     era: "1896-1977",
     category: "hinduism",
+    image: "/images/gurus/real/prabhupada.jpg",
   },
   {
     id: "rabia",
@@ -460,6 +474,14 @@ export const ALL_GURUS: Guru[] = [
     era: "788-820 CE",
     category: "hinduism",
     image: "/images/gurus/real/shankaracharya.jpg",
+  },
+  {
+    id: "shiva",
+    name: "Mahadev (Shiva)",
+    tradition: "Shaivism, Supreme Yogi",
+    era: "Timeless",
+    category: "hinduism",
+    image: "/images/gurus/real/shiva.png",
   },
   {
     id: "st_francis",

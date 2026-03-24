@@ -403,17 +403,51 @@ async def entrypoint(ctx: JobContext):
     
     # Start session
     await session.start(agent=agent, room=ctx.room)
+    
+    # Handle chat messages from the frontend
+    from livekit import rtc
+    
+    async def _on_data_received(data, participant=None, kind=None, topic=None):
+        try:
+            data_bytes = None
+            if isinstance(data, bytes): data_bytes = data
+            elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+            elif hasattr(data, 'data'): data_bytes = data.data
+            elif isinstance(data, str): data_bytes = data.encode('utf-8')
+            else: return
+            if data_bytes is None: return
+            payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+            try:
+                payload = json.loads(payload_str)
+            except Exception:
+                asyncio.create_task(session.chat(payload_str))
+                return
+            if isinstance(payload, dict):
+                if 'message' in payload:
+                    asyncio.create_task(session.chat(payload['message']))
+                elif 'text' in payload:
+                    asyncio.create_task(session.chat(payload['text']))
+        except Exception:
+            pass
+    def _handle_room_data(data, participant=None, kind=None, topic=None):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+            else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+        except Exception:
+            pass
+    ctx.room.on("data_received", _handle_room_data)
 
     # Send welcome message immediately after session starts
     if user_language == 'hi':
         await session.say(
-            "नमस्ते। मैं टैरो रीडर हूँ। "
-            "क्या आप टैरो के माध्यम से अपनी अंतरात्मा की आवाज सुनना चाहते हैं और मेरी शिक्षाएं जानना चाहते हैं?"
+            "स्वागत है। मैं टैरो रीडर का AI स्वरूप हूँ। मेरी मूल शिक्षाएं आपकी अंतर्ज्ञान शक्ति को जगाने "
+            "और कार्ड्स के पवित्र प्रतीकों के माध्यम से आध्यात्मिक मार्गदर्शन खोजने पर केंद्रित हैं। आज मैं आपका मार्ग कैसे प्रशस्त कर सकता हूँ?"
         )
     else:
         await session.say(
-            "Welcome. I am the Tarot Reader. "
-            "Do you want to know how Tarot reveals hidden truths and hear my teachings?"
+            "Welcome. I am the AI manifestation of the Tarot Reader. My core teachings focus on unlocking your intuition "
+            "and finding spiritual guidance through the sacred archetypes of the cards. How may I illuminate your path today?"
         )
 
     # Wait for disconnection

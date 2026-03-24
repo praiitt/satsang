@@ -79,4 +79,38 @@ router.get('/recordings', async (req: Request, res: Response) => {
     }
 });
 
+// GET /chat/feed?limit=10
+router.get('/feed', async (req: Request, res: Response) => {
+    try {
+        const { limit = '10' } = req.query;
+        const db = getDb();
+
+        // Fetch public recordings
+        // Note: For true randomness, we might need a better strategy,
+        // but for now we'll fetch the most recent 100 public ones and shuffle them.
+        const snapshot = await db.collection('recordings')
+            .where('isPublic', '==', true)
+            .where('status', 'in', ['completed', 'stopped'])
+            .orderBy('startedAt', 'desc')
+            .limit(100)
+            .get();
+
+        let recordings = snapshot.docs
+            .map(doc => ({
+                id: doc.id,
+                ...doc.data(),
+                createdAt: doc.data().startedAt
+            }))
+            .filter((rec: any) => !!rec.publicUrl); // Ensure only recordings with actual URLs are shown
+
+        // Remove Shuffle - user wants latest first
+        recordings = recordings.slice(0, Number(limit));
+
+        res.json({ recordings });
+    } catch (error) {
+        console.error('[Chat Feed] Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 export default router;

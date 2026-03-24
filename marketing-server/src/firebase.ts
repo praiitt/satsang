@@ -18,7 +18,7 @@ export function initFirebaseAdmin() {
       }),
     });
     initialized = true;
-    console.log('[auth-server] ✅ Initialized Firebase Admin from environment variables');
+    console.log('[marketing-server] ✅ Initialized Firebase Admin from environment variables');
     return;
   }
 
@@ -34,10 +34,10 @@ export function initFirebaseAdmin() {
         credential: admin.credential.cert(serviceAccount),
       });
       initialized = true;
-      console.log(`[auth-server] ✅ Initialized Firebase Admin from file: ${explicitPath}`);
+      console.log(`[marketing-server] ✅ Initialized Firebase Admin from file: ${explicitPath}`);
       return;
     } catch (error) {
-      console.error('[auth-server] Failed to parse service account file:', error);
+      console.error('[marketing-server] Failed to parse service account file:', error);
     }
   }
 

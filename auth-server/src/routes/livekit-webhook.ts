@@ -102,7 +102,7 @@ router.post('/', async (req: Request, res: Response) => {
                     if (file.location) {
                         updates.filePath = file.location;
                         // Reconstruct publicUrl with correct bucket name
-                        const correctBucket = 'satsangrecordings'; // Use the actual GCS bucket
+                        const correctBucket = 'rraasi-agent-recordings'; // Use the actual GCS bucket
                         updates.publicUrl = `https://storage.googleapis.com/${correctBucket}/${file.location}`;
                     }
                     // Don't use file.url directly as it may have wrong bucket name

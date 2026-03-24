@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/livekit/button';
 import { LogoutButton } from '@/components/auth/logout-button';
+import { RecordingsModal } from '@/components/app/recordings-modal';
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -28,6 +29,7 @@ export default function ProfilePage() {
     const { balance, loading: balanceLoading } = useCoinBalance();
     const [user, setUser] = useState<any>(null);
     const [copied, setCopied] = useState(false);
+    const [showRecordings, setShowRecordings] = useState(false);
 
     useEffect(() => {
         const auth = getFirebaseAuth();
@@ -166,6 +168,26 @@ export default function ProfilePage() {
                     </div>
                 </div>
 
+                {/* Session Recordings Quick Access */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Music className="h-5 w-5 text-amber-600" />
+                            My Session Recordings
+                        </h2>
+                        <p className="text-gray-600 dark:text-gray-400 mt-1 text-sm">
+                            Listen to your past Satsang and music creation sessions.
+                        </p>
+                    </div>
+                    <Button 
+                        onClick={() => setShowRecordings(true)}
+                        variant="primary"
+                        className="w-full sm:w-auto shrink-0"
+                    >
+                        View Recordings
+                    </Button>
+                </div>
+
                 {/* Subscription Status */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
@@ -279,6 +301,11 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
+
+            <RecordingsModal
+                isOpen={showRecordings}
+                onClose={() => setShowRecordings(false)}
+            />
         </div>
     );
 }

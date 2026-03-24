@@ -1,7 +1,29 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Users, 
+  Mic2, 
+  Plus, 
+  Trash2, 
+  Play, 
+  RefreshCcw, 
+  Scissors, 
+  Download, 
+  ExternalLink, 
+  CheckCircle2, 
+  AlertCircle, 
+  ChevronRight, 
+  MessageSquare, 
+  Video, 
+  Upload, 
+  Info,
+  Sparkles,
+  Search,
+  Check,
+  Languages
+} from 'lucide-react';
 import { Button } from '@/components/livekit/button';
 import { getCurrentUser } from '@/lib/auth-api';
 
@@ -29,13 +51,175 @@ interface PodcastJobResponse {
 
 const PODCAST_API_BASE = '/api/marketing/podcast';
 
+// --- HELPER COMPONENTS ---
+
+const Card = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    className={`rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/50 ${className}`}
+  >
+    {children}
+  </motion.div>
+);
+
+const SectionHeading = ({ icon: Icon, title, subtitle }: { icon: any, title: string, subtitle?: string }) => (
+  <div className="mb-6 flex items-start gap-4">
+    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-50 text-orange-600 dark:bg-orange-950/20">
+      <Icon className="h-6 w-6" />
+    </div>
+    <div>
+      <h2 className="text-xl font-bold text-gray-900 dark:text-white">{title}</h2>
+      {subtitle && <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
+    </div>
+  </div>
+);
+
+const AvatarSelector = ({ 
+  label, 
+  value, 
+  onChange,
+  typeValue,
+  onTypeChange
+}: { 
+  label: string; 
+  value: string; 
+  onChange: (val: string) => void;
+  typeValue?: 'avatar' | 'talking_photo';
+  onTypeChange?: (val: 'avatar' | 'talking_photo') => void;
+}) => (
+  <div className="flex flex-col gap-3">
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</span>
+    </div>
+
+    {onTypeChange && typeValue && (
+      <div className="relative mb-2 shrink-0">
+        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Asset Type</label>
+        <select
+          value={typeValue}
+          onChange={(e) => onTypeChange(e.target.value as 'avatar' | 'talking_photo')}
+          className="w-full rounded-xl border border-gray-100 bg-gray-50/50 p-3 text-sm outline-none transition-all focus:ring-2 focus:ring-orange-500/20 dark:border-gray-800 dark:bg-gray-900 cursor-pointer"
+        >
+          <option value="avatar">Video Avatar (Default)</option>
+          <option value="talking_photo">Talking Photo</option>
+        </select>
+      </div>
+    )}
+
+    <div className="relative">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Enter HeyGen Avatar ID (e.g. 054b...)"
+        className="w-full rounded-xl border border-gray-100 bg-gray-50/50 p-4 pl-12 text-sm font-mono outline-none transition-all focus:ring-2 focus:ring-orange-500/20 dark:border-gray-800 dark:bg-gray-900 shadow-inner"
+      />
+      <Users className="absolute left-4 top-[50%] h-5 w-5 -translate-y-1/2 text-orange-400" />
+    </div>
+    <p className="text-[10px] text-gray-400 italic">"Ensure the ID matches your selected Asset Type"</p>
+  </div>
+);
+
+const VoiceSelector = ({ 
+  label, 
+  value, 
+  onChange, 
+  voices, 
+  langFilter, 
+  setLangFilter, 
+  genderFilter, 
+  setGenderFilter, 
+  languages, 
+  genders, 
+  loading, 
+  onPreview, 
+  previewing 
+}: { 
+  label: string, 
+  value: string, 
+  onChange: (val: string) => void, 
+  voices: any[], 
+  langFilter: string, 
+  setLangFilter: (val: string) => void, 
+  genderFilter: string, 
+  setGenderFilter: (val: string) => void, 
+  languages: string[], 
+  genders: string[], 
+  loading: boolean, 
+  onPreview: (id: string) => void, 
+  previewing: string | null 
+}) => (
+  <div className="flex flex-col gap-3">
+    <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{label}</span>
+    <div className="grid grid-cols-2 gap-2">
+      <select
+        value={langFilter}
+        onChange={(e) => setLangFilter(e.target.value)}
+        className="rounded-lg border border-gray-100 bg-gray-50 px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-800 dark:bg-gray-900"
+      >
+        <option value="">All Languages</option>
+        {languages.map(l => <option key={l} value={l}>{l}</option>)}
+      </select>
+      <select
+        value={genderFilter}
+        onChange={(e) => setGenderFilter(e.target.value)}
+        className="rounded-lg border border-gray-100 bg-gray-50 px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-800 dark:bg-gray-900"
+      >
+        <option value="">All Genders</option>
+        {genders.map(g => <option key={g} value={g}>{g}</option>)}
+      </select>
+    </div>
+    <div className="flex gap-2">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="flex-1 rounded-xl border border-gray-100 bg-white p-3 text-sm shadow-sm outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-800 dark:bg-gray-900"
+        disabled={loading}
+      >
+        <option value="">Select a Voice...</option>
+        {voices.map((v) => (
+          <option key={v.id} value={v.id}>
+            {v.name} ({v.language || 'Unknown'})
+          </option>
+        ))}
+      </select>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={() => onPreview(value)}
+        disabled={!value || previewing === value}
+        className="h-[46px] w-[46px] rounded-xl border-gray-100 dark:border-gray-800"
+      >
+        {previewing === value ? (
+          <RefreshCcw className="h-4 w-4 animate-spin text-orange-600" />
+        ) : (
+          <Play className="h-4 w-4 text-orange-600" />
+        )}
+      </Button>
+    </div>
+    <div className="relative">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Or paste ID manually..."
+        className="w-full rounded-xl border border-gray-100 bg-gray-50/50 p-3 pl-10 text-xs font-mono outline-none focus:ring-2 focus:ring-orange-500/20 dark:border-gray-800 dark:bg-gray-900"
+      />
+      <Mic2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+    </div>
+  </div>
+);
+
 export default function MarketingPodcastPage() {
   // Pre-fill with working talking photo ID and voice ID
   const DEFAULT_TALKING_PHOTO_ID = 'f31ce977d65e47caa3e92a46703d6b1f';
   const DEFAULT_VOICE_ID = 'dc5370c68baa4905be87f702758df4b0';
 
   const [hostAvatarId, setHostAvatarId] = useState(DEFAULT_TALKING_PHOTO_ID);
+  const [hostAvatarType, setHostAvatarType] = useState<'avatar' | 'talking_photo'>('talking_photo');
   const [guestAvatarId, setGuestAvatarId] = useState(DEFAULT_TALKING_PHOTO_ID);
+  const [guestAvatarType, setGuestAvatarType] = useState<'avatar' | 'talking_photo'>('talking_photo');
   const [hostVoiceId, setHostVoiceId] = useState(DEFAULT_VOICE_ID);
   const [guestVoiceId, setGuestVoiceId] = useState(DEFAULT_VOICE_ID);
   const [turns, setTurns] = useState<TurnInput[]>([
@@ -50,12 +234,6 @@ export default function MarketingPodcastPage() {
   const [urlInput, setUrlInput] = useState('');
   const [currentPlayingIndex, setCurrentPlayingIndex] = useState<number | null>(null);
   const [isPlayingSequence, setIsPlayingSequence] = useState(false);
-  const [talkingPhotos, setTalkingPhotos] = useState<
-    Array<{ id: string; name: string; isPublic?: boolean; type?: string }>
-  >([]);
-  const [loadingPhotos, setLoadingPhotos] = useState(false);
-  const [hostPhotoFilter, setHostPhotoFilter] = useState<string>(''); // 'all', 'my', 'public'
-  const [guestPhotoFilter, setGuestPhotoFilter] = useState<string>(''); // 'all', 'my', 'public'
   const [voices, setVoices] = useState<
     Array<{ id: string; name: string; language?: string; gender?: string; previewAudio?: string }>
   >([]);
@@ -69,8 +247,11 @@ export default function MarketingPodcastPage() {
   // Separate video stitching state
   const [stitchVideoUrls, setStitchVideoUrls] = useState<string[]>(['']);
   const [stitchVideoFiles, setStitchVideoFiles] = useState<(File | null)[]>([null]); // Start with one file slot
-  const [isStitchingStandalone, setIsStitchingStandalone] = useState(false);
   const [standaloneStitchedUrl, setStandaloneStitchedUrl] = useState<string | null>(null);
+  const [uniqueLanguages, setUniqueLanguages] = useState<string[]>([]);
+  const [uniqueGenders, setUniqueGenders] = useState<string[]>([]);
+  const [initialJobId, setInitialJobId] = useState<string | null>(null);
+
 
   const handleAddTurn = () => {
     const lastSpeaker = turns[turns.length - 1]?.speaker ?? 'guest';
@@ -118,6 +299,8 @@ export default function MarketingPodcastPage() {
         body: JSON.stringify({
           hostAvatarId: hostAvatarId.trim(),
           guestAvatarId: guestAvatarId.trim(),
+          hostAvatarType,
+          guestAvatarType,
           turns: turns.map((t) => ({
             speaker: t.speaker,
             text: t.text.trim(),
@@ -226,23 +409,6 @@ export default function MarketingPodcastPage() {
   const handleCancelEdit = () => {
     setEditingUrlIndex(null);
     setUrlInput('');
-  };
-
-  const fetchTalkingPhotos = async () => {
-    setLoadingPhotos(true);
-    try {
-      const res = await fetch('/api/marketing/podcast/talking-photos');
-      const data = await res.json();
-      if (res.ok && data.talkingPhotos) {
-        setTalkingPhotos(data.talkingPhotos);
-      } else {
-        console.error('Failed to fetch talking photos:', data.error);
-      }
-    } catch (error) {
-      console.error('Error fetching talking photos:', error);
-    } finally {
-      setLoadingPhotos(false);
-    }
   };
 
   const fetchVoices = async () => {
@@ -463,17 +629,28 @@ export default function MarketingPodcastPage() {
     }
   };
 
-  // Fetch talking photos and voices on mount
+  // Get unique languages and genders from voices for filtering
   useEffect(() => {
-    fetchTalkingPhotos();
+    if (voices.length > 0) {
+      const langs = Array.from(new Set(voices.map(v => v.language).filter(Boolean))).sort() as string[];
+      const gens = Array.from(new Set(voices.map(v => v.gender).filter(Boolean))).sort() as string[];
+      setUniqueLanguages(langs);
+      setUniqueGenders(gens);
+    }
+  }, [voices]);
+
+  // Initial Data Fetch & Poll Check
+  useEffect(() => {
     fetchVoices();
+    
+    const query = new URLSearchParams(window.location.search);
+    const id = query.get('jobId');
+    if (id) {
+      setInitialJobId(id);
+      void pollJob(id);
+    }
   }, []);
 
-  // Get unique languages and genders from voices
-  const uniqueLanguages = Array.from(new Set(voices.map((v) => v.language).filter(Boolean))).sort();
-  const uniqueGenders = Array.from(new Set(voices.map((v) => v.gender).filter(Boolean))).sort();
-
-  // Filter voices based on selected filters
   const getFilteredVoices = (languageFilter: string, genderFilter: string) => {
     return voices.filter((voice) => {
       const matchesLanguage = !languageFilter || voice.language === languageFilter;
@@ -485,19 +662,6 @@ export default function MarketingPodcastPage() {
 
   const filteredHostVoices = getFilteredVoices(hostLanguageFilter, hostGenderFilter);
   const filteredGuestVoices = getFilteredVoices(guestLanguageFilter, guestGenderFilter);
-
-  // Filter talking photos based on selected filter
-  const getFilteredPhotos = (filter: string) => {
-    if (filter === 'my') {
-      return talkingPhotos.filter((photo) => !photo.isPublic);
-    } else if (filter === 'public') {
-      return talkingPhotos.filter((photo) => photo.isPublic);
-    }
-    return talkingPhotos; // 'all' or empty
-  };
-
-  const filteredHostPhotos = getFilteredPhotos(hostPhotoFilter);
-  const filteredGuestPhotos = getFilteredPhotos(guestPhotoFilter);
 
   const playSequence = () => {
     if (!job) return;
@@ -525,711 +689,517 @@ export default function MarketingPodcastPage() {
   };
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-6 p-4 md:p-8">
-      <div>
-        <h1 className="text-2xl font-bold md:text-3xl">
-          Marketing Podcast (HeyGen Talking Photos)
-        </h1>
-        <p className="text-muted-foreground mt-2 text-sm">
-          Create a two-avatar podcast conversation using HeyGen talking photo avatars. Configure
-          host and guest talking photo IDs, write their dialogue, and generate video clips that you
-          can stitch into a podcast-style video. Uses the working HeyGen API format with 720p
-          resolution.
-        </p>
-      </div>
-
-      <div className="grid gap-4 rounded-lg border p-4 md:grid-cols-2 md:gap-6">
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Talking Photo Avatars & Voices</h2>
-          <p className="text-muted-foreground text-xs">
-            Use HeyGen talking photo IDs and voice IDs. Defaults are pre-filled with working IDs.
-            Videos are generated in 720p format (free plan compatible).
-          </p>
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Host Talking Photo
-                <div className="mt-1 space-y-1">
-                  <select
-                    value={hostPhotoFilter}
-                    onChange={(e) => {
-                      setHostPhotoFilter(e.target.value);
-                      setHostAvatarId(DEFAULT_TALKING_PHOTO_ID); // Reset photo when filter changes
-                    }}
-                    className="w-full rounded-md border px-2 py-1 text-xs"
-                  >
-                    <option value="">All Photos</option>
-                    <option value="my">My Moving Photos</option>
-                    <option value="public">Public Photos</option>
-                  </select>
-                  <select
-                    value={hostAvatarId}
-                    onChange={(e) => setHostAvatarId(e.target.value)}
-                    className="w-full rounded-md border px-2 py-1 text-xs"
-                    disabled={loadingPhotos}
-                  >
-                    <option value={DEFAULT_TALKING_PHOTO_ID}>
-                      {loadingPhotos
-                        ? 'Loading...'
-                        : filteredHostPhotos.length === 0
-                          ? 'No photos match filter'
-                          : `Select photo (${filteredHostPhotos.length} available)...`}
-                    </option>
-                    {filteredHostPhotos.map((photo) => (
-                      <option key={photo.id} value={photo.id}>
-                        {photo.name} ({photo.id.slice(0, 8)}...)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <input
-                  type="text"
-                  value={hostAvatarId}
-                  onChange={(e) => setHostAvatarId(e.target.value)}
-                  placeholder="Or type talking photo ID..."
-                  className="mt-1 w-full rounded-md border px-2 py-1 font-mono text-sm text-xs"
-                />
-              </label>
-              <label className="text-sm font-medium">
-                Host Voice
-                <div className="mt-1 space-y-1">
-                  <div className="grid grid-cols-2 gap-2">
-                    <select
-                      value={hostLanguageFilter}
-                      onChange={(e) => {
-                        setHostLanguageFilter(e.target.value);
-                        setHostVoiceId(DEFAULT_VOICE_ID); // Reset voice when filter changes
-                      }}
-                      className="rounded-md border px-2 py-1 text-xs"
-                    >
-                      <option value="">All Languages</option>
-                      {uniqueLanguages.map((lang) => (
-                        <option key={lang} value={lang}>
-                          {lang}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={hostGenderFilter}
-                      onChange={(e) => {
-                        setHostGenderFilter(e.target.value);
-                        setHostVoiceId(DEFAULT_VOICE_ID); // Reset voice when filter changes
-                      }}
-                      className="rounded-md border px-2 py-1 text-xs"
-                    >
-                      <option value="">All Genders</option>
-                      {uniqueGenders.map((gender) => (
-                        <option key={gender} value={gender}>
-                          {gender}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex gap-2">
-                    <select
-                      value={hostVoiceId}
-                      onChange={(e) => setHostVoiceId(e.target.value)}
-                      className="flex-1 rounded-md border px-2 py-1 text-xs"
-                      disabled={loadingVoices}
-                    >
-                      <option value={DEFAULT_VOICE_ID}>
-                        {loadingVoices
-                          ? 'Loading...'
-                          : filteredHostVoices.length === 0
-                            ? 'No voices match filters'
-                            : `Select voice (${filteredHostVoices.length} available)...`}
-                      </option>
-                      {filteredHostVoices.map((voice) => (
-                        <option key={voice.id} value={voice.id}>
-                          {voice.name} {voice.language ? `(${voice.language})` : ''}{' '}
-                          {voice.gender ? `[${voice.gender}]` : ''}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => previewVoice(hostVoiceId)}
-                      disabled={!hostVoiceId || previewingVoice === hostVoiceId}
-                      className="px-2 text-xs"
-                      title="Preview voice"
-                    >
-                      {previewingVoice === hostVoiceId ? '⏳' : '▶️'}
-                    </Button>
-                  </div>
-                </div>
-                <input
-                  type="text"
-                  value={hostVoiceId}
-                  onChange={(e) => setHostVoiceId(e.target.value)}
-                  placeholder="Or type voice ID..."
-                  className="mt-1 w-full rounded-md border px-2 py-1 font-mono text-sm text-xs"
-                />
-              </label>
+    <div className="min-h-screen bg-[#faf9f6] text-[#2c2c2c] dark:bg-[#0f1115] dark:text-[#e0e0e0]">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-orange-50 to-transparent py-12 dark:from-orange-950/10">
+        <div className="container mx-auto max-w-5xl px-6 relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600 text-white shadow-lg shadow-orange-500/20">
+                <Mic2 className="h-5 w-5" />
+              </div>
+              <span className="text-sm font-bold uppercase tracking-widest text-orange-600">Studio</span>
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Guest Talking Photo
-                <div className="mt-1 space-y-1">
-                  <select
-                    value={guestPhotoFilter}
-                    onChange={(e) => {
-                      setGuestPhotoFilter(e.target.value);
-                      setGuestAvatarId(DEFAULT_TALKING_PHOTO_ID); // Reset photo when filter changes
-                    }}
-                    className="w-full rounded-md border px-2 py-1 text-xs"
-                  >
-                    <option value="">All Photos</option>
-                    <option value="my">My Moving Photos</option>
-                    <option value="public">Public Photos</option>
-                  </select>
-                  <select
-                    value={guestAvatarId}
-                    onChange={(e) => setGuestAvatarId(e.target.value)}
-                    className="w-full rounded-md border px-2 py-1 text-xs"
-                    disabled={loadingPhotos}
-                  >
-                    <option value={DEFAULT_TALKING_PHOTO_ID}>
-                      {loadingPhotos
-                        ? 'Loading...'
-                        : filteredGuestPhotos.length === 0
-                          ? 'No photos match filter'
-                          : `Select photo (${filteredGuestPhotos.length} available)...`}
-                    </option>
-                    {filteredGuestPhotos.map((photo) => (
-                      <option key={photo.id} value={photo.id}>
-                        {photo.name} ({photo.id.slice(0, 8)}...)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <input
-                  type="text"
-                  value={guestAvatarId}
-                  onChange={(e) => setGuestAvatarId(e.target.value)}
-                  placeholder="Or type talking photo ID..."
-                  className="mt-1 w-full rounded-md border px-2 py-1 font-mono text-sm text-xs"
-                />
-              </label>
-              <label className="text-sm font-medium">
-                Guest Voice
-                <div className="mt-1 space-y-1">
-                  <div className="grid grid-cols-2 gap-2">
-                    <select
-                      value={guestLanguageFilter}
-                      onChange={(e) => {
-                        setGuestLanguageFilter(e.target.value);
-                        setGuestVoiceId(DEFAULT_VOICE_ID); // Reset voice when filter changes
-                      }}
-                      className="rounded-md border px-2 py-1 text-xs"
-                    >
-                      <option value="">All Languages</option>
-                      {uniqueLanguages.map((lang) => (
-                        <option key={lang} value={lang}>
-                          {lang}
-                        </option>
-                      ))}
-                    </select>
-                    <select
-                      value={guestGenderFilter}
-                      onChange={(e) => {
-                        setGuestGenderFilter(e.target.value);
-                        setGuestVoiceId(DEFAULT_VOICE_ID); // Reset voice when filter changes
-                      }}
-                      className="rounded-md border px-2 py-1 text-xs"
-                    >
-                      <option value="">All Genders</option>
-                      {uniqueGenders.map((gender) => (
-                        <option key={gender} value={gender}>
-                          {gender}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex gap-2">
-                    <select
-                      value={guestVoiceId}
-                      onChange={(e) => setGuestVoiceId(e.target.value)}
-                      className="flex-1 rounded-md border px-2 py-1 text-xs"
-                      disabled={loadingVoices}
-                    >
-                      <option value={DEFAULT_VOICE_ID}>
-                        {loadingVoices
-                          ? 'Loading...'
-                          : filteredGuestVoices.length === 0
-                            ? 'No voices match filters'
-                            : `Select voice (${filteredGuestVoices.length} available)...`}
-                      </option>
-                      {filteredGuestVoices.map((voice) => (
-                        <option key={voice.id} value={voice.id}>
-                          {voice.name} {voice.language ? `(${voice.language})` : ''}{' '}
-                          {voice.gender ? `[${voice.gender}]` : ''}
-                        </option>
-                      ))}
-                    </select>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => previewVoice(guestVoiceId)}
-                      disabled={!guestVoiceId || previewingVoice === guestVoiceId}
-                      className="px-2 text-xs"
-                      title="Preview voice"
-                    >
-                      {previewingVoice === guestVoiceId ? '⏳' : '▶️'}
-                    </Button>
-                  </div>
-                </div>
-                <input
-                  type="text"
-                  value={guestVoiceId}
-                  onChange={(e) => setGuestVoiceId(e.target.value)}
-                  placeholder="Or type voice ID..."
-                  className="mt-1 w-full rounded-md border px-2 py-1 font-mono text-sm text-xs"
-                />
-              </label>
-            </div>
-          </div>
-          <div className="text-muted-foreground flex gap-4 text-xs">
-            {talkingPhotos.length > 0 && <span>✅ {talkingPhotos.length} talking photos</span>}
-            {voices.length > 0 && <span>✅ {voices.length} voices</span>}
-          </div>
-          {talkingPhotos.length > 0 && voices.length > 0 && (
-            <p className="text-muted-foreground text-xs">
-              Select from dropdowns or type IDs manually. Click ▶️ to preview voices.
+            <h1 className="mb-4 text-4xl font-extrabold tracking-tight text-[#1a1a1a] dark:text-white md:text-5xl">
+              Marketing <span className="text-orange-600">Podcast</span>
+            </h1>
+            <p className="max-w-2xl text-lg text-gray-600 dark:text-gray-400">
+              Create immersive, AI-driven conversations between spiritual masters. 
+              Configure your avatars, craft the script, and generate studio-quality videos.
             </p>
-          )}
+          </motion.div>
         </div>
-
-        <div className="space-y-3">
-          <h2 className="text-lg font-semibold">Actions</h2>
-          <Button onClick={createJob} disabled={isSubmitting || isPolling} className="w-full">
-            {isSubmitting ? 'Creating Podcast Job...' : 'Create Podcast Job'}
-          </Button>
-
-          {job && (
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="font-medium">Job ID:</span> {job.jobId}
-              </div>
-              <div>
-                <span className="font-medium">Status:</span>{' '}
-                <span
-                  className={
-                    job.status === 'ready'
-                      ? 'text-green-600'
-                      : job.status === 'failed'
-                        ? 'text-red-600'
-                        : 'text-yellow-700'
-                  }
-                >
-                  {job.status}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!job.jobId || isPolling}
-                  onClick={() => pollJob(job.jobId)}
-                >
-                  {isPolling ? 'Polling…' : 'Refresh Status'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!job.turns.some((t) => t.videoUrl && t.status === 'ready')}
-                  onClick={playSequence}
-                >
-                  Play Sequence
-                </Button>
-                <Button
-                  variant="default"
-                  size="sm"
-                  disabled={
-                    isStitching || !job.turns.some((t) => t.videoUrl && t.status === 'ready')
-                  }
-                  onClick={handleStitchVideos}
-                >
-                  {isStitching ? 'Stitching...' : '🎬 Stitch Videos'}
-                </Button>
-              </div>
-              {(job as any).stitchedVideoUrl && (
-                <div className="mt-2 rounded-md border p-2 text-xs">
-                  <p className="font-medium text-green-600">✅ Stitched Video Ready!</p>
-                  <a
-                    href={(job as any).stitchedVideoUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 underline hover:text-blue-800"
-                  >
-                    Download Stitched Video
-                  </a>
-                </div>
-              )}
-            </div>
-          )}
-
-          {error && <div className="text-destructive mt-2 text-sm">Error: {error}</div>}
-        </div>
+        <div className="absolute right-0 top-0 h-64 w-64 translate-x-1/2 -translate-y-1/2 rounded-full bg-orange-200/20 blur-3xl dark:bg-orange-800/10" />
       </div>
 
-      <div className="space-y-3 rounded-lg border p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Conversation Script</h2>
-          <Button type="button" variant="outline" size="sm" onClick={handleAddTurn}>
-            + Add Turn
-          </Button>
-        </div>
-
-        <div className="space-y-3">
-          {turns.map((turn, index) => {
-            const isHost = turn.speaker === 'host';
-            const label = isHost ? 'Host' : 'Guest';
-            const colorClass = isHost ? 'border-blue-400' : 'border-amber-400';
-
-            return (
-              <div
-                key={index}
-                className={`flex flex-col gap-2 rounded-md border p-3 text-sm md:flex-row md:items-start ${colorClass}`}
-              >
-                <div className="flex items-center gap-2 md:w-32">
-                  <select
-                    value={turn.speaker}
-                    onChange={(e) =>
-                      handleUpdateTurn(index, {
-                        speaker: e.target.value as SpeakerRole,
-                      })
-                    }
-                    className="w-full rounded-md border px-2 py-1 text-xs"
-                  >
-                    <option value="host">Host</option>
-                    <option value="guest">Guest</option>
-                  </select>
-                  <span className="text-muted-foreground hidden text-xs md:inline">
-                    #{index + 1}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <label className="flex flex-col gap-1">
-                    <span className="text-xs font-medium">
-                      {label} line #{index + 1}
-                    </span>
-                    <textarea
-                      value={turn.text}
-                      onChange={(e) => handleUpdateTurn(index, { text: e.target.value })}
-                      rows={2}
-                      className="w-full rounded-md border px-2 py-1 text-xs md:text-sm"
-                      placeholder={
-                        isHost
-                          ? 'Welcome the audience, introduce the topic...'
-                          : 'Respond as the guest, share insights...'
-                      }
-                    />
-                  </label>
-                </div>
-                <div className="flex flex-col items-end gap-2 md:w-24">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleRemoveTurn(index)}
-                    disabled={turns.length <= 1}
-                    aria-label="Remove turn"
-                  >
-                    ✕
-                  </Button>
-                  {job && job.turns[index] && (
-                    <span className="text-muted-foreground text-[10px]">
-                      {job.turns[index].status}
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {job && (
-        <div className="space-y-4 rounded-lg border p-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Podcast Clips</h2>
-            {job.turns.some((t) => t.videoUrl && t.status === 'ready') && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={playSequence}
-                disabled={isPlayingSequence}
-              >
-                {isPlayingSequence ? 'Playing...' : 'Play Sequence'}
-              </Button>
-            )}
-          </div>
-          <p className="text-muted-foreground text-xs">
-            Each turn becomes a separate HeyGen talking photo video clip (720p). Videos typically
-            take 3-5 minutes to generate. When ready in HeyGen dashboard, paste the video URL below
-            to mark it as ready.
-          </p>
-          <ol className="space-y-3 text-sm">
-            {job.turns.map((turn) => (
-              <li key={turn.index} className="rounded-md border p-3">
-                <div className="mb-2 flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <span className="font-medium">
-                      #{turn.index + 1} {turn.speaker === 'host' ? 'Host' : 'Guest'}
-                    </span>
-                    <span
-                      className={`ml-2 text-xs ${
-                        turn.status === 'ready'
-                          ? 'text-green-600'
-                          : turn.status === 'failed'
-                            ? 'text-red-600'
-                            : turn.status === 'processing'
-                              ? 'text-yellow-600'
-                              : 'text-gray-500'
-                      }`}
-                    >
-                      {turn.status}
-                    </span>
-                    {turn.heygenVideoId && (
-                      <span className="text-muted-foreground ml-2 font-mono text-xs">
-                        HeyGen ID: {turn.heygenVideoId.slice(0, 8)}...
-                      </span>
-                    )}
+      <div className="container mx-auto max-w-5xl px-6 pb-24">
+        <div className="grid gap-8 lg:grid-cols-12">
+          {/* Left Column: Configuration */}
+          <div className="space-y-8 lg:col-span-12">
+            <Card>
+              <SectionHeading 
+                icon={Users} 
+                title="Avatar & Voice Configuration" 
+                subtitle="Choose the voices and talking photos for your spiritual hosts."
+              />
+              
+              <div className="grid gap-12 md:grid-cols-2">
+                {/* Host Config */}
+                <div className="space-y-8 border-r border-gray-100 pr-0 dark:border-gray-800 md:pr-12">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-2 w-2 rounded-full bg-blue-500" />
+                    <span className="text-xs font-bold uppercase tracking-tighter text-blue-500">Host Avatar</span>
                   </div>
-                  {turn.status !== 'ready' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditUrl(turn.index)}
-                      className="text-xs"
-                    >
-                      {turn.videoUrl ? 'Update URL' : 'Add URL'}
-                    </Button>
-                  )}
+                  
+                  <AvatarSelector 
+                    label="Talking Photo"
+                    value={hostAvatarId}
+                    onChange={setHostAvatarId}
+                    typeValue={hostAvatarType}
+                    onTypeChange={setHostAvatarType}
+                  />
+                  
+                  <VoiceSelector 
+                    label="Voice Identity"
+                    value={hostVoiceId}
+                    onChange={setHostVoiceId}
+                    voices={filteredHostVoices}
+                    langFilter={hostLanguageFilter}
+                    setLangFilter={setHostLanguageFilter}
+                    genderFilter={hostGenderFilter}
+                    setGenderFilter={setHostGenderFilter}
+                    languages={uniqueLanguages}
+                    genders={uniqueGenders}
+                    loading={loadingVoices}
+                    onPreview={previewVoice}
+                    previewing={previewingVoice}
+                  />
                 </div>
 
-                {editingUrlIndex === turn.index ? (
-                  <div className="mt-2 space-y-2">
-                    <input
-                      type="text"
-                      value={urlInput}
-                      onChange={(e) => setUrlInput(e.target.value)}
-                      placeholder="Paste video URL from HeyGen dashboard..."
-                      className="w-full rounded-md border px-2 py-1 font-mono text-xs"
-                    />
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        onClick={() => updateVideoUrl(turn.index, urlInput)}
-                        disabled={!urlInput.trim()}
-                        className="text-xs"
+                {/* Guest Config */}
+                <div className="space-y-8">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="h-2 w-2 rounded-full bg-amber-500" />
+                    <span className="text-xs font-bold uppercase tracking-tighter text-amber-500">Guest Avatar</span>
+                  </div>
+
+                  <AvatarSelector 
+                    label="Talking Photo"
+                    value={guestAvatarId}
+                    onChange={setGuestAvatarId}
+                    typeValue={guestAvatarType}
+                    onTypeChange={setGuestAvatarType}
+                  />
+
+                  <VoiceSelector 
+                    label="Voice Identity"
+                    value={guestVoiceId}
+                    onChange={setGuestVoiceId}
+                    voices={filteredGuestVoices}
+                    langFilter={guestLanguageFilter}
+                    setLangFilter={setGuestLanguageFilter}
+                    genderFilter={guestGenderFilter}
+                    setGenderFilter={setGuestGenderFilter}
+                    languages={uniqueLanguages}
+                    genders={uniqueGenders}
+                    loading={loadingVoices}
+                    onPreview={previewVoice}
+                    previewing={previewingVoice}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-12 flex flex-col gap-4 border-t border-gray-50 pt-8 dark:border-gray-800 md:flex-row md:items-center md:justify-between">
+                <div className="flex gap-4 text-xs text-gray-400">
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-green-500" />
+                    High-Fidelity AI Avatars
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3 text-green-500" />
+                    {voices.length} Voices Available
+                  </div>
+                </div>
+                
+                <Button 
+                  onClick={createJob} 
+                  disabled={isSubmitting || isPolling}
+                  className="rounded-xl bg-orange-600 px-8 py-6 text-lg font-bold shadow-lg shadow-orange-600/20 hover:bg-orange-700 disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                      <RefreshCcw className="h-5 w-5 animate-spin" /> Initializing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      Generate Podcast <ChevronRight className="h-5 w-5" />
+                    </span>
+                  )}
+                </Button>
+              </div>
+              
+              {error && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-6 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400"
+                >
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  {error}
+                </motion.div>
+              )}
+            </Card>
+
+            {/* Conversation Script */}
+            <Card>
+              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <SectionHeading 
+                  icon={MessageSquare} 
+                  title="Conversation Script" 
+                  subtitle="Draft the dialogue for your podcast turns."
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={handleAddTurn}
+                  className="rounded-xl border-orange-100 bg-orange-50/50 text-orange-600 hover:bg-orange-100 dark:border-orange-900/30 dark:bg-orange-900/10"
+                >
+                  <Plus className="mr-2 h-4 w-4" /> Add Turn
+                </Button>
+              </div>
+
+              <div className="space-y-6">
+                <AnimatePresence mode="popLayout">
+                  {turns.map((turn, index) => {
+                    const isHost = turn.speaker === 'host';
+                    return (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, x: isHost ? -20 : 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`flex gap-4 ${isHost ? 'flex-row' : 'flex-row-reverse'}`}
                       >
-                        Save
-                      </Button>
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white shadow-sm ${isHost ? 'bg-blue-500' : 'bg-amber-500'}`}>
+                          {isHost ? 'H' : 'G'}
+                        </div>
+                        <div className={`flex flex-1 flex-col gap-2 ${isHost ? 'items-start' : 'items-end'}`}>
+                          <div className={`relative w-full max-w-2xl rounded-2xl p-4 shadow-sm ${
+                            isHost 
+                              ? 'bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30' 
+                              : 'bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30'
+                          }`}>
+                            <div className="mb-2 flex items-center justify-between">
+                              <select
+                                value={turn.speaker}
+                                onChange={(e) => handleUpdateTurn(index, { speaker: e.target.value as SpeakerRole })}
+                                className="bg-transparent text-[10px] font-bold uppercase tracking-wider text-gray-400 outline-none"
+                              >
+                                <option value="host">Host</option>
+                                <option value="guest">Guest</option>
+                              </select>
+                              <button 
+                                onClick={() => handleRemoveTurn(index)}
+                                disabled={turns.length <= 1}
+                                className="text-gray-400 transition-colors hover:text-red-500"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
+                            </div>
+                            <textarea
+                              value={turn.text}
+                              onChange={(e) => handleUpdateTurn(index, { text: e.target.value })}
+                              rows={2}
+                              className="w-full bg-transparent text-sm leading-relaxed outline-none placeholder:text-gray-300 dark:placeholder:text-gray-700"
+                              placeholder={isHost ? "Host leads the conversation..." : "Guest responds..."}
+                            />
+                            <div className="absolute -bottom-2 right-4 text-[10px] font-mono text-gray-300">
+                              #{index + 1}
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+            </Card>
+
+            {/* Results Section */}
+            {job && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
+                <Card className="border-orange-200 bg-orange-50/30 dark:border-orange-900/30">
+                  <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-600 text-white">
+                        <Video className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold">Generation Progress</h2>
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-gray-500 uppercase tracking-tighter text-[10px] font-bold">Job ID:</span>
+                          <span className="font-mono text-xs text-orange-600">{job.jobId}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-3">
                       <Button
                         variant="outline"
-                        size="sm"
-                        onClick={handleCancelEdit}
-                        className="text-xs"
+                        onClick={() => pollJob(job.jobId)}
+                        disabled={isPolling}
+                        className="rounded-xl border-gray-200 bg-white"
                       >
-                        Cancel
+                        <RefreshCcw className={`mr-2 h-4 w-4 ${isPolling ? 'animate-spin' : ''}`} />
+                        {isPolling ? 'Polling...' : 'Check Status'}
+                      </Button>
+                      
+                      <Button
+                        variant="outline"
+                        onClick={playSequence}
+                        disabled={!job.turns.some(t => t.videoUrl && t.status === 'ready') || isPlayingSequence}
+                        className="rounded-xl border-gray-200 bg-white"
+                      >
+                        <Play className="mr-2 h-4 w-4" /> Preview All
+                      </Button>
+
+                      <Button
+                        onClick={handleStitchVideos}
+                        disabled={isStitching || !job.turns.some(t => t.videoUrl && t.status === 'ready')}
+                        className="rounded-xl bg-gray-900 text-white hover:bg-black dark:bg-white dark:text-black"
+                      >
+                        <Scissors className={`mr-2 h-4 w-4 ${isStitching ? 'animate-spin' : ''}`} />
+                        {isStitching ? 'Stitching...' : 'Stitch Final Video'}
                       </Button>
                     </div>
                   </div>
-                ) : turn.videoUrl && turn.status === 'ready' ? (
-                  <div className="mt-2">
-                    {(() => {
-                      const readyTurns = job.turns.filter(
-                        (t) => t.videoUrl && t.status === 'ready'
-                      );
-                      const readyIndex = readyTurns.findIndex((t) => t.index === turn.index);
-                      const isCurrentPlaying =
-                        isPlayingSequence && currentPlayingIndex === readyIndex;
-                      const isUpcoming =
-                        isPlayingSequence &&
-                        currentPlayingIndex !== null &&
-                        readyIndex > currentPlayingIndex;
 
-                      return (
-                        <>
-                          {isCurrentPlaying ? (
-                            <video
-                              key={`playing-${turn.index}`}
-                              src={turn.videoUrl}
-                              controls
-                              autoPlay
-                              className="w-full rounded-md border-2 border-blue-500"
-                              onEnded={() => handleVideoEnd(turn.index)}
-                            >
-                              Your browser does not support the video tag.
-                            </video>
-                          ) : (
-                            <video
-                              src={turn.videoUrl}
-                              controls={!isPlayingSequence}
-                              className={`w-full rounded-md ${isUpcoming ? 'opacity-50' : ''}`}
-                              preload="metadata"
-                            >
-                              Your browser does not support the video tag.
-                            </video>
-                          )}
-                          {isCurrentPlaying && (
-                            <p className="mt-1 text-xs text-blue-600">▶️ Now playing...</p>
-                          )}
-                          {isUpcoming && (
-                            <p className="mt-1 text-xs text-gray-500">⏸️ Up next...</p>
-                          )}
-                        </>
-                      );
-                    })()}
-                    <a
-                      href={turn.videoUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="mt-1 inline-block text-xs text-blue-600 underline hover:text-blue-800"
+                  {(job as any).stitchedVideoUrl && (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="mt-8 rounded-3xl bg-white p-6 shadow-xl dark:bg-gray-800"
                     >
-                      Open in new tab
-                    </a>
+                      <div className="mb-4 flex items-center justify-between">
+                        <h3 className="flex items-center gap-2 font-bold text-green-600">
+                          <CheckCircle2 className="h-5 w-5" /> Stitched Video Ready
+                        </h3>
+                        <a 
+                          href={(job as any).stitchedVideoUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:underline"
+                        >
+                          <Download className="h-4 w-4" /> Download
+                        </a>
+                      </div>
+                      <video 
+                        src={(job as any).stitchedVideoUrl} 
+                        controls 
+                        className="aspect-video w-full rounded-2xl border bg-black shadow-inner"
+                      />
+                    </motion.div>
+                  )}
+                </Card>
+
+                {/* Individual Clips Timeline */}
+                <div className="space-y-6">
+                  <SectionHeading 
+                    icon={Video} 
+                    title="Podcast Clips" 
+                    subtitle="Individual video segments generated by HeyGen."
+                  />
+                  
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {job.turns.map((turn, i) => (
+                      <Card key={turn.index} className="overflow-hidden p-0">
+                        <div className="p-4 border-b border-gray-50 dark:border-gray-800 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white ${turn.speaker === 'host' ? 'bg-blue-500' : 'bg-amber-500'}`}>
+                              {turn.speaker === 'host' ? 'H' : 'G'}
+                            </span>
+                            <span className="text-sm font-bold">Turn #{turn.index + 1}</span>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                             <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase ${
+                              turn.status === 'ready' ? 'bg-green-100 text-green-700 dark:bg-green-900/30' :
+                              turn.status === 'failed' ? 'bg-red-100 text-red-700 dark:bg-red-900/30' :
+                              'bg-orange-100 text-orange-700 dark:bg-orange-900/30'
+                            }`}>
+                              {turn.status}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="p-4">
+                          <p className="line-clamp-2 text-xs italic text-gray-500 mb-4">"{turn.text}"</p>
+                          
+                          {turn.status === 'ready' && turn.videoUrl ? (
+                            <div className="relative group rounded-xl overflow-hidden border dark:border-gray-800 bg-black">
+                              <video 
+                                src={turn.videoUrl} 
+                                controls={!isPlayingSequence}
+                                autoPlay={isPlayingSequence && currentPlayingIndex === i}
+                                onEnded={() => handleVideoEnd(turn.index)}
+                                className={`aspect-video w-full ${isPlayingSequence && currentPlayingIndex === i ? 'border-2 border-orange-500' : ''}`}
+                              />
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <a href={turn.videoUrl} target="_blank" rel="noreferrer" className="p-2 bg-black/50 rounded-full text-white backdrop-blur-sm">
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex aspect-video flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-gray-50 text-center dark:border-gray-800 dark:bg-gray-900 group relative overflow-hidden">
+                              {turn.status === 'processing' ? (
+                                <>
+                                  <RefreshCcw className="mb-2 h-8 w-8 animate-spin text-orange-300" />
+                                  <p className="text-xs text-orange-500 font-medium tracking-tight">AI is generating this clip...</p>
+                                  <p className="text-[10px] text-gray-400 mt-1 uppercase">Webhooks will update automatically</p>
+                                  
+                                  {/* Hover overlay to allow edit */}
+                                  <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-xl backdrop-blur-sm z-10">
+                                    <span className="text-[10px] text-white/50 uppercase tracking-wider">Taking too long?</span>
+                                    <Button 
+                                      size="sm" 
+                                      onClick={() => handleEditUrl(turn.index)}
+                                      className="h-8 rounded-lg text-[10px] bg-white/10 hover:bg-white/20 text-white"
+                                    >
+                                      Override & Add URL
+                                    </Button>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <Info className="mb-2 h-8 w-8 text-gray-200" />
+                                  <p className="text-xs text-gray-400">Waiting for generation to start</p>
+                                  <Button 
+                                    variant="link" 
+                                    size="sm" 
+                                    onClick={() => handleEditUrl(turn.index)}
+                                    className="text-[10px] text-blue-500"
+                                  >
+                                    Manually Add URL
+                                  </Button>
+                                </>
+                              )}
+                            </div>
+                          )}
+
+                          {editingUrlIndex === turn.index && (
+                            <motion.div 
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              className="mt-4 space-y-3 border-t border-gray-50 pt-4 dark:border-gray-800"
+                            >
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  value={urlInput}
+                                  onChange={(e) => setUrlInput(e.target.value)}
+                                  placeholder="Paste HeyGen URL..."
+                                  className="w-full rounded-xl border border-gray-100 bg-gray-50 p-2 text-xs font-mono outline-none dark:border-gray-800 dark:bg-gray-900"
+                                />
+                                <Upload className="absolute right-3 top-1/2 h-3 w-3 -translate-y-1/2 text-gray-400" />
+                              </div>
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={() => updateVideoUrl(turn.index, urlInput)} className="h-8 rounded-lg text-[10px]">Save URL</Button>
+                                <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="h-8 rounded-lg text-[10px]">Cancel</Button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
                   </div>
-                ) : turn.status === 'processing' ? (
-                  <p className="text-muted-foreground mt-2 text-xs">
-                    Video is generating... Check HeyGen dashboard and paste URL when ready.
-                  </p>
-                ) : null}
-              </li>
-            ))}
-          </ol>
-        </div>
-      )}
+                </div>
+              </motion.div>
+            )}
 
-      {/* Separate Video Stitching Section */}
-      <div className="space-y-4 rounded-lg border p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Video Stitching Tool</h2>
-            <p className="text-muted-foreground mt-1 text-xs">
-              Stitch multiple videos together into a single video. Upload video files or paste video
-              URLs. Videos will be stitched in the order you add them.
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {/* File Upload Section */}
-          <div className="space-y-2">
-            <p className="text-sm font-medium">Upload Video Files:</p>
-            {stitchVideoFiles.map((file, index) => (
-              <div key={`file-${index}`} className="flex items-center gap-2">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) => handleFileSelect(e, index)}
-                  className="flex-1 text-sm file:mr-4 file:rounded-md file:border-0 file:bg-blue-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-blue-700 hover:file:bg-blue-100"
+            {/* Standalone Video Stitching Tool */}
+            <Card className="border-dashed border-gray-300 bg-transparent shadow-none dark:border-gray-800">
+               <SectionHeading 
+                  icon={Scissors} 
+                  title="Quick Stitch Tool" 
+                  subtitle="Manually merge external videos or files."
                 />
-                {file && (
-                  <span className="text-muted-foreground text-xs">
-                    {file.name} ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                  </span>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleRemoveFile(index)}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  ✕
-                </Button>
-              </div>
-            ))}
-            <Button type="button" variant="outline" size="sm" onClick={handleAddFileSlot}>
-              + Add File Upload
-            </Button>
-          </div>
+                
+                <div className="grid gap-8 md:grid-cols-2">
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      <Upload className="h-4 w-4" /> Upload Files
+                    </h3>
+                    <div className="space-y-3">
+                      {stitchVideoFiles.map((file, index) => (
+                        <div key={`file-${index}`} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm dark:bg-gray-900 border dark:border-gray-800">
+                          <input
+                            type="file"
+                            accept="video/*"
+                            onChange={(e) => handleFileSelect(e, index)}
+                            className="flex-1 text-xs file:hidden"
+                          />
+                          {file ? (
+                            <span className="truncate text-[10px] font-bold text-green-600 max-w-[150px]">{file.name}</span>
+                          ) : (
+                            <span className="text-[10px] text-gray-400">Click to choose file</span>
+                          )}
+                          <button onClick={() => handleRemoveFile(index)} className="text-gray-300 hover:text-red-500"><Trash2 className="h-3 w-3" /></button>
+                        </div>
+                      ))}
+                      <Button variant="ghost" size="sm" onClick={handleAddFileSlot} className="w-full rounded-xl border-dashed border border-gray-200 text-gray-400 hover:border-orange-500 hover:text-orange-500">
+                        + Add File Slot
+                      </Button>
+                    </div>
+                  </div>
 
-          <div className="border-t pt-3">
-            <p className="mb-2 text-sm font-medium">Or Enter Video URLs:</p>
-            {stitchVideoUrls.map((url, index) => (
-              <div key={`url-${index}`} className="mb-2 flex gap-2">
-                <input
-                  type="text"
-                  value={url}
-                  onChange={(e) => handleUpdateStitchUrl(index, e.target.value)}
-                  placeholder={`Video URL ${index + 1} (e.g., https://example.com/video.mp4)`}
-                  className="flex-1 rounded-md border px-3 py-2 text-sm"
-                />
-                {stitchVideoUrls.length > 1 && (
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                      <ExternalLink className="h-4 w-4" /> Video URLs
+                    </h3>
+                    <div className="space-y-3">
+                      {stitchVideoUrls.map((url, index) => (
+                        <div key={`url-${index}`} className="flex items-center gap-3 rounded-xl bg-white p-3 shadow-sm dark:bg-gray-900 border dark:border-gray-800">
+                          <input
+                            type="text"
+                            value={url}
+                            onChange={(e) => handleUpdateStitchUrl(index, e.target.value)}
+                            placeholder="https://..."
+                            className="flex-1 bg-transparent text-xs outline-none"
+                          />
+                          {stitchVideoUrls.length > 1 && (
+                            <button onClick={() => handleRemoveStitchUrl(index)} className="text-gray-300 hover:text-red-500"><Trash2 className="h-3 w-3" /></button>
+                          )}
+                        </div>
+                      ))}
+                      <Button variant="ghost" size="sm" onClick={handleAddStitchUrl} className="w-full rounded-xl border-dashed border border-gray-200 text-gray-400 hover:border-orange-500 hover:text-orange-500">
+                        + Add URL Slot
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 flex items-center justify-between border-t border-gray-100 pt-6 dark:border-gray-800">
+                  <div className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">
+                    Ready to Merge {stitchVideoFiles.filter(f => f).length + stitchVideoUrls.filter(u => u).length} items
+                  </div>
                   <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleRemoveStitchUrl(index)}
-                    className="text-red-600 hover:text-red-700"
+                    onClick={handleStitchStandalone}
+                    disabled={isStitchingStandalone || (stitchVideoUrls.filter(u => u.trim()).length + stitchVideoFiles.filter(f => f).length < 2)}
+                    className="rounded-xl bg-orange-600 px-6 font-bold shadow-lg shadow-orange-600/20"
                   >
-                    ✕
+                    {isStitchingStandalone ? (
+                      <span className="flex items-center gap-2"><RefreshCcw className="h-4 w-4 animate-spin" /> Stitching...</span>
+                    ) : (
+                      <span className="flex items-center gap-2"><Scissors className="h-4 w-4" /> Stitch Videos</span>
+                    )}
                   </Button>
+                </div>
+
+                {standaloneStitchedUrl && (
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mt-8 rounded-3xl bg-white p-6 shadow-xl dark:bg-gray-800"
+                  >
+                    <div className="mb-4 flex items-center justify-between">
+                      <h3 className="font-bold text-green-600 uppercase tracking-tighter text-xs">Standalone Result</h3>
+                      <a href={standaloneStitchedUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-blue-500 hover:underline flex items-center gap-1">
+                        <Download className="h-3 w-3" /> Download
+                      </a>
+                    </div>
+                    <video src={standaloneStitchedUrl} controls className="w-full rounded-2xl border bg-black shadow-inner" />
+                  </motion.div>
                 )}
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={handleAddStitchUrl}>
-              + Add Video URL
-            </Button>
-            <Button
-              type="button"
-              variant="default"
-              size="sm"
-              onClick={handleStitchStandalone}
-              disabled={
-                isStitchingStandalone ||
-                stitchVideoUrls.filter((url) => url.trim().length > 0).length +
-                  stitchVideoFiles.filter((f) => f != null).length <
-                  2
-              }
-            >
-              {isStitchingStandalone ? 'Stitching...' : '🎬 Stitch Videos'}
-            </Button>
-          </div>
-
-          {standaloneStitchedUrl && (
-            <div className="mt-4 rounded-md border border-green-500 bg-green-50 p-3 dark:bg-green-950">
-              <p className="mb-2 font-medium text-green-700 dark:text-green-300">
-                ✅ Stitched Video Ready!
-              </p>
-              <div className="flex flex-col gap-2">
-                <a
-                  href={standaloneStitchedUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-sm text-blue-600 underline hover:text-blue-800"
-                >
-                  Download Stitched Video
-                </a>
-                <video
-                  src={standaloneStitchedUrl}
-                  controls
-                  className="max-h-96 w-full rounded-md border"
-                >
-                  Your browser does not support the video tag.
-                </video>
-              </div>
-            </div>
-          )}
-
-          <div className="text-muted-foreground text-xs">
-            <p className="mb-1 font-medium">💡 Tips:</p>
-            <ul className="list-inside list-disc space-y-1">
-              <li>You can mix uploaded files and URLs - they will be stitched in order</li>
-              <li>Videos will be stitched in the order you add them (files first, then URLs)</li>
-              <li>All videos should be in the same format (MP4 recommended)</li>
-              <li>Make sure ffmpeg is installed on the server</li>
-              <li>Large videos may take several minutes to process</li>
-            </ul>
+            </Card>
           </div>
         </div>
       </div>

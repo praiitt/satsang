@@ -608,6 +608,46 @@ export const RRaaSiMusicWelcomeView = ({
           </p>
         </div>
       </section >
+      {/* How to Use AI Music - Explainer */}
+      <section className="mx-auto mt-16 max-w-5xl px-4 sm:px-6">
+        <div className="text-center mb-10">
+          <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
+            {mt('howToManifestTitle')}
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="relative rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/5 p-6 shadow-sm dark:backdrop-blur-md text-center">
+            <div className="mb-4 mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 text-xl font-bold border border-amber-500/20 dark:border-amber-500/30">
+              1
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">{mt('manifestStep1Title')}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {mt('manifestStep1Desc')}
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/5 p-6 shadow-sm dark:backdrop-blur-md text-center">
+            <div className="mb-4 mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 text-xl font-bold border border-cyan-500/20 dark:border-cyan-500/30">
+              2
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">{mt('manifestStep2Title')}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {mt('manifestStep2Desc')}
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-white/5 p-6 shadow-sm dark:backdrop-blur-md text-center">
+            <div className="mb-4 mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-purple-500/10 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 text-xl font-bold border border-purple-500/20 dark:border-purple-500/30">
+              3
+            </div>
+            <h3 className="mb-2 text-lg font-bold text-gray-900 dark:text-white">{mt('manifestStep3Title')}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {mt('manifestStep3Desc')}
+            </p>
+          </div>
+        </div>
+      </section>
 
       {/* My Music Section */}
       < section className="max-w-7xl mx-auto px-4 mt-16 border-b border-gray-100 dark:border-gray-800 pb-16" >
@@ -704,6 +744,7 @@ export const RRaaSiMusicWelcomeView = ({
                   <MusicPlayerCard
                     key={track.id}
                     id={track.id}
+                    shareId={track.shareId}
                     title={track.title || 'Untitled'}
                     audioUrl={track.audioUrl}
                     imageUrl={track.imageUrl}
@@ -851,6 +892,7 @@ export const RRaaSiMusicWelcomeView = ({
                   <MusicPlayerCard
                     key={track.id}
                     id={track.id}
+                    shareId={track.shareId}
                     title={track.title || 'Untitled'}
                     audioUrl={track.audioUrl}
                     imageUrl={track.imageUrl} // Pass imageUrl

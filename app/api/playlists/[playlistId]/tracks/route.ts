@@ -3,6 +3,7 @@ import { getCurrentUser } from '@/lib/auth-api';
 import { headers } from 'next/headers';
 import { getAdminDb } from '@/lib/firebase-admin';
 import admin from 'firebase-admin';
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/playlists/:playlistId/tracks

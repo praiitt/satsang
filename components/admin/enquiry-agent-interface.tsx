@@ -5,7 +5,8 @@ import {
     LiveKitRoom,
     RoomAudioRenderer,
     useLocalParticipant,
-    useVoiceAssistant,
+    useRemoteParticipants,
+    useTracks,
     useChat,
 } from '@livekit/components-react';
 import { ChatTranscript } from '@/components/app/chat-transcript';
@@ -13,7 +14,7 @@ import { Button } from '@/components/livekit/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, MicOff, Database, Server, Info, Terminal, Activity } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Room } from 'livekit-client';
+import { Room, Track } from 'livekit-client';
 
 interface EnquiryAgentInterfaceProps {
     accessToken: string;
@@ -95,7 +96,16 @@ export function EnquiryAgentInterface({ accessToken, url, onDisconnect }: Enquir
 }
 
 function VisualizerState({ room }: { room: Room | null }) {
-    const { state, audioTrack } = useVoiceAssistant();
+    const remoteParticipants = useRemoteParticipants();
+    const agents = remoteParticipants.filter((p) => p.isAgent);
+    const agent = agents.length > 0 ? agents[0] : undefined;
+    
+    const audioTracks = useTracks([Track.Source.Microphone], { onlySubscribed: true })
+        .filter((t) => t.participant.isAgent);
+    const audioTrack = audioTracks.length > 0 ? audioTracks[0] : undefined;
+    
+    const state = !agent ? 'idle' : (agent.isSpeaking ? 'speaking' : 'listening');
+
     const [volume, setVolume] = useState(0);
 
     useEffect(() => {

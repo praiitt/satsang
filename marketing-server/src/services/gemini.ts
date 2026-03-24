@@ -174,10 +174,10 @@ export async function generateAdImage(
 
     try {
         const sharp = (await import('sharp')).default;
-        imageBuffer = await sharp(imageBuffer)
+        imageBuffer = (await sharp(imageBuffer)
             .resize(1080, 1080, { fit: 'inside', withoutEnlargement: true })
             .jpeg({ quality: 85 })
-            .toBuffer();
+            .toBuffer()) as any;
     } catch (e) {
         console.warn('Could not resize image with sharp, proceeding with original', e);
     }

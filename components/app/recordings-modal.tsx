@@ -131,7 +131,7 @@ export function RecordingsModal({ isOpen, onClose }: RecordingsModalProps) {
                 {/* Player Footer */}
                 {playingUrl && (
                     <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-                        <audio controls autoPlay src={playingUrl} className="w-full h-8" />
+                        <video controls autoPlay src={playingUrl} className="w-full max-h-48 bg-black rounded" />
                     </div>
                 )}
             </div>

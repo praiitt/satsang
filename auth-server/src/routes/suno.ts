@@ -498,6 +498,38 @@ router.post('/callback', async (req: Request, res: Response) => {
                 await batch.commit();
                 console.log(`[Suno Callback] ✅ Successfully saved ${tracks.length} track(s) to Firestore`);
 
+                // --- Satsang Plan Auto-Link ---
+                if (query.planId) {
+                    const planId = query.planId as string;
+                    console.log(`[Suno Callback] Received planId: ${planId}. Linking track to Satsang Plan.`);
+                    try {
+                        const planRef = db.collection('satsang_plans').doc(planId);
+                        
+                        const firstTrack = tracks[0];
+                        if (firstTrack) {
+                            const trackDoc = await musicTracksRef.doc(taskId).get();
+                            const trackData = trackDoc.data();
+                            
+                            // Grab the finalized storage URLs from the newly updated track document
+                            const finalizedTracks = trackData?.tracks || [];
+                            const completedTrack = finalizedTracks.find((t: any) => t.sunoId === firstTrack.id);
+                            
+                            if (completedTrack && completedTrack.audioUrl) {
+                                await planRef.update({
+                                    meditation_audio_url: completedTrack.audioUrl,
+                                    meditation_image_url: completedTrack.imageUrl || null,
+                                    meditation_title: trackData?.title || firstTrack.title || 'Satsang Meditation',
+                                    meditation_track_id: taskId
+                                });
+                                console.log(`[Suno Callback] ✅ Automatically linked track ${taskId} to Satsang Plan ${planId} as meditation.`);
+                            }
+                        }
+                    } catch (err) {
+                        console.error(`[Suno Callback] ❌ Failed to auto-link to Satsang Plan:`, err);
+                    }
+                }
+                // --- End Satsang Plan Auto-Link ---
+
                 // Deduct coins ONCE per taskId (not per track)
                 const docRef = musicTracksRef.doc(taskId);
                 const doc = await docRef.get();

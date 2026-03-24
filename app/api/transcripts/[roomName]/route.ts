@@ -1,15 +1,16 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
-export const revalidate = 0;
+export const dynamic = 'force-dynamic';
 
 export async function GET(
     request: Request,
-    { params }: { params: { roomName: string } }
+    { params }: { params: Promise<{ roomName: string }> }
 ) {
     try {
-        const roomName = decodeURIComponent(params.roomName);
-        const doc = await adminDb.collection('session_transcripts').doc(roomName).get();
+        const { roomName: rawRoomName } = await params;
+        const roomName = decodeURIComponent(rawRoomName);
+        const doc = await getAdminDb().collection('session_transcripts').doc(roomName).get();
 
         if (!doc.exists) {
             return NextResponse.json({ error: 'Transcript not found' }, { status: 404 });
@@ -20,7 +21,7 @@ export async function GET(
         // Also check for associated recording
         let recordingUrl: string | null = null;
         try {
-            const recDoc = await adminDb.collection('recordings').doc(roomName).get();
+            const recDoc = await getAdminDb().collection('recordings').doc(roomName).get();
             if (recDoc.exists) {
                 const recData = recDoc.data() as Record<string, unknown>;
                 recordingUrl = (recData?.recordingUrl as string) ?? null;

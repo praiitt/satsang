@@ -10,6 +10,13 @@
         }
       },
       {
+        "source": "/satsang-marketing-server/**",
+        "run": {
+          "serviceId": "satsang-marketing-server",
+          "region": "asia-south1"
+        }
+      },
+      {
         "source": "**",
         "run": {
           "serviceId": "satsang-frontend",

@@ -480,18 +480,52 @@ async def entrypoint(ctx: JobContext):
     # Start the session (this connects to the room)
     await session.start(agent, room=ctx.room)
     
+    # Handle chat messages from the frontend
+    from livekit import rtc
+    
+    async def _on_data_received(data, participant=None, kind=None, topic=None):
+        try:
+            data_bytes = None
+            if isinstance(data, bytes): data_bytes = data
+            elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+            elif hasattr(data, 'data'): data_bytes = data.data
+            elif isinstance(data, str): data_bytes = data.encode('utf-8')
+            else: return
+            if data_bytes is None: return
+            payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+            try:
+                payload = json.loads(payload_str)
+            except Exception:
+                asyncio.create_task(session.chat(payload_str))
+                return
+            if isinstance(payload, dict):
+                if 'message' in payload:
+                    asyncio.create_task(session.chat(payload['message']))
+                elif 'text' in payload:
+                    asyncio.create_task(session.chat(payload['text']))
+        except Exception:
+            pass
+    def _handle_room_data(data, participant=None, kind=None, topic=None):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+            else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+        except Exception:
+            pass
+    ctx.room.on("data_received", _handle_room_data)
+    
     # Now that we're connected, set the publish function
     agent._publish_data_fn = ctx.room.local_participant.publish_data
     
     if user_language == "hi":
         welcome_msg = (
-            "नमस्ते। मैं ट्रेन्स म्यूजिक गाइड हूँ। "
-            "क्या आप संगीत के माध्यम से चेतना का विस्तार करना चाहते हैं?"
+            "स्वागत है। मैं ट्रान्स और शैमैनिक ज्ञान का AI मार्गदर्शक हूँ। मेरी मूल शिक्षाएं ध्वनि चिकित्सा, "
+            "चेतना के विभिन्न स्तरों की खोज और ध्यान पर केंद्रित हैं। आज मैं आपकी आंतरिक यात्रा में कैसे मार्गदर्शन कर सकता हूँ?"
         )
     else:
         welcome_msg = (
-            "Welcome. I am the Trance Music Guide. "
-            "Do you want to expand your consciousness through sound and know my teachings?"
+            "Welcome. I am the AI guide for Trance and Shamanic Wisdom. My core teachings focus on sound healing, "
+            "exploring altered states of consciousness, and dynamic meditation. How may I guide your inner journey today?"
         )
 
     await session.say(welcome_msg, allow_interruptions=True)

@@ -550,31 +550,15 @@ For example:
     await ctx.connect()
 
     # Send personalized welcome message based on chart data availability
-    has_chart_data = (
-        vedic_agent.user_chart_summary and 
-        vedic_agent.user_chart_summary != "User's birth chart data is not available." and
-        "Unknown" not in vedic_agent.user_chart_summary[:100]
-    )
-    
-    if has_chart_data:
-        # Returning user - has chart data
+    if user_language == 'hi':
         welcome_msg = (
-            "Namaste! Maine aapki kundli dekh li hai. "
-            "Aap mujhse apne bhavishya, rashifal, ya kisi bhi jyotish prashn ke baare mein pooch sakte hain." 
-            if user_language == 'hi' else
-            "Welcome back! I have your birth chart ready. "
-            "Feel free to ask me about your future, horoscope, or any astrological guidance."
+            "प्रणाम। मैं वैदिक ज्योतिषी का AI स्वरूप हूँ। मेरी मूल शिक्षाएं ग्रहों की स्थिति, ब्रह्मांडीय समय चक्र "
+            "और आपके कर्मों के ब्लूप्रिंट को समझने पर केंद्रित हैं। आज मैं आपके नक्षत्रों को कैसे स्पष्ट कर सकता हूँ?"
         )
     else:
-        # New user - needs to provide birth details
         welcome_msg = (
-            "Namaste! Main aapka Vedic Jyotish guide hoon. "
-            "Mujhe aapki kundli banane ke liye aapki janam details chahiye. "
-            "Kya aap apni janam tareekh, samay, aur jagah share karenge?" 
-            if user_language == 'hi' else
-            "Welcome! I'm your Vedic Astrology guide. "
-            "I'll need your birth details to prepare your chart. "
-            "Could you please share your birth date, time, and place?"
+            "Namaste. I am the AI manifestation of the Vedic Astrologer. My core teachings focus on understanding "
+            "planetary alignments, cosmic timing, and navigating your karmic blueprint. How may I bring clarity to your stars today?"
         )
     
     await session.say(welcome_msg)

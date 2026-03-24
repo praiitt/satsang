@@ -20,9 +20,20 @@ async function getTrack(id: string) {
         if (!doc.exists) return null;
 
         const data = doc.data();
+        let trackAudioUrl = data?.audioUrl || data?.audio_url;
+        let trackImageUrl = data?.imageUrl || data?.image_url;
+        
+        // If audioUrl is missing at the root, check if there's a nested tracks array
+        if (!trackAudioUrl && data?.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
+            trackAudioUrl = data.tracks[0].audioUrl || data.tracks[0].streamAudioUrl || data.tracks[0].sourceAudioUrl;
+            trackImageUrl = data.tracks[0].imageUrl || data.tracks[0].sourceImageUrl || trackImageUrl;
+        }
+
         return {
             id: doc.id,
             ...data,
+            audioUrl: trackAudioUrl,
+            imageUrl: trackImageUrl,
             // Serializable dates
             createdAt: data?.createdAt ? new Date(data.createdAt._seconds * 1000).toISOString() : null,
         };

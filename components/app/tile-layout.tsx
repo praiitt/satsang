@@ -2,15 +2,14 @@ import React, { useMemo } from 'react';
 import { Track } from 'livekit-client';
 import { AnimatePresence, type Transition, motion } from 'motion/react';
 import {
-  /* BarVisualizer, */
   type TrackReference,
   VideoTrack,
   useLocalParticipant,
   useTracks,
   useRemoteParticipants,
-  /* useVoiceAssistant, */
 } from '@livekit/components-react';
 import { cn } from '@/lib/utils';
+import { AgentAudioVisualizerAura } from '@/components/agents-ui/agent-audio-visualizer-aura';
 
 const MotionContainer = motion.create('div');
 
@@ -87,8 +86,13 @@ export function TileLayout({ chatOpen }: TileLayoutProps) {
   const agentAudioTrack = audioTracks.length > 0 ? audioTracks[0] : undefined;
   const agentVideoTrack = videoTracks.length > 0 ? videoTracks[0] : undefined;
 
-  // Use simple state proxy
-  const agentState = agent ? 'connected' : 'disconnected';
+  const agentState = agent
+    ? agentAudioTrack?.publication?.isMuted
+      ? 'thinking'
+      : agent.isSpeaking
+        ? 'speaking'
+        : 'listening'
+    : 'disconnected';
   const [screenShareTrack] = useTracks([Track.Source.ScreenShare]);
   const cameraTrack: TrackReference | undefined = useLocalTrackRef(Track.Source.Camera);
 
@@ -119,39 +123,34 @@ export function TileLayout({ chatOpen }: TileLayoutProps) {
                 // Audio Agent
                 <MotionContainer
                   key="agent"
+                  layout="position"
                   layoutId="agent"
                   initial={{
                     opacity: 0,
-                    scale: 0,
                   }}
                   animate={{
                     opacity: 1,
-                    scale: chatOpen ? 1 : 5,
+                    borderRadius: chatOpen ? 6 : 12,
                   }}
                   transition={{
                     ...ANIMATION_TRANSITION,
                     delay: animationDelay,
                   }}
                   className={cn(
-                    'bg-background aspect-square h-[90px] rounded-md border border-transparent transition-[border,drop-shadow]',
+                    'bg-background aspect-square rounded-md border border-transparent transition-[border,drop-shadow]',
+                    chatOpen ? 'h-[90px]' : 'h-full max-h-[400px] w-full max-w-[400px] place-self-center', // use actual dimensions
                     chatOpen && 'border-input/50 drop-shadow-lg/10 delay-200'
                   )}
                 >
-                  {/* Visualizer replaced with simple dot for compatibility */}
-                  <div className="flex h-full items-center justify-center gap-1">
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        opacity: [0.5, 1, 0.5]
-                      }}
-                      transition={{
-                        duration: 1.5,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      className="h-4 w-4 rounded-full bg-primary"
+                  {/* Visualizer replaced with Aura Visualizer */}
+                  <div className="flex h-full items-center justify-center gap-1 p-2">
+                    <AgentAudioVisualizerAura
+                      state={agentState}
+                      audioTrack={agentAudioTrack as any}
+                      color="#f59e0b"
+                      size="xl"
+                      className="w-full h-full"
                     />
-                    {/* <BarVisualizer ... /> removed */}
                   </div>
                 </MotionContainer>
               )}

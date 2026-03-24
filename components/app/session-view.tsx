@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { type Transition, type Variants, motion } from 'motion/react';
 import type { AppConfig } from '@/app-config';
-import { ChatTranscript } from '@/components/app/chat-transcript';
+import { AgentChatTranscript } from '@/components/agents-ui/agent-chat-transcript';
 import { PreConnectMessage } from '@/components/app/preconnect-message';
 import { useSession } from '@/components/app/session-provider';
 import { TileLayout } from '@/components/app/tile-layout';
@@ -220,10 +220,10 @@ export const SessionView = ({
             className="px-4 pt-40 md:px-6"
             style={{ paddingBottom: `${bottomPadding}px` }}
           >
-            <ChatTranscript
-              hidden={!chatOpen}
+            <AgentChatTranscript
+              agentState={agentIsSleeping ? 'thinking' : 'listening'}
               messages={messages}
-              className="mx-auto max-w-2xl space-y-3 transition-opacity duration-300 ease-out"
+              className={cn("mx-auto max-w-2xl space-y-3 transition-opacity duration-300 ease-out", !chatOpen && "hidden")}
             />
           </ScrollArea>
         </div>
@@ -244,10 +244,7 @@ export const SessionView = ({
             className="bg-background relative mx-auto max-w-2xl pb-[max(12px,env(safe-area-inset-bottom))] md:pb-12"
           >
             <Fade bottom className="absolute inset-x-0 top-0 h-4 -translate-y-full" />
-            {/* YouTube Bhajan Player with controls */}
-            <div className="mb-2 px-3">
-              <YouTubeBhajanPlayer agentName={appConfig.agentName} />
-            </div>
+            {/* YouTube Bhajan Player with controls (Removed as per request) */}
             <AgentControlBar controls={controls} onChatOpenChange={setChatOpen} />
           </div>
         </MotionBottom>

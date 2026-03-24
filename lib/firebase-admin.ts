@@ -70,6 +70,7 @@ export function initAdmin() {
   }
 }
 
+// Export getAdminDb as the primary way to access Firestore
 export function getAdminDb() {
   initAdmin();
   return admin.firestore();

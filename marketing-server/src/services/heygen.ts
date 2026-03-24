@@ -30,15 +30,18 @@ interface HeyGenVideoStatusResponse {
   status: 'queued' | 'processing' | 'ready' | 'failed' | 'unknown';
   videoUrl?: string;
   thumbnailUrl?: string;
+  error?: string; // Add error message field
   raw: any;
 }
 
 export interface CreateAvatarClipParams {
   avatarId: string;
+  avatarType?: 'avatar' | 'talking_photo';
   text: string;
   voiceId?: string;
   ratio?: string;
   resolution?: string;
+  metadata?: Record<string, string | number | boolean>;
 }
 
 function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
@@ -56,19 +59,24 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
     const url = new URL(HEYGEN_BASE_URL);
     const bodyString = options.body !== undefined ? JSON.stringify(options.body) : undefined;
 
-    const req = https.request(
-      {
-        hostname: url.hostname,
-        port: url.port || 443,
-        path: fullPath,
-        method: options.method,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Api-Key': HEYGEN_API_KEY || '',
-          'Content-Length': bodyString ? Buffer.byteLength(bodyString) : 0,
-        },
+    // eslint-disable-next-line no-console
+    console.log(`[heygen] Request: ${options.method} ${fullPath} (Base: ${HEYGEN_BASE_URL})`);
+
+    const reqOptions = {
+      hostname: url.hostname,
+      port: url.port || 443,
+      path: fullPath,
+      method: options.method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': 'Node.js/marketing-server',
+        'X-Api-Key': HEYGEN_API_KEY || '',
+        'Content-Length': bodyString ? Buffer.byteLength(bodyString) : 0,
       },
-      (res) => {
+    };
+
+    const req = https.request(reqOptions, (res) => {
         let data = '';
         const isStatusEndpoint = options.path.includes('status');
         res.on('data', (chunk) => {
@@ -80,35 +88,26 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
             let errorMessage = `HTTP ${res.statusCode}`;
             let errorDetails: any = null;
 
-            // Don't log 404 errors for status endpoints - HeyGen doesn't have that endpoint (expected)
-            // Only log non-404 errors or errors for non-status endpoints
-            if (!(isStatusEndpoint && res.statusCode === 404)) {
-              // eslint-disable-next-line no-console
-              console.warn(`[heygen] HTTP ${res.statusCode} for ${options.method} ${options.path}`);
-            }
+            // Always log errors during debugging
+            // eslint-disable-next-line no-console
+            console.warn(`[heygen] HTTP ${res.statusCode} for ${options.method} ${fullPath}`);
 
             // Try to parse error response as JSON
             if (data) {
               try {
                 errorDetails = JSON.parse(data);
                 errorMessage = errorDetails.message || errorDetails.error || errorMessage;
-                // Don't log 404 errors for status endpoints - HeyGen doesn't have that endpoint
-                if (!isStatusEndpoint || res.statusCode !== 404) {
-                  // eslint-disable-next-line no-console
-                  console.error(`[heygen] API Error ${res.statusCode}:`, errorDetails);
-                }
-              } catch {
+                // eslint-disable-next-line no-console
+                console.error(`[heygen] API Error Body ${res.statusCode}:`, data);
+              } catch (e) {
                 // Not JSON, use raw response
-                // Don't log 404 errors for status endpoints to reduce log spam
-                if (!isStatusEndpoint || res.statusCode !== 404) {
-                  // eslint-disable-next-line no-console
-                  console.error(
-                    `[heygen] API Error ${res.statusCode}. Raw response:`,
-                    data.substring(0, 500)
-                  );
-                }
-                errorMessage = `${errorMessage}: ${data.substring(0, 200)}`;
+                // eslint-disable-next-line no-console
+                console.error(
+                  `[heygen] API Error ${res.statusCode}. Raw response:`,
+                  data.substring(0, 500)
+                );
               }
+              errorMessage = `${errorMessage}: ${data.substring(0, 200)}`;
             }
 
             const error = new Error(errorMessage) as Error & { statusCode?: number; details?: any };
@@ -190,14 +189,26 @@ export async function createAvatarClip(
       }
     }
 
-    // Use talking_photo format (matches working test script)
-    const payload = {
+    const characterType = params.avatarType || 'avatar'; // Default to avatar 
+
+    let characterConfig: any;
+    if (characterType === 'talking_photo') {
+      characterConfig = {
+        type: 'talking_photo',
+        talking_photo_id: params.avatarId,
+      };
+    } else {
+      characterConfig = {
+        type: 'avatar',
+        avatar_id: params.avatarId,
+        avatar_style: 'normal',
+      };
+    }
+
+    const payload: any = {
       video_inputs: [
         {
-          character: {
-            type: 'talking_photo',
-            talking_photo_id: params.avatarId, // f31ce977d65e47caa3e92a46703d6b1f
-          },
+          character: characterConfig,
           voice: {
             type: 'text',
             input_text: params.text,
@@ -206,12 +217,18 @@ export async function createAvatarClip(
           },
         },
       ],
-      background: 'white', // Default background
       dimension: {
         width,
         height,
       },
+      // Pass metadata to HeyGen - v2 API returns this in webhooks
+      metadata: params.metadata,
     };
+
+    // Only apply a forced background for talking photos, or leave default for avatars
+    if (characterType === 'talking_photo') {
+      payload.background = { type: 'color', value: '#FFFFFF' };
+    }
 
     // eslint-disable-next-line no-console
     console.log(`[heygen] Creating talking photo clip for avatar ${params.avatarId}`);
@@ -272,9 +289,12 @@ export async function getAvatarClipStatus(videoId: string): Promise<HeyGenVideoS
   // Try the most likely status endpoints (matching test script)
   // Note: HeyGen status endpoint may not exist, but we try the RESTful pattern
   const statusEndpoints = [
-    `/v2/video/${videoId}`, // Most RESTful pattern (matches /v2/video/generate)
-    `/v2/video/status/${videoId}`, // Alternative status endpoint
-    `/v2/video/status?video_id=${encodeURIComponent(videoId)}`, // Query string variant
+    `/v1/video_status.get?video_id=${videoId}`, // Official endpoint from docs
+    `/v1/video_status?video_id=${videoId}`, // Common variant
+    `/v2/video_status.get?video_id=${videoId}`, // Documented v2 variant
+    `/v2/video/${videoId}`, // RESTful pattern
+    `/v2/video/status/${videoId}`, // Alternative
+    `/v2/video/status?video_id=${encodeURIComponent(videoId)}`, // Query variant
   ];
 
   let lastError: Error | null = null;
@@ -304,10 +324,14 @@ export async function getAvatarClipStatus(videoId: string): Promise<HeyGenVideoS
 
       const videoUrl = json?.data?.video_url || json?.data?.videoUrl || json?.video_url;
       const thumbnailUrl = json?.data?.cover_url || json?.data?.thumbnail_url || undefined;
+      const errorMsg = json?.data?.error?.message || json?.error?.message || (status === 'failed' ? 'Generation failed' : undefined);
 
-      // Only log if we actually got a successful response
       // eslint-disable-next-line no-console
       console.log(`[heygen] ✅ Status check successful (${endpoint}): ${status}`);
+      if (errorMsg) {
+        // eslint-disable-next-line no-console
+        console.error(`[heygen] Failure reason: ${errorMsg}`);
+      }
       if (videoUrl) {
         // eslint-disable-next-line no-console
         console.log(`[heygen] Video URL: ${videoUrl}`);
@@ -318,6 +342,7 @@ export async function getAvatarClipStatus(videoId: string): Promise<HeyGenVideoS
         status,
         videoUrl,
         thumbnailUrl,
+        error: errorMsg,
         raw: json,
       };
     } catch (error: any) {
@@ -335,6 +360,52 @@ export async function getAvatarClipStatus(videoId: string): Promise<HeyGenVideoS
     success: false,
     status: 'unknown',
     raw: { error: lastError?.message || 'Status endpoint not available (HeyGen limitation)' },
+  };
+}
+
+/**
+ * List available avatars from HeyGen.
+ * Tries multiple endpoints to find the working one for the current API key.
+ */
+export async function listAvatars(): Promise<{
+  success: boolean;
+  avatars: Array<{ id: string; name?: string; type?: string; thumbnail?: string }>;
+  raw: any;
+}> {
+  const avatarEndpoints = ['/v2/avatars', '/v1/avatars', '/v1/avatar.list'];
+  let lastError: any = null;
+
+  for (const endpoint of avatarEndpoints) {
+    try {
+      const json: any = await httpRequestJson<any>({
+        method: 'GET',
+        path: endpoint,
+      });
+
+      const avatarsList = json?.data?.avatars || json?.data?.list || json?.avatars || json?.data || (Array.isArray(json) ? json : []);
+
+      if (Array.isArray(avatarsList) && avatarsList.length > 0) {
+        return {
+          success: true,
+          avatars: avatarsList.map((a: any) => ({
+            id: a.avatar_id || a.id || a.avatarId || String(a),
+            name: a.avatar_name || a.name || 'Unnamed Avatar',
+            type: a.avatar_type || a.type || 'talking_photo',
+            thumbnail: a.thumbnail_url || a.preview_url || a.image_url || undefined,
+          })),
+          raw: json,
+        };
+      }
+    } catch (err) {
+      lastError = err;
+      continue;
+    }
+  }
+
+  return {
+    success: false,
+    avatars: [],
+    raw: lastError || { error: 'No avatars found or endpoints failed' },
   };
 }
 
@@ -367,63 +438,17 @@ export async function healthCheck(): Promise<{
   }
 
   try {
-    // Try to list avatars - common endpoints: /v1/avatar.list, /v1/avatars, /v2/avatars
-    // We'll try multiple endpoints to see which one works
-    const avatarEndpoints = ['/v1/avatar.list', '/v1/avatars', '/v2/avatars', '/v1/avatar'];
-
-    let lastError: Error | null = null;
-    for (const endpoint of avatarEndpoints) {
-      try {
-        // eslint-disable-next-line no-console
-        console.log(`[heygen-health] Trying endpoint: ${endpoint}`);
-        const json: any = await httpRequestJson<any>({
-          method: 'GET',
-          path: endpoint,
-        });
-
-        result.rawResponse = json;
-
-        // Try to extract avatars from various response formats
-        const avatarsList =
-          json?.data?.avatars ||
-          json?.data?.list ||
-          json?.avatars ||
-          json?.data ||
-          (Array.isArray(json) ? json : []);
-
-        if (Array.isArray(avatarsList) && avatarsList.length > 0) {
-          result.avatars = avatarsList.map((a: any) => ({
-            id: a.avatar_id || a.id || a.avatarId || String(a),
-            name: a.name || a.avatar_name || undefined,
-            type: a.type || a.avatar_type || undefined,
-          }));
-          result.success = true;
-          // eslint-disable-next-line no-console
-          console.log(
-            `[heygen-health] ✅ Success! Found ${result.avatars.length} avatars via ${endpoint}`
-          );
-          return result;
-        } else if (json && typeof json === 'object') {
-          // Even if no avatars, getting a valid JSON response means API is working
-          result.success = true;
-          result.error = `API connected but no avatars found in response from ${endpoint}`;
-          // eslint-disable-next-line no-console
-          console.log(
-            `[heygen-health] ✅ API connected but no avatars in response from ${endpoint}`
-          );
-          return result;
-        }
-      } catch (err) {
-        lastError = err as Error;
-        // Continue to next endpoint
-        continue;
-      }
+    const listResult = await listAvatars();
+    result.rawResponse = listResult.raw;
+    
+    if (listResult.success) {
+      result.avatars = listResult.avatars;
+      result.success = true;
+      return result;
+    } else {
+      result.error = listResult.raw?.message || 'Failed to list avatars';
+      return result;
     }
-
-    // If all endpoints failed, return error
-    result.error = `All avatar endpoints failed. Last error: ${lastError?.message || 'Unknown'}`;
-    result.rawResponse = { lastError: lastError?.message };
-    return result;
   } catch (error: any) {
     result.error = String(error?.message || error);
     result.rawResponse = { error: String(error) };

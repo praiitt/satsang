@@ -16,6 +16,15 @@ export const musicTranslationsHi = {
     'features_license_title': 'पूर्ण स्वामित्व और लाइसेंस',
     'features_license_desc': 'व्यावसायिक लाइसेंस के साथ अपने ट्रैक डाउनलोड करें और कहीं भी उपयोग करें - Spotify, YouTube, आदि।',
 
+    // How to Manifest Section
+    howToManifestTitle: 'ईश्वरीय आवृत्तियों को कैसे प्रकट करें',
+    manifestStep1Title: 'अपना इरादा टाइप करें',
+    manifestStep1Desc: 'आप क्या चाहते हैं, साझा करें—शांति, ऊर्जा या भक्ति। AI आपकी आत्मा के अनुरोध को सुनता है।',
+    manifestStep2Title: 'AI प्रकटीकरण',
+    manifestStep2Desc: 'कुछ ही क्षणों में, RRAASI आपका अद्वितीय भजन या मंत्र बनाने के लिए प्राचीन संगीत संरचनाओं को बुनता है।',
+    manifestStep3Title: 'अपने स्थान को ऊपर उठाएं',
+    manifestStep3Desc: 'अपनी आभा, पर्यावरण को शुद्ध करने और अपने कंपन को बढ़ाने के लिए इन उच्च-ऊर्जा आवृत्तियों को चलाएं।',
+
     // Features Section
     featuresTitle: 'आप क्या बना सकते हैं',
 

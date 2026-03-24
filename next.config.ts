@@ -87,6 +87,8 @@ const nextConfig: NextConfig = {
     const BACKEND_URL = process.env.BACKEND_SERVICE_URL || 'http://localhost:3003';
 
     console.log('[Next.Config] AUTH_URL:', AUTH_URL);
+    console.log('[Next.Config] MARKETING_SERVER_URL:', MARKETING_SERVER_URL);
+    console.log('[Next.Config] BACKEND_URL:', BACKEND_URL);
     console.log('[Next.Config] Suno Rewrite Dst:', `${AUTH_URL}/suno/:path*`);
 
     return [
@@ -111,10 +113,36 @@ const nextConfig: NextConfig = {
         source: '/api/transcript/:path*',
         destination: `${MARKETING_SERVER_URL}/transcript/:path*`,
       },
+      // YouTube OAuth (Proxied to Marketing Server as per user request)
+      {
+        source: '/api/auth/youtube',
+        destination: `${MARKETING_SERVER_URL}/youtube-auth/init`,
+      },
+      {
+        source: '/api/auth/youtube/callback',
+        destination: `${MARKETING_SERVER_URL}/youtube-auth/callback`,
+      },
+      {
+        source: '/api/auth/status',
+        has: [{ type: 'query', key: 'provider', value: 'youtube' }],
+        destination: `${MARKETING_SERVER_URL}/youtube-auth/status`,
+      },
       // Auth Server Proxy
       {
         source: '/api/auth/:path*',
         destination: `${AUTH_URL}/auth/:path*`,
+      },
+      {
+        source: '/api/auth-chat/:path*',
+        destination: `${AUTH_URL}/chat/:path*`,
+      },
+      {
+        source: '/api/auth-marketing/:path*',
+        destination: `${AUTH_URL}/marketing/:path*`,
+      },
+      {
+        source: '/api/suno/:path*',
+        destination: `${AUTH_URL}/suno/:path*`,
       },
       // Suno API Proxy (Auth Server)
       {

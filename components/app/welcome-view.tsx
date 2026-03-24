@@ -123,9 +123,9 @@ export const WelcomeView = ({
                   controls
                   playsInline
                   className="h-full w-full object-cover"
-                  poster="/product-video-poster.jpg"
+                  poster="https://storage.googleapis.com/rraasi-public-assets/product-video-poster.jpg"
                 >
-                  <source src="https://storage.googleapis.com/satsangpublicurls/Raassi_Intro.mp4" type="video/mp4" />
+                  <source src="https://storage.googleapis.com/rraasi-public-assets/Raassi_Intro.mp4" type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
                 {/* Glossy Overlay */}
@@ -139,7 +139,6 @@ export const WelcomeView = ({
           </div>
         </div>
       </section>
-
 
 
       {/* My Spiritual Circle */}

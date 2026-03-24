@@ -662,6 +662,41 @@ async def entrypoint(ctx: JobContext):
             )
             
             await session.start(agent=chitragupta_agent, room=ctx.room)
+            
+            # Handle chat messages from the frontend
+            from livekit import rtc
+            
+            async def _on_data_received(data, participant=None, kind=None, topic=None):
+                try:
+                    data_bytes = None
+                    if isinstance(data, bytes): data_bytes = data
+                    elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+                    elif hasattr(data, 'data'): data_bytes = data.data
+                    elif isinstance(data, str): data_bytes = data.encode('utf-8')
+                    else: return
+                    if data_bytes is None: return
+                    payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+                    try:
+                        import json
+                        payload = json.loads(payload_str)
+                    except Exception:
+                        asyncio.create_task(session.chat(payload_str))
+                        return
+                    if isinstance(payload, dict):
+                        if 'message' in payload:
+                            asyncio.create_task(session.chat(payload['message']))
+                        elif 'text' in payload:
+                            asyncio.create_task(session.chat(payload['text']))
+                except Exception:
+                    pass
+            def _handle_room_data(data, participant=None, kind=None, topic=None):
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+                    else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+                except Exception:
+                    pass
+            ctx.room.on("data_received", _handle_room_data)
             await ctx.connect()
             
             # Wait for disconnect and save transcript
@@ -839,6 +874,41 @@ async def entrypoint(ctx: JobContext):
             )
             
             await session.start(agent=tarot_agent, room=ctx.room)
+            
+            # Handle chat messages from the frontend
+            from livekit import rtc
+            
+            async def _on_data_received(data, participant=None, kind=None, topic=None):
+                try:
+                    data_bytes = None
+                    if isinstance(data, bytes): data_bytes = data
+                    elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+                    elif hasattr(data, 'data'): data_bytes = data.data
+                    elif isinstance(data, str): data_bytes = data.encode('utf-8')
+                    else: return
+                    if data_bytes is None: return
+                    payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+                    try:
+                        import json
+                        payload = json.loads(payload_str)
+                    except Exception:
+                        asyncio.create_task(session.chat(payload_str))
+                        return
+                    if isinstance(payload, dict):
+                        if 'message' in payload:
+                            asyncio.create_task(session.chat(payload['message']))
+                        elif 'text' in payload:
+                            asyncio.create_task(session.chat(payload['text']))
+                except Exception:
+                    pass
+            def _handle_room_data(data, participant=None, kind=None, topic=None):
+                try:
+                    loop = asyncio.get_event_loop()
+                    if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+                    else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+                except Exception:
+                    pass
+            ctx.room.on("data_received", _handle_room_data)
             await ctx.connect()
             
             # Wait for disconnect and save transcript
@@ -952,6 +1022,41 @@ async def entrypoint(ctx: JobContext):
         session.on("metrics_collected", _on_metrics_collected)
 
         await session.start(agent=agent_instance, room=ctx.room)
+        
+        # Handle chat messages from the frontend
+        from livekit import rtc
+        
+        async def _on_data_received(data, participant=None, kind=None, topic=None):
+            try:
+                data_bytes = None
+                if isinstance(data, bytes): data_bytes = data
+                elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+                elif hasattr(data, 'data'): data_bytes = data.data
+                elif isinstance(data, str): data_bytes = data.encode('utf-8')
+                else: return
+                if data_bytes is None: return
+                payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+                try:
+                    import json
+                    payload = json.loads(payload_str)
+                except Exception:
+                    asyncio.create_task(session.chat(payload_str))
+                    return
+                if isinstance(payload, dict):
+                    if 'message' in payload:
+                        asyncio.create_task(session.chat(payload['message']))
+                    elif 'text' in payload:
+                        asyncio.create_task(session.chat(payload['text']))
+            except Exception:
+                pass
+        def _handle_room_data(data, participant=None, kind=None, topic=None):
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+                else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+            except Exception:
+                pass
+        ctx.room.on("data_received", _handle_room_data)
 
 
         logger.info("AgentSession created successfully")
@@ -1124,8 +1229,14 @@ async def entrypoint(ctx: JobContext):
                 payload = json.loads(payload_str)
                 logger.info(f"[DATA_RECEIVED] Parsed JSON: {payload}")
             except json.JSONDecodeError as e:
-                logger.debug(f"Not JSON data (ignoring): {e}, payload: {payload_str[:100]}")
+                logger.debug(f"Not JSON data (handling as chat): {e}, payload: {payload_str[:100]}")
+                asyncio.create_task(session.chat(payload_str))
                 return
+            
+            # Forward to chat if format matches
+            if isinstance(payload, dict):
+                if 'message' in payload: asyncio.create_task(session.chat(payload['message']))
+                elif 'text' in payload: asyncio.create_task(session.chat(payload['text']))
             
             # Only handle agent.control messages
             # Check topic first (if provided), then check payload type
@@ -1377,32 +1488,16 @@ async def entrypoint(ctx: JobContext):
     # The greeting should be engaging and invite conversation
     # Greeting language matches user's language preference
     if user_language == 'hi':
-        if is_live_satsang:
-            greeting = (
-                "नमस्ते! मैं आपका आध्यात्मिक गुरु हूं। मेरी शिक्षा का सार यह है कि परमात्मा आपके भीतर ही है, और ध्यान तथा प्रेम के माध्यम से "
-                "आप अपनी सच्ची दिव्यता को जान सकते हैं। आज हम सभी साधकों के साथ सत्संग में हैं। "
-                "क्या आप किसी विशेष विषय पर चर्चा करना चाहेंगे? मैं आपके लिए भक्ति भजन चला सकता हूं, "
-                "या किसी संत का प्रेरक वाणी प्रवचन भी ढूंढ सकता हूं।"
-            )
-        else:
-            greeting = (
-                "नमस्ते। मैं आपका गुरुजी हूँ। "
-                "क्या आप मेरी शिक्षाओं और सत्संग के महत्व के बारे में जानना चाहते हैं? "
-                "या आज आप किस विषय पर बात करना चाहेंगे?"
-            )
+        greeting = (
+            "नमस्ते। मैं सनातन धर्म का AI आध्यात्मिक मार्गदर्शक हूँ। मेरी मूल शिक्षाएं वेदों के शाश्वत ज्ञान, "
+            "कर्म को समझने और सत्य के मार्ग पर चलने पर केंद्रित हैं। आज मैं आपके आध्यात्मिक सफर में कैसे मार्गदर्शन कर सकता हूँ?"
+        )
     else:
-        if is_live_satsang:
-            greeting = (
-                "Namaste. I am Guruji. "
-                "Do you want to know about my teachings and the path of Satsang? "
-                "Or is there a specific topic you would like to discuss today?"
-            )
-        else:
-            greeting = (
-                "Namaste. I am Guruji. "
-                "Do you want to know my teachings? "
-                "How may I guide you on your spiritual journey today?"
-            )
+        greeting = (
+            "Namaste. I am an AI spiritual guide immersed in Sanatana Dharma. My core teachings focus on "
+            "the timeless wisdom of the Vedas, understanding Karma, and walking the path of truth. "
+            "How may I guide your spiritual journey today?"
+        )
     
     logger.info("Sending proactive initial greeting to user")
     

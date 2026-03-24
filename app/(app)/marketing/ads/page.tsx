@@ -1,52 +1,60 @@
 'use client';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Download, Copy, Send, Sparkles, Image as ImageIcon, Video, Trash2, 
+  ChevronDown, ChevronUp, ChevronRight, RefreshCw, ExternalLink, Bot, Play, Edit3,
+  Layout, Target, Users, Megaphone, CheckCircle2, AlertCircle, X,
+  ArrowRight, Plus, Search, Filter, Monitor, Smartphone, MessageSquare
+} from 'lucide-react';
 import { Button } from '@/components/livekit/button';
 import { getCurrentUser } from '@/lib/auth-api';
 import { MarketingAgentInterface } from '@/components/marketing/marketing-agent-interface';
-import { Download, Copy, Send, Sparkles, Image, Video, Trash2, ChevronDown, ChevronUp, RefreshCw, ExternalLink, Bot, Play, Edit3 } from 'lucide-react';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
+// --- Types ---
 interface AdBrief {
-    id: string;
-    title: string;
-    topic: string;
-    objective: string;
-    audience: string;
-    cta: string;
-    tone: string;
-    language: string;
-    channels: string[];
-    createdAt: number;
+  id: string;
+  title: string;
+  topic: string;
+  objective: string;
+  audience: string;
+  cta: string;
+  tone: string;
+  language: string;
+  channels: string[];
+  createdAt: number;
+  latestVideoUrl?: string;
+  latestVideoStatus?: string;
 }
 
 interface AdVariant {
-    id: string;
-    type: 'text' | 'image';
-    platform?: string;
-    caption?: string;
-    hashtags?: string[];
-    hooks?: string[];
-    imagePrompt?: string;
-    imageUrl?: string;
-    videoUrl?: string;
-    videoStatus?: 'queued' | 'processing' | 'ready' | 'failed';
-    videoId?: string;
-    videoScript?: string;
-    publishedAt?: number;
-    publishedToChannels?: string[];
-    publishStatus?: 'published' | 'partial' | 'failed';
-    lastPublishError?: string;
-    createdAt: number;
+  id: string;
+  type: 'text' | 'image';
+  platform?: string;
+  caption?: string;
+  hashtags?: string[];
+  hooks?: string[];
+  imagePrompt?: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  videoStatus?: 'queued' | 'processing' | 'ready' | 'failed';
+  videoId?: string;
+  videoScript?: string;
+  videoThumbnailUrl?: string;
+  videoError?: string;
+  publishedAt?: number;
+  publishedToChannels?: string[];
+  publishStatus?: 'published' | 'partial' | 'failed';
+  lastPublishError?: string;
+  createdAt: number;
 }
 
 interface BufferChannel {
-    id: string;
-    name: string;
-    service: string;
-    username?: string;
+  id: string;
+  name: string;
+  service: string;
+  username?: string;
 }
 
 const API = '/api/marketing/ads';
@@ -55,1173 +63,1109 @@ const TONES = ['devotional', 'inspirational', 'informative', 'playful', 'emotion
 const LANGUAGES = ['english', 'hindi', 'hinglish'];
 const OBJECTIVES = ['Awareness', 'App Downloads', 'Engagement', 'Event Promotion', 'Community Building'];
 
-const platformIcon: Record<string, string> = {
-    instagram: '📷',
-    twitter: '🐦',
-    linkedin: '💼',
-    facebook: '👥',
-};
-
-const serviceColor: Record<string, string> = {
-    instagram: 'from-purple-500 to-pink-500',
-    twitter: 'from-sky-400 to-blue-500',
-    linkedin: 'from-blue-600 to-blue-800',
-    facebook: 'from-blue-500 to-indigo-600',
-    tiktok: 'from-black to-red-600',
-    pinterest: 'from-red-500 to-red-700',
-};
-
-const AVATAR_OPTIONS = [
-    { id: 'f31ce977d65e47caa3e92a46703d6b1f', name: 'Rraasi Brand Avatar', type: 'Talking Photo' },
-    { id: 'Anna_public_3_20240108', name: 'Anna (Professional)', type: 'Video Avatar' },
-    { id: 'Susan_public_2_20240108', name: 'Susan (Casual)', type: 'Video Avatar' },
-    { id: 'Edward_public_1_20240108', name: 'Edward (Corporate)', type: 'Video Avatar' },
+const FALLBACK_AVATARS = [
+  { id: 'f31ce977d65e47caa3e92a46703d6b1f', name: 'Rraasi Brand Avatar', type: 'Talking Photo', thumbnail: '/avatars/brand.png' },
+  { id: 'Anna_public_3_20240108', name: 'Anna (Professional)', type: 'Video Avatar', thumbnail: '/avatars/anna.png' },
+  { id: 'Susan_public_2_20240108', name: 'Susan (Casual)', type: 'Video Avatar', thumbnail: '/avatars/susan.png' },
+  { id: 'Edward_public_1_20240108', name: 'Edward (Corporate)', type: 'Video Avatar', thumbnail: '/avatars/edward.png' },
 ];
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+const platformInfo: Record<string, { icon: any, color: string }> = {
+  instagram: { icon: Smartphone, color: 'from-purple-500 to-pink-500' },
+  twitter: { icon: MessageSquare, color: 'from-sky-400 to-blue-500' },
+  linkedin: { icon: Monitor, color: 'from-blue-600 to-blue-800' },
+  facebook: { icon: Users, color: 'from-blue-500 to-indigo-600' },
+};
 
+// --- Helper Components ---
+const Card = ({ children, className = "", delay = 0 }: { children: React.ReactNode, className?: string, delay?: number }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.5, delay }}
+    className={`bg-[#1a1c20] border border-white/5 rounded-3xl overflow-hidden shadow-2xl ${className}`}
+  >
+    {children}
+  </motion.div>
+);
+
+const SectionHeading = ({ icon: Icon, title, subtitle }: { icon: any, title: string, subtitle?: string }) => (
+  <div className="flex items-center gap-4 mb-6">
+    <div className="h-12 w-12 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20 shadow-[0_0_20px_rgba(249,115,22,0.1)]">
+      <Icon className="h-6 w-6 text-orange-400" />
+    </div>
+    <div>
+      <h2 className="text-xl font-bold text-white tracking-tight">{title}</h2>
+      {subtitle && <p className="text-sm text-white/40">{subtitle}</p>}
+    </div>
+  </div>
+);
+
+// --- Main Page ---
 export default function AdsPage() {
-    const [briefs, setBriefs] = useState<AdBrief[]>([]);
-    const [selectedBrief, setSelectedBrief] = useState<AdBrief | null>(null);
-    const [variants, setVariants] = useState<AdVariant[]>([]);
-    const [bufferChannels, setBufferChannels] = useState<BufferChannel[]>([]);
-    const [bufferConfigured, setBufferConfigured] = useState(false);
+  const [briefs, setBriefs] = useState<AdBrief[]>([]);
+  const [selectedBrief, setSelectedBrief] = useState<AdBrief | null>(null);
+  const [variants, setVariants] = useState<AdVariant[]>([]);
+  const [bufferChannels, setBufferChannels] = useState<BufferChannel[]>([]);
+  const [bufferConfigured, setBufferConfigured] = useState(false);
 
-    const [loading, setLoading] = useState(false);
-    const [loadingVariants, setLoadingVariants] = useState(false);
-    const [generatingText, setGeneratingText] = useState(false);
-    const [generatingImage, setGeneratingImage] = useState<string | null>(null); // variantId
-    const [generatingVideo, setGeneratingVideo] = useState<string | null>(null); // variantId
-    const activePolls = useRef(new Set<string>());
-    const [publishing, setPublishing] = useState<string | null>(null); // variantId
-    const [error, setError] = useState<string | null>(null);
-    const [copied, setCopied] = useState<string | null>(null);
-    const [notLoggedIn, setNotLoggedIn] = useState(false);
-    const [imageProvider, setImageProvider] = useState<'gemini' | 'dalle'>('dalle');
+  const [loading, setLoading] = useState(false);
+  const [loadingVariants, setLoadingVariants] = useState(false);
+  const [generatingText, setGeneratingText] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState<string | null>(null);
+  const [generatingVideo, setGeneratingVideo] = useState<string | null>(null);
+  const activePolls = useRef(new Set<string>());
+  const [publishing, setPublishing] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+  const [notLoggedIn, setNotLoggedIn] = useState(false);
+  const [imageProvider, setImageProvider] = useState<'gemini' | 'dalle'>('dalle');
 
-    const [showCreateForm, setShowCreateForm] = useState(false);
-    const [showPublishModal, setShowPublishModal] = useState<AdVariant | null>(null);
-    const [showVideoConfigModal, setShowVideoConfigModal] = useState<AdVariant | null>(null);
-    const [videoConfig, setVideoConfig] = useState({ script: '', avatarId: '' });
-    const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
-    const [scheduledAt, setScheduledAt] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showPublishModal, setShowPublishModal] = useState<AdVariant | null>(null);
+  const [showVideoConfigModal, setShowVideoConfigModal] = useState<AdVariant | null>(null);
+  const [videoConfig, setVideoConfig] = useState<{ script: string; avatarId: string; avatarType: 'avatar' | 'talking_photo' }>({ script: '', avatarId: '', avatarType: 'avatar' });
+  const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
+  const [scheduledAt, setScheduledAt] = useState('');
 
-    const [showAgent, setShowAgent] = useState(false);
-    const [agentToken, setAgentToken] = useState('');
-    const [agentUrl, setAgentUrl] = useState('');
+  const [showAgent, setShowAgent] = useState(false);
+  const [agentToken, setAgentToken] = useState('');
+  const [agentUrl, setAgentUrl] = useState('');
 
-    const [selectedPlatform, setSelectedPlatform] = useState('instagram');
+  const [selectedPlatform, setSelectedPlatform] = useState('instagram');
+  const [searchQuery, setSearchQuery] = useState('');
 
-    const [form, setForm] = useState({
-        title: '',
-        topic: '',
-        objective: 'Awareness',
-        audience: 'Spiritual seekers aged 25-45 in India',
-        cta: 'Download the Rraasi app',
-        tone: 'inspirational',
-        language: 'english',
-        channels: ['instagram'],
-    });
+  const [form, setForm] = useState({
+    title: '',
+    topic: '',
+    objective: 'Awareness',
+    audience: 'Spiritual seekers aged 25-45 in India',
+    cta: 'Download the Rraasi app',
+    tone: 'inspirational',
+    languages: ['english'],
+    channels: ['instagram'],
+  });
 
-    const authHeaders = async () => {
-        await getCurrentUser().catch(() => { });
-        return { 'Content-Type': 'application/json' };
+  const authHeaders = async () => {
+    await getCurrentUser().catch(() => { });
+    return { 'Content-Type': 'application/json' };
+  };
+
+  const startAgent = async () => {
+    try {
+      const headers = await authHeaders();
+      let userId = undefined;
+      try {
+        const user = await getCurrentUser();
+        if (user) userId = (user as any).uid || (user as any).id;
+      } catch (e) { }
+
+      const res = await fetch('/api/connection-details', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          userId,
+          room_config: { agents: [{ agent_name: 'chitragupta' }] }
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to get connection details');
+      setAgentToken(data.participantToken);
+      setAgentUrl(data.serverUrl);
+      setShowAgent(true);
+    } catch (e: any) {
+      setError('Failed to connect to Chitragupta: ' + e.message);
+    }
+  };
+
+  const loadBriefs = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API}/briefs`, { credentials: 'include' });
+      if (res.status === 401) { setNotLoggedIn(true); return; }
+      setNotLoggedIn(false);
+      if (!res.ok) throw new Error(`Error ${res.status}`);
+      const data = await res.json();
+      setBriefs(data.items || []);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pollIntervals = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const selectedBriefIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    selectedBriefIdRef.current = selectedBrief?.id || null;
+    pollIntervals.current.forEach(interval => clearInterval(interval));
+    pollIntervals.current.clear();
+    activePolls.current.clear();
+  }, [selectedBrief]);
+
+  useEffect(() => {
+    loadBriefs();
+    loadBufferChannels();
+    return () => {
+      pollIntervals.current.forEach(interval => clearInterval(interval));
+      pollIntervals.current.clear();
     };
+  }, []);
 
-    const startAgent = async () => {
-        try {
-            const headers = await authHeaders();
-            let userId = undefined;
-            try {
-                const user = await getCurrentUser();
-                if (user) userId = (user as any).uid || (user as any).id;
-            } catch (e) {}
+  useEffect(() => {
+    if (selectedBrief) loadVariants(selectedBrief.id);
+    else setVariants([]);
+  }, [selectedBrief]);
 
-            const res = await fetch('/api/connection-details', {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({
-                    userId,
-                    room_config: { agents: [{ agent_name: 'chitragupta' }] }
-                })
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error || 'Failed to get connection details');
-            setAgentToken(data.participantToken);
-            setAgentUrl(data.serverUrl);
-            setShowAgent(true);
-        } catch (e: any) {
-            setError('Failed to connect to Chitragupta: ' + e.message);
+  const startPollingVideo = (briefId: string, variantId: string, videoId: string) => {
+    if (activePolls.current.has(videoId)) return;
+    activePolls.current.add(videoId);
+
+    const interval = setInterval(async () => {
+      try {
+        const headers = await authHeaders();
+        const res = await fetch(`${API}/briefs/${briefId}/video-status?videoId=${videoId}&variantId=${variantId}`, {
+          headers,
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.status === 'ready' || data.status === 'failed') {
+          if (pollIntervals.current.has(videoId)) {
+            clearInterval(pollIntervals.current.get(videoId)!);
+            pollIntervals.current.delete(videoId);
+          }
+          activePolls.current.delete(videoId);
+          if (selectedBriefIdRef.current === briefId) {
+            await loadVariants(briefId);
+          }
         }
-    };
+      } catch (e) {
+        console.error('Error polling video status:', e);
+      }
+    }, 5000);
+    pollIntervals.current.set(videoId, interval);
+  };
 
-    // ─── Load Briefs ──────────────────────────────────────────────────────────
-    const loadBriefs = async () => {
-        try {
-            setLoading(true);
-            const res = await fetch(`${API}/briefs`, { credentials: 'include' });
-            if (res.status === 401) { setNotLoggedIn(true); return; }
-            setNotLoggedIn(false);
-            if (!res.ok) {
-                const text = await res.text();
-                let errMsg = `Error ${res.status}`;
-                try {
-                    const data = JSON.parse(text);
-                    errMsg = data.error || data.details || errMsg;
-                } catch {
-                    errMsg = text.slice(0, 100) || errMsg;
-                }
-                throw new Error(errMsg);
-            }
-            const data = await res.json();
-            setBriefs(data.items || []);
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setLoading(false);
+  const loadVariants = async (briefId: string) => {
+    if (!briefId) return;
+    try {
+      setLoadingVariants(true);
+      const res = await fetch(`${API}/briefs/${briefId}/variants`, { credentials: 'include' });
+      const data = await res.json();
+      const items = data.items || [];
+      setVariants(items);
+      items.forEach((v: AdVariant) => {
+        if (v.videoStatus === 'processing' && v.videoId && !activePolls.current.has(v.videoId)) {
+          startPollingVideo(briefId, v.id, v.videoId);
         }
-    };
+      });
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoadingVariants(false);
+    }
+  };
 
-    const startPollingVideo = (briefId: string, variantId: string, videoId: string) => {
-        if (activePolls.current.has(videoId)) return;
-        activePolls.current.add(videoId);
+  const loadBufferChannels = async () => {
+    try {
+      const res = await fetch(`${API}/buffer/channels`, { credentials: 'include' });
+      const data = await res.json();
+      setBufferConfigured(data.configured || false);
+      setBufferChannels(data.channels || []);
+    } catch { }
+  };
 
-        const interval = setInterval(async () => {
-            try {
-                const headers = await authHeaders();
-                const res = await fetch(`${API}/briefs/${briefId}/video-status?videoId=${videoId}&variantId=${variantId}`, {
-                    headers,
-                    credentials: 'include'
-                });
-                const data = await res.json();
-                if (data.status === 'ready' || data.status === 'failed') {
-                    clearInterval(interval);
-                    activePolls.current.delete(videoId);
-                    await loadVariants(briefId);
-                }
-            } catch (e) {
-                console.error('Error polling video status:', e);
-                clearInterval(interval);
-                activePolls.current.delete(videoId);
-            }
-        }, 5000);
-    };
+  const handleCreateBrief = async () => {
+    if (!form.title || !form.topic) return setError('Title and Topic are required.');
+    try {
+      setLoading(true);
+      const headers = await authHeaders();
+      const res = await fetch(`${API}/briefs`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      await loadBriefs();
+      setSelectedBrief(data);
+      setShowCreateForm(false);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const loadVariants = async (briefId: string) => {
-        try {
-            setLoadingVariants(true);
-            const res = await fetch(`${API}/briefs/${briefId}/variants`, { credentials: 'include' });
-            if (!res.ok) throw new Error(`Failed to load variants: ${res.status}`);
-            const data = await res.json();
-            const items = data.items || [];
-            setVariants(items);
+  const handleGenerateContent = async () => {
+    if (!selectedBrief) return;
+    try {
+      setGeneratingText(true);
+      const headers = await authHeaders();
+      await fetch(`${API}/briefs/${selectedBrief.id}/generate`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ platform: selectedPlatform }),
+      });
+      await loadVariants(selectedBrief.id);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setGeneratingText(false);
+    }
+  };
 
-            // Auto-poll for processing videos
-            items.forEach((v: AdVariant) => {
-                if (v.videoStatus === 'processing' && v.videoId && !activePolls.current.has(v.videoId)) {
-                    startPollingVideo(briefId, v.id, v.videoId);
-                }
-            });
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setLoadingVariants(false);
-        }
-    };
+  const handleGenerateImage = async (variant: AdVariant) => {
+    if (!selectedBrief) return;
+    try {
+      setGeneratingImage(variant.id);
+      const headers = await authHeaders();
+      await fetch(`${API}/briefs/${selectedBrief.id}/generate-image`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ variantId: variant.id, imagePrompt: variant.imagePrompt, provider: imageProvider }),
+      });
+      await loadVariants(selectedBrief.id);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setGeneratingImage(null);
+    }
+  };
 
-    const loadBufferChannels = async () => {
-        try {
-            const res = await fetch(`${API}/buffer/channels`, { credentials: 'include' });
-            if (!res.ok) {
-                console.warn(`Buffer channels fetch failed with status ${res.status}`);
-                setBufferConfigured(false);
-                return;
-            }
-            const data = await res.json();
-            setBufferConfigured(data.configured || false);
-            setBufferChannels(data.channels || []);
-        } catch {
-            // Buffer not configured
-        }
-    };
+  const handleGenerateVideo = async (variant: AdVariant) => {
+    if (!selectedBrief) return;
+    try {
+      setGeneratingVideo(variant.id);
+      setShowVideoConfigModal(null);
+      const headers = await authHeaders();
+      const res = await fetch(`${API}/briefs/${selectedBrief.id}/generate-video`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ 
+          variantId: variant.id, 
+          avatarId: videoConfig.avatarId, 
+          avatarType: videoConfig.avatarType,
+          customScript: videoConfig.script 
+        }),
+      });
+      const data = await res.json();
+      await loadVariants(selectedBrief.id);
+      if (data.status !== 'ready' && data.videoId) {
+        startPollingVideo(selectedBrief.id, variant.id, data.videoId);
+      }
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setGeneratingVideo(null);
+    }
+  };
 
-    useEffect(() => {
-        loadBriefs();
-        loadBufferChannels();
-    }, []);
+  const handleDeleteBrief = async (briefId: string) => {
+    if (!confirm('Are you sure you want to delete this entire campaign and all its variants?')) return;
+    try {
+      const headers = await authHeaders();
+      await fetch(`${API}/briefs/${briefId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      });
+      if (selectedBrief?.id === briefId) {
+        setSelectedBrief(null);
+        setVariants([]);
+      }
+      await loadBriefs();
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
 
-    useEffect(() => {
-        if (selectedBrief) loadVariants(selectedBrief.id);
-        else setVariants([]);
-    }, [selectedBrief]);
+  const handleDeleteVariant = async (variantId: string) => {
+    if (!selectedBrief || !confirm('Delete this variant?')) return;
+    try {
+      const headers = await authHeaders();
+      await fetch(`${API}/briefs/${selectedBrief.id}/variants/${variantId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers,
+      });
+      await loadVariants(selectedBrief.id);
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
 
-    // ─── Create Brief ─────────────────────────────────────────────────────────
-    const handleCreateBrief = async () => {
-        if (!form.title || !form.topic || !form.objective) {
-            setError('Title, Topic, and Objective are required.');
-            return;
-        }
-        try {
-            setLoading(true);
-            const headers = await authHeaders();
-            const res = await fetch(`${API}/briefs`, {
-                method: 'POST',
-                credentials: 'include',
-                headers,
-                body: JSON.stringify(form),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.error);
-            await loadBriefs();
-            setSelectedBrief(data);
-            setShowCreateForm(false);
-            setForm({ ...form, title: '', topic: '' });
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleCopy = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2000);
+  };
 
-    // ─── Generate Text Content ────────────────────────────────────────────────
-    const handleGenerateContent = async () => {
-        if (!selectedBrief) return;
-        try {
-            setGeneratingText(true);
-            setError(null);
-            const headers = await authHeaders();
-            const res = await fetch(`${API}/briefs/${selectedBrief.id}/generate`, {
-                method: 'POST',
-                credentials: 'include',
-                headers,
-                body: JSON.stringify({ platform: selectedPlatform }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.details || data.error);
-            await loadVariants(selectedBrief.id);
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setGeneratingText(false);
-        }
-    };
+  const handlePublish = async () => {
+    if (!selectedBrief || !showPublishModal || !selectedChannels.length) return;
+    try {
+      setPublishing(showPublishModal.id);
+      const headers = await authHeaders();
+      await fetch(`${API}/briefs/${selectedBrief.id}/publish`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({
+          variantId: showPublishModal.id,
+          channelIds: selectedChannels,
+          scheduledAt: scheduledAt || undefined,
+        }),
+      });
+      setShowPublishModal(null);
+      await loadVariants(selectedBrief.id);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setPublishing(null);
+    }
+  };
 
-    // ─── Generate Image ───────────────────────────────────────────────────────
-    const handleGenerateImage = async (variant: AdVariant) => {
-        if (!selectedBrief) return;
-        try {
-            setGeneratingImage(variant.id);
-            setError(null);
-            const headers = await authHeaders();
-            const res = await fetch(`${API}/briefs/${selectedBrief.id}/generate-image`, {
-                method: 'POST',
-                credentials: 'include',
-                headers,
-                body: JSON.stringify({
-                    variantId: variant.id,
-                    imagePrompt: variant.imagePrompt,
-                    provider: imageProvider
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.details || data.error);
-            await loadVariants(selectedBrief.id);
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setGeneratingImage(null);
-        }
-    };
+  const handleDownloadImage = async (url: string, id: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `satsang-ad-${id}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+      console.error('Download failed:', e);
+      setError('Failed to download image.');
+    }
+  };
 
-    // ─── Generate HeyGen Video ───────────────────────────────────────────────
-    const handleGenerateVideo = async (variant: AdVariant) => {
-        if (!selectedBrief) return;
-        try {
-            setGeneratingVideo(variant.id);
-            setError(null);
-            setShowVideoConfigModal(null);
-            const headers = await authHeaders();
-            const res = await fetch(`${API}/briefs/${selectedBrief.id}/generate-video`, {
-                method: 'POST',
-                credentials: 'include',
-                headers,
-                body: JSON.stringify({ 
-                    variantId: variant.id,
-                    avatarId: videoConfig.avatarId,
-                    customScript: videoConfig.script
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.details || data.error);
+  const filteredBriefs = useMemo(() => {
+    return briefs.filter(b => 
+      b.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      b.topic.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [briefs, searchQuery]);
 
-            // Re-load to get the videoId
-            await loadVariants(selectedBrief.id);
+  const textVariants = variants.filter(v => v.type === 'text');
+  const imageVariants = variants.filter(v => v.type === 'image');
+  const imageLookup = useMemo(() => {
+    return imageVariants.reduce((acc, iv) => {
+      const linkedId = (iv as any).linkedVariantId;
+      if (linkedId) acc[linkedId] = iv;
+      return acc;
+    }, {} as Record<string, AdVariant>);
+  }, [imageVariants]);
 
-            // Start polling if not ready immediately
-            if (data.status !== 'ready' && data.videoId) {
-                startPollingVideo(selectedBrief.id, variant.id, data.videoId);
-            }
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setGeneratingVideo(null);
-        }
-    };
+  return (
+    <div className="min-h-screen bg-[#0f1115] text-white selection:bg-orange-500/30">
+      {/* --- Premium Header --- */}
+      <div className="relative border-b border-white/5 bg-[#1a1c20]/50 backdrop-blur-xl z-20">
+        <div className="mx-auto max-w-7xl px-6 py-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-8 w-8 rounded-lg bg-orange-500 flex items-center justify-center shadow-[0_0_20px_rgba(249,115,22,0.4)]">
+                <Megaphone className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-xs font-bold text-orange-400 uppercase tracking-[0.2em]">Marketing Studio</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter">
+              Social <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-rose-400 to-orange-400">Ads Studio</span>
+            </h1>
+            <p className="mt-3 text-white/50 text-sm max-w-md font-medium leading-relaxed">
+              Create premium spiritual ad campaigns powered by AI. Generate captions, visuals, and talking avatar videos in seconds.
+            </p>
+          </motion.div>
 
-    // ─── Delete Variant ───────────────────────────────────────────────────────
-    const handleDeleteVariant = async (variantId: string) => {
-        if (!selectedBrief) return;
-        if (!confirm('Delete this variant?')) return;
-        try {
-            const headers = await authHeaders();
-            await fetch(`${API}/briefs/${selectedBrief.id}/variants/${variantId}`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers,
-            });
-            await loadVariants(selectedBrief.id);
-        } catch (e: any) {
-            setError(e.message);
-        }
-    };
+          <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-wrap gap-4">
+            {bufferConfigured ? (
+              <div className="group relative">
+                <div className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-bold text-white/80 transition-all hover:bg-white/10">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]" />
+                  Buffer Connected
+                </div>
+              </div>
+            ) : (
+              <button 
+                onClick={loadBufferChannels}
+                className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-bold text-white/40 hover:text-white hover:bg-white/10 transition-all"
+              >
+                <ExternalLink className="h-3 w-3" /> Connect Buffer
+              </button>
+            )}
+            
+            <button
+              onClick={showAgent ? () => setShowAgent(false) : startAgent}
+              className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-4 py-2 text-xs font-bold text-white/80 hover:bg-white/10 transition-all"
+            >
+              <Bot className="h-4 w-4 text-orange-400" />
+              {showAgent ? 'Close Assistant' : 'Ask Chitragupta'}
+            </button>
 
-    // ─── Copy to clipboard ───────────────────────────────────────────────────
-    const handleCopy = (text: string, id: string) => {
-        navigator.clipboard.writeText(text);
-        setCopied(id);
-        setTimeout(() => setCopied(null), 2000);
-    };
+            <button
+              onClick={() => setShowCreateForm(true)}
+              className="flex items-center gap-2 rounded-2xl bg-orange-500 px-6 py-2 text-xs font-black text-white shadow-[0_0_30px_rgba(249,115,22,0.3)] hover:scale-105 active:scale-95 transition-all"
+            >
+              <Plus className="h-4 w-4" /> New Campaign
+            </button>
+          </motion.div>
+        </div>
+      </div>
 
-    // ─── Download Image ───────────────────────────────────────────────────────
-    const handleDownloadImage = async (imageUrl: string, variantId: string) => {
-        const a = document.createElement('a');
-        a.href = imageUrl;
-        a.download = `rraasi-ad-${variantId}.jpg`;
-        a.target = '_blank';
-        a.click();
-    };
+      <div className="mx-auto max-w-7xl px-6 py-10">
+        {error && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8 rounded-2xl bg-rose-500/10 border border-rose-500/20 p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3 text-rose-400 text-sm font-medium">
+              <AlertCircle className="h-4 w-4" /> {error}
+            </div>
+            <button onClick={() => setError(null)} className="text-white/20 hover:text-white transition-colors"><X className="h-4 w-4" /></button>
+          </motion.div>
+        )}
 
-    // ─── Publish to Buffer ────────────────────────────────────────────────────
-    const handlePublish = async () => {
-        if (!selectedBrief || !showPublishModal || !selectedChannels.length) return;
-        try {
-            setPublishing(showPublishModal.id);
-            setError(null);
-            const headers = await authHeaders();
-            const res = await fetch(`${API}/briefs/${selectedBrief.id}/publish`, {
-                method: 'POST',
-                credentials: 'include',
-                headers,
-                body: JSON.stringify({
-                    variantId: showPublishModal.id,
-                    channelIds: selectedChannels,
-                    scheduledAt: scheduledAt || undefined,
-                }),
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.details || data.error);
-            setShowPublishModal(null);
-            setSelectedChannels([]);
-            await loadVariants(selectedBrief.id);
-        } catch (e: any) {
-            setError(e.message);
-        } finally {
-            setPublishing(null);
-        }
-    };
+        {showAgent && agentToken && agentUrl && (
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mb-10">
+            <MarketingAgentInterface
+              accessToken={agentToken}
+              url={agentUrl}
+              onDisconnect={() => setShowAgent(false)}
+            />
+          </motion.div>
+        )}
 
-    // ─── Render ───────────────────────────────────────────────────────────────
-    const textVariants = variants.filter(v => v.type === 'text');
-    const imageVariants = variants.filter(v => v.type === 'image');
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 text-white">
-            <div className="mx-auto max-w-7xl p-6">
-                {/* ── Header ── */}
-                <div className="mb-8 flex items-start justify-between">
-                    <div>
-                        <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-pink-400 bg-clip-text text-transparent">
-                            Social Media Ads Studio
-                        </h1>
-                        <p className="mt-2 text-slate-400">
-                            Generate AI-powered social media posts and publish directly via Buffer
-                        </p>
-                    </div>
-                    <div className="flex gap-3">
-                        {bufferConfigured ? (
-                            <div className="flex items-center gap-2 rounded-full bg-green-900/40 border border-green-500/30 px-3 py-1.5 text-xs text-green-400">
-                                <div className="h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-                                Buffer Connected
-                            </div>
-                        ) : (
-                            <div className="flex items-center gap-2">
-                                <a
-                                    href="https://publish.buffer.com/settings/api"
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-center gap-2 rounded-full bg-slate-800 border border-slate-600 px-3 py-1.5 text-xs text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
-                                >
-                                    <ExternalLink className="h-3 w-3" />
-                                    Connect Buffer
-                                </a>
-                                <button
-                                    onClick={loadBufferChannels}
-                                    title="Retry Buffer connection"
-                                    className="rounded-full bg-slate-800 border border-slate-700 p-1.5 text-slate-500 hover:text-white hover:bg-slate-700 transition-colors"
-                                >
-                                    <RefreshCw className="h-3 w-3" />
-                                </button>
-                            </div>
-                        )}
-                        <Button
-                            onClick={showAgent ? () => setShowAgent(false) : startAgent}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white border-0"
-                        >
-                            <Bot className="mr-2 h-4 w-4" />
-                            {showAgent ? 'Close Assistant' : 'Ask Chitragupta'}
-                        </Button>
-                        <Button
-                            onClick={() => setShowCreateForm(!showCreateForm)}
-                            className="bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white border-0"
-                        >
-                            <Sparkles className="mr-2 h-4 w-4" />
-                            New Campaign
-                        </Button>
-                    </div>
+        {/* --- Create Campaign Form --- */}
+        <AnimatePresence>
+          {showCreateForm && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-12 overflow-hidden"
+            >
+              <Card className="p-8 bg-gradient-to-br from-[#1a1c20] to-[#121418]">
+                <div className="flex items-center justify-between mb-8">
+                  <SectionHeading icon={Plus} title="Launch New Campaign" subtitle="Define your objective and audience" />
+                  <button onClick={() => setShowCreateForm(false)} className="text-white/20 hover:text-white"><X className="h-6 w-6" /></button>
                 </div>
 
-                {/* ── Not Logged In ── */}
-                {notLoggedIn && (
-                    <div className="mb-4 rounded-xl border border-yellow-500/30 bg-yellow-900/20 px-4 py-3 text-sm text-yellow-300 flex items-center gap-3">
-                        <span>🔑</span>
-                        <span>Please <a href="/login" className="underline hover:text-yellow-200">log in</a> to access your campaigns.</span>
+                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Campaign Title</label>
+                    <input 
+                      type="text" value={form.title} 
+                      onChange={e => setForm({ ...form, title: e.target.value })}
+                      placeholder="e.g. Navratri Special Satsang"
+                      className="w-full rounded-2xl bg-white/5 border border-white/5 px-4 py-3 text-sm focus:border-orange-500/50 outline-none transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Core Theme</label>
+                    <input 
+                      type="text" value={form.topic} 
+                      onChange={e => setForm({ ...form, topic: e.target.value })}
+                      placeholder="e.g. Finding Peace in Chaos"
+                      className="w-full rounded-2xl bg-white/5 border border-white/5 px-4 py-3 text-sm focus:border-orange-500/50 outline-none transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Campaign Goal</label>
+                    <select 
+                      value={form.objective} onChange={e => setForm({ ...form, objective: e.target.value })}
+                      className="w-full rounded-2xl bg-white/5 border border-white/5 px-4 py-3 text-sm focus:border-orange-500/50 outline-none transition-all appearance-none"
+                    >
+                      {OBJECTIVES.map(o => <option key={o} value={o} className="bg-[#1a1c20]">{o}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2 lg:col-span-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Target Audience</label>
+                    <input 
+                      type="text" value={form.audience} 
+                      onChange={e => setForm({ ...form, audience: e.target.value })}
+                      className="w-full rounded-2xl bg-white/5 border border-white/5 px-4 py-3 text-sm focus:border-orange-500/50 outline-none transition-all"
+                    />
+                  </div>
+                  <div className="space-y-4 lg:col-span-3">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-white/30 ml-1">Target Languages (Select Multiple)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {LANGUAGES.map(l => (
+                        <button
+                          key={l}
+                          type="button"
+                          onClick={() => {
+                            setForm(p => ({
+                              ...p,
+                              languages: p.languages?.includes(l) 
+                                ? p.languages.filter(x => x !== l) 
+                                : [...(p.languages || []), l]
+                            }));
+                          }}
+                          className={`px-4 py-2 rounded-xl border text-xs font-bold transition-all ${form.languages?.includes(l) ? 'bg-orange-500 border-orange-500 text-black shadow-[0_0_15px_rgba(249,115,22,0.3)]' : 'bg-white/5 border-white/5 text-white/40 hover:bg-white/10'}`}
+                        >
+                          {l.charAt(0).toUpperCase() + l.slice(1)}
+                        </button>
+                      ))}
                     </div>
-                )}
-
-                {/* ── Error ── */}
-                {error && (
-                    <div className="mb-4 rounded-xl border border-red-500/30 bg-red-900/20 px-4 py-3 text-sm text-red-300">
-                        ⚠️ {error}
-                        <button onClick={() => setError(null)} className="ml-2 text-red-400 hover:text-red-200">×</button>
-                    </div>
-                )}
-
-                {/* ── Marketing Agent ── */}
-                {showAgent && agentToken && agentUrl && (
-                    <div className="mb-8">
-                        <MarketingAgentInterface
-                            accessToken={agentToken}
-                            url={agentUrl}
-                            onDisconnect={() => setShowAgent(false)}
-                        />
-                    </div>
-                )}
-
-                {/* ── Create Form ── */}
-                {showCreateForm && (
-                    <div className="mb-8 rounded-2xl border border-violet-500/20 bg-slate-900/60 backdrop-blur-sm p-6">
-                        <h2 className="mb-4 text-lg font-semibold text-violet-300">New Ad Campaign Brief</h2>
-                        <div className="grid gap-4 md:grid-cols-2">
-                            <div className="space-y-1">
-                                <label className="text-xs text-slate-400">Campaign Title *</label>
-                                <input
-                                    type="text"
-                                    value={form.title}
-                                    onChange={e => setForm({ ...form, title: e.target.value })}
-                                    placeholder="e.g. Satsang App Launch"
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-violet-500 focus:outline-none"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-slate-400">Topic / Theme *</label>
-                                <input
-                                    type="text"
-                                    value={form.topic}
-                                    onChange={e => setForm({ ...form, topic: e.target.value })}
-                                    placeholder="e.g. Daily Spiritual Satsang & Meditation"
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-violet-500 focus:outline-none"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-slate-400">Objective *</label>
-                                <select
-                                    value={form.objective}
-                                    onChange={e => setForm({ ...form, objective: e.target.value })}
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-violet-500 focus:outline-none"
-                                >
-                                    {OBJECTIVES.map(o => <option key={o}>{o}</option>)}
-                                </select>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-slate-400">Target Audience</label>
-                                <input
-                                    type="text"
-                                    value={form.audience}
-                                    onChange={e => setForm({ ...form, audience: e.target.value })}
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-violet-500 focus:outline-none"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-slate-400">Call to Action</label>
-                                <input
-                                    type="text"
-                                    value={form.cta}
-                                    onChange={e => setForm({ ...form, cta: e.target.value })}
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-violet-500 focus:outline-none"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-slate-400">Tone</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {TONES.map(t => (
-                                        <button
-                                            key={t}
-                                            onClick={() => setForm({ ...form, tone: t })}
-                                            className={`rounded-full px-3 py-1 text-xs transition-colors ${form.tone === t
-                                                ? 'bg-violet-600 text-white'
-                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                                                }`}
-                                        >
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-slate-400">Language</label>
-                                <div className="flex gap-2">
-                                    {LANGUAGES.map(l => (
-                                        <button
-                                            key={l}
-                                            onClick={() => setForm({ ...form, language: l })}
-                                            className={`rounded-full px-3 py-1 text-xs transition-colors capitalize ${form.language === l
-                                                ? 'bg-violet-600 text-white'
-                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                                                }`}
-                                        >
-                                            {l}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="space-y-1">
-                                <label className="text-xs text-slate-400">Target Platforms</label>
-                                <div className="flex gap-2">
-                                    {PLATFORMS.map(p => (
-                                        <button
-                                            key={p}
-                                            onClick={() =>
-                                                setForm(prev => ({
-                                                    ...prev,
-                                                    channels: prev.channels.includes(p)
-                                                        ? prev.channels.filter(c => c !== p)
-                                                        : [...prev.channels, p],
-                                                }))
-                                            }
-                                            className={`rounded-lg px-3 py-1 text-xs transition-colors ${form.channels.includes(p)
-                                                ? 'bg-violet-600 text-white'
-                                                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                                                }`}
-                                        >
-                                            {platformIcon[p]} {p}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                        <div className="mt-4 flex gap-3">
-                            <Button onClick={handleCreateBrief} disabled={loading} className="bg-violet-600 hover:bg-violet-700">
-                                {loading ? '⏳ Creating...' : '✨ Create Campaign'}
-                            </Button>
-                            <Button variant="outline" onClick={() => setShowCreateForm(false)}>
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                )}
-
-                <div className="grid gap-6 lg:grid-cols-[320px,1fr]">
-                    {/* ── Brief List ── */}
-                    <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                            <h2 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Campaigns</h2>
-                            <button onClick={loadBriefs} className="text-slate-500 hover:text-slate-300 transition-colors">
-                                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                            </button>
-                        </div>
-
-                        {loading && !briefs.length ? (
-                            <div className="text-center py-8 text-slate-500 text-sm">Loading...</div>
-                        ) : briefs.length === 0 ? (
-                            <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center">
-                                <Sparkles className="mx-auto mb-2 h-6 w-6 text-slate-600" />
-                                <p className="text-sm text-slate-500">No campaigns yet.</p>
-                                <button
-                                    onClick={() => setShowCreateForm(true)}
-                                    className="mt-2 text-xs text-violet-400 hover:text-violet-300"
-                                >
-                                    Create your first one →
-                                </button>
-                            </div>
-                        ) : (
-                            briefs.map(brief => (
-                                <button
-                                    key={brief.id}
-                                    onClick={() => setSelectedBrief(brief.id === selectedBrief?.id ? null : brief)}
-                                    className={`w-full rounded-xl border p-4 text-left transition-all ${selectedBrief?.id === brief.id
-                                        ? 'border-violet-500/50 bg-violet-900/20 shadow-lg shadow-violet-900/20'
-                                        : 'border-slate-700/50 bg-slate-800/40 hover:border-slate-600 hover:bg-slate-800/60'
-                                        }`}
-                                >
-                                    <div className="mb-1 font-medium text-white text-sm">{brief.title}</div>
-                                    <div className="text-xs text-slate-400 mb-2">{brief.topic}</div>
-                                    <div className="flex gap-1 flex-wrap">
-                                        {(brief.channels || []).map(c => (
-                                            <span key={c} className="rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300">
-                                                {platformIcon[c] || '🌐'} {c}
-                                            </span>
-                                        ))}
-                                        <span className={`ml-auto rounded-full px-2 py-0.5 text-xs ${brief.objective === 'App Downloads'
-                                            ? 'bg-green-900/40 text-green-400'
-                                            : 'bg-blue-900/40 text-blue-400'
-                                            }`}>
-                                            {brief.objective}
-                                        </span>
-                                    </div>
-                                </button>
-                            ))
-                        )}
-                    </div>
-
-                    {/* ── Workspace ── */}
-                    <div>
-                        {!selectedBrief ? (
-                            <div className="flex h-full min-h-[400px] items-center justify-center rounded-2xl border border-dashed border-slate-700">
-                                <div className="text-center">
-                                    <Sparkles className="mx-auto mb-3 h-12 w-12 text-violet-500/40" />
-                                    <p className="text-slate-500">Select a campaign to start generating</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-6">
-                                {/* Brief Summary */}
-                                <div className="rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm p-5">
-                                    <div className="flex items-start justify-between">
-                                        <div>
-                                            <h2 className="text-xl font-bold text-white">{selectedBrief.title}</h2>
-                                            <p className="text-sm text-slate-400 mt-1">{selectedBrief.topic}</p>
-                                            <div className="mt-2 flex gap-2 flex-wrap text-xs">
-                                                <span className="rounded bg-slate-800 px-2 py-1 text-slate-300">
-                                                    🎯 {selectedBrief.objective}
-                                                </span>
-                                                <span className="rounded bg-slate-800 px-2 py-1 text-slate-300">
-                                                    🗣️ {selectedBrief.tone}
-                                                </span>
-                                                <span className="rounded bg-slate-800 px-2 py-1 text-slate-300">
-                                                    🌐 {selectedBrief.language}
-                                                </span>
-                                                <span className="rounded bg-slate-800 px-2 py-1 text-slate-300">
-                                                    📣 {selectedBrief.cta}
-                                                </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Generate Controls */}
-                                <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-900/20 to-pink-900/20 p-5">
-                                    <h3 className="mb-4 font-semibold text-violet-300">🤖 AI Generation</h3>
-                                    <div className="flex items-center gap-4">
-                                        <div className="space-y-1">
-                                            <label className="text-xs text-slate-400">Platform</label>
-                                            <div className="flex gap-2">
-                                                {PLATFORMS.map(p => (
-                                                    <button
-                                                        key={p}
-                                                        onClick={() => setSelectedPlatform(p)}
-                                                        className={`rounded-lg px-3 py-2 text-sm transition-all ${selectedPlatform === p
-                                                            ? 'bg-gradient-to-r ' + (serviceColor[p] || 'from-violet-600 to-pink-600') + ' text-white shadow-lg'
-                                                            : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
-                                                            }`}
-                                                    >
-                                                        {platformIcon[p]} {p}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div className="ml-auto flex gap-3">
-                                            <Button
-                                                onClick={handleGenerateContent}
-                                                disabled={generatingText}
-                                                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0"
-                                            >
-                                                {generatingText ? (
-                                                    <>
-                                                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                                        Generating...
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <Sparkles className="mr-2 h-4 w-4" />
-                                                        Generate Caption & Tags
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Variants */}
-                                {loadingVariants ? (
-                                    <div className="py-8 text-center text-slate-500 text-sm">
-                                        <div className="mx-auto mb-2 h-6 w-6 animate-spin rounded-full border-2 border-slate-700 border-t-violet-500" />
-                                        Loading posts...
-                                    </div>
-                                ) : textVariants.length === 0 && imageVariants.length === 0 ? (
-                                    <div className="rounded-xl border border-dashed border-slate-700 p-8 text-center text-slate-500 text-sm">
-                                        No posts generated yet. Click "Generate Caption & Tags" to start.
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <h3 className="text-sm font-medium uppercase tracking-wider text-slate-400">
-                                            Generated Posts ({textVariants.length})
-                                        </h3>
-                                        {textVariants.map(variant => {
-                                            const linkedImage = imageVariants.find(
-                                                iv => (iv as any).linkedVariantId === variant.id
-                                            );
-                                            const captionWithTags = [
-                                                variant.caption || '',
-                                                variant.hashtags?.length
-                                                    ? variant.hashtags.map(h => (h.startsWith('#') ? h : `#${h}`)).join(' ')
-                                                    : '',
-                                            ]
-                                                .filter(Boolean)
-                                                .join('\n\n');
-
-                                            return (
-                                                <div
-                                                    key={variant.id}
-                                                    className="rounded-2xl border border-slate-700/50 bg-slate-900/60 backdrop-blur-sm overflow-hidden"
-                                                >
-                                                    {/* Card Header */}
-                                                    <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-lg">{platformIcon[variant.platform || 'instagram']}</span>
-                                                            <span className="text-xs font-medium text-slate-300 capitalize">{variant.platform}</span>
-                                                            {variant.publishStatus === 'published' && (
-                                                                <span className="rounded-full bg-green-900/40 px-2 py-0.5 text-xs text-green-400">
-                                                                    ✓ Published
-                                                                </span>
-                                                            )}
-                                                            {variant.publishStatus === 'partial' && (
-                                                                <span className="rounded-full bg-yellow-900/40 px-2 py-0.5 text-xs text-yellow-400">
-                                                                    ⚠ Partial Success
-                                                                </span>
-                                                            )}
-                                                            {variant.publishStatus === 'failed' && (
-                                                                <span className="rounded-full bg-red-900/40 px-2 py-0.5 text-xs text-red-400">
-                                                                    ✕ Failed
-                                                                </span>
-                                                            )}
-                                                            {variant.publishStatus === 'failed' && variant.lastPublishError && (
-                                                                <span className="ml-2 text-[10px] text-red-500/80 italic line-clamp-1 max-w-[150px]" title={variant.lastPublishError}>
-                                                                    {variant.lastPublishError}
-                                                                </span>
-                                                            )}
-                                                            {variant.publishStatus === 'partial' && variant.lastPublishError && (
-                                                                <span className="ml-2 text-[10px] text-yellow-500/80 italic line-clamp-1 max-w-[150px]" title={variant.lastPublishError}>
-                                                                    {variant.lastPublishError}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs text-slate-500">
-                                                                {new Date(variant.createdAt).toLocaleDateString()}
-                                                            </span>
-                                                            <button
-                                                                onClick={() => handleDeleteVariant(variant.id)}
-                                                                className="text-slate-600 hover:text-red-400 transition-colors"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="p-5 grid gap-4 md:grid-cols-[1fr,200px]">
-                                                        <div className="space-y-4">
-                                                            {/* Hook Lines */}
-                                                            {variant.hooks && variant.hooks.length > 0 && (
-                                                                <div>
-                                                                    <p className="mb-1 text-xs font-medium text-slate-500 uppercase tracking-wider">Hook Options</p>
-                                                                    <div className="space-y-1.5">
-                                                                        {variant.hooks.map((hook, i) => (
-                                                                            <div key={i} className="flex items-start gap-2 rounded-lg bg-slate-800/60 px-3 py-2">
-                                                                                <span className="mt-0.5 text-xs text-violet-400 font-bold">{i + 1}</span>
-                                                                                <p className="text-sm text-slate-300 flex-1">{hook}</p>
-                                                                                <button
-                                                                                    onClick={() => handleCopy(hook, `hook-${variant.id}-${i}`)}
-                                                                                    className="text-slate-600 hover:text-slate-400 shrink-0"
-                                                                                >
-                                                                                    {copied === `hook-${variant.id}-${i}` ? '✓' : <Copy className="h-3 w-3" />}
-                                                                                </button>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-
-                                                            {/* Caption */}
-                                                            {variant.caption && (
-                                                                <div>
-                                                                    <p className="mb-1 text-xs font-medium text-slate-500 uppercase tracking-wider">Caption</p>
-                                                                    <div className="rounded-lg bg-slate-800/60 px-3 py-2">
-                                                                        <p className="text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
-                                                                            {variant.caption}
-                                                                        </p>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-
-                                                            {/* Hashtags */}
-                                                            {variant.hashtags && variant.hashtags.length > 0 && (
-                                                                <div>
-                                                                    <p className="mb-1.5 text-xs font-medium text-slate-500 uppercase tracking-wider">Hashtags</p>
-                                                                    <div className="flex flex-wrap gap-1.5">
-                                                                        {variant.hashtags.map((tag, i) => (
-                                                                            <span
-                                                                                key={i}
-                                                                                className="rounded-full bg-indigo-900/40 border border-indigo-500/20 px-2 py-0.5 text-xs text-indigo-300"
-                                                                            >
-                                                                                {tag.startsWith('#') ? tag : `#${tag}`}
-                                                                            </span>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            )}
-
-                                                            {/* Action Buttons */}
-                                                            <div className="flex flex-wrap gap-2 pt-1">
-                                                                <Button
-                                                                    variant="outline"
-                                                                    size="sm"
-                                                                    onClick={() => handleCopy(captionWithTags, `caption-${variant.id}`)}
-                                                                    className="border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs"
-                                                                >
-                                                                    {copied === `caption-${variant.id}` ? '✓ Copied!' : (
-                                                                        <><Copy className="mr-1.5 h-3 w-3" />Copy All</>
-                                                                    )}
-                                                                </Button>
-
-                                                                {bufferConfigured && (
-                                                                    <Button
-                                                                        size="sm"
-                                                                        onClick={() => {
-                                                                            setShowPublishModal(variant);
-                                                                            setSelectedChannels(variant.publishedToChannels || []);
-                                                                        }}
-                                                                        className={variant.publishStatus === 'failed' || variant.publishStatus === 'partial' 
-                                                                            ? "bg-amber-600 hover:bg-amber-700 text-white border-0 text-xs"
-                                                                            : "bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white border-0 text-xs"
-                                                                        }
-                                                                    >
-                                                                        {variant.publishStatus === 'failed' || variant.publishStatus === 'partial' ? (
-                                                                            <RefreshCw className="mr-1.5 h-3 w-3" />
-                                                                        ) : (
-                                                                            <Send className="mr-1.5 h-3 w-3" />
-                                                                        )}
-                                                                        {variant.publishStatus === 'failed' || variant.publishStatus === 'partial' ? 'Retry Publishing' : 'Post via Buffer'}
-                                                                    </Button>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="space-y-3">
-                                                            {linkedImage?.imageUrl || (variant as any).imageUrl ? (
-                                                                <div>
-                                                                    <p className="mb-2 text-xs font-medium text-slate-500 uppercase tracking-wider">AI Image</p>
-                                                                    <img
-                                                                        src={linkedImage?.imageUrl || (variant as any).imageUrl}
-                                                                        alt="Generated ad"
-                                                                        className="w-full rounded-xl object-cover aspect-square"
-                                                                    />
-                                                                    <Button
-                                                                        variant="outline"
-                                                                        size="sm"
-                                                                        onClick={() => handleDownloadImage(
-                                                                            linkedImage?.imageUrl || (variant as any).imageUrl,
-                                                                            variant.id
-                                                                        )}
-                                                                        className="mt-2 w-full border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs"
-                                                                    >
-                                                                        <Download className="mr-2 h-3 w-3" />
-                                                                        Download Image
-                                                                    </Button>
-                                                                </div>
-                                                            ) : (
-                                                                <div>
-                                                                    <div className="flex items-center gap-2 mb-2">
-                                                                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">AI Image</p>
-                                                                        <select
-                                                                            value={imageProvider}
-                                                                            onChange={(e) => setImageProvider(e.target.value as any)}
-                                                                            className="ml-auto bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-[10px] text-slate-400 focus:outline-none focus:border-violet-500"
-                                                                        >
-                                                                            <option value="gemini">Gemini</option>
-                                                                            <option value="dalle">DALL-E 3</option>
-                                                                        </select>
-                                                                    </div>
-                                                                    <div className="aspect-square w-full rounded-xl border border-dashed border-slate-700 flex flex-col items-center justify-center gap-2 bg-slate-800/30">
-                                                                        <Image className="h-8 w-8 text-slate-600" />
-                                                                        <p className="text-xs text-slate-600 text-center px-2">
-                                                                            {variant.imagePrompt ? 'Ready to generate' : 'No image yet'}
-                                                                        </p>
-                                                                    </div>
-                                                                    <Button
-                                                                        size="sm"
-                                                                        onClick={() => handleGenerateImage(variant)}
-                                                                        disabled={generatingImage === variant.id}
-                                                                        className={`mt-2 w-full text-white border-0 text-xs ${imageProvider === 'dalle' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-pink-600 hover:bg-pink-700'
-                                                                            }`}
-                                                                    >
-                                                                        {generatingImage === variant.id ? (
-                                                                            <>
-                                                                                <div className="mr-1.5 h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                                                                                Generating...
-                                                                            </>
-                                                                        ) : (
-                                                                            <>
-                                                                                <Sparkles className="mr-1.5 h-3 w-3" />
-                                                                                Generate with {imageProvider === 'dalle' ? 'DALL-E' : 'Gemini'}
-                                                                            </>
-                                                                        )}
-                                                                    </Button>
-                                                                    {variant.imagePrompt && (
-                                                                        <p className="mt-1 text-xs text-slate-600 italic line-clamp-2">
-                                                                            {variant.imagePrompt.slice(0, 80)}...
-                                                                        </p>
-                                                                    )}
-                                                                </div>
-                                                            )}
-
-                                                            {/* AI Video section */}
-                                                            <div className="pt-2 border-t border-slate-800/50 mt-2">
-                                                                {variant.videoUrl ? (
-                                                                    <div>
-                                                                        <p className="mb-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Talking Avatar Video</p>
-                                                                        <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-700">
-                                                                            <video 
-                                                                                src={variant.videoUrl} 
-                                                                                controls 
-                                                                                className="w-full h-full object-contain"
-                                                                            />
-                                                                        </div>
-                                                                        <Button
-                                                                            variant="outline"
-                                                                            size="sm"
-                                                                            onClick={() => window.open(variant.videoUrl, '_blank')}
-                                                                            className="mt-2 w-full border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs"
-                                                                        >
-                                                                            <ExternalLink className="mr-2 h-3 w-3" />
-                                                                            View Full Video
-                                                                        </Button>
-                                                                    </div>
-                                                                ) : (
-                                                                    <div>
-                                                                        <div className="flex items-center gap-2 mb-2">
-                                                                            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider">Talking Avatar Video</p>
-                                                                            {variant.videoStatus === 'processing' && (
-                                                                                <div className="ml-auto flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-violet-500/10 border border-violet-500/20">
-                                                                                    <div className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse" />
-                                                                                    <span className="text-[10px] text-violet-300 font-medium">Generating...</span>
-                                                                                </div>
-                                                                            )}
-                                                                        </div>
-                                                                        
-                                                                        {!variant.videoUrl && variant.videoStatus !== 'processing' ? (
-                                                                            <Button
-                                                                                size="sm"
-                                                                                onClick={() => {
-                                                                                    setVideoConfig({
-                                                                                        script: (variant.caption || '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
-                                                                                        avatarId: AVATAR_OPTIONS[0].id
-                                                                                    });
-                                                                                    setShowVideoConfigModal(variant);
-                                                                                }}
-                                                                                disabled={generatingVideo === variant.id}
-                                                                                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white border-0 text-xs shadow-lg shadow-indigo-500/20"
-                                                                            >
-                                                                                <Sparkles className="mr-1.5 h-3 w-3" />
-                                                                                Configure AI Video
-                                                                            </Button>
-                                                                        ) : variant.videoStatus === 'processing' ? (
-                                                                            <div className="aspect-video w-full rounded-xl border border-dashed border-violet-500/30 flex flex-col items-center justify-center gap-2 bg-violet-500/5 backdrop-blur-sm">
-                                                                                <Bot className="h-8 w-8 text-violet-400 animate-bounce" />
-                                                                                <p className="text-[11px] text-violet-300 font-medium px-4 text-center">
-                                                                                    Render in progress (~1-2 min)
-                                                                                </p>
-                                                                                <p className="text-[9px] text-slate-500">
-                                                                                    Avatar is speaking your caption
-                                                                                </p>
-                                                                            </div>
-                                                                        ) : null}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
+                  </div>
                 </div>
+
+                <div className="mt-10 flex gap-4">
+                  <button 
+                    onClick={handleCreateBrief} disabled={loading}
+                    className="flex items-center gap-2 rounded-2xl bg-orange-500 px-8 py-3 text-xs font-black text-white shadow-xl hover:scale-105 active:scale-95 transition-all"
+                  >
+                    {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Create Studio Session
+                  </button>
+                  <button onClick={() => setShowCreateForm(false)} className="px-6 py-3 text-xs font-bold text-white/40 hover:text-white">Cancel</button>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="grid gap-10 lg:grid-cols-[400px,1fr] items-start">
+          {/* --- Navigation Panel --- */}
+          <div className="lg:sticky lg:top-24 space-y-6">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-orange-400 transition-colors" />
+              <input 
+                type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search campaigns..."
+                className="w-full rounded-2xl bg-white/5 border border-white/5 pl-11 pr-4 py-4 text-sm focus:bg-white/10 outline-none transition-all"
+              />
             </div>
 
-            {/* ── Publish Modal ── */}
-            {showPublishModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="w-full max-w-md rounded-2xl border border-violet-500/20 bg-slate-900 p-6 shadow-2xl">
-                        <h3 className="mb-4 text-lg font-bold text-white">🚀 Publish via Buffer</h3>
+            <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+              {filteredBriefs.map((brief, i) => (
+                <motion.button
+                  key={brief.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => setSelectedBrief(brief)}
+                  className={`group relative w-full text-left p-5 rounded-3xl border transition-all ${
+                    selectedBrief?.id === brief.id 
+                    ? 'bg-orange-500/10 border-orange-500/30' 
+                    : 'bg-white/5 border-white/5 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="mb-2 pr-12">
+                    <h3 className={`font-bold text-sm leading-tight ${selectedBrief?.id === brief.id ? 'text-orange-400' : 'text-white'}`}>{brief.title}</h3>
+                  </div>
 
-                        {bufferChannels.length === 0 ? (
-                            <div className="text-sm text-slate-400">
-                                No Buffer channels found. Make sure Buffer is configured and you have connected channels.
-                                <a href="https://publish.buffer.com/settings/api" target="_blank" rel="noreferrer"
-                                    className="block mt-2 text-violet-400 hover:text-violet-300">
-                                    Go to Buffer Settings →
-                                </a>
-                            </div>
-                        ) : (
-                            <>
-                                <p className="mb-3 text-sm text-slate-400">Select accounts to post to:</p>
-                                <div className="space-y-2 mb-4">
-                                    {bufferChannels.map(channel => (
-                                        <label key={channel.id} className="flex items-center gap-3 rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 cursor-pointer hover:border-slate-600 transition-colors">
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedChannels.includes(channel.id)}
-                                                onChange={e =>
-                                                    e.target.checked
-                                                        ? setSelectedChannels(prev => [...prev, channel.id])
-                                                        : setSelectedChannels(prev => prev.filter(id => id !== channel.id))
-                                                }
-                                                className="accent-violet-500"
-                                            />
-                                            <div className={`h-7 w-7 rounded-full bg-gradient-to-br ${serviceColor[channel.service] || 'from-slate-600 to-slate-700'} flex items-center justify-center text-xs`}>
-                                                {platformIcon[channel.service] || '🌐'}
-                                            </div>
-                                            <div>
-                                                <div className="text-sm font-medium text-white">{channel.name}</div>
-                                                <div className="text-xs text-slate-500 capitalize">{channel.service}</div>
-                                            </div>
-                                        </label>
-                                    ))}
+                  <div className="absolute top-4 right-4 flex flex-col gap-2">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); handleDeleteBrief(brief.id); }}
+                      className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-400 text-white/20 transition-all opacity-0 group-hover:opacity-100"
+                    ><Trash2 className="h-4 w-4" /></button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setSelectedBrief(brief); }}
+                      className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center hover:bg-orange-500 text-white transition-all"
+                    ><ChevronRight className="h-4 w-4" /></button>
+                  </div>
+
+                  <p className="text-[11px] text-white/40 mb-4 line-clamp-2 pr-8">{brief.topic}</p>
+                  
+                  <div className="flex items-center justify-between mt-auto">
+                    <div className="flex -space-x-1">
+                      {brief.channels?.map(c => {
+                        const Info = platformInfo[c] || { icon: Megaphone, color: 'bg-white/10' };
+                        return (
+                          <div key={c} className={`h-6 w-6 rounded-full bg-gradient-to-br ${Info.color} border-2 border-[#1a1c20] flex items-center justify-center text-[10px]`}>
+                            <Info.icon className="h-2.5 w-2.5 text-white" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <span className="text-[9px] font-black uppercase tracking-[0.1em] text-white/20">{brief.objective}</span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
+
+          {/* --- Studio Workspace --- */}
+          <div className="space-y-8">
+            {!selectedBrief ? (
+              <div className="h-[500px] rounded-[40px] border border-dashed border-white/5 flex flex-col items-center justify-center text-center p-12 bg-white/[0.02]">
+                <div className="h-20 w-20 rounded-3xl bg-white/5 flex items-center justify-center mb-6">
+                  <Layout className="h-8 w-8 text-white/20" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Welcome to the Studio</h3>
+                <p className="text-white/40 text-sm max-w-xs mx-auto">Select a campaign or create a new one to start your AI generation journey.</p>
+              </div>
+            ) : (
+              <div className="space-y-10">
+                {/* Active Campaign Info */}
+                <Card className="p-8 bg-gradient-to-r from-[#1a1c20] to-[#121418] border-orange-500/10 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 p-8 opacity-5">
+                    <Target className="h-32 w-32" />
+                  </div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 text-xs font-bold text-orange-400 uppercase tracking-[0.2em] mb-3">
+                      <div className="h-2 w-2 rounded-full bg-orange-500" /> Active Session
+                    </div>
+                    <h2 className="text-3xl font-black text-white tracking-tighter mb-4">{selectedBrief.title}</h2>
+                    <div className="flex flex-wrap gap-4">
+                      <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5">
+                        <span className="text-[10px] font-black uppercase text-white/30 block mb-0.5 tracking-wider">Goal</span>
+                        <span className="text-sm font-bold text-white/80">{selectedBrief.objective}</span>
+                      </div>
+                      <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5">
+                        <span className="text-[10px] font-black uppercase text-white/30 block mb-0.5 tracking-wider">Tone</span>
+                        <span className="text-sm font-bold text-white/80 capitalize">{selectedBrief.tone}</span>
+                      </div>
+                      <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/5">
+                        <span className="text-[10px] font-black uppercase text-white/30 block mb-0.5 tracking-wider">Language</span>
+                        <span className="text-sm font-bold text-white/80 capitalize">{selectedBrief.language}</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Automation Bar */}
+                <Card className="p-1 px-6 bg-[#1a1c20] border-orange-500/20">
+                  <div className="flex items-center justify-between py-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
+                        <Bot className="h-5 w-5 text-orange-400" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-bold text-white">Generate High-Impact Content</div>
+                        <div className="text-xs text-white/40">Gemini will draft captions, hooks and hashtags for {selectedPlatform}</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="flex bg-black/40 p-1 rounded-xl h-10">
+                        {PLATFORMS.map(p => {
+                          const Info = platformInfo[p];
+                          return (
+                            <button
+                              key={p}
+                              onClick={() => setSelectedPlatform(p)}
+                              className={`px-3 flex items-center gap-2 rounded-lg transition-all text-[10px] font-bold ${
+                                selectedPlatform === p ? 'bg-orange-500 text-white shadow-lg' : 'text-white/40 hover:text-white/60'
+                              }`}
+                            >
+                              <Info.icon className="h-3 w-3" /> <span className="hidden sm:inline capitalize">{p}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        onClick={handleGenerateContent}
+                        disabled={generatingText}
+                        className="h-10 px-6 rounded-xl bg-gradient-to-r from-orange-400 to-rose-400 text-black font-black text-xs hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                      >
+                        {generatingText ? <RefreshCw className="h-4 w-4 animate-spin mx-auto" /> : 'Generate Now'}
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Posts Feed */}
+                <div className="space-y-8">
+                  <SectionHeading icon={Layout} title="Campaign Posts" subtitle={`${textVariants.length} variations generated`} />
+                  
+                  {loadingVariants ? (
+                    <div className="py-20 flex flex-col items-center justify-center gap-4 text-white/20 uppercase text-[10px] font-black tracking-widest">
+                      <RefreshCw className="h-8 w-8 animate-spin" />
+                      Loading Studio Feed...
+                    </div>
+                  ) : textVariants.length === 0 ? (
+                    <div className="py-20 rounded-[40px] border border-dashed border-white/5 flex flex-col items-center justify-center bg-white/[0.01]">
+                      <Bot className="h-10 w-10 text-white/10 mb-4" />
+                      <p className="text-sm text-white/30 font-medium">Click "Generate Now" to create your first post.</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-6">
+                      {textVariants.map((variant, i) => {
+                        const linkedImage = imageLookup[variant.id];
+                        const Info = platformInfo[variant.platform as string] || platformInfo['instagram'];
+                        return (
+                          <motion.div 
+                            key={variant.id}
+                            initial={{ opacity: 0, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: i * 0.1 }}
+                          >
+                            <Card className="p-0 border-white/10 shadow-none hover:border-orange-500/20 transition-all">
+                              <div className="grid lg:grid-cols-[1fr,360px] divide-x divide-white/5">
+                                {/* Left Content */}
+                                <div className="p-8 space-y-8">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className={`h-8 w-8 rounded-lg bg-gradient-to-br ${Info?.color || 'from-white/10 to-white/5'} flex items-center justify-center`}>
+                                        {Info?.icon ? <Info.icon className="h-4 w-4 text-white" /> : <Megaphone className="h-4 w-4 text-white" />}
+                                      </div>
+                                      <div className="flex flex-col">
+                                        <span className="text-xs font-bold text-white uppercase tracking-widest leading-none mb-1">{variant.platform}</span>
+                                        {variant.language && <span className="text-[8px] font-black text-orange-400/60 uppercase tracking-tighter">{variant.language}</span>}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                      {variant.publishStatus === 'published' && (
+                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-green-500 uppercase">
+                                          <CheckCircle2 className="h-3 w-3" /> Live
+                                        </div>
+                                      )}
+                                      <button onClick={() => handleDeleteVariant(variant.id)} className="text-white/10 hover:text-rose-400 transition-colors"><Trash2 className="h-4 w-4" /></button>
+                                    </div>
+                                  </div>
+
+                                  <div className="space-y-6">
+                                    <div className="space-y-3">
+                                      <div className="text-[10px] font-black uppercase text-white/20 tracking-widest flex items-center gap-2">
+                                        <Bot className="h-3 w-3" /> AI Hooks
+                                      </div>
+                                      <div className="grid gap-3">
+                                        {variant.hooks?.slice(0, 2).map((hook, hi) => (
+                                          <div key={hi} className="group relative bg-white/[0.03] rounded-2xl p-4 pr-12 border border-transparent hover:border-orange-500/20 transition-all">
+                                            <p className="text-sm font-medium text-white/80 leading-relaxed italic">"{hook}"</p>
+                                            <button 
+                                              onClick={() => handleCopy(hook, `hook-${variant.id}-${hi}`)}
+                                              className="absolute right-4 top-1/2 -translate-y-1/2 text-white/20 hover:text-orange-400"
+                                            >
+                                              {copied === `hook-${variant.id}-${hi}` ? <CheckCircle2 className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                      <div className="text-[10px] font-black uppercase text-white/20 tracking-widest flex items-center gap-2">
+                                        <Edit3 className="h-3 w-3" /> Primary Caption
+                                      </div>
+                                      <div className="bg-white/5 rounded-2xl p-6 relative group">
+                                        <p className="text-sm text-white/80 leading-[1.8] whitespace-pre-wrap">{variant.caption}</p>
+                                        <div className="mt-4 flex flex-wrap gap-2">
+                                          {variant.hashtags?.map((tag, ti) => (
+                                            <span key={ti} className="text-[11px] font-bold text-orange-400/60 hover:text-orange-400 cursor-default transition-colors">
+                                              #{tag.replace('#', '')}
+                                            </span>
+                                          ))}
+                                        </div>
+                                        <button 
+                                          onClick={() => handleCopy(`${variant.caption}\n\n${variant.hashtags?.map(h => '#' + h.replace('#', '')).join(' ')}`, variant.id)}
+                                          className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-lg text-[10px] font-bold text-white/40 hover:text-white border border-white/5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        >
+                                          {copied === variant.id ? 'Copied' : 'Copy All'}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  <div className="pt-4 flex gap-4">
+                                    <button 
+                                      onClick={() => { setShowPublishModal(variant); setSelectedChannels(variant.publishedToChannels || []); }}
+                                      className="flex items-center gap-2 rounded-2xl bg-white/5 border border-white/10 px-6 py-3 text-[11px] font-black text-white hover:bg-white/10 transition-all"
+                                    >
+                                      <Send className="h-4 w-4" /> Queue for Social
+                                    </button>
+                                  </div>
                                 </div>
 
-                                <div className="mb-4 space-y-1">
-                                    <label className="text-xs text-slate-400">Schedule (optional — leave empty to add to queue)</label>
-                                    <input
-                                        type="datetime-local"
-                                        value={scheduledAt}
-                                        onChange={e => setScheduledAt(e.target.value)}
-                                        className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white focus:border-violet-500 focus:outline-none"
-                                    />
+                                {/* Right Visual Media Panel */}
+                                <div className="p-8 bg-black/20 space-y-8">
+                                  {/* AI Image Section */}
+                                  <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                      <div className="text-[10px] font-black uppercase text-white/20 tracking-widest flex items-center gap-2">
+                                        <ImageIcon className="h-3 w-3" /> Visual Asset
+                                      </div>
+                                      <select 
+                                        value={imageProvider} onChange={e => setImageProvider(e.target.value as any)}
+                                        className="bg-transparent border-0 text-[10px] font-bold text-white/30 hover:text-orange-400 outline-none cursor-pointer"
+                                      >
+                                        <option value="dalle" className="bg-[#1a1c20]">DALL-E 3</option>
+                                        <option value="gemini" className="bg-[#1a1c20]">Gemini</option>
+                                      </select>
+                                    </div>
+                                    
+                                    {linkedImage?.imageUrl || (variant as any).imageUrl ? (
+                                      <div className="relative group rounded-3xl overflow-hidden border border-white/5 aspect-square">
+                                        <img src={linkedImage?.imageUrl || (variant as any).imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt="Generated visual" />
+                                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                                          <button 
+                                            onClick={() => window.open(linkedImage?.imageUrl || (variant as any).imageUrl, '_blank')}
+                                            className="h-10 w-10 rounded-full bg-white text-black flex items-center justify-center hover:scale-110 transition-all"
+                                          ><ExternalLink className="h-4 w-4" /></button>
+                                          <button 
+                                            onClick={() => handleDownloadImage(linkedImage?.imageUrl || (variant as any).imageUrl, variant.id)}
+                                            className="h-10 w-10 rounded-full bg-white/10 text-white backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all"
+                                          ><Download className="h-4 w-4" /></button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="aspect-square rounded-3xl bg-white/5 border border-dashed border-white/10 flex flex-col items-center justify-center gap-4 text-center p-6">
+                                        <div className="h-12 w-12 rounded-2xl bg-white/5 flex items-center justify-center"><ImageIcon className="h-6 w-6 text-white/10" /></div>
+                                        <button 
+                                          onClick={() => handleGenerateImage(variant)}
+                                          disabled={generatingImage === variant.id}
+                                          className="text-[11px] font-black uppercase text-orange-400 hover:text-orange-300 disabled:opacity-50"
+                                        >
+                                          {generatingImage === variant.id ? 'Rendering...' : 'Generate AI Image'}
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* AI Video Section */}
+                                  <div className="space-y-4 pt-8 border-t border-white/5">
+                                    <div className="text-[10px] font-black uppercase text-white/20 tracking-widest flex items-center gap-2">
+                                      <Video className="h-3 w-3" /> Talking Avatar
+                                    </div>
+
+                                    {variant.videoUrl ? (
+                                      <div className="relative group rounded-3xl overflow-hidden border border-white/5 aspect-video bg-black/40">
+                                        <video src={variant.videoUrl} className="w-full h-full object-contain" controls />
+                                      </div>
+                                      ) : variant.videoStatus === 'failed' ? (
+                                        <div className="relative group aspect-video rounded-3xl bg-red-500/5 border border-red-500/20 flex flex-col items-center justify-center gap-3 p-6 overflow-hidden">
+                                          <AlertCircle className="h-6 w-6 text-red-500" />
+                                          <span className="text-[10px] font-black text-red-500 uppercase tracking-widest text-center">Generation Failed</span>
+                                          <span className="text-[10px] text-white/70 text-center max-w-[200px] leading-tight line-clamp-2">
+                                            {variant.videoError || 'Unknown error occurred'}
+                                          </span>
+                                          
+                                          {/* Hover overlay to allow retry */}
+                                          <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl backdrop-blur-sm z-10">
+                                            <button 
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                setVideoConfig({
+                                                  script: (variant.caption || '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
+                                                  avatarId: '',
+                                                  avatarType: 'avatar'
+                                                });
+                                                setShowVideoConfigModal(variant);
+                                              }}
+                                              className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-[10px] font-bold text-white transition-colors"
+                                            >
+                                              Try Again
+                                            </button>
+                                          </div>
+                                        </div>
+                                      ) : variant.videoStatus === 'processing' ? (
+                                      <div className="relative group aspect-video rounded-3xl bg-orange-500/5 border border-orange-500/20 flex flex-col items-center justify-center gap-3 p-6 overflow-hidden">
+                                        <RefreshCw className="h-6 w-6 text-orange-400 animate-spin" />
+                                        <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest text-center">Video generating...</span>
+                                        <span className="text-[8px] text-white/30 text-center uppercase tracking-wider">Updates via Webhook</span>
+                                        
+                                        {/* Hover overlay to allow retry if stuck */}
+                                        <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl backdrop-blur-sm z-10">
+                                          <span className="text-[10px] text-white/50 uppercase tracking-wider">Taking too long?</span>
+                                          <button 
+                                            onClick={(e) => {
+                                              e.preventDefault();
+                                              setVideoConfig({
+                                                script: (variant.caption || '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
+                                                avatarId: '',
+                                                avatarType: 'avatar'
+                                              });
+                                              setShowVideoConfigModal(variant);
+                                            }}
+                                            className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/40 border border-orange-500/50 rounded-xl text-[10px] font-bold text-white transition-colors"
+                                          >
+                                            Generate Again
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <button 
+                                        onClick={() => {
+                                          setVideoConfig({
+                                            script: (variant.caption || '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
+                                            avatarId: '',
+                                            avatarType: 'avatar'
+                                          });
+                                          setShowVideoConfigModal(variant);
+                                        }}
+                                        disabled={generatingVideo === variant.id}
+                                        className="w-full aspect-video rounded-3xl bg-white/5 border border-dashed border-white/10 flex flex-col items-center justify-center gap-4 group hover:bg-white/10 transition-all"
+                                      >
+                                        <div className="h-12 w-12 rounded-2xl bg-white/5 group-hover:bg-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-all">
+                                          <Video className="h-6 w-6 text-white/10 group-hover:text-orange-400" />
+                                        </div>
+                                        <span className="text-[11px] font-black uppercase text-white/30 group-hover:text-white">Configure AI Video</span>
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
-                            </>
-                        )}
-
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={handlePublish}
-                                disabled={!selectedChannels.length || !!publishing}
-                                className="flex-1 bg-gradient-to-r from-violet-600 to-pink-600 hover:from-violet-700 hover:to-pink-700 text-white border-0"
-                            >
-                                {publishing ? (
-                                    <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Publishing...</>
-                                ) : (
-                                    <><Send className="mr-2 h-4 w-4" />Publish Now</>
-                                )}
-                            </Button>
-                            <Button variant="outline" onClick={() => setShowPublishModal(null)}
-                                className="border-slate-700 text-slate-300">
-                                Cancel
-                            </Button>
-                        </div>
+                              </div>
+                            </Card>
+                          </motion.div>
+                        );
+                      })}
                     </div>
+                  )}
                 </div>
+              </div>
             )}
-            {/* ── Video Configuration Modal ── */}
-            {showVideoConfigModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                    <div className="w-full max-w-lg rounded-2xl border border-indigo-500/20 bg-slate-900 p-6 shadow-2xl">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="h-10 w-10 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
-                                <Sparkles className="h-5 w-5 text-indigo-400" />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-white">Configure AI Video</h3>
-                                <p className="text-xs text-slate-400">Customize the script and avatar for your video.</p>
-                            </div>
-                        </div>
-
-                        <div className="space-y-4 mb-6">
-                            <div>
-                                <label className="flex items-center gap-1.5 text-xs font-medium text-slate-400 mb-1.5">
-                                    <Video className="h-3 w-3" /> Select Avatar
-                                </label>
-                                <select 
-                                    value={videoConfig.avatarId} 
-                                    onChange={e => setVideoConfig(prev => ({ ...prev, avatarId: e.target.value }))}
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2.5 text-sm text-white focus:border-indigo-500 focus:outline-none"
-                                >
-                                    {AVATAR_OPTIONS.map(opt => (
-                                        <option key={opt.id} value={opt.id}>{opt.name} ({opt.type})</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="flex items-center justify-between text-xs font-medium text-slate-400 mb-1.5">
-                                    <span className="flex items-center gap-1.5"><Edit3 className="h-3 w-3" /> Spoken Script</span>
-                                    <span className={videoConfig.script.length > 500 ? 'text-red-400' : ''}>{videoConfig.script.length}/500 chars</span>
-                                </label>
-                                <textarea
-                                    value={videoConfig.script}
-                                    onChange={(e) => setVideoConfig(prev => ({ ...prev, script: e.target.value }))}
-                                    rows={6}
-                                    maxLength={500}
-                                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none resize-none leading-relaxed"
-                                />
-                                <p className="text-[10px] text-slate-500 mt-1.5 leading-tight">
-                                    This text will be spoken exactly as written by the avatar. Make sure it sounds natural. Maximum 500 characters.
-                                </p>
-                            </div>
-                        </div>
-
-                        <div className="flex gap-3">
-                            <Button
-                                onClick={() => handleGenerateVideo(showVideoConfigModal)}
-                                disabled={!videoConfig.script || videoConfig.script.length > 500 || generatingVideo === showVideoConfigModal.id}
-                                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white border-0"
-                            >
-                                {generatingVideo === showVideoConfigModal.id ? (
-                                    <><div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Generating...</>
-                                ) : (
-                                    <><Video className="mr-2 h-4 w-4" />Start Generation</>
-                                )}
-                            </Button>
-                            <Button variant="outline" onClick={() => setShowVideoConfigModal(null)}
-                                className="border-slate-700 text-slate-300">
-                                Cancel
-                            </Button>
-                        </div>
-                    </div>
-                </div>
-            )}
+          </div>
         </div>
-    );
+      </div>
+
+      {/* --- Modals --- */}
+      <AnimatePresence>
+        {/* Buffer Publish Modal */}
+        {showPublishModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-lg rounded-[40px] bg-[#1a1c20] border border-white/10 p-10 shadow-2xl">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-14 w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20"><Send className="h-7 w-7 text-orange-400" /></div>
+                <div>
+                  <h3 className="text-2xl font-black text-white tracking-tighter">Publish Content</h3>
+                  <p className="text-white/40 text-sm">Select Buffer channels</p>
+                </div>
+              </div>
+
+              {bufferChannels.length === 0 ? (
+                <div className="py-10 text-center bg-white/5 rounded-3xl border border-white/5 mb-8">
+                  <p className="text-sm text-white/40 mb-4">No connected channels found.</p>
+                  <a href="https://publish.buffer.com/settings/api" target="_blank" rel="noreferrer" className="text-xs font-black text-orange-400 uppercase tracking-widest hover:text-orange-300">Open Buffer Settings →</a>
+                </div>
+              ) : (
+                <div className="space-y-4 mb-10 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                  {bufferChannels.map(channel => (
+                    <label key={channel.id} className={`flex items-center gap-4 p-4 rounded-3xl border cursor-pointer transition-all ${selectedChannels.includes(channel.id) ? 'bg-orange-500/10 border-orange-500/30' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}>
+                      <input 
+                        type="checkbox" checked={selectedChannels.includes(channel.id)}
+                        onChange={e => e.target.checked ? setSelectedChannels(p => [...p, channel.id]) : setSelectedChannels(p => p.filter(id => id !== channel.id))}
+                        className="h-5 w-5 rounded-lg border-white/20 bg-white/5 text-orange-500 focus:ring-orange-500/50"
+                      />
+                      <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${platformInfo[channel.service]?.color || 'from-white/10 to-white/5'} flex items-center justify-center`}>
+                        {platformInfo[channel.service]?.icon ? <Monitor className="h-5 w-5 text-white" /> : <Megaphone className="h-5 w-5 text-white" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-bold text-sm text-white">{channel.name}</div>
+                        <div className="text-[10px] font-black uppercase text-white/20 tracking-widest">{channel.service}</div>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-4">
+                <button 
+                  onClick={handlePublish} disabled={!selectedChannels.length || !!publishing}
+                  className="flex-1 h-14 rounded-2xl bg-orange-500 text-black font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-20"
+                >
+                  {publishing ? <RefreshCw className="h-5 w-5 animate-spin mx-auto" /> : 'Confirm & Schedule'}
+                </button>
+                <button onClick={() => setShowPublishModal(null)} className="flex-1 h-14 rounded-2xl bg-white/5 font-black text-sm text-white/40 hover:text-white transition-all">Cancel</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* AI Video Configuration Modal */}
+        {showVideoConfigModal && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <motion.div initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} className="w-full max-w-2xl max-h-[85vh] overflow-y-auto rounded-[40px] bg-[#1a1c20] border border-white/10 p-8 md:p-10 shadow-2xl">
+              <div className="flex items-center gap-4 mb-10">
+                <div className="h-14 w-14 rounded-2xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20"><Video className="h-7 w-7 text-orange-400" /></div>
+                <div>
+                  <h3 className="text-2xl font-black text-white tracking-tighter">AI Video Studio</h3>
+                  <p className="text-white/40 text-sm italic">"Metadata: Webhook Integration Enabled"</p>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-[200px,1fr] gap-10">
+                <div className="space-y-6">
+                    <div className="p-8 rounded-[32px] bg-white/5 border border-white/10 text-center">
+                      <Users className="h-10 w-10 text-orange-400 mx-auto mb-4" />
+                      <h4 className="text-sm font-bold text-white mb-2">Configure Actor</h4>
+                      <p className="text-xs text-white/40 mb-6">Enter your custom HeyGen Avatar ID or Photo ID below to generate the video.</p>
+                      
+                      <div className="relative">
+                        <input 
+                          type="text" 
+                          value={videoConfig.avatarId}
+                          onChange={e => setVideoConfig(p => ({ ...p, avatarId: e.target.value }))}
+                          placeholder="Enter HeyGen Avatar ID (e.g. 054b...)"
+                          className="w-full rounded-2xl bg-black/40 border border-white/20 px-4 py-4 text-sm text-center text-orange-400 font-mono focus:border-orange-500/50 outline-none transition-all shadow-inner"
+                        />
+                      </div>
+                      <div className="mt-4 text-[10px] text-white/20 italic">"Ensure the ID matches an asset in your HeyGen account"</div>
+                      
+                      <div className="mt-6 text-left">
+                        <label className="text-xs font-bold text-white/60 uppercase tracking-widest mb-2 block">Asset Type</label>
+                        <select
+                          value={videoConfig.avatarType}
+                          onChange={e => setVideoConfig(p => ({ ...p, avatarType: e.target.value as 'avatar' | 'talking_photo' }))}
+                          className="w-full rounded-2xl bg-black/40 border border-white/20 px-4 py-3 text-sm text-white outline-none focus:border-orange-500/50 transition-all cursor-pointer"
+                        >
+                          <option value="avatar">Video Avatar (Default)</option>
+                          <option value="talking_photo">Talking Photo</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+    
+                  <div className="mt-4 p-4 rounded-2xl bg-black/40 border border-white/5">
+                    <span className="text-[9px] font-black uppercase text-white/20 tracking-[0.2em] block mb-2">Selected ID</span>
+                    <code className="text-[10px] text-orange-400/80 font-mono break-all leading-tight bg-orange-500/5 px-2 py-1 rounded-md border border-orange-500/10 block">
+                      {videoConfig.avatarId || 'None'}
+                    </code>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest ml-1">
+                      <span className="text-white/20">Spoken Script</span>
+                      <span className={videoConfig.script.length > 500 ? 'text-rose-500' : 'text-white/40'}>{videoConfig.script.length}/500</span>
+                    </div>
+                    <textarea 
+                      value={videoConfig.script} 
+                      onChange={e => setVideoConfig(p => ({ ...p, script: e.target.value }))}
+                      className="w-full h-48 rounded-3xl bg-white/5 border border-white/5 p-6 text-sm text-white/80 leading-relaxed outline-none focus:border-orange-500/50 transition-all resize-none"
+                    />
+                    <div className="flex items-center gap-2 p-3 rounded-2xl bg-orange-500/5 border border-orange-500/10">
+                      <AlertCircle className="h-4 w-4 text-orange-400 shrink-0" />
+                      <p className="text-[10px] font-bold text-orange-400/80 leading-tight">The avatar will speak this exact text. Check for natural phrasing!</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-12 flex gap-4">
+                <button 
+                  onClick={() => handleGenerateVideo(showVideoConfigModal)} 
+                  disabled={generatingVideo === showVideoConfigModal.id || !videoConfig.script}
+                  className="flex-1 h-14 rounded-2xl bg-orange-500 text-black font-black text-sm hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-20"
+                >
+                  {generatingVideo === showVideoConfigModal.id ? <RefreshCw className="h-5 w-5 animate-spin mx-auto" /> : 'Initialize Render'}
+                </button>
+                <button onClick={() => setShowVideoConfigModal(null)} className="flex-1 h-14 rounded-2xl bg-white/5 font-black text-sm text-white/40 hover:text-white transition-all">Discard</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <style jsx global>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.02);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(249, 115, 22, 0.2);
+        }
+      `}</style>
+    </div>
+  );
 }

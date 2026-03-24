@@ -9,9 +9,11 @@ import { promisify } from 'util';
 
 const readFile = promisify(fs.readFile);
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
     try {
-        const { trackId, platform, userId } = await request.json();
+        const { trackId, platform, userId, shareId } = await request.json();
 
         if (!trackId || !platform || !userId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -20,12 +22,31 @@ export async function POST(request: NextRequest) {
         initAdmin();
         const db = getAdminDb();
 
-        // 1. Fetch Track Data
-        const trackDoc = await db.collection('music_tracks').doc(trackId).get();
+        // 1. Fetch Track Data using shareId as the document ID (or fallback to trackId if missing)
+        const docId = shareId || trackId;
+        const trackDoc = await db.collection('music_tracks').doc(docId).get();
         if (!trackDoc.exists) {
-            return NextResponse.json({ error: 'Track not found' }, { status: 404 });
+            return NextResponse.json({ error: 'Track doc not found' }, { status: 404 });
         }
-        const trackData = trackDoc.data()!;
+        let trackData = trackDoc.data()!;
+        
+        // If track is inside array, extract the specific clip info
+        if (trackData.tracks && Array.isArray(trackData.tracks)) {
+            const nestedClip = trackData.tracks.find((t: any) => t.sunoId === trackId || `${trackData.taskId || docId}` === trackId);
+            if (nestedClip) {
+                // Merge nested properties over root properties
+                trackData = {
+                    ...trackData,
+                    ...nestedClip,
+                    // keep original ID for updating
+                    id: docId,
+                    sunoId: trackId
+                };
+            }
+        } else {
+             trackData.id = docId;
+             trackData.sunoId = trackId;
+        }
 
         // 2. Fetch Integration Token
         const tokenDoc = await db.collection(INTEGRATION_TOKENS_COLLECTION).doc(`${userId}_${platform}`).get();
@@ -51,8 +72,10 @@ export async function POST(request: NextRequest) {
 
 async function uploadToYouTube(userId: string, trackData: any, token: IntegrationToken, db: FirebaseFirestore.Firestore) {
     let videoPath = '';
+    let isTemporaryVideo = false;
+
     try {
-        // Refresh token if needed
+        // Refresh token logic would go here if needed (googleapis handles it if refresh_token is set)
         const oauth2Client = new google.auth.OAuth2(
             process.env.YOUTUBE_CLIENT_ID,
             process.env.YOUTUBE_CLIENT_SECRET
@@ -63,19 +86,37 @@ async function uploadToYouTube(userId: string, trackData: any, token: Integratio
             expiry_date: token.expiryDate
         });
 
-        // 1. Generate Video
-        const audioUrl = trackData.audio_url || trackData.audioUrl;
-        const imageUrl = trackData.image_url || trackData.imageUrl;
+        // 1. Get Video Source
+        // The api mapping should already have combined the exact nested URLs to the root properties
+        let audioUrl = trackData.audio_url || trackData.audioUrl;
+        let imageUrl = trackData.image_url || trackData.imageUrl || trackData.sourceImageUrl;
+        let videoUrl = trackData.video_url || trackData.videoUrl;
 
-        if (!audioUrl || !imageUrl) {
-            throw new Error('Missing audio or image URL in track data');
+        if (videoUrl) {
+            console.log(`[YouTube] Using pre-generated video: ${videoUrl}`);
+            // Download the video to a temporary file for uploading
+            const response = await fetch(videoUrl);
+            if (!response.ok) throw new Error(`Failed to download video from ${videoUrl}`);
+            
+            const arrayBuffer = await response.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            videoPath = `/tmp/video_yt_${trackData.id || Date.now()}.mp4`;
+            fs.writeFileSync(videoPath, buffer);
+            isTemporaryVideo = true;
+        } else {
+            // Generate Video from Audio + Image
+            console.log(`[YouTube] Generating video from audio: ${audioUrl}`);
+            if (!audioUrl || !imageUrl) {
+                throw new Error('Missing audio or image URL in track data for video generation');
+            }
+
+            videoPath = await generateVideoFromAudio({
+                audioUrl,
+                imageUrl,
+                outputName: `youtube_${trackData.id || Date.now()}`
+            });
+            isTemporaryVideo = true;
         }
-
-        videoPath = await generateVideoFromAudio({
-            audioUrl,
-            imageUrl,
-            outputName: `youtube_${trackData.id || Date.now()}`
-        });
 
         // 2. Upload to YouTube
         const youtube = google.youtube({ version: 'v3', auth: oauth2Client });
@@ -93,7 +134,7 @@ async function uploadToYouTube(userId: string, trackData: any, token: Integratio
                     tags: ['AI Music', 'Satsang', 'Meditation']
                 },
                 status: {
-                    privacyStatus: 'private' // Default to private for safety
+                    privacyStatus: 'public'
                 }
             },
             media: {

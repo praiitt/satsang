@@ -3,10 +3,11 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
-import { Button } from '@/components/livekit/button';
-import { Loader2, Music, Youtube, Upload, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Music, Youtube, Upload, CheckCircle, AlertCircle, ExternalLink, X } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { distributeMusic, disconnectPlatform } from './actions';
 
 interface Track {
     id: string;
@@ -14,6 +15,8 @@ interface Track {
     prompt?: string;
     imageUrl?: string;
     audioUrl?: string;
+    videoUrl?: string;
+    videoStatus?: 'generating' | 'completed' | 'failed';
     createdAt: number;
     youtubeId?: string;
     youtubeUrl?: string;
@@ -26,6 +29,7 @@ export default function DistributionPage() {
     const [loadingTracks, setLoadingTracks] = useState(true);
     const [youtubeConnected, setYoutubeConnected] = useState(false);
     const [soundcloudConnected, setSoundcloudConnected] = useState(false);
+    const [youtubeInfo, setYoutubeInfo] = useState<{ email?: string; name?: string } | null>(null);
     const [uploadingId, setUploadingId] = useState<string | null>(null);
 
     // Check for success params from OAuth callback
@@ -52,7 +56,13 @@ export default function DistributionPage() {
                 ]);
                 const ytData = await ytRes.json();
                 const scData = await scRes.json();
-                setYoutubeConnected(ytData.connected);
+                if (ytData.connected) {
+                    setYoutubeConnected(true);
+                    setYoutubeInfo({ email: ytData.userEmail, name: ytData.displayName });
+                } else {
+                    setYoutubeConnected(false);
+                    setYoutubeInfo(null);
+                }
                 setSoundcloudConnected(scData.connected);
             } catch (error) {
                 console.error('Failed to check status', error);
@@ -81,7 +91,54 @@ export default function DistributionPage() {
 
     const handleConnect = (provider: 'youtube' | 'soundcloud') => {
         if (!user) return;
-        window.location.href = `/api/auth/${provider}?userId=${user.uid}`;
+        const currentOrigin = encodeURIComponent(window.location.origin);
+        window.location.href = `/api/auth/${provider}?userId=${user.uid}&appUrl=${currentOrigin}`;
+    };
+
+    const handleGenerateVideo = async (track: Track) => {
+        if (!user) return;
+        
+        setTracks(prev => prev.map(t => t.id === track.id ? { ...t, videoStatus: 'generating' } : t));
+        const toastId = toast.loading('Starting MP4 video generation...');
+
+        try {
+            const res = await fetch('/api/suno/generate-video', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    trackId: (track as any).shareId || track.id,
+                    sunoId: track.id
+                })
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Failed to start video generation');
+
+            toast.success('Video generation started! It will be ready in a minute.', { id: toastId });
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Failed to start video generation', { id: toastId });
+            setTracks(prev => prev.map(t => t.id === track.id ? { ...t, videoStatus: undefined } : t));
+        }
+    };
+
+    const handleDisconnect = async (platform: 'youtube' | 'soundcloud') => {
+        if (!user) return;
+        
+        try {
+            await disconnectPlatform({ userId: user.uid, platform });
+            
+            if (platform === 'youtube') {
+                setYoutubeConnected(false);
+                setYoutubeInfo(null);
+            }
+            if (platform === 'soundcloud') setSoundcloudConnected(false);
+            
+            toast.success(`Disconnected from ${platform}`);
+        } catch (err: any) {
+            console.error('Failed to disconnect:', err);
+            toast.error(err.message || `Failed to disconnect from ${platform}`);
+        }
     };
 
     const handleUpload = async (track: Track, platform: 'youtube' | 'soundcloud') => {
@@ -92,29 +149,25 @@ export default function DistributionPage() {
             toast.error('Connect YouTube first');
             return;
         }
-        if (platform === 'soundcloud' && !soundcloudConnected) {
-            toast.error('Connect SoundCloud first');
-            return;
+        
+        // Warn if no video for YouTube
+        if (platform === 'youtube' && !track.videoUrl) {
+            toast.info('No video found. We will generate a basic one with the track image.');
         }
 
         setUploadingId(track.id);
         const toastId = toast.loading(`Uploading to ${platform}...`);
 
         try {
-            const res = await fetch('/api/music/distribute', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    trackId: track.id,
-                    platform,
-                    userId: user.uid
-                })
+            const data = await distributeMusic({
+                trackId: track.id,
+                shareId: (track as any).shareId || track.id,
+                platform,
+                userId: user.uid
             });
 
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Upload failed');
+            if (!data || !data.success) {
+                throw new Error('Upload failed with unknown error');
             }
 
             toast.success(`Successfully uploaded to ${platform}!`, { id: toastId });
@@ -160,24 +213,55 @@ export default function DistributionPage() {
                     <p className="text-zinc-400">Push your AI-generated tracks to the world.</p>
                 </div>
                 <div className="flex gap-4">
-                    <Button
-                        variant={youtubeConnected ? "outline" : "default"}
-                        className={youtubeConnected ? "border-green-500/30 text-green-400 bg-green-500/10" : "bg-red-600 hover:bg-red-700"}
-                        onClick={() => handleConnect('youtube')}
-                        disabled={youtubeConnected}
-                    >
-                        <Youtube className="w-4 h-4 mr-2" />
-                        {youtubeConnected ? "Connected to YouTube" : "Connect YouTube"}
-                    </Button>
-                    <Button
-                        variant={soundcloudConnected ? "outline" : "default"}
-                        className={soundcloudConnected ? "border-orange-500/30 text-orange-400 bg-orange-500/10" : "bg-orange-600 hover:bg-orange-700"}
-                        onClick={() => handleConnect('soundcloud')}
-                        disabled={soundcloudConnected}
-                    >
-                        {soundcloudConnected ? <CheckCircle className="w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                        {soundcloudConnected ? "Connected to SoundCloud" : "Connect SoundCloud"}
-                    </Button>
+                    <div className="flex flex-col items-end gap-2">
+                        <div className="flex items-center">
+                            <Button
+                                variant={youtubeConnected ? "outline" : "default"}
+                                className={youtubeConnected ? "border-green-500/30 text-green-400 bg-green-500/10 rounded-r-none" : "bg-red-600 hover:bg-red-700"}
+                                onClick={() => handleConnect('youtube')}
+                            >
+                                <Youtube className="w-4 h-4 mr-2" />
+                                {youtubeConnected ? "Change YouTube Account" : "Connect YouTube"}
+                            </Button>
+                            {youtubeConnected && (
+                                <Button
+                                    variant="outline"
+                                    className="border-green-500/30 border-l-0 rounded-l-none bg-green-500/5 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors px-3"
+                                    onClick={() => handleDisconnect('youtube')}
+                                    title="Disconnect YouTube"
+                                >
+                                    <X className="w-4 h-4" />
+                                </Button>
+                            )}
+                        </div>
+                        {youtubeConnected && youtubeInfo?.email && (
+                            <div className="text-xs text-zinc-400">
+                                Connected as <span className="text-zinc-200">{youtubeInfo.email}</span>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="flex items-center self-start">
+                        <Button
+                            variant={soundcloudConnected ? "outline" : "default"}
+                            className={soundcloudConnected ? "border-orange-500/30 text-orange-400 bg-orange-500/10 rounded-r-none" : "bg-orange-600 hover:bg-orange-700"}
+                            onClick={() => handleConnect('soundcloud')}
+                            disabled={soundcloudConnected}
+                        >
+                            {soundcloudConnected ? <CheckCircle className="w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+                            {soundcloudConnected ? "Connected to SoundCloud" : "Connect SoundCloud"}
+                        </Button>
+                        {soundcloudConnected && (
+                            <Button
+                                variant="outline"
+                                className="border-orange-500/30 border-l-0 rounded-l-none bg-orange-500/5 hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 transition-colors px-3"
+                                onClick={() => handleDisconnect('soundcloud')}
+                                title="Disconnect SoundCloud"
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </header>
 
@@ -193,66 +277,94 @@ export default function DistributionPage() {
                 </div>
             ) : (
                 <div className="grid gap-4">
-                    {tracks.map(track => (
-                        <div key={track.id} className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 flex flex-col md:flex-row items-center gap-6 hover:border-purple-500/30 transition-colors">
-                            {/* Artwork */}
-                            <div className="relative w-full md:w-24 h-24 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0">
-                                {track.imageUrl ? (
-                                    <Image
-                                        src={track.imageUrl}
-                                        alt={track.title}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full"><Music className="text-white/20" /></div>
-                                )}
-                            </div>
+                    {tracks.map(track => {
+                        let parsedDate = 'Unknown Date';
+                        if (track.createdAt) {
+                            try {
+                                const ms = typeof track.createdAt === 'object' && 'seconds' in track.createdAt 
+                                    ? track.createdAt.seconds * 1000 
+                                    : typeof track.createdAt === 'string' 
+                                        ? new Date(track.createdAt).getTime()
+                                        : track.createdAt;
+                                parsedDate = new Date(ms).toLocaleDateString();
+                                if (parsedDate === 'Invalid Date') parsedDate = 'Recent';
+                            } catch(e) { parsedDate = 'Recent'; }
+                        }
 
-                            {/* Info */}
-                            <div className="flex-1 min-w-0 text-center md:text-left">
-                                <h3 className="text-lg font-semibold text-white truncate">{track.title || 'Untitled Track'}</h3>
-                                <p className="text-sm text-zinc-500 truncate mt-1">{track.prompt || 'AI Generated Music'}</p>
-                                <div className="flex items-center justify-center md:justify-start gap-4 mt-2 text-xs text-zinc-600 font-mono uppercase">
-                                    <span>{new Date(track.createdAt?.seconds ? track.createdAt.seconds * 1000 : track.createdAt).toLocaleDateString()}</span>
-                                    {track.audioUrl && (
-                                        <audio controls className="h-6 w-48 opacity-50 hover:opacity-100 transition-opacity" src={track.audioUrl} />
+                        return (
+                        <div key={track.id} className="bg-zinc-900/50 border border-white/10 rounded-xl p-4 flex flex-col xl:flex-row items-start xl:items-center justify-between gap-6 hover:border-purple-500/30 transition-colors w-full overflow-hidden">
+                            {/* Left Side: Artwork + Info */}
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 w-full xl:w-auto xl:flex-1 min-w-0">
+                                {/* Artwork */}
+                                <div className="relative w-24 h-24 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0">
+                                    {track.imageUrl ? (
+                                        <Image src={track.imageUrl} alt={track.title} fill className="object-cover" />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full"><Music className="text-white/20" /></div>
                                     )}
+                                </div>
+
+                                {/* Info */}
+                                <div className="flex-1 min-w-0">
+                                    <h3 className="text-lg font-semibold text-white truncate max-w-full" title={track.title || 'Untitled Track'}>{track.title || 'Untitled Track'}</h3>
+                                    <p className="text-sm text-zinc-500 truncate mt-1 max-w-full hover:text-zinc-300 transition-colors" title={track.prompt || 'AI Generated Music'}>{track.prompt || 'AI Generated Music'}</p>
+                                    <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-zinc-600 font-mono uppercase">
+                                        <span>{parsedDate}</span>
+                                        {track.audioUrl && (
+                                            <audio controls className="h-8 max-w-[200px] xl:max-w-[240px]" src={track.audioUrl} />
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
-                            {/* Actions */}
-                            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                            {/* Right Side: Actions */}
+                            <div className="flex flex-col sm:flex-row xl:flex-col gap-3 w-full sm:w-auto flex-shrink-0">
                                 {track.youtubeUrl ? (
                                     <Button
                                         variant="outline"
-                                        className="border-red-500/30 text-red-400 bg-red-500/5 hover:bg-red-500/10 w-full"
+                                        className="border-red-500/30 text-red-400 bg-red-500/5 hover:bg-red-500/10 w-full sm:w-auto xl:w-full min-w-[200px]"
                                         onClick={() => window.open(track.youtubeUrl, '_blank')}
                                     >
                                         <ExternalLink className="w-4 h-4 mr-2" /> View on YouTube
                                     </Button>
                                 ) : (
-                                    <Button
-                                        className="bg-red-600 hover:bg-red-700 text-white w-full"
-                                        disabled={!youtubeConnected || uploadingId === track.id}
-                                        onClick={() => handleUpload(track, 'youtube')}
-                                    >
-                                        {uploadingId === track.id ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Youtube className="w-4 h-4 mr-2" />}
-                                        Upload to YouTube
-                                    </Button>
+                                    <div className="flex col-span-2 sm:flex-row xl:flex-col gap-2 w-full">
+                                        {!track.videoUrl && (
+                                            <Button
+                                                variant="outline"
+                                                className="border-purple-500/50 text-purple-400 bg-purple-500/5 hover:bg-purple-500/10 w-full text-xs py-1 h-10 min-w-[180px]"
+                                                disabled={track.videoStatus === 'generating'}
+                                                onClick={() => handleGenerateVideo(track)}
+                                            >
+                                                {track.videoStatus === 'generating' ? (
+                                                    <><Loader2 className="animate-spin w-3 h-3 mr-2" /> Creating Video...</>
+                                                ) : (
+                                                    <><Upload className="w-3 h-3 mr-2" /> Convert to MP4 (Suno)</>
+                                                )}
+                                            </Button>
+                                        )}
+                                        <Button
+                                            className="bg-red-600 hover:bg-red-700 text-white w-full h-10 min-w-[180px]"
+                                            disabled={!youtubeConnected || uploadingId === track.id}
+                                            onClick={() => handleUpload(track, 'youtube')}
+                                        >
+                                            {uploadingId === track.id ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Youtube className="w-4 h-4 mr-2" />}
+                                            {track.videoUrl ? 'Publish Video to YT' : 'Upload to YouTube'}
+                                        </Button>
+                                    </div>
                                 )}
 
                                 <Button
-                                    className="bg-orange-600 hover:bg-orange-700 text-white w-full"
+                                    className="bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto xl:w-full h-10 min-w-[180px]"
                                     disabled={!soundcloudConnected || uploadingId === track.id}
                                     onClick={() => handleUpload(track, 'soundcloud')}
                                 >
                                     {uploadingId === track.id ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
-                                    Upload to SC
+                                    Upload to SoundCloud
                                 </Button>
                             </div>
                         </div>
-                    ))}
+                    )})}
                 </div>
             )}
         </div>

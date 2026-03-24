@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const MARKETING_SERVER_URL = process.env.MARKETING_SERVER_URL || 'http://localhost:4001';
+const MARKETING_SERVER_URL = process.env.MARKETING_SERVER_URL || 'https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-marketing-server';
 
 async function proxyToMarketing(req: NextRequest, path: string[]) {
     const subPath = path.join('/');

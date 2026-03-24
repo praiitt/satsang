@@ -16,6 +16,8 @@ interface RraasiBhajanPlayerProps {
     /** Whether to autoplay when audioUrl is set */
     autoPlay?: boolean;
     className?: string;
+    /** If true, forces the audio playback to pause (e.g., from an external button) */
+    forcePause?: boolean;
 }
 
 /**
@@ -31,6 +33,7 @@ export function RraasiBhajanPlayer({
     onEnded,
     autoPlay = true,
     className = '',
+    forcePause = false
 }: RraasiBhajanPlayerProps) {
     const [isPlaying, setIsPlaying] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -67,11 +70,17 @@ export function RraasiBhajanPlayer({
     }, [room]);
 
 
+    const onEndedRef = useRef(onEnded);
+    useEffect(() => {
+        onEndedRef.current = onEnded;
+    }, [onEnded]);
+
     // Set up audio element
     useEffect(() => {
         if (!audioUrl) return;
 
         const audio = new Audio(audioUrl);
+        audio.crossOrigin = 'anonymous'; // Enforce cross-origin so the WebRTC pipeline can capture stream bytes without tainting the browser sandbox
         audioRef.current = audio;
 
         audio.addEventListener('loadedmetadata', () => {
@@ -89,7 +98,7 @@ export function RraasiBhajanPlayer({
             setIsPlaying(false);
             setProgress(0);
             setCurrentTime(0);
-            onEnded?.();
+            onEndedRef.current?.();
         });
 
         audio.addEventListener('error', (e) => {
@@ -115,6 +124,19 @@ export function RraasiBhajanPlayer({
             audioRef.current = null;
         };
     }, [audioUrl]);
+
+    // Handle external pause/resume from the parent component
+    useEffect(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
+
+        if (forcePause && isPlaying) {
+            audio.pause();
+            setIsPlaying(false);
+        } else if (!forcePause && !isPlaying && !autoplayFailed) {
+            audio.play().then(() => setIsPlaying(true)).catch(e => console.warn('[RraasiBhajanPlayer] Parent resume failed', e));
+        }
+    }, [forcePause, isPlaying, autoplayFailed]);
 
     const togglePlay = () => {
         const audio = audioRef.current;

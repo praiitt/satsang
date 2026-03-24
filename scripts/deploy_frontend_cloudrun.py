@@ -80,7 +80,7 @@ def main():
                         
                         if key.startswith('NEXT_PUBLIC_'):
                             public_vars[key] = val
-                        elif key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL', 'LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET', 'LIVEKIT_EGRESS_ENABLED', 'LIVEKIT_EGRESS_GCP_BUCKET', 'LIVEKIT_EGRESS_GCP_CREDENTIALS']:
+                        elif key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL', 'BACKEND_SERVICE_URL', 'LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET', 'LIVEKIT_EGRESS_ENABLED', 'LIVEKIT_EGRESS_GCP_BUCKET', 'LIVEKIT_EGRESS_GCP_CREDENTIALS', 'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'NEXT_PUBLIC_APP_URL']:
                              public_vars[key] = val
 
     # Hardcode/Fallback for Backend if missing
@@ -121,7 +121,7 @@ steps:
 """
     
     for key, val in public_vars.items():
-        if key.startswith('NEXT_PUBLIC_') or key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL']:
+        if key.startswith('NEXT_PUBLIC_') or key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL', 'BACKEND_SERVICE_URL', 'NEXT_PUBLIC_APP_URL']:
             # Append to yaml args
             # We use substitutions for values: --build-arg KEY=$_KEY
             sub_key = f"_{key}"

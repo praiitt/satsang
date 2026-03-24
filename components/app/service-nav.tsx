@@ -4,16 +4,23 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home } from 'lucide-react';
 
 interface ServiceItem {
     name: string;
     href: string;
-    iconPath: string;
+    iconPath?: string;
+    icon?: any;
     color: string;
 }
 
 const services: ServiceItem[] = [
+    {
+        name: 'Main Menu',
+        href: '/',
+        icon: Home,
+        color: 'border-white/50 shadow-white/20',
+    },
     {
         name: 'Satsang',
         href: '/satsang',
@@ -37,12 +44,6 @@ const services: ServiceItem[] = [
         href: '/vedic-jyotish',
         iconPath: '/services/astrology-icon-fixed.png',
         color: 'border-pink-500 shadow-pink-500/50',
-    },
-    {
-        name: 'History',
-        href: '/conversations',
-        iconPath: '/services/history-icon.png',
-        color: 'border-green-400 shadow-green-400/50',
     },
 ];
 
@@ -75,11 +76,15 @@ export function ServiceNav({ className, variant = 'header' }: ServiceNavProps) {
                                 "hover:border-white/20 hover:scale-110",
                                 isActive && cn("border-opacity-100 shadow-[0_0_15px_rgba(0,0,0,0.5)] scale-110", service.color)
                             )}>
-                                <img
-                                    src={service.iconPath}
-                                    alt={service.name}
-                                    className={cn("w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity", isActive && "opacity-100")}
-                                />
+                                {service.icon ? (
+                                    <service.icon className={cn("w-5 h-5 sm:w-6 sm:h-6 text-white opacity-80 group-hover:opacity-100 transition-opacity", isActive && "opacity-100")} />
+                                ) : (
+                                    <img
+                                        src={service.iconPath}
+                                        alt={service.name}
+                                        className={cn("w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity", isActive && "opacity-100")}
+                                    />
+                                )}
                             </div>
                         </Link>
                     );
@@ -139,11 +144,15 @@ export function ServiceNav({ className, variant = 'header' }: ServiceNavProps) {
                                     ? cn("border-opacity-100 shadow-[0_0_15px_rgba(var(--primary),0.5)]", service.color)
                                     : "hover:border-border"
                             )}>
-                                <img
-                                    src={service.iconPath}
-                                    alt={service.name}
-                                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                />
+                                {service.icon ? (
+                                    <service.icon className="w-6 h-6 text-foreground transition-transform duration-300 group-hover:scale-110" />
+                                ) : (
+                                    <img
+                                        src={service.iconPath}
+                                        alt={service.name}
+                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                    />
+                                )}
                             </div>
 
                             {/* Hover Label (Only visible when expanded) */}

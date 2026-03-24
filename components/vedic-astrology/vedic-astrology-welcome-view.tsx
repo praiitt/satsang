@@ -1,12 +1,20 @@
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/livekit/button';
+import { VedicEarlyAccessView } from '@/components/app/vedic-early-access-view';
 
 interface VedicAstrologyWelcomeViewProps {
     onStartCall: () => void;
 }
 
 export function VedicAstrologyWelcomeView({ onStartCall }: VedicAstrologyWelcomeViewProps) {
+    const [showEarlyAccess, setShowEarlyAccess] = useState(false);
+
+    if (showEarlyAccess) {
+        return <VedicEarlyAccessView />;
+    }
+
     return (
         <div className="relative flex min-h-svh w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 dark:from-slate-950 dark:via-orange-950 dark:to-red-950">
             {/* Background Pattern */}
@@ -69,17 +77,17 @@ export function VedicAstrologyWelcomeView({ onStartCall }: VedicAstrologyWelcome
                 {/* CTA Button */}
                 <div className="flex flex-col items-center gap-4">
                     <Button
-                        onClick={onStartCall}
+                        onClick={() => setShowEarlyAccess(true)}
                         size="lg"
-                        className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 px-8 py-6 text-lg font-semibold text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl dark:from-orange-600 dark:via-red-600 dark:to-amber-600"
+                        className="group relative overflow-hidden bg-gradient-to-r from-orange-500 via-red-500 to-amber-500 px-8 py-6 text-xl font-bold text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl dark:from-orange-600 dark:via-red-600 dark:to-amber-600"
                     >
                         <span className="relative z-10 flex items-center gap-2">
-                            🪔 <span className="hidden sm:inline">शुरू करें /</span> Start Your Jyotish Journey
+                            🌟 Early Access
                         </span>
                         <div className="absolute inset-0 bg-gradient-to-r from-amber-400 via-orange-400 to-red-400 opacity-0 transition-opacity group-hover:opacity-100" />
                     </Button>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                        Voice-enabled AI Jyotishi • Bilingual Support
+                    <p className="text-sm font-medium text-orange-700 dark:text-orange-400">
+                        Join the waiting list for Voice-enabled AI Jyotishi
                     </p>
                 </div>
 

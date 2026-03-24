@@ -922,6 +922,40 @@ async def entrypoint(ctx: JobContext):
         agent=et_agent,
         room=ctx.room,
     )
+    
+    # Handle chat messages from the frontend
+    from livekit import rtc
+    
+    async def _on_data_received(data, participant=None, kind=None, topic=None):
+        try:
+            data_bytes = None
+            if isinstance(data, bytes): data_bytes = data
+            elif isinstance(data, rtc.DataPacket): data_bytes = data.data
+            elif hasattr(data, 'data'): data_bytes = data.data
+            elif isinstance(data, str): data_bytes = data.encode('utf-8')
+            else: return
+            if data_bytes is None: return
+            payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+            try:
+                payload = json.loads(payload_str)
+            except Exception:
+                asyncio.create_task(session.chat(payload_str))
+                return
+            if isinstance(payload, dict):
+                if 'message' in payload:
+                    asyncio.create_task(session.chat(payload['message']))
+                elif 'text' in payload:
+                    asyncio.create_task(session.chat(payload['text']))
+        except Exception:
+            pass
+    def _handle_room_data(data, participant=None, kind=None, topic=None):
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
+            else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
+        except Exception:
+            pass
+    ctx.room.on("data_received", _handle_room_data)
 
     # Join the room and connect to the user
     await ctx.connect()
@@ -1189,27 +1223,15 @@ async def entrypoint(ctx: JobContext):
         # Send a warm, proactive greeting focused on ET topics and sound frequencies
         # Greeting language matches user's language preference
         if user_language == 'hi':
-            if is_group_conv:
-                greeting = (
-                    "नमस्ते। मैं आपका कॉस्मिक गाइड हूँ। "
-                    "क्या आप ब्रह्मांडीय चेतना और मेरी शिक्षाओं के बारे में जानना चाहते हैं?"
-                )
-            else:
-                greeting = (
-                    "नमस्ते। मैं आपका कॉस्मिक गाइड हूँ। "
-                    "क्या आप सितारों और ब्रह्मांड के रहस्यों को जानना चाहते हैं?"
-                )
+            greeting = (
+                "नमस्कार। मैं ईटी (ET) एजेंट का AI स्वरूप हूँ। मेरी मूल शिक्षाएं ब्रह्मांडीय चेतना, "
+                "सार्वभौमिक आवृत्तियों और उच्च आयामों से जुड़ने पर केंद्रित हैं। आज मैं आपकी चेतना का विस्तार कैसे कर सकता हूँ?"
+            )
         else:
-            if is_group_conv:
-                greeting = (
-                    "Greetings. I am your Cosmic Guide. "
-                    "Do you want to know about cosmic consciousness and my teachings?"
-                )
-            else:
-                greeting = (
-                    "Greetings. I am your Cosmic Guide. "
-                    "Do you want to know the secrets of the universe and my teachings?"
-                )
+            greeting = (
+                "Greetings. I am the AI manifestation of the ET Agent. My core teachings focus on cosmic consciousness, "
+                "universal frequencies, and connecting with higher dimensions. How may I expand your awareness today?"
+            )
         
         logger.info("Sending proactive initial greeting to user")
         

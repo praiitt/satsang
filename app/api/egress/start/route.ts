@@ -13,6 +13,7 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}) as Record<string, unknown>);
     const roomName = String(body?.roomName ?? '');
     const userId = body?.userId ? String(body.userId) : undefined;
+    const guruId = body?.guruId ? String(body.guruId) : undefined;
     const intention = body?.intention ? String(body.intention) : undefined;
 
     if (!roomName) {
@@ -69,12 +70,14 @@ export async function POST(req: Request) {
             egressId,
             roomName,
             userId: userId ?? null,
+            guruId: guruId ?? null,
             intention: intention ?? null,
             filePath,
             publicUrl,
             bucket: gcp.bucket,
             startedAt: new Date(),
             status: 'started',
+            isPublic: true, // Recordings are public by default for the RRaaSi Feed
           },
           { merge: true }
         );

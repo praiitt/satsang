@@ -3,19 +3,15 @@
  */
 
 // Use Next.js API routes as proxy (better for cookies and CORS)
-// Use direct Cloud Function URL in production to avoid rewrite issues
-const PROD_API_URL = 'https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-auth-server';
-
-// Base API URL (e.g. http://localhost:4000 or Cloud Function Root)
-// Base API URL (e.g. http://localhost:4000 or Cloud Function Root)
-const API_BASE_URL = process.env.NEXT_PUBLIC_AUTH_SERVER_URL ||
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:4000'
-    : PROD_API_URL);
+const API_BASE_URL = typeof window !== 'undefined' 
+  ? '/api' 
+  : (process.env.NEXT_PUBLIC_AUTH_SERVER_URL || 'http://localhost:4000');
 
 // Specific Endpoint Roots
 const AUTH_URL = `${API_BASE_URL}/auth`;
-const CHAT_URL = `${API_BASE_URL}/chat`;
+// Use /api/auth-chat to avoid conflict with /api/chat (Astrology Backend)
+const CHAT_URL = typeof window !== 'undefined' ? '/api/auth-chat' : `${API_BASE_URL}/chat`;
+const MARKETING_URL = typeof window !== 'undefined' ? '/api/auth-marketing' : `${API_BASE_URL}/marketing`;
 
 export interface AuthResponse {
   uid: string;
@@ -152,7 +148,7 @@ export async function triggerMarketingWelcome(data: {
   zodiacSign?: string;
 }): Promise<void> {
   // Fire and forget - don't block UI
-  fetch(`${API_BASE_URL}/marketing/welcome`, {
+  fetch(`${MARKETING_URL}/welcome`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -173,6 +169,8 @@ export interface ChatMessage {
 export interface Recording {
   id: string;
   userId: string;
+  roomName?: string; // LiveKit room name mapping
+  guruId?: string;
   status: string;
   publicUrl?: string;
   duration?: number;
@@ -213,4 +211,21 @@ export async function getUserRecordings(userId: string): Promise<Recording[]> {
   const data = await response.json();
   return data.recordings || [];
 }
+
+/**
+ * Fetch global feed recordings (Public)
+ */
+export async function getFeedRecordings(limit: number = 20): Promise<Recording[]> {
+  const params = new URLSearchParams({ limit: limit.toString() });
+
+  const response = await fetch(`${CHAT_URL}/feed?${params.toString()}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!response.ok) return [];
+  const data = await response.json();
+  return data.recordings || [];
+}
+
 

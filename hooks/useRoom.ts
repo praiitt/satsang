@@ -185,7 +185,9 @@ export function useRoom(appConfig: AppConfig) {
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
                     roomName: targetRoomName,
-                    userId: recordingUserId || 'anonymous_guest' // Fallback to ensure recording happens
+                    userId: recordingUserId || 'anonymous_guest', // Fallback to ensure recording happens
+                    guruId: appConfig.metadata?.guruId,
+                    intention: sessionOptionsRef.current.intention
                   }),
                 });
                 const data = await res.json();

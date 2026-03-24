@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth-api';
 import { headers } from 'next/headers';
 import { getAdminDb } from '@/lib/firebase-admin';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/playlists/[playlistId]

@@ -28,8 +28,11 @@ export async function POST(req: Request) {
             .get();
 
         if (!existingPlans.empty) {
-            // Find a plan that actually has the new Rraasi audio integration
-            const validPlan = existingPlans.docs.find(doc => !!doc.data().bhajan_audio_url);
+            // Find a plan that actually has content (either discourse points or meditation audio)
+            const validPlan = existingPlans.docs.find(doc => {
+                const data = doc.data();
+                return !!data.pravachan_points || !!data.meditation_audio_url || !!data.bhajan_audio_url;
+            });
             
             if (validPlan) {
                 const plan = validPlan.data();
@@ -60,12 +63,13 @@ export async function POST(req: Request) {
       
       The output must be valid JSON with the following fields:
 
-      1. "intro_text": A warm, characteristic introduction by ${guruName} setting a sacred atmosphere. (approx 4-5 sentences).
-      2. "pravachan_points": An array of strings. Each string is a substantial paragraph of the discourse. 
-         - Generate 5-6 detailed paragraphs.
+      1. "intro_text": A warm, characteristic, and deeply engaging introduction by ${guruName}. Keep it brief (2-3 sentences max). You MUST end this introduction with a direct, compassionate question that invites the seeker to immediately share their thoughts, struggles, or questions regarding the topic.
+      2. "pravachan_points": An array of strings. Each string is a substantial, high-quality paragraph of the discourse. 
+         - Generate 7-10 detailed, spiritually profound paragraphs.
          - Address the topic exclusively through the lens of ${guruName}.
-         - Include a story, metaphor, or famous quote associated with ${guruName} if fitting.
-         - Conclude with practical spiritual application in their style.
+         - Include specific stories, metaphors, or famous quotes associated with ${guruName} to make it authentic.
+         - Ensure each paragraph is long enough to provide deep insight (minimum 4-5 sentences each).
+         - Conclude the entire array with practical spiritual application in their style.
       3. "closing_text": A final blessing or provocative closing thought typical of ${guruName}.
       
       JSON Output:
@@ -82,12 +86,15 @@ export async function POST(req: Request) {
         if (!content) throw new Error('Failed to generate content from LLM');
 
         const planData = JSON.parse(content);
+        
+        // Prepare Document Reference early so we can pass its ID to Suno Callback
+        const planRef = db.collection('satsang_plans').doc();
 
         // 2. Fetch a rraasi music track (meditation or healing category)
-        let bhajanTrackId: string | null = null;
-        let bhajanAudioUrl: string | null = null;
-        let bhajanTitle: string | null = null;
-        let bhajanImageUrl: string | null = null;
+        let meditationTrackId: string | null = null;
+        let meditationAudioUrl: string | null = null;
+        let meditationTitle: string | null = null;
+        let meditationImageUrl: string | null = null;
 
         try {
             // Use the shared service instead of fetching from the API route over HTTP
@@ -95,22 +102,110 @@ export async function POST(req: Request) {
             const musicData = await getRandomMeditationTrack();
 
             if (musicData) {
-                bhajanTrackId = musicData.id;
-                bhajanAudioUrl = musicData.audioUrl;
-                bhajanTitle = musicData.title;
-                bhajanImageUrl = musicData.imageUrl;
-                console.log('[Satsang Generate] Found rraasi track:', bhajanTitle, bhajanTrackId);
+                meditationTrackId = musicData.id;
+                meditationAudioUrl = musicData.audioUrl;
+                meditationTitle = musicData.title;
+                meditationImageUrl = musicData.imageUrl;
+                console.log('[Satsang Generate] Found rraasi track:', meditationTitle, meditationTrackId);
             } else {
-                console.warn('[Satsang Generate] No rraasi track available, bhajan will be skipped');
+                console.warn('[Satsang Generate] No rraasi track available, meditation will be skipped');
             }
         } catch (err) {
             console.error('[Satsang Generate] Failed to fetch rraasi music via service:', err);
-            // Non-fatal — session will run without bhajan music
+            // Non-fatal — session will run without meditation music
         }
 
-        // 3. Store Plan in Firestore
-        const planRef = db.collection('satsang_plans').doc();
+        // 2.5 LRYICS CREATOR AGENT & SUNO INTEGRATION (FIRE AND FORGET)
+        const triggerSunoAsync = async (planId: string) => {
+            try {
+                const lyricsPrompt = `Based on the following Satsang discourse regarding "${topic}", create the foundation for a deeply meditative 4 to 5-minute chakra meditation track.
+Respond in JSON format with two fields:
+1. "lyrics": Create highly professional, poetic, and profoundly meaningful lyrics or a guided meditation script in ${language}. Ensure the words carry deep emotional resonance, spiritual weight, and perfectly capture the crux of the discourse. You MUST include explicit song structure tags like [Intro], [Visualization], [Mantra], [Deepening], [Outro]. Provide enough content to sustain a 4-5 minute meditation.
+2. "style_tags": A comma-separated list of musical styles and instruments. You MUST include exactly: "chakra meditation, chakra songs", followed by mood-appropriate descriptors (e.g., "chakra meditation, chakra songs, healing frequencies, singing bowls, peaceful").
 
+Discourse outline:
+${planData.pravachan_points?.join('\\n')}
+`;
+                
+                const lyricsCompletion = await openai.chat.completions.create({
+                    messages: [{ role: 'system', content: lyricsPrompt }],
+                    model: 'gpt-4o',
+                    response_format: { type: 'json_object' },
+                });
+                
+                const lyricsContent = lyricsCompletion.choices[0].message.content;
+                if (lyricsContent) {
+                    const lyricsData = JSON.parse(lyricsContent);
+                    if (lyricsData.lyrics && lyricsData.style_tags) {
+                        console.log('[Satsang Generate] Generated lyrics and tags:', lyricsData.style_tags);
+                        
+                        // Trigger Suno API
+                        // Use auth-server callback (same as music agent) so track goes into music_tracks (My Music)
+                        const AUTH_SERVER_URL = 'https://satsang-auth-server-6ougd45dya-el.a.run.app';
+                        const callBackUrl = `${AUTH_SERVER_URL}/suno/callback?userId=${userId}`;
+                        
+                        const sunoResponse = await fetch('https://api.sunoapi.org/api/v1/generate', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${process.env.SUNO_API_KEY}`
+                            },
+                            body: JSON.stringify({
+                                prompt: lyricsData.lyrics,
+                                tags: lyricsData.style_tags,
+                                title: `Satsang Meditation: ${topic}`,
+                                instrumental: false,
+                                model: 'V3_5',
+                                customMode: true,
+                                callBackUrl: callBackUrl
+                            })
+                        });
+                        
+                        const sunoResult = await sunoResponse.json();
+                        let sunoTaskId: string | null = null;
+                        
+                        // Grab task ID from various possible Suno API response formats
+                        if (sunoResult?.data?.task_id) {
+                            sunoTaskId = sunoResult.data.task_id;
+                        } else if (sunoResult?.data?.taskId) {
+                            sunoTaskId = sunoResult.data.taskId;
+                        } else if (typeof sunoResult?.data === 'string') {
+                            sunoTaskId = sunoResult.data;
+                        } else if (Array.isArray(sunoResult?.data) && sunoResult.data.length > 0) {
+                            sunoTaskId = sunoResult.data[0]?.id || null;
+                        }
+                        
+                        console.log(`[Satsang Generate] Initiated background Suno task: ${sunoTaskId}`, sunoResult);
+                        
+                        if (sunoTaskId) {
+                            await db.collection('satsang_plans').doc(planId).update({
+                                suno_task_id: sunoTaskId
+                            });
+                            
+                            // Immedately push a PENDING track so frontend polling catches it 
+                            // and Doesn't think the session ended without music.
+                            await db.collection('music_tracks').doc(sunoTaskId).set({
+                                id: sunoTaskId,
+                                userId: userId,
+                                title: `Satsang Meditation: ${topic}`,
+                                lyrics: lyricsData.lyrics || '',
+                                tags: lyricsData.style_tags || '',
+                                status: 'PENDING',
+                                createdAt: new Date().toISOString(),
+                                source: 'private_satsang'
+                            });
+                        }
+                    }
+                }
+            } catch (sunoErr) {
+                console.error('[Satsang Generate] Error in Lyrics Creator / Suno background integration:', sunoErr);
+            }
+        };
+
+        // Fire and forget
+        triggerSunoAsync(planRef.id).catch(console.error);
+
+        // 3. Store Plan in Firestore
         const finalPlan = {
             id: planRef.id,
             userId,
@@ -120,10 +215,10 @@ export async function POST(req: Request) {
             status: 'ready',
             ...planData,
             // Rraasi music (replaces YouTube)
-            bhajan_track_id: bhajanTrackId,
-            bhajan_audio_url: bhajanAudioUrl,
-            bhajan_title: bhajanTitle,
-            bhajan_image_url: bhajanImageUrl,
+            meditation_track_id: meditationTrackId,
+            meditation_audio_url: meditationAudioUrl,
+            meditation_title: meditationTitle,
+            meditation_image_url: meditationImageUrl,
         };
 
         await planRef.set(finalPlan);

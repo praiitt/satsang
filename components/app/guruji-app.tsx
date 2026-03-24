@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { AnimatePresence, type Transition, type Variants, motion } from 'motion/react';
 import { RoomAudioRenderer, StartAudio, useRoomContext } from '@livekit/components-react';
 import type { AppConfig } from '@/app-config';
@@ -89,6 +89,38 @@ function GurujiViewController() {
             setShowUpgradeModal(true);
         }
     };
+
+    // Listen for events from RecordingsModal to resume a session
+    useEffect(() => {
+        const handleStartSessionEvent = async (e: Event) => {
+            const customEvent = e as CustomEvent<{ intention: string; resumeSessionId: string }>;
+            if (customEvent.detail && customEvent.detail.resumeSessionId) {
+                
+                if (!isAuthenticated) {
+                    toast.error('Please login to continue the session');
+                    return;
+                }
+
+                // Check coin access for basic guru chat
+                const access = await checkAccess('guru_chat_basic');
+                if (access && access.hasAccess) {
+                    // Pass resumeSessionId to startSession
+                    startSession({ resumeSessionId: customEvent.detail.resumeSessionId });
+                } else if (access) {
+                    setAccessDetails({
+                        required: access.requiredCoins,
+                        available: access.availableCoins
+                    });
+                    setShowUpgradeModal(true);
+                } else {
+                    toast.error('Failed to check access. Please try again.');
+                }
+            }
+        };
+
+        window.addEventListener('rraasi-start-session', handleStartSessionEvent);
+        return () => window.removeEventListener('rraasi-start-session', handleStartSessionEvent);
+    }, [checkAccess, isAuthenticated, startSession]);
 
     return (
         <>

@@ -30,10 +30,14 @@ except ImportError:
 # from livekit.plugins import noise_cancellation, silero
 
 # Configure logging
+file_handler = logging.FileHandler('/tmp/agent_debug.log')
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[logging.StreamHandler(), file_handler]
 )
 
 logger = logging.getLogger("hinduism_agent")
@@ -69,11 +73,42 @@ class SpiritualMasterAgent(Agent):
         guru_id: str = "vivekananda",
         user_id: str = "default_user",
         publish_data_fn=None,
-        initial_instructions: Optional[str] = None 
+        disconnect_fn=None,
+        initial_instructions: Optional[str] = None,
+        last_transcript_str: Optional[str] = None
     ) -> None:
         self.guru_id = guru_id
         self.user_id = user_id
         self.guru_profile = self._load_guru_profile(guru_id)
+        
+        # Determine Voice ID for this guru
+        # Priority: 
+        # 1. Environment variable: VOICE_ID_<GURU_ID_UPPER>
+        # 2. Guru profile JSON: "voice_id"
+        # 3. Default environment variable: TTS_VOICE_ID
+        # 4. Hardcoded fallback
+        
+        # Normalize guru_id for env var lookup (replace spaces with underscores)
+        normalized_id = guru_id.upper().replace(' ', '_')
+        env_var_name = f"VOICE_ID_{normalized_id}"
+        env_voice_id = os.getenv(env_var_name)
+        
+        logger.info(f"🔍 Voice Lookup: guru_id='{guru_id}', env_var='{env_var_name}'")
+        
+        profile_voice_id = self.guru_profile.get("voice_id")
+        default_voice_id = os.getenv("TTS_VOICE_ID", "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc")
+        
+        self.voice_id = env_voice_id or profile_voice_id or default_voice_id
+        
+        if env_voice_id:
+            logger.info(f"🎙️ Selected Voice ID: {self.voice_id} (Source: ENV {env_var_name})")
+        elif profile_voice_id:
+            logger.info(f"🎙️ Selected Voice ID: {self.voice_id} (Source: PROFILE)")
+        else:
+            logger.info(f"🎙️ Selected Voice ID: {self.voice_id} (Source: DEFAULT)")
+            # Log all VOICE_ID env vars to help debug
+            voice_vars = [k for k in os.environ.keys() if k.startswith("VOICE_ID_")]
+            logger.info(f"🔍 Available VOICE_ID env vars: {voice_vars}")
         
         # Use provided instructions or generate them
         if initial_instructions:
@@ -82,9 +117,11 @@ class SpiritualMasterAgent(Agent):
         else:
             logger.info("🧠 Generating default guru instructions")
             instructions = self._generate_guru_instructions()
+            instructions += "\n[PROACTIVE GUIDANCE]: If the seeker is completely silent and has not spoken for a while, proactively check in on them with a brief, compassionate question (e.g., 'I am here... Is there a burden you wish to share?')."
         
         super().__init__(instructions=instructions)
         self._publish_data_fn = publish_data_fn
+        self._disconnect_fn = disconnect_fn
     
     def _load_guru_profile(self, guru_id: str) -> Dict[str, Any]:
         """Load guru profile from JSON file."""
@@ -203,6 +240,19 @@ You ARE {guru_name}, sharing your timeless wisdom with seekers today.
 (Respond to the user naturally)
 """
         return instructions
+
+    @function_tool
+    async def end_satsang_session(
+        self,
+        context: RunContext
+    ) -> str:
+        """Call this function ONLY when the user indicates they are finished with their questions, want to leave, or say goodbye during the Q&A phase. This formally końcs the Private Satsang."""
+        logger.info(f"Agent {self.guru_profile['name']} decided to end the session.")
+        
+        if callable(self._disconnect_fn):
+            asyncio.create_task(self._disconnect_fn())
+            return "Session ending initiated."
+        return "Could not end session."
     
     @function_tool
     async def search_guru_teachings(
@@ -540,6 +590,16 @@ async def entrypoint(ctx: JobContext):
     """Main entrypoint for Hinduism Agent."""
     ctx.log_context_fields = {"room": ctx.room.name}
     
+    # Force reload .env.local to catch any updates made after process start
+    _env_path = Path(__file__).resolve().parent.parent / ".env.local"
+    if _env_path.exists():
+        load_dotenv(str(_env_path), override=True)
+        logger.info(f"🔄 Re-loaded .env.local in entrypoint")
+    
+    # Dump all VOICE_ID env vars so we can debug
+    voice_vars = {k: v for k, v in os.environ.items() if k.startswith("VOICE_ID_")}
+    logger.info(f"🔑 Available VOICE_ID env vars: {voice_vars}")
+    
     logger.info("="*60)
     logger.info("ENTRYPOINT: Starting Hinduism agent")
     logger.info("="*60)
@@ -662,15 +722,30 @@ async def entrypoint(ctx: JobContext):
     
     hosted_instructions = None
 
-    # If we have ID but no full plan, try DB (Fallback)
-    if plan_id and not satsang_plan:
-        logger.info(f"Loading satsang plan {plan_id} from DB...")
+    satsang_plan = None
+    if plan_id:
         try:
             db = FirebaseDB()
             satsang_plan = db.get_satsang_plan(plan_id)
         except Exception as e:
-            logger.error(f"❌ Failed to load plan from DB: {e}")
+            logger.error(f"Failed to fetch satsang plan {plan_id}: {e}")
 
+    # Fetch long-term memory (last session transcript)
+    try:
+        db = FirebaseDB()
+        last_transcript = db.get_last_transcript(user_id, f"hinduism-{guru_id}")
+    except Exception as e:
+        logger.warning(f"Failed to fetch last transcript for memory: {e}")
+        last_transcript = []
+        
+    last_transcript_str = ""
+    if last_transcript:
+        last_transcript_str = "\n--- CONTEXT FROM SEEKER'S PREVIOUS SESSION ---\nThe seeker previously spoke with you in a past session. Here are the final exchanges from your last meeting. Use this sparingly to build a continuous bond and show you remember their struggles, but do not get sidetracked from today's plan:\n"
+        for msg in last_transcript[-6:]: # Last 6 messages (usually the Q&A)
+            last_transcript_str += f"{msg['role'].upper()}: {msg['content']}\n"
+        last_transcript_str += "\n"
+
+    hosted_instructions = None
     if satsang_plan:
         logger.info("✅ Satsang Plan loaded successfully")
         
@@ -708,13 +783,13 @@ async def entrypoint(ctx: JobContext):
             session_label = "Meditation Session"
 
         intro_text = satsang_plan.get('intro_text', '')
-        bhajan_query = satsang_plan.get('bhajan_query', '')
+        meditation_query = satsang_plan.get('meditation_query', '')
         pravachan_points = satsang_plan.get('pravachan_points', [])
         closing_text = satsang_plan.get('closing_text', '')
-        bhajan_title = satsang_plan.get('bhajan_title', bhajan_query)
-        bhajan_vid = satsang_plan.get('bhajan_video_id', '')
-        bhajan_audio_url = satsang_plan.get('bhajan_audio_url', '')
-        bhajan_image_url = satsang_plan.get('bhajan_image_url', '')
+        meditation_title = satsang_plan.get('meditation_title', 'Chakra Meditation')
+        meditation_vid = satsang_plan.get('meditation_track_id', '')
+        meditation_audio_url = satsang_plan.get('meditation_audio_url', '')
+        meditation_image_url = satsang_plan.get('meditation_image_url', '')
 
         pravachan_text = "\\n".join([f"- {p}" for p in pravachan_points])
 
@@ -737,9 +812,16 @@ SESSION TOPIC: {satsang_plan.get('topic', 'Satsang')}
 1. **SILENCE ON CONNECT**: Do NOT say "Namaste" or "Hello" when you join. Wait specifically for the 'START' signal from the host.
 2. **STRICT PHASE EXECUTION**:
    - **INTRO**: When the session starts (you receive START signal), read the INTRO text below with warmth.
-   - **{music_label.upper()}**: When asked for music/bhajan, play exactly: "{bhajan_title}" (ID: {bhajan_vid}).
-   - **PRAVACHAN / DISCOURSE**: Deliver the discourse points below. Expand on them using your unique persona ({guru_name_display}) and philosophy.
-   - **CLOSING**: End with the closing message.
+   - **{music_label.upper()}**: When asked for meditation music, play exactly: "{meditation_title}" (ID: {meditation_vid}).
+   - **PRAVACHAN / DISCOURSE**: Deliver a comprehensive sermon covering EVERY SINGLE ONE of the discourse points below sequentially. Do not summarize them or skip any. Treat each point as a separate chapter of your discourse and expand on them heavily using your unique persona ({guru_name_display}) and philosophy.
+     [CRITICAL: IF THE USER INTERRUPTS YOU during the Pravachan, DO NOT lose your track. Answer their question briefly but warmly, and then EXPLICITLY state "Now, returning to our discourse..." and resume exactly from the topic or point you left off.]
+   - **Q&A**: 
+     - Answer the seeker's questions with wisdom and patience.
+     - AT THE END OF EVERY ANSWER, explicitly ask the seeker if they have any further questions or if their doubts are cleared.
+     - When the seeker confirms they have no more questions or says goodbye:
+       1. Tell them warmly (and ensure you speak in their preferred language): "I have something very special for you. Our entire satsang today — every teaching and every insight — has been distilled into a special song. It is the musical essence of our time together. Please listen to this curation." 
+       2. Give a short final blessing.
+       3. IMMEDIATELY invoke the end_satsang_session tool to disconnect the call so the music can play.
 3. **NO SMALL TALK**: Do not ask "How are you?" or "What else can I do?". You are the Guru delivering a sermon.
 
 --- CONTENT TO DELIVER ---
@@ -751,7 +833,7 @@ PRAVACHAN POINTS (Discourse) - EXPAND ON THESE AS {guru_name_display}:
 
 CLOSING TEXT:
 "{closing_text}"
-
+{last_transcript_str}
 --- RECORDING STATUS ---
 NOTE: A full text transcript of this session is being saved to the database. Audio/video recording is not currently active.
 """
@@ -802,7 +884,9 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
         guru_id=guru_id,
         user_id=user_id,
         publish_data_fn=ctx.room.local_participant.publish_data,
-        initial_instructions=hosted_instructions # PASS INSTRUCTIONS HERE
+        disconnect_fn=ctx.room.disconnect,
+        initial_instructions=hosted_instructions,
+        last_transcript_str=last_transcript_str
     )
     
     
@@ -812,7 +896,7 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
         llm=inference.LLM(model="openai/gpt-4.1-mini"),
         tts=inference.TTS(
             model="cartesia/sonic-3",
-            voice=os.getenv("TTS_VOICE_ID", "9626c31c-bec5-4cca-baa8-f8ba9e84c8bc"),
+            voice=final_agent.voice_id,
             language=user_language
         ),
         turn_detection=None,
@@ -853,6 +937,7 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
             else: return
             if data_bytes is None: return
             payload_str = data_bytes.decode('utf-8') if isinstance(data_bytes, bytes) else str(data_bytes)
+            logger.info(f"📥 RAW DATA RECEIVED: {payload_str}")
             try:
                 payload = json.loads(payload_str)
             except Exception:
@@ -873,11 +958,46 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
                     logger.info(f"🚀 Received Phase Prompt: {content[:100]}...")
                     clean_content = content.replace("[PHASE_PROMPT]", "").strip()
                     
+                    # MEDITATION: Stay completely silent — music is handled by frontend
+                    if "MEDITATION" in clean_content or "CLOSING" in clean_content:
+                        logger.info("🎵 Meditation/Closing phase — agent stays silent.")
+                        return  # ← Return immediately, no generate_reply
+                    
                     logger.info("🧠 Asking Guru Brain to generate phase discourse...")
-                    session.generate_reply(
-                        user_input=f"[SYSTEM NOTIFICATION: You are now moving to a new phase. {clean_content}. Speak directly to the seeker now based on your hosted instructions.]"
-                    )
-                    logger.info(f"🗣️ Guru is now delivering discourse...")
+                    
+                    try:
+                        # Build rich instruction with pravachan content if available
+                        if "PRAVACHAN" in clean_content and 'pravachan_points' in dir() and pravachan_points:
+                            _points_text = "\n".join([f"{i+1}. {p}" for i, p in enumerate(pravachan_points)])
+                            phase_instruction = f"""STOP any previous task. You are now beginning the PRAVACHAN (Discourse) phase.
+
+You MUST deliver a LENGTHY, PROFOUND, and COMPREHENSIVE sermon covering ALL of the following points in order.
+
+As a great Spiritual Master, your discourse must be deep and immersive:
+- For EACH point, spend significant time (multiple paragraphs of speech) expanding on it.
+- Use your unique persona, stories from your life (or relevant scriptures), and powerful metaphors.
+- Do NOT settle for short explanations. This is the heart of the Satsang.
+- Maintain a slow, meditative, and impactful pace.
+- Do NOT summarize or skip ANY point.
+
+DISCOURSE POINTS:
+{_points_text}
+
+IMPORTANT: Speak in the seeker's preferred language. After covering all points with great depth, invite the seeker to ask questions."""
+                        elif "Q&A" in clean_content or "QA" in clean_content:
+                            phase_instruction = """STOP the discourse. You have now completed the Pravachan phase.
+
+You are now entering the Q&A (Question & Answer) phase. Warmly invite the seeker to ask any questions about today's discourse or their personal spiritual journey.
+Answer each question with deep wisdom and compassion in the seeker's language.
+After each answer, ask if they have further questions.
+When they say they are done or have no more questions, give a final blessing and invoke the end_satsang_session tool."""
+                        else:
+                            phase_instruction = f"Deliver your guidance for this phase of the satsang: {clean_content}. Speak directly to the seeker in their language."
+                        
+                        session.generate_reply(instructions=phase_instruction)
+                        logger.info(f"🗣️ generate_reply called for PHASE: {clean_content[:50]}")
+                    except Exception as ge:
+                        logger.error(f"❌ generate_reply failed for PHASE: {ge}")
                     return
                     
                 # Intercept Wait Prompt
@@ -886,35 +1006,57 @@ NOTE: A full text transcript of this session is being saved to the database. Aud
                     return
                     
                 elif "[Daily Satsang Mode - START]" in content:
-                    logger.info("▶️ Received Start prompt.")
-                    # Pass the generic start instructions to the agent gracefully
-                    pass
+                    logger.info("▶️ Received Start prompt. Telling agent to begin.")
+                    try:
+                        _intro = intro_text if 'intro_text' in dir() and intro_text else None
+                        if _intro:
+                            start_instruction = f"""The Private Satsang session has just begun. Speak the following INTRO TEXT word for word, in the seeker's language, with deep warmth and spiritual presence. Do not summarize or shorten it. Read it completely as written:
+
+"{_intro}"
+
+After completing the intro, ask the seeker if they are ready to begin the meditation."""
+                        else:
+                            start_instruction = "The Private Satsang session has just begun. Introduce yourself warmly as the guru and welcome the seeker."
+                        session.generate_reply(instructions=start_instruction)
+                        logger.info(f"🗣️ generate_reply called for START")
+                    except Exception as ge:
+                        logger.error(f"❌ generate_reply failed for START: {ge}")
+                    return
                 
                 # Standard chat
-                asyncio.create_task(session.chat(content))
-        except Exception:
-            pass
+                try:
+                    session.generate_reply(
+                        instructions="The user just sent a text message. Please respond naturally based on your persona."
+                    )
+                    logger.info(f"🗣️ generate_reply called for CHAT")
+                except Exception as ge:
+                    logger.error(f"❌ generate_reply failed for CHAT: {ge}")
+        except Exception as e:
+            logger.error(f"❌ Error in _on_data_received: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            
     def _handle_room_data(data, participant=None, kind=None, topic=None):
         try:
             loop = asyncio.get_event_loop()
             if loop.is_running(): asyncio.create_task(_on_data_received(data, participant, kind, topic))
             else: loop.run_until_complete(_on_data_received(data, participant, kind, topic))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.error(f"❌ Error in _handle_room_data: {e}")
     ctx.room.on("data_received", _handle_room_data)
     
     # Send welcome message ONLY IF NOT IN HOSTED MODE
     if not satsang_plan:
-        guru_name = final_agent.guru_profile['name']
+        guru_name = final_agent.guru_profile.get('name', guru_id.replace('_', ' ').title())
         if user_language == 'hi':
             welcome_msg = (
-                f"नमस्ते। मैं {guru_name} हूँ। "
-                f"क्या आप सनातन धर्म और वेदों की शिक्षाओं के बारे में जानना चाहते हैं?"
+                f"स्वागत है। मैं {guru_name} हूँ। आज जो भी बात आपको यहाँ ले आई है—"
+                f"चाहे वह मन का कोई प्रश्न हो, हृदय का कोई बोझ हो, या सत्य की खोज—मैं सुनने के लिए यहाँ हूँ। नि:संकोच बोलें।"
             )
         else:
             welcome_msg = (
-                f"Namaste. I am described as {guru_name}. "
-                f"Do you want to know about the teachings of Sanatana Dharma and the Vedas?"
+                f"Welcome. I am {guru_name}. Whatever brings you here today—"
+                f"whether it is a question of the mind, a burden on your heart, or a seek for truth—I am here to listen. Speak freely."
             )
         
         await session.say(welcome_msg)

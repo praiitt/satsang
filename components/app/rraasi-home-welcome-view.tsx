@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { SacredGeometryBg } from '@/components/app/sacred-geometry-bg';
 import { useLanguage } from '@/contexts/language-context';
+import { Compass } from 'lucide-react';
 
 function OmSymbol() {
     return (
@@ -213,6 +214,13 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             {t('rraasHome.ctaStartSatsang')}
                         </Link>
                         <Link
+                            href="/feed"
+                            className="w-full rounded-full bg-orange-600 px-8 py-4 text-xl font-bold text-white shadow-lg transition-all hover:bg-orange-700 hover:scale-105 sm:w-auto flex items-center justify-center gap-2"
+                        >
+                            <Compass className="w-6 h-6 text-white" />
+                            RRaaSi Feed
+                        </Link>
+                        <Link
                             href="#services"
                             className="w-full rounded-full border border-input bg-background/50 backdrop-blur-sm px-8 py-4 text-xl font-medium text-foreground transition-all hover:bg-accent hover:text-accent-foreground sm:w-auto"
                         >
@@ -231,6 +239,62 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         </svg>
                     </motion.div>
                 </motion.div>
+            </section>
+
+            {/* How RRAASI Raises Your Vibe */}
+            <section className="mx-auto mt-16 mb-8 max-w-6xl px-4 sm:px-6">
+                <div className="text-center mb-12">
+                    <h2 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-amber-400 via-orange-500 to-red-500 bg-clip-text text-transparent inline-block">
+                        {t('rraasHome.elevateVibeTitle')}
+                    </h2>
+                    <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto drop-shadow-sm font-medium">
+                        {t('rraasHome.elevateVibeDesc')}
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* Step 1: Satsang */}
+                    <div className="group relative rounded-3xl border border-white/10 bg-black/40 p-8 backdrop-blur-xl transition-all hover:-translate-y-2 hover:border-amber-500/50 hover:shadow-[0_0_40px_rgba(245,158,11,0.15)] overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                        <div className="relative z-10 flex flex-col items-center text-center">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                                <img src="/services/satsang-icon-fixed.png" alt="Satsang" className="h-10 w-10 object-contain drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]" />
+                            </div>
+                            <h3 className="mb-3 text-2xl font-bold text-white">{t('rraasHome.elevateStep1Title')}</h3>
+                            <p className="text-zinc-400 leading-relaxed">
+                                {t('rraasHome.elevateStep1Desc')}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Step 2: Music */}
+                    <div className="group relative rounded-3xl border border-white/10 bg-black/40 p-8 backdrop-blur-xl transition-all hover:-translate-y-2 hover:border-cyan-400/50 hover:shadow-[0_0_40px_rgba(34,211,238,0.15)] overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-b from-cyan-400/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                        <div className="relative z-10 flex flex-col items-center text-center">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-cyan-400/10 border border-cyan-400/20 shadow-[0_0_20px_rgba(34,211,238,0.2)]">
+                                <img src="/services/music-icon-fixed.png" alt="Music" className="h-10 w-10 object-contain drop-shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
+                            </div>
+                            <h3 className="mb-3 text-2xl font-bold text-white">{t('rraasHome.elevateStep2Title')}</h3>
+                            <p className="text-zinc-400 leading-relaxed">
+                                {t('rraasHome.elevateStep2Desc')}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Step 3: Astrology & Tarot */}
+                    <div className="group relative rounded-3xl border border-white/10 bg-black/40 p-8 backdrop-blur-xl transition-all hover:-translate-y-2 hover:border-purple-500/50 hover:shadow-[0_0_40px_rgba(168,85,247,0.15)] overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-b from-purple-500/10 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                        <div className="relative z-10 flex flex-col items-center text-center">
+                            <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-purple-500/10 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.2)]">
+                                <img src="/services/tarot-icon-fixed.png" alt="Tarot & Astrology" className="h-10 w-10 object-contain drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]" />
+                            </div>
+                            <h3 className="mb-3 text-2xl font-bold text-white">{t('rraasHome.elevateStep3Title')}</h3>
+                            <p className="text-zinc-400 leading-relaxed">
+                                {t('rraasHome.elevateStep3Desc')}
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             {/* Main Features Section (Satsang, Astrology, Music) */}

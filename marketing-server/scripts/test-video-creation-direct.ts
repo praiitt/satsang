@@ -35,7 +35,7 @@ function getGcsBucket() {
   }
 
   const storage = new Storage({ credentials });
-  const bucketName = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings';
+  const bucketName = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'rraasi-agent-recordings';
   return storage.bucket(bucketName);
 }
 
@@ -336,7 +336,7 @@ async function main() {
     console.log('='.repeat(60));
     console.log(`✅ Both videos created and saved to GCS bucket`);
     console.log(
-      `📁 Location: gs://${process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'satsangrecordings'}/marketing_avatars/test/`
+      `📁 Location: gs://${process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'rraasi-agent-recordings'}/marketing_avatars/test/`
     );
   } catch (error: any) {
     console.error('\n❌ Test failed:', error.message);

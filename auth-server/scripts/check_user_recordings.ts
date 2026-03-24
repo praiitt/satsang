@@ -1,17 +1,6 @@
-import * as admin from 'firebase-admin';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import { getDb } from '../src/firebase.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Initialize Firebase Admin
-const serviceAccountPath = path.join(__dirname, '../../rraasiServiceAccount.json');
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccountPath)
-});
-
-const db = admin.firestore();
+const db = getDb();
 
 async function checkUserRecordings(userId: string) {
     console.log(`Checking recordings for user: ${userId}\n`);
@@ -20,7 +9,7 @@ async function checkUserRecordings(userId: string) {
         // Get all recordings for this user (no status filter)
         const snapshot = await db.collection('recordings')
             .where('userId', '==', userId)
-            .orderBy('createdAt', 'desc')
+            .orderBy('startedAt', 'desc')
             .limit(10)
             .get();
 

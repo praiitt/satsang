@@ -4,6 +4,7 @@ import { Button } from '@/components/livekit/button';
 import { useLanguage } from '@/contexts/language-context';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
+import { GuruPastRecordings } from '@/components/app/guru-past-recordings';
 
 interface UniversalGuruWelcomeViewProps {
     startButtonText?: string;
@@ -15,6 +16,7 @@ interface UniversalGuruWelcomeViewProps {
     traditionName?: string;
     traditionEmoji?: string;
     theme?: string; // Tailwind bg class
+    prasadText?: string | null;
 }
 
 // Dynamic Icon based on emoji
@@ -35,6 +37,7 @@ export const UniversalGuruWelcomeView = ({
     traditionName = 'Hinduism',
     traditionEmoji = '🕉️',
     theme = 'from-orange-50 via-yellow-50 to-red-50',
+    prasadText,
     ref,
 }: React.ComponentProps<'div'> & UniversalGuruWelcomeViewProps) => {
     const { t } = useLanguage();
@@ -61,30 +64,30 @@ export const UniversalGuruWelcomeView = ({
     // We will use a 'text-current' approach or specific overrides?
     // Let's keep it simple: Use a dark text color for contrast on light backgrounds.
 
-    const textColor = 'text-gray-900';
-    const subTextColor = 'text-gray-700';
-    const primaryBtnClass = "bg-gray-900 text-white hover:bg-black"; // Neutral powerful
-    const secondaryBtnClass = "border-gray-900 text-gray-900 hover:bg-gray-100";
+    const textColor = 'text-white';
+    const subTextColor = 'text-zinc-300';
+    const primaryBtnClass = "bg-white text-black hover:bg-zinc-200 border-0"; 
+    const secondaryBtnClass = "border-white/30 text-white hover:bg-white/10 backdrop-blur-md";
 
     return (
-        <div ref={ref} className="w-full pb-24 md:pb-32 text-gray-900">
+        <div ref={ref} className="w-full pb-24 md:pb-32 text-white relative overflow-hidden">
             {/* Background gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${theme} -z-10`} />
+            <div className={`fixed inset-0 bg-gradient-to-br ${theme} -z-10`} />
+            <div className="fixed inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay -z-10" />
 
             {/* Hero Section */}
-            <section className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[80vh] md:min-h-screen md:py-12">
-                {/* Back button */}
+            <section className="flex min-h-[70vh] flex-col items-center justify-center px-4 py-8 text-center sm:min-h-[80vh] md:min-h-screen md:py-12 relative z-10">
                 {/* Back button */}
                 <Link
                     href={`/${guruId ? '../' : ''}`} // Go up one level to tradition
-                    className="absolute top-4 left-4 z-30 flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md px-4 py-2 text-gray-900 shadow-sm hover:bg-white/20 transition-all border border-gray-900/10"
+                    className="absolute top-6 left-6 z-30 flex items-center gap-2 rounded-full bg-black/40 backdrop-blur-xl px-4 py-2 text-white shadow-2xl hover:bg-black/60 transition-all border border-white/10"
                 >
                     <ChevronLeft className="w-5 h-5" />
                     <span className="font-bold text-xs">{t('hinduismGuru.backToGurus').replace('← ', '') || 'EXIT'}</span>
                 </Link>
 
                 {guruImage ? (
-                    <div className="flex items-center justify-center size-32 rounded-full border-4 border-white/30 shadow-2xl overflow-hidden mb-6 bg-white/10 backdrop-blur-sm">
+                    <div className="flex items-center justify-center size-32 md:size-40 rounded-full border-4 border-white/20 shadow-[0_0_40px_rgba(255,255,255,0.1)] overflow-hidden mb-8 bg-black/40 backdrop-blur-xl group-hover:scale-105 transition-transform duration-500">
                         <img
                             src={guruImage}
                             alt={guruName}
@@ -95,10 +98,23 @@ export const UniversalGuruWelcomeView = ({
                     <TraditionIcon emoji={traditionEmoji} />
                 )}
 
-                <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl drop-shadow-sm">
+                {/* Prasad / Post-Session Summary Box */}
+                {prasadText && (
+                    <div className="w-full max-w-2xl mb-8 animate-in slide-in-from-bottom-4 fade-in duration-700">
+                        <div className="bg-black/60 backdrop-blur-2xl p-6 rounded-3xl border border-white/20 shadow-2xl relative overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+                            <p className="text-orange-400 text-xs uppercase tracking-widest font-semibold mb-3">✨ Your Spiritual Takeaway</p>
+                            <p className="text-white text-lg md:text-xl font-serif leading-relaxed italic relative z-10">
+                                &quot;{prasadText}&quot;
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                <h1 className="mt-4 text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl drop-shadow-2xl bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">
                     {guruName}
                 </h1>
-                <p className="mx-auto mt-4 max-w-2xl text-base leading-7 sm:text-lg md:text-xl font-medium opacity-90">
+                <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 sm:text-xl md:text-2xl font-medium text-zinc-300 drop-shadow-md">
                     {replaceTradition(t('hinduismGuru.heroDesc').replace('{name}', guruName))}
                 </p>
 
@@ -122,15 +138,59 @@ export const UniversalGuruWelcomeView = ({
                         </Button>
                     </Link>
                 </div>
-                <p className="mt-3 text-sm opacity-75">{t('hinduismGuru.voiceEnabled')}</p>
+
+                {/* Suggested Icebreakers (Visual Prompts) */}
+                <div className="mt-8 flex flex-col items-center max-w-2xl">
+                    <p className="text-xs uppercase tracking-widest text-white/50 mb-3 font-medium">Suggested Topics</p>
+                    <div className="flex flex-wrap justify-center gap-2">
+                        {guruId === 'buddha' ? (
+                            <>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Overcoming suffering</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">What is mindfulness?</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Letting go of attachment</span>
+                            </>
+                        ) : guruId === 'osho' ? (
+                            <>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Living dangerously</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Dynamic meditation</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Love and awareness</span>
+                            </>
+                        ) : guruId === 'jesus' ? (
+                            <>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">The Kingdom of Heaven</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Loving your enemies</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Finding inner peace</span>
+                            </>
+                        ) : guruId === 'shiva' ? (
+                            <>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Destroying the ego</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">The cosmic dance</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Stillness in chaos</span>
+                            </>
+                        ) : (
+                            <>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Finding life's purpose</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Overcoming anxiety</span>
+                                <span className="px-4 py-1.5 rounded-full border border-white/10 bg-black/20 text-xs text-zinc-300 backdrop-blur-md">Beginning meditation</span>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                <p className="mt-6 text-sm opacity-75">{t('hinduismGuru.voiceEnabled')}</p>
+
+                {/* Past Recordings Section */}
+                <div className="w-full max-w-2xl mt-4">
+                    <GuruPastRecordings guruId={guruId} type="chat" />
+                </div>
             </section>
 
             {/* Key Features Section */}
-            <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-16">
-                <h2 className="text-center text-2xl font-bold md:text-3xl opacity-90">
+            <section className="mx-auto mt-12 max-w-6xl px-4 sm:mt-16 relative z-10">
+                <h2 className="text-center text-3xl font-bold md:text-4xl tracking-tight text-white mb-12">
                     {t('hinduismGuru.whatYouCanAsk')}
                 </h2>
-                <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                     {[
                         { icon: '📿', title: 'hinduismGuru.spiritualGuidance', desc: 'hinduismGuru.spiritualGuidanceDesc' },
                         { icon: '🧘', title: 'hinduismGuru.meditationPractices', desc: 'hinduismGuru.meditationPracticesDesc' },
@@ -139,9 +199,9 @@ export const UniversalGuruWelcomeView = ({
                         { icon: '🎥', title: 'hinduismGuru.videoTeachings', desc: 'hinduismGuru.videoTeachingsDesc' },
                         { icon: '🌟', title: 'hinduismGuru.personalWisdom', desc: 'hinduismGuru.personalWisdomDesc' },
                     ].map((item, idx) => (
-                        <div key={idx} className="rounded-2xl bg-white/80 backdrop-blur-sm p-6 shadow-md border border-white/50">
-                            <div className="text-3xl mb-3">{item.icon}</div>
-                            <h3 className="text-lg font-semibold opacity-90">{t(item.title)}</h3>
+                        <div key={idx} className="group rounded-3xl bg-black/40 backdrop-blur-xl p-8 shadow-2xl border border-white/10 hover:bg-white/5 hover:border-white/20 transition-all duration-300">
+                            <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{item.icon}</div>
+                            <h3 className="text-xl font-bold text-white mb-2">{t(item.title)}</h3>
                             <p className="mt-2 text-sm opacity-75">
                                 {t(item.desc)}
                             </p>
@@ -151,19 +211,19 @@ export const UniversalGuruWelcomeView = ({
             </section>
 
             {/* How It Works */}
-            <section className="mx-auto mt-16 max-w-4xl px-4">
-                <h2 className="text-center text-2xl font-bold md:text-3xl opacity-90">
+            <section className="mx-auto mt-24 max-w-4xl px-4 relative z-10">
+                <h2 className="text-center text-3xl font-bold md:text-4xl tracking-tight text-white mb-12">
                     {t('hinduismGuru.howItWorks')}
                 </h2>
-                <div className="mt-8 space-y-4">
+                <div className="space-y-6">
                     {[1, 2, 3].map((step) => (
-                        <div key={step} className="flex items-start gap-4 rounded-xl bg-white/80 backdrop-blur-sm p-6 shadow-md border-l-4 border-gray-600">
-                            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-gray-200 text-lg font-bold text-gray-800">
+                        <div key={step} className="flex items-start gap-6 rounded-3xl bg-black/40 backdrop-blur-xl p-8 shadow-2xl border border-white/10 hover:bg-white/5 transition-colors duration-300">
+                            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-white/10 border border-white/20 text-xl font-bold text-white shadow-inner">
                                 {step}
                             </div>
-                            <div>
-                                <h3 className="font-semibold opacity-90">{t(`hinduismGuru.step${step}Title`)}</h3>
-                                <p className="mt-1 text-sm opacity-75">
+                            <div className="pt-1">
+                                <h3 className="text-xl font-bold text-white mb-2">{t(`hinduismGuru.step${step}Title`)}</h3>
+                                <p className="text-zinc-300 leading-relaxed text-base">
                                     {t(`hinduismGuru.step${step}Desc`)}
                                 </p>
                             </div>
