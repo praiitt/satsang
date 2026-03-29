@@ -9,6 +9,7 @@ export const hi = {
     remaining: 'शेष',
     redirecting: 'लॉगिन पर रीडायरेक्ट हो रहा है...',
     siteTitle: 'RRAASI',
+    cancel: 'रद्द करें',
   },
   auth: {
     welcome: 'सत्संग में आपका स्वागत है',
@@ -864,6 +865,7 @@ export const hi = {
     triggerButton: '✨ भ्रमित हैं? मुझे चुनने में मदद करें',
     modalTitle: 'मुझे चुनने में मदद करें',
     modalTitleResult: 'हम अनुशंसा करते हैं',
+    step: 'चरण',
     questions: {
       q0: 'क्या आपके मन में कोई विशिष्ट परंपरा है?',
       q1: 'अभी आप सबसे ज्यादा क्या खोज रहे हैं?',

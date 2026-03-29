@@ -9,6 +9,7 @@ export const en = {
     remaining: 'remaining',
     redirecting: 'Redirecting to login...',
     siteTitle: 'RRAASI',
+    cancel: 'Cancel',
   },
   auth: {
     welcome: 'Welcome to Satsang',
@@ -897,6 +898,7 @@ export const en = {
     triggerButton: '✨ Confused? Help me choose',
     modalTitle: 'Help Me Choose',
     modalTitleResult: 'We Recommend',
+    step: 'Step',
     questions: {
       q0: 'Do you have a specific tradition in mind?',
       q1: 'What are you seeking most right now?',
