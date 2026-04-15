@@ -127,22 +127,6 @@ export function TrackActionsMenu({ trackId, trackTitle, trackDate, trackDuration
                     className="absolute right-0 bottom-full mb-2 w-64 bg-zinc-900 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200 backdrop-blur-xl"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    {/* License Section */}
-                    <div className="p-2 border-b border-white/5">
-                        <button
-                            onClick={handleDownloadLicense}
-                            disabled={isGeneratingLicense}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-yellow-500 hover:bg-yellow-500/10 rounded-lg transition-colors group"
-                        >
-                            <FileText className="w-4 h-4" />
-                            <div className="flex flex-col items-start">
-                                <span className="font-medium group-hover:text-yellow-400">Download Certificate</span>
-                                <span className="text-[10px] text-zinc-500 group-hover:text-yellow-500/70">Commercial Rights License (PDF)</span>
-                            </div>
-                            {isGeneratingLicense && <span className="ml-auto w-3 h-3 border-2 border-yellow-500/50 border-t-yellow-500 rounded-full animate-spin"></span>}
-                        </button>
-                    </div>
-
                     {/* Video Section */}
                     <div className="p-2 border-b border-white/5">
                         <button

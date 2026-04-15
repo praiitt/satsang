@@ -1,0 +1,412 @@
+{
+  "assets": [
+    {
+      "id": "icon",
+      "originalPath": "public/icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/icon.png",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "favicon",
+      "originalPath": "public/favicon.ico",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/favicon.ico",
+      "type": "favicon",
+      "usage": "Browser tab icon"
+    },
+    {
+      "id": "lk_wordmark",
+      "originalPath": "public/lk-wordmark.svg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/lk-wordmark.svg",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "mobile_app_icon",
+      "originalPath": "public/mobile-app-icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/mobile-app-icon.png",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "apple_icon",
+      "originalPath": "public/apple-icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/apple-icon.png",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "lk_logo_dark",
+      "originalPath": "public/lk-logo-dark.svg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/lk-logo-dark.svg",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "lk_logo",
+      "originalPath": "public/lk-logo.svg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/lk-logo.svg",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "opengraph_image_bg",
+      "originalPath": "public/opengraph-image-bg.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/opengraph-image-bg.png",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "product_video_poster",
+      "originalPath": "public/product-video-poster.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/product-video-poster.jpg",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "dance_meditation_hero",
+      "originalPath": "public/dance_meditation_hero.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/dance_meditation_hero.png",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "logo_horizontal",
+      "originalPath": "public/branding/logo-horizontal.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/branding/logo-horizontal.png",
+      "type": "logo",
+      "usage": "Branding asset: logo-horizontal.png"
+    },
+    {
+      "id": "logo_round",
+      "originalPath": "public/branding/logo-round.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/branding/logo-round.png",
+      "type": "logo",
+      "usage": "Branding asset: logo-round.png"
+    },
+    {
+      "id": "logo",
+      "originalPath": "public/branding/logo.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/branding/logo.png",
+      "type": "logo",
+      "usage": "Branding asset: logo.png"
+    },
+    {
+      "id": "placeholder_guru",
+      "originalPath": "public/images/placeholder-guru.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/placeholder-guru.jpg",
+      "type": "image",
+      "usage": "General asset"
+    },
+    {
+      "id": "yogananda",
+      "originalPath": "public/images/gurus/yogananda.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/yogananda.png",
+      "type": "guru",
+      "usage": "Spiritual master portrait: yogananda.png"
+    },
+    {
+      "id": "sadhguru",
+      "originalPath": "public/images/gurus/sadhguru.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/sadhguru.png",
+      "type": "guru",
+      "usage": "Spiritual master portrait: sadhguru.png"
+    },
+    {
+      "id": "ramana",
+      "originalPath": "public/images/gurus/ramana.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/ramana.png",
+      "type": "guru",
+      "usage": "Spiritual master portrait: ramana.png"
+    },
+    {
+      "id": "ramakrishna",
+      "originalPath": "public/images/gurus/ramakrishna.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/ramakrishna.png",
+      "type": "guru",
+      "usage": "Spiritual master portrait: ramakrishna.png"
+    },
+    {
+      "id": "srisri",
+      "originalPath": "public/images/gurus/srisri.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/srisri.png",
+      "type": "guru",
+      "usage": "Spiritual master portrait: srisri.png"
+    },
+    {
+      "id": "vivekananda",
+      "originalPath": "public/images/gurus/vivekananda.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/vivekananda.png",
+      "type": "guru",
+      "usage": "Spiritual master portrait: vivekananda.png"
+    },
+    {
+      "id": "shankaracharya",
+      "originalPath": "public/images/gurus/shankaracharya.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/shankaracharya.png",
+      "type": "guru",
+      "usage": "Spiritual master portrait: shankaracharya.png"
+    },
+    {
+      "id": "shankaracharya",
+      "originalPath": "public/images/gurus/shankaracharya.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/shankaracharya.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: shankaracharya.jpg"
+    },
+    {
+      "id": "neemkaroli",
+      "originalPath": "public/images/gurus/real/neemkaroli.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/neemkaroli.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: neemkaroli.jpg"
+    },
+    {
+      "id": "guru_nanak",
+      "originalPath": "public/images/gurus/real/guru_nanak.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/guru_nanak.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: guru_nanak.jpg"
+    },
+    {
+      "id": "al_ghazali",
+      "originalPath": "public/images/gurus/real/al_ghazali.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/al_ghazali.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: al_ghazali.jpg"
+    },
+    {
+      "id": "jesus",
+      "originalPath": "public/images/gurus/real/jesus.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/jesus.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: jesus.jpg"
+    },
+    {
+      "id": "dalai_lama",
+      "originalPath": "public/images/gurus/real/dalai_lama.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/dalai_lama.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: dalai_lama.jpg"
+    },
+    {
+      "id": "laotzu",
+      "originalPath": "public/images/gurus/real/laotzu.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/laotzu.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: laotzu.jpg"
+    },
+    {
+      "id": "yogananda",
+      "originalPath": "public/images/gurus/real/yogananda.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/yogananda.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: yogananda.jpg"
+    },
+    {
+      "id": "sadhguru",
+      "originalPath": "public/images/gurus/real/sadhguru.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/sadhguru.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: sadhguru.jpg"
+    },
+    {
+      "id": "mahavira",
+      "originalPath": "public/images/gurus/real/mahavira.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/mahavira.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: mahavira.jpg"
+    },
+    {
+      "id": "prabhupada",
+      "originalPath": "public/images/gurus/real/prabhupada.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/prabhupada.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: prabhupada.jpg"
+    },
+    {
+      "id": "ramana",
+      "originalPath": "public/images/gurus/real/ramana.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/ramana.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: ramana.jpg"
+    },
+    {
+      "id": "buddha",
+      "originalPath": "public/images/gurus/real/buddha.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/buddha.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: buddha.jpg"
+    },
+    {
+      "id": "aurobindo",
+      "originalPath": "public/images/gurus/real/aurobindo.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/aurobindo.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: aurobindo.jpg"
+    },
+    {
+      "id": "ramakrishna",
+      "originalPath": "public/images/gurus/real/ramakrishna.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/ramakrishna.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: ramakrishna.jpg"
+    },
+    {
+      "id": "osho",
+      "originalPath": "public/images/gurus/real/osho.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/osho.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: osho.jpg"
+    },
+    {
+      "id": "bodhidharma",
+      "originalPath": "public/images/gurus/real/bodhidharma.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/bodhidharma.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: bodhidharma.jpg"
+    },
+    {
+      "id": "amma",
+      "originalPath": "public/images/gurus/real/amma.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/amma.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: amma.jpg"
+    },
+    {
+      "id": "srisri",
+      "originalPath": "public/images/gurus/real/srisri.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/srisri.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: srisri.jpg"
+    },
+    {
+      "id": "vivekananda",
+      "originalPath": "public/images/gurus/real/vivekananda.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/vivekananda.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: vivekananda.jpg"
+    },
+    {
+      "id": "shiva",
+      "originalPath": "public/images/gurus/real/shiva.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/shiva.png",
+      "type": "guru",
+      "usage": "Spiritual master portrait: shiva.png"
+    },
+    {
+      "id": "anandamayi_ma_hd",
+      "originalPath": "public/images/gurus/real/anandamayi_ma_hd.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/anandamayi_ma_hd.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: anandamayi_ma_hd.jpg"
+    },
+    {
+      "id": "akiva",
+      "originalPath": "public/images/gurus/real/akiva.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/akiva.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: akiva.jpg"
+    },
+    {
+      "id": "anandamayi",
+      "originalPath": "public/images/gurus/real/anandamayi.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/anandamayi.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: anandamayi.jpg"
+    },
+    {
+      "id": "shankaracharya",
+      "originalPath": "public/images/gurus/real/shankaracharya.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/shankaracharya.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: shankaracharya.jpg"
+    },
+    {
+      "id": "baal_shem_tov",
+      "originalPath": "public/images/gurus/real/baal_shem_tov.jpg",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/images/gurus/real/baal_shem_tov.jpg",
+      "type": "guru",
+      "usage": "Spiritual master portrait: baal_shem_tov.jpg"
+    },
+    {
+      "id": "music_icon",
+      "originalPath": "public/services/music-icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/music-icon.png",
+      "type": "icon",
+      "usage": "Service category icon: music-icon.png"
+    },
+    {
+      "id": "history_icon",
+      "originalPath": "public/services/history-icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/history-icon.png",
+      "type": "icon",
+      "usage": "Service category icon: history-icon.png"
+    },
+    {
+      "id": "tarot_icon_fixed",
+      "originalPath": "public/services/tarot-icon-fixed.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/tarot-icon-fixed.png",
+      "type": "icon",
+      "usage": "Service category icon: tarot-icon-fixed.png"
+    },
+    {
+      "id": "astrology_icon",
+      "originalPath": "public/services/astrology-icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/astrology-icon.png",
+      "type": "icon",
+      "usage": "Service category icon: astrology-icon.png"
+    },
+    {
+      "id": "music_icon_fixed",
+      "originalPath": "public/services/music-icon-fixed.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/music-icon-fixed.png",
+      "type": "icon",
+      "usage": "Service category icon: music-icon-fixed.png"
+    },
+    {
+      "id": "lightworkers_icon",
+      "originalPath": "public/services/lightworkers-icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/lightworkers-icon.png",
+      "type": "icon",
+      "usage": "Service category icon: lightworkers-icon.png"
+    },
+    {
+      "id": "satsang_icon",
+      "originalPath": "public/services/satsang-icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/satsang-icon.png",
+      "type": "icon",
+      "usage": "Service category icon: satsang-icon.png"
+    },
+    {
+      "id": "astrology_icon_fixed",
+      "originalPath": "public/services/astrology-icon-fixed.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/astrology-icon-fixed.png",
+      "type": "icon",
+      "usage": "Service category icon: astrology-icon-fixed.png"
+    },
+    {
+      "id": "satsang_icon_universal",
+      "originalPath": "public/services/satsang-icon-universal.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/satsang-icon-universal.png",
+      "type": "icon",
+      "usage": "Service category icon: satsang-icon-universal.png"
+    },
+    {
+      "id": "tarot_icon",
+      "originalPath": "public/services/tarot-icon.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/tarot-icon.png",
+      "type": "icon",
+      "usage": "Service category icon: tarot-icon.png"
+    },
+    {
+      "id": "satsang_icon_fixed",
+      "originalPath": "public/services/satsang-icon-fixed.png",
+      "publicUrl": "https://storage.googleapis.com/rraasi-public-assets/services/satsang-icon-fixed.png",
+      "type": "icon",
+      "usage": "Service category icon: satsang-icon-fixed.png"
+    }
+  ],
+  "bucket": "rraasi-public-assets",
+  "baseUrl": "https://storage.googleapis.com/rraasi-public-assets"
+}

@@ -29,13 +29,33 @@ async function getTrack(id: string) {
             trackImageUrl = data.tracks[0].imageUrl || data.tracks[0].sourceImageUrl || trackImageUrl;
         }
 
+        // Safe date parsing
+        let createdAt = null;
+        if (data?.createdAt) {
+            if (typeof data.createdAt === 'string') {
+                createdAt = data.createdAt;
+            } else if (data.createdAt._seconds) {
+                createdAt = new Date(data.createdAt._seconds * 1000).toISOString();
+            } else {
+                // Try parsing as a generic date object if it's something else
+                try {
+                    createdAt = new Date(data.createdAt).toISOString();
+                } catch {
+                    createdAt = null;
+                }
+            }
+        }
+
         return {
             id: doc.id,
             ...data,
             audioUrl: trackAudioUrl,
             imageUrl: trackImageUrl,
-            // Serializable dates
-            createdAt: data?.createdAt ? new Date(data.createdAt._seconds * 1000).toISOString() : null,
+            createdAt: createdAt,
+            story: data?.story,
+            lyrics: data?.lyrics,
+            healingBenefits: data?.healingBenefits,
+            tags: data?.tags || tree_metadata_tags(data),
         };
     } catch (error) {
         console.error("Error fetching track:", error);
@@ -70,7 +90,7 @@ export async function generateMetadata(
 
     const title = track.title || 'Spiritual Music by RRAASI';
     const description = track.description || track.prompt || (tree_metadata_tags(track.metadata)) || "Listen to this beautiful spiritual composition created by RRAASI AI.";
-    const imageUrl = track.imageUrl || 'https://rraasi.com/icon.png';
+    const imageUrl = track.imageUrl || 'https://www.rraasi.com/icon.png';
 
     return {
         title: `${title} | RRAASI Music`,
@@ -79,7 +99,7 @@ export async function generateMetadata(
             title: title,
             description: description,
             images: [imageUrl],
-            url: `https://rraasi.com/track/${id}`,
+            url: `https://www.rraasi.com/track/${id}`,
             type: 'music.song',
             audio: track.audioUrl,
         },
@@ -141,10 +161,67 @@ export default async function TrackPage(props: Props) {
                     createdAt={track.createdAt}
                     status={track.status}
                     metadata={track.metadata}
+                    story={track.story}
+                    lyrics={track.lyrics}
+                    healingBenefits={track.healingBenefits}
+                    tags={track.tags}
                     enableDownload={true}
                 />
 
-                <div className="text-center space-y-4">
+                {/* Journey of this Track Section */}
+                {(track.story || track.lyrics || (track.healingBenefits?.length > 0)) && (
+                    <div className="bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 space-y-8 backdrop-blur-md mt-4">
+                        <div className="text-center space-y-2">
+                            <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-200 to-amber-500 bg-clip-text text-transparent">
+                                Journey of this Track
+                            </h2>
+                            <p className="text-sm text-white/50 w-full max-w-sm mx-auto">
+                                The spiritual essence and meaning behind the music
+                            </p>
+                        </div>
+                        
+                        {track.story && (
+                            <section className="space-y-3">
+                                <h3 className="text-sm font-bold tracking-widest text-amber-500 uppercase flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" /> The Story
+                                </h3>
+                                <p className="text-white/80 leading-relaxed text-sm sm:text-base font-light p-4 bg-white/5 rounded-2xl">
+                                    {track.story}
+                                </p>
+                            </section>
+                        )}
+                        
+                        {track.healingBenefits && track.healingBenefits.length > 0 && (
+                            <section className="space-y-3">
+                                <h3 className="text-sm font-bold tracking-widest text-rose-400 uppercase flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" /> Healing Benefits
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {track.healingBenefits.map((benefit: string, i: number) => (
+                                        <span key={i} className="px-3 py-1.5 rounded-full bg-rose-500/10 text-rose-300 text-sm font-medium border border-rose-500/20">
+                                            {benefit}
+                                        </span>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
+
+                        {track.lyrics && track.lyrics.trim() !== '' && (
+                            <section className="space-y-3">
+                                <h3 className="text-sm font-bold tracking-widest text-cyan-400 uppercase flex items-center gap-2">
+                                    <Sparkles className="w-4 h-4" /> Lyrics & Mantras
+                                </h3>
+                                <div className="p-5 rounded-2xl bg-cyan-950/20 border border-cyan-500/10">
+                                    <pre className="whitespace-pre-wrap font-sans text-cyan-50/80 text-sm sm:text-base leading-relaxed">
+                                        {track.lyrics}
+                                    </pre>
+                                </div>
+                            </section>
+                        )}
+                    </div>
+                )}
+
+                <div className="text-center space-y-4 mt-4">
                     <Link href="/rraasi-music">
                         <Button className="bg-white/10 hover:bg-white/20 text-white border-white/10 w-full backdrop-blur-md">
                             Discover More Spiritual AI Music

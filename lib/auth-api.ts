@@ -2,10 +2,11 @@
  * Client-side API functions for authentication
  */
 
-// Use Next.js API routes as proxy (better for cookies and CORS)
+// Use Next.js API routes as proxy for client side
+// Server side must use absolute AUTH_SERVER_URL
 const API_BASE_URL = typeof window !== 'undefined' 
   ? '/api' 
-  : (process.env.NEXT_PUBLIC_AUTH_SERVER_URL || 'http://localhost:4000');
+  : (process.env.AUTH_SERVER_URL || 'http://localhost:4000');
 
 // Specific Endpoint Roots
 const AUTH_URL = `${API_BASE_URL}/auth`;

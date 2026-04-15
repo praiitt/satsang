@@ -63,10 +63,52 @@ app.use(
 );
 
 // Only use express.json() when NOT running in Cloud Functions
-// Cloud Functions v2 already parses the body, and calling express.json() causes "stream is not readable" error
 if (!process.env.FUNCTION_TARGET) {
   app.use(express.json());
 }
+
+// Query Polyfill Middleware for Cloud Functions (Gen 2 / Cloud Run)
+app.use((req, _res, next) => {
+  // If req.query is already populated by GCF, we use it
+  // But if it's missing things that are in the URL, we polyfill
+  const urlParts = (req.url || '').split('?');
+  const queryString = urlParts[1] || '';
+  
+  if (queryString) {
+    const searchParams = new URLSearchParams(queryString);
+    const query: any = req.query || {};
+    let added = 0;
+    searchParams.forEach((value, key) => {
+      if (!query[key]) {
+        query[key] = value;
+        added++;
+      }
+    });
+
+    if (added > 0) {
+      console.log(`[auth-server] ✅ Middleware added ${added} parameters from URL to req.query`);
+      try {
+        Object.defineProperty(req, 'query', {
+          value: query,
+          writable: true,
+          configurable: true,
+          enumerable: true
+        });
+      } catch (e) {
+        Object.assign(req.query || {}, query);
+      }
+    }
+  }
+  
+  if (!req.query) {
+    try {
+      Object.defineProperty(req, 'query', { value: {} });
+    } catch (e) {
+      (req as any).query = {};
+    }
+  }
+  next();
+});
 
 // Create a main router to handle path prefixing
 const mainRouter = express.Router();
@@ -134,27 +176,6 @@ http('authServer', (req, res) => {
 
   // Debug Logging
   console.log(`[auth-server] Request: ${req.method} ${req.url}`);
-  console.log(`[auth-server] Headers: origin=${req.headers.origin}, content-type=${req.headers['content-type']}`);
-
-  // Ensure req.query exists (fix for "Cannot read properties of undefined (reading 'page')")
-  if (!req.query || Object.keys(req.query).length === 0) {
-    try {
-      // req.url usually contains the path + query string in GCF/Express
-      const queryString = (req.url || '').split('?')[1] || '';
-      if (queryString) {
-        console.log('[auth-server] ⚠️ req.query was empty, polyfilling from URL: ' + req.url);
-        const searchParams = new URLSearchParams(queryString);
-        const query: any = {};
-        searchParams.forEach((value, key) => {
-          query[key] = value;
-        });
-        req.query = query;
-      }
-    } catch (e) {
-      console.error('[auth-server] Failed to polyfill req.query', e);
-      req.query = {};
-    }
-  }
 
   // Debug Body
   if (req.method === 'POST') {

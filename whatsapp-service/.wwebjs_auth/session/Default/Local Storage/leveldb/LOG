@@ -1,0 +1,27 @@
+2026/04/06-09:19:54.000 2e97b6 Reusing MANIFEST /Users/prakash/Documents/satsang/satsangapp/whatsapp-service/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/04/06-09:19:54.002 2e97b6 Recovering log #4
+2026/04/06-09:19:54.003 2e97b6 Reusing old log /Users/prakash/Documents/satsang/satsangapp/whatsapp-service/.wwebjs_auth/session/Default/Local Storage/leveldb/000004.log 
+2026/04/06-14:00:14.855 2e97b9 Level-0 table #8: started
+2026/04/06-14:00:14.874 2e97b9 Level-0 table #8: 15715 bytes OK
+2026/04/06-14:00:14.879 2e97b9 Delete type=0 #4
+2026/04/06-21:00:40.963 2e97b9 Level-0 table #10: started
+2026/04/06-21:00:40.976 2e97b9 Level-0 table #10: 14915 bytes OK
+2026/04/06-21:00:40.981 2e97b9 Delete type=0 #7
+2026/04/07-07:11:15.601 2e97b9 Level-0 table #12: started
+2026/04/07-07:11:15.618 2e97b9 Level-0 table #12: 14489 bytes OK
+2026/04/07-07:11:15.622 2e97b9 Delete type=0 #9
+2026/04/07-22:50:43.172 2e97b9 Level-0 table #14: started
+2026/04/07-22:50:43.184 2e97b9 Level-0 table #14: 14131 bytes OK
+2026/04/07-22:50:43.191 2e97b9 Delete type=0 #11
+2026/04/09-05:23:59.617 2e97b9 Level-0 table #16: started
+2026/04/09-05:23:59.634 2e97b9 Level-0 table #16: 12785 bytes OK
+2026/04/09-05:23:59.638 2e97b9 Delete type=0 #13
+2026/04/09-05:23:59.644 2e97b9 Compacting 4@0 + 1@1 files
+2026/04/09-05:23:59.649 2e97b9 Generated table #17@0: 29 keys, 3738 bytes
+2026/04/09-05:23:59.649 2e97b9 Compacted 4@0 + 1@1 files => 3738 bytes
+2026/04/09-05:23:59.650 2e97b9 compacted to: files[ 0 1 1 0 0 0 0 ]
+2026/04/09-05:23:59.651 2e97b9 Delete type=2 #14
+2026/04/09-05:23:59.651 2e97b9 Delete type=2 #16
+2026/04/09-05:23:59.651 2e97b9 Delete type=2 #12
+2026/04/09-05:23:59.651 2e97b9 Delete type=2 #10
+2026/04/09-05:23:59.651 2e97b9 Delete type=2 #8

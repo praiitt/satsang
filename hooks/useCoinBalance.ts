@@ -36,6 +36,7 @@ export function useCoinBalance(): UseCoinBalanceReturn {
             if (result.success && result.balance) {
                 setBalance(result.balance);
             } else {
+                console.error('[useCoinBalance] Fetch failed:', result.error);
                 setError(result.error || 'Failed to fetch balance');
             }
         } catch (err: any) {

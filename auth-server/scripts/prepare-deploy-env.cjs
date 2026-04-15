@@ -26,7 +26,7 @@ const keyMapping = {
 
 const vars = [];
 vars.push(`NODE_ENV=production`);
-vars.push(`CORS_ORIGIN=https://rraasi.com`);
+vars.push(`CORS_ORIGIN=https://rraasi.com,https://www.rraasi.com`);
 
 for (const [localKey, remoteKey] of Object.entries(keyMapping)) {
     const value = configToUse[localKey];
@@ -52,7 +52,7 @@ for (const [localKey, remoteKey] of Object.entries(keyMapping)) {
 // Better strategy: Generate a YAML file for gcloud
 const envVars = {
     NODE_ENV: 'production',
-    CORS_ORIGIN: 'https://rraasi.com'
+    CORS_ORIGIN: 'https://rraasi.com,https://www.rraasi.com'
 };
 
 for (const [localKey, remoteKey] of Object.entries(keyMapping)) {

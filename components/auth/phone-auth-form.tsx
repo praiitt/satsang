@@ -26,14 +26,17 @@ interface PhoneAuthFormProps {
 }
 
 export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormProps) {
-  const { sendOTP, verifyOTP, signInWithGoogle, signInWithFacebook } = useAuth();
+  const { sendOTP, verifyOTP, signInWithGoogle, signInWithFacebook, sendEmailLink } = useAuth();
   const { t, language } = useLanguage();
+  const [authMode, setAuthMode] = useState<'phone' | 'email'>('phone');
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [selectedCountry, setSelectedCountry] = useState<Country>(DEFAULT_COUNTRY);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [email, setEmail] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
   const [otpSupported, setOtpSupported] = useState(false);
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
   const otpInputRef = useRef<HTMLInputElement>(null);
@@ -175,6 +178,31 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
     }
   };
 
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      if (!email) {
+        throw new Error('Please enter your email address');
+      }
+
+      await sendEmailLink(email);
+      setEmailSent(true);
+
+      toastAlert({
+        title: 'Email Sent!',
+        description: 'Check your inbox for the magic link to log in.',
+      });
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Authentication failed';
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleBack = () => {
     setStep('phone');
     setOtpCode('');
@@ -239,7 +267,7 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
           </div>
         )}
 
-        {step === 'phone' ? (
+        {step === 'phone' && authMode === 'phone' ? (
           <form onSubmit={handleSendOTP} className="space-y-4">
             <div>
               <label htmlFor="country" className="text-foreground mb-2 block text-sm font-medium">
@@ -303,6 +331,50 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
               {loading ? t('auth.sending') : t('auth.sendOTP')}
             </Button>
           </form>
+        ) : step === 'phone' && authMode === 'email' ? (
+          emailSent ? (
+            <div className="text-center space-y-4 py-4">
+              <div className="bg-primary/10 text-primary mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold">
+                {language === 'hi' ? 'लिंक भेजा गया!' : 'Link Sent!'}
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                {language === 'hi' 
+                  ? 'हमने आपको एक मैजिक लिंक भेजा है। लॉग इन करने के लिए अपने ईमेल की जांच करें और उस पर क्लिक करें।'
+                  : "We've sent a magic link to your email. Check your inbox and click it to log in."}
+              </p>
+              <Button onClick={() => setEmailSent(false)} variant="outline" className="mt-4">
+                {language === 'hi' ? 'फिर से कोशिश करें' : 'Try another email'}
+              </Button>
+            </div>
+          ) : (
+            <form onSubmit={handleEmailAuth} className="space-y-4">
+              <div>
+                <label htmlFor="email" className="text-foreground mb-2 block text-sm font-medium">
+                  {language === 'hi' ? 'ईमेल पता' : 'Email Address'}
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="border-input bg-background text-foreground focus:ring-ring h-12 w-full rounded-lg border px-4 text-sm focus:ring-2 focus:outline-none sm:text-base"
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <Button type="submit" disabled={loading} className="h-12 w-full text-base">
+                {loading
+                  ? language === 'hi' ? 'लिंक भेज रहे हैं...' : 'Sending Link...'
+                  : language === 'hi' ? 'मैजिक लिंक भेजें' : 'Send Magic Link'}
+              </Button>
+            </form>
+          )
         ) : (
           <form onSubmit={handleVerifyOTP} className="space-y-4">
             <div>
@@ -427,7 +499,6 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
                 Google
               </Button>
 
-              {/* Facebook Login - Temporarily Disabled
               <Button
                 variant="outline"
                 type="button"
@@ -473,7 +544,22 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
                 )}
                 Facebook
               </Button>
-              */}
+            </div>
+            
+            {/* Auth Mode Toggle */}
+            <div className="mt-6 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode(authMode === 'phone' ? 'email' : 'phone');
+                  setError(null);
+                }}
+                className="text-muted-foreground hover:text-foreground text-sm underline transition-colors"
+              >
+                {authMode === 'phone' 
+                  ? (language === 'hi' ? 'ईमेल से जारी रखें' : 'Continue with Email instead')
+                  : (language === 'hi' ? 'फ़ोन नंबर से जारी रखें' : 'Continue with Phone instead')}
+              </button>
             </div>
           </>
         )}

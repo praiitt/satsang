@@ -94,6 +94,24 @@ export function SatsangSessionView({
     const [hasAgentSpokenIntro, setHasAgentSpokenIntro] = useState(false);
     const { t } = useLanguage();
 
+    // New state for graceful end and background music
+    const [isEnding, setIsEnding] = useState(false);
+    const [ambientMusicUrl, setAmbientMusicUrl] = useState<string | null>(null);
+
+    // Fetch healing ambient music
+    useEffect(() => {
+        const fetchAmbient = async () => {
+            try {
+                const res = await fetch('/api/music/healing-ambient');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.audioUrl) setAmbientMusicUrl(data.audioUrl);
+                }
+            } catch (e) { console.warn('Failed to fetch ambient track', e); }
+        };
+        fetchAmbient();
+    }, []);
+
     // Get agent audio track for visualizer
     const audioTracks = useTracks([Track.Source.Microphone], { 
         room: room || undefined, 
@@ -106,10 +124,11 @@ export function SatsangSessionView({
         remaining,
         overallSeconds,
         isRunning,
+        isSessionComplete,
         phases,
         handleStart,
         handlePause,
-        handleNext,
+        handleNext: _handleNext,
         handlePrev
     } = useSatsangLogic({
         room,
@@ -129,7 +148,33 @@ export function SatsangSessionView({
         }
     });
 
+    // Sync natural session end with the graceful overlay
+    useEffect(() => {
+        if (isSessionComplete && !isEnding) {
+            setIsEnding(true);
+            const timer = setTimeout(() => {
+                onLeave();
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [isSessionComplete, isEnding, onLeave]);
+
     const { isMicrophoneEnabled, localParticipant } = useLocalParticipant({ room: room || undefined });
+
+    // Custom handleNext that triggers graceful end at the final phase manually
+    const handleNext = () => {
+        const currentIndex = phases.findIndex(p => p.key === currentPhase.key);
+        if (currentIndex === phases.length - 1) {
+            if (!isEnding) {
+                setIsEnding(true);
+                setTimeout(() => {
+                    onLeave();
+                }, 3000);
+            }
+            return;
+        }
+        _handleNext();
+    };
 
     const toggleMic = async () => {
         if (localParticipant?.isMicrophoneEnabled) {
@@ -191,6 +236,16 @@ export function SatsangSessionView({
 
     return (
         <div className="relative h-full w-full overflow-hidden bg-black text-white flex flex-col font-sans">
+            {/* Ambient Healing Music (Background) */}
+            {ambientMusicUrl && (
+                <audio 
+                    src={ambientMusicUrl}
+                    autoPlay 
+                    loop 
+                    muted={isMeditationPhase || isClosingPhase} 
+                    volume={0.08}
+                />
+            )}
 
             {/* 1. Ambient Background Layer */}
             <div className="absolute inset-0 z-0">
@@ -209,9 +264,48 @@ export function SatsangSessionView({
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/60" />
             </div>
 
+            {/* Graceful Ending Overlay */}
+            <AnimatePresence>
+                {isEnding && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md"
+                    >
+                        <div className="text-center space-y-6">
+                            <motion.div 
+                                initial={{ scale: 0.8, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                transition={{ delay: 0.2 }}
+                                className="text-6xl"
+                            >
+                                🕉️
+                            </motion.div>
+                            <motion.h2 
+                                initial={{ y: 20, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                transition={{ delay: 0.4 }}
+                                className="text-3xl font-serif tracking-widest text-[#FFF7ED]"
+                            >
+                                {t('privateSatsang.sessionComplete') || 'SESSION COMPLETE'}
+                            </motion.h2>
+                            <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 1 }}
+                                className="text-orange-200/60 uppercase tracking-widest text-xs"
+                            >
+                                Committing spiritual merits...
+                            </motion.p>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Phase Transition Overlay */}
             <AnimatePresence>
-                {showTransition && (
+                {showTransition && !isEnding && (
                     <PhaseTransitionOverlay label={transitionLabel} emoji={transitionEmoji} />
                 )}
             </AnimatePresence>
@@ -357,36 +451,34 @@ export function SatsangSessionView({
                 <div className="mx-auto max-w-md flex flex-col gap-6">
 
                     {/* Main Playback Controls */}
-                    <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center justify-center gap-6">
 
                         {/* Previous */}
                         <button
                             onClick={handlePrev}
-                            className="p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all active:scale-90"
+                            className="p-3 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all active:scale-90"
+                            title={t('privateSatsang.prevPhase') === 'privateSatsang.prevPhase' ? 'Previous' : t('privateSatsang.prevPhase')}
                         >
-                            <SkipBack size={28} />
+                            <SkipBack size={24} />
                         </button>
 
-                        {/* Play/Pause (Hero Button) */}
+                        {/* Next (Hero Button) */}
                         <motion.button
-                            whileTap={{ scale: 0.92 }}
-                            whileHover={{ scale: 1.06 }}
-                            onClick={isRunning ? handlePause : handleStart}
-                            className="h-20 w-20 rounded-full bg-white text-black flex items-center justify-center shadow-lg shadow-white/20"
+                            whileTap={{ scale: 0.95 }}
+                            whileHover={{ scale: 1.05 }}
+                            onClick={() => {
+                                // Forcing agent interrupt is handled by sendPromptForPhase internally 
+                                // but we trigger it immediately via handleNext
+                                handleNext();
+                            }}
+                            className="h-16 px-10 rounded-full bg-white text-black flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(255,255,255,0.2)] font-semibold"
                         >
-                            {isRunning
-                                ? <Pause size={32} fill="currentColor" />
-                                : <Play size={32} fill="currentColor" className="ml-1" />
-                            }
+                            <span className="uppercase tracking-widest text-sm">
+                                {t('privateSatsang.nextPhase') === 'privateSatsang.nextPhase' ? 'Next Phase' : t('privateSatsang.nextPhase')}
+                            </span>
+                            <SkipForward size={22} fill="currentColor" />
                         </motion.button>
-
-                        {/* Next */}
-                        <button
-                            onClick={handleNext}
-                            className="p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all active:scale-90"
-                        >
-                            <SkipForward size={28} />
-                        </button>
+                        
                     </div>
 
                     {/* Secondary Actions Row */}

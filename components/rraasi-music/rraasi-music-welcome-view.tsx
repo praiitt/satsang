@@ -8,8 +8,9 @@ import { useLanguage } from '@/contexts/language-context';
 import { musicTranslations } from '@/lib/translations/music';
 import { MusicCategoryTabs, type MusicCategory } from '@/components/rraasi-music/music-category-tabs';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
-import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw } from 'lucide-react';
+import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw, Heart, Upload, Globe, Lock } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { getFirebaseAuth } from '@/lib/firebase-client';
 import Link from 'next/link';
 import { useMusicPlayer } from '@/contexts/music-player-context';
 import { PlaylistList } from './playlist-list';
@@ -48,10 +49,16 @@ interface MusicTrack {
   description?: string;
   category?: MusicCategory;
   createdAt: any;
-  status?: string; // Add status
-  shareId?: string; // Add shareId
-  videoUrl?: string; // Add videoUrl
-  videoStatus?: 'generating' | 'completed' | 'failed' | null; // Add videoStatus
+  status?: string; 
+  shareId?: string;
+  videoUrl?: string; 
+  videoStatus?: 'generating' | 'completed' | 'failed' | null;
+  story?: string;
+  lyrics?: string;
+  healingBenefits?: string[];
+  tags?: string[];
+  isPublic?: boolean;
+  metadata?: any;
 }
 
 interface RRaaSiMusicWelcomeViewProps {
@@ -70,6 +77,7 @@ export const RRaaSiMusicWelcomeView = ({
 
   /* State */
   const [activeCategory, setActiveCategory] = useState<MusicCategory>('all');
+  const [showOnlyHealing, setShowOnlyHealing] = useState(false);
   const [musicTracks, setMusicTracks] = useState<MusicTrack[]>([]);
   const [myTracks, setMyTracks] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,6 +97,10 @@ export const RRaaSiMusicWelcomeView = ({
 
   // Recordings Modal State
   const [showRecordings, setShowRecordings] = useState(false);
+
+  // Multiselect State
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedTracks, setSelectedTracks] = useState<Set<string>>(new Set());
 
   const toggleMute = () => {
     setIsMuted(prev => !prev);
@@ -196,6 +208,11 @@ export const RRaaSiMusicWelcomeView = ({
               status: t.status,
               videoUrl: t.videoUrl,
               videoStatus: t.videoStatus,
+              story: sub.story || t.story,
+              lyrics: sub.lyrics || t.lyrics,
+              healingBenefits: sub.healingBenefits || t.healingBenefits,
+              tags: sub.tags || t.tags,
+              isPublic: sub.isPublic ?? t.isPublic ?? t.is_public ?? false,
             }));
           }
           return [{
@@ -209,10 +226,14 @@ export const RRaaSiMusicWelcomeView = ({
             category: t.category,
             metadata: t.metadata,
             createdAt: t.createdAt || t.created_at,
-            createdAt: t.createdAt || t.created_at,
             status: t.status,
             videoUrl: t.videoUrl,
             videoStatus: t.videoStatus,
+            story: t.story,
+            lyrics: t.lyrics,
+            healingBenefits: t.healingBenefits,
+            tags: t.tags,
+            isPublic: t.isPublic ?? t.is_public ?? false,
           }];
         });
 
@@ -340,6 +361,82 @@ export const RRaaSiMusicWelcomeView = ({
     }
   };
 
+  // Publish Toggle Handler
+  const handlePublishToggle = async (trackId: string, newStatus: boolean) => {
+    if (!user?.uid) return;
+
+    // Optimistic update
+    setMyTracks(prev => prev.map(t =>
+      (t.shareId === trackId || t.id === trackId) ? { ...t, isPublic: newStatus } : t
+    ));
+
+    try {
+      const auth = getFirebaseAuth();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) throw new Error('Not authenticated');
+
+      const response = await fetch('/api/rraasi-music/publish', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ trackId, isPublic: newStatus })
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to publish');
+      }
+    } catch (e) {
+      console.error("Publish toggle error:", e);
+      alert("Failed to update track visibility.");
+      // Revert optimistic update
+      setMyTracks(prev => prev.map(t =>
+        (t.shareId === trackId || t.id === trackId) ? { ...t, isPublic: !newStatus } : t
+      ));
+    }
+  };
+
+  // Bulk Publish Handler
+  const handleBulkPublish = async (makePublic: boolean) => {
+    if (selectedTracks.size === 0) return;
+    
+    const selectedIds = Array.from(selectedTracks);
+    // Optimistic update
+    setMyTracks(prev => prev.map(t => 
+      (selectedIds.includes(t.shareId || t.id)) ? { ...t, isPublic: makePublic } : t
+    ));
+    setSelectionMode(false);
+    setSelectedTracks(new Set());
+
+    try {
+      const auth = getFirebaseAuth();
+      const token = await auth.currentUser?.getIdToken();
+      if (!token) return;
+
+      const response = await fetch('/api/rraasi-music/publish/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ trackIds: selectedIds, isPublic: makePublic })
+      });
+      
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to bulk publish');
+      }
+    } catch (error) {
+      console.error("Bulk publish failed", error);
+      alert("Failed to update bulk visibility.");
+      // Revert optimistic update
+      setMyTracks(prev => prev.map(t => 
+        (selectedIds.includes(t.shareId || t.id)) ? { ...t, isPublic: !makePublic } : t
+      ));
+    }
+  };
+
   // Updated fetchMusic to use API
   const fetchMusic = async (pageNum: number, isNewCategory = false) => {
     if (pageNum === 1) {
@@ -376,6 +473,10 @@ export const RRaaSiMusicWelcomeView = ({
             status: t.status,
             videoUrl: t.videoUrl,
             videoStatus: t.videoStatus,
+            story: sub.story || t.story,
+            lyrics: sub.lyrics || t.lyrics,
+            healingBenefits: sub.healingBenefits || t.healingBenefits,
+            tags: sub.tags || t.tags,
           }));
         }
 
@@ -391,10 +492,13 @@ export const RRaaSiMusicWelcomeView = ({
           category: t.category,
           metadata: t.metadata,
           createdAt: t.createdAt,
-          createdAt: t.createdAt,
           status: t.status,
           videoUrl: t.videoUrl,
           videoStatus: t.videoStatus,
+          story: t.story,
+          lyrics: t.lyrics,
+          healingBenefits: t.healingBenefits,
+          tags: t.tags,
         }];
       });
 
@@ -668,9 +772,52 @@ export const RRaaSiMusicWelcomeView = ({
 
           {/* Action Buttons (Section Header) */}
           {isAuthenticated && (
-            <div className="flex gap-2">
-              {/* Refresh Button */}
+            <div className="flex gap-2 flex-wrap items-center">
+              {selectionMode && selectedTracks.size > 0 && (
+                <>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleBulkPublish(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white border-none shadow-md gap-1"
+                  >
+                    <Globe className="w-4 h-4" /> <span className="hidden sm:inline">Make </span>Public ({selectedTracks.size})
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={() => handleBulkPublish(false)}
+                    className="bg-gray-600 hover:bg-gray-700 text-white border-none shadow-md gap-1"
+                  >
+                    <Lock className="w-4 h-4" /> <span className="hidden sm:inline">Make </span>Private ({selectedTracks.size})
+                  </Button>
+                </>
+              )}
+              
               <Button
+                variant={selectionMode ? "primary" : "dotted"}
+                onClick={() => {
+                  setSelectionMode(!selectionMode);
+                  if (selectionMode) setSelectedTracks(new Set());
+                }}
+                className={selectionMode ? "bg-amber-500 hover:bg-amber-600 border-none text-white shadow-md" : "text-amber-500 border-amber-500/20 hover:bg-amber-500/10"}
+              >
+                {selectionMode ? "Cancel Selection" : "Select Tracks"}
+              </Button>
+
+              {!selectionMode && (
+                <Button
+                  variant="primary"
+                  onClick={() => window.location.href = '/business/creators/music/distribution'}
+                  className="text-white bg-amber-600 hover:bg-amber-700 shadow-md border-none"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  <span className="hidden lg:inline">Distribute to YouTube</span>
+                  <span className="inline lg:hidden">Distribute</span>
+                </Button>
+              )}
+
+              {/* Refresh Button */}
+              {!selectionMode && (
+                <Button
                 variant="dotted"
                 onClick={fetchMyMusic}
                 disabled={myTracksLoading}
@@ -680,6 +827,7 @@ export const RRaaSiMusicWelcomeView = ({
                 <RefreshCw className={`w-4 h-4 mr-2 ${myTracksLoading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
               </Button>
+              )}
 
               {/* Session Recordings Button */}
               <Button
@@ -756,6 +904,25 @@ export const RRaaSiMusicWelcomeView = ({
                     status={track.status}
                     videoUrl={track.videoUrl}
                     videoStatus={track.videoStatus}
+                    story={track.story}
+                    lyrics={track.lyrics}
+                    healingBenefits={track.healingBenefits}
+                    metadata={track.metadata}
+                    tags={track.tags}
+                    isPublic={track.isPublic}
+                    isOwner={true}
+                    selectionMode={selectionMode}
+                    isSelected={selectedTracks.has(track.shareId || track.id)}
+                    onToggleSelection={() => {
+                      const id = track.shareId || track.id;
+                      setSelectedTracks(prev => {
+                        const newSet = new Set(prev);
+                        if (newSet.has(id)) newSet.delete(id);
+                        else newSet.add(id);
+                        return newSet;
+                      });
+                    }}
+                    onPublishToggle={(newStatus) => handlePublishToggle(track.shareId || track.id, newStatus)}
                     onGenerateVideo={() => handleGenerateVideo(track.id, track.shareId)}
                     onSync={() => handleSync(track.id)}
                     isSyncing={syncingTrackId === track.id}
@@ -812,13 +979,28 @@ export const RRaaSiMusicWelcomeView = ({
           </p>
         </div >
 
-        {/* Category Filter */}
-        < div className="mb-8" >
-          <MusicCategoryTabs
-            activeCategory={activeCategory}
-            onCategoryChange={setActiveCategory}
-            language={language}
-          />
+        {/* Category Filter & Toggles */}
+        < div className="mb-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4" >
+          <div className="flex-1 w-full overflow-hidden">
+            <MusicCategoryTabs
+              activeCategory={activeCategory}
+              onCategoryChange={setActiveCategory}
+              language={language}
+            />
+          </div>
+          <button
+            onClick={() => setShowOnlyHealing(!showOnlyHealing)}
+            className={`shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full font-medium transition-all text-sm border backdrop-blur-md
+              ${showOnlyHealing 
+                ? 'bg-rose-500/20 shadow-lg text-rose-600 dark:text-rose-400 border-rose-500/50 ring-1 ring-rose-500/50 scale-105' 
+                : 'bg-white/50 dark:bg-zinc-900 border-gray-200 dark:border-zinc-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-zinc-800'
+              }
+            `}
+            title="Show only tracks containing spiritual healing benefits content"
+          >
+            <Heart className={`w-4 h-4 ${showOnlyHealing ? 'fill-rose-500/50' : ''}`} />
+            {language === 'hi' ? 'हीलिंग लाभ' : 'Has Healing Benefits'}
+          </button>
         </div >
 
         {/* Music Content - Grid or Playlists */}
@@ -871,7 +1053,7 @@ export const RRaaSiMusicWelcomeView = ({
             <div className="text-center py-16 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/20">
               <p className="text-red-600 dark:text-red-400 text-lg mb-4">{error}</p>
             </div>
-          ) : musicTracks.length === 0 ? (
+          ) : musicTracks.length === 0 || (showOnlyHealing && musicTracks.filter(t => t.healingBenefits && t.healingBenefits.length > 0).length === 0) ? (
             <div className="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-2xl">
               <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-600 dark:text-gray-400 text-lg mb-4">
@@ -888,7 +1070,9 @@ export const RRaaSiMusicWelcomeView = ({
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {musicTracks.map((track, index) => (
+                {musicTracks
+                  .filter(track => showOnlyHealing ? (track.healingBenefits && track.healingBenefits.length > 0) : true)
+                  .map((track, index) => (
                   <MusicPlayerCard
                     key={track.id}
                     id={track.id}
@@ -903,7 +1087,6 @@ export const RRaaSiMusicWelcomeView = ({
                     createdAt={track.createdAt?.toDate?.()?.toISOString() || track.createdAt || new Date().toISOString()}
                     videoUrl={track.videoUrl}
                     videoStatus={track.videoStatus}
-                    onGenerateVideo={() => handleGenerateVideo(track.id, track.shareId)}
                     onPlay={() => playPlaylist(musicTracks, index)} // Use playlist
                   />
                 ))}

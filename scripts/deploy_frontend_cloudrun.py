@@ -80,7 +80,27 @@ def main():
                         
                         if key.startswith('NEXT_PUBLIC_'):
                             public_vars[key] = val
-                        elif key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL', 'BACKEND_SERVICE_URL', 'LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET', 'LIVEKIT_EGRESS_ENABLED', 'LIVEKIT_EGRESS_GCP_BUCKET', 'LIVEKIT_EGRESS_GCP_CREDENTIALS', 'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'NEXT_PUBLIC_APP_URL']:
+                        elif key in [
+                            # Next.js server-side URL configs
+                            'AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL',
+                            'BACKEND_SERVICE_URL', 'NEXT_PUBLIC_APP_URL',
+                            # LiveKit
+                            'LIVEKIT_URL', 'LIVEKIT_API_KEY', 'LIVEKIT_API_SECRET',
+                            'LIVEKIT_EGRESS_ENABLED', 'LIVEKIT_EGRESS_GCP_BUCKET',
+                            'LIVEKIT_EGRESS_GCP_CREDENTIALS',
+                            # YouTube
+                            'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'YOUTUBE_API_KEY',
+                            # AI / LLM API Keys
+                            'OPENAI_API_KEY',
+                            'GEMINI_API_KEY',
+                            'SUNO_API_KEY',       # ← was missing, caused music generation 401
+                            'HEYGEN_API_KEY',
+                            'SARVAM_API_KEY',
+                            # Marketing / Comms
+                            'SENDGRID_API_KEY',
+                            'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 'TWILIO_WHATSAPP_NUMBER',
+                            'BUFFER_ACCESS_TOKEN',
+                        ]:
                              public_vars[key] = val
 
     # Hardcode/Fallback for Backend if missing
@@ -121,7 +141,12 @@ steps:
 """
     
     for key, val in public_vars.items():
-        if key.startswith('NEXT_PUBLIC_') or key in ['AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL', 'BACKEND_SERVICE_URL', 'NEXT_PUBLIC_APP_URL']:
+        if key.startswith('NEXT_PUBLIC_') or key in [
+                'AUTH_SERVER_URL', 'AUTH_SERVICE_URL', 'MARKETING_SERVER_URL',
+                'BACKEND_SERVICE_URL', 'NEXT_PUBLIC_APP_URL',
+                'OPENAI_API_KEY', 'GEMINI_API_KEY', 'SUNO_API_KEY',
+                'HEYGEN_API_KEY', 'SARVAM_API_KEY',
+            ]:
             # Append to yaml args
             # We use substitutions for values: --build-arg KEY=$_KEY
             sub_key = f"_{key}"

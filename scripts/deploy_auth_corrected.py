@@ -127,9 +127,9 @@ def main():
     with open(env_yaml_file, 'w') as yf:
         yf.write(f"FIREBASE_PROJECT_ID: '{firebase_project_id}'\n")
         yf.write(f"FIREBASE_CLIENT_EMAIL: '{firebase_client_email}'\n")
-        yf.write(f"FIREBASE_PRIVATE_KEY: |\n")
-        for line in firebase_private_key.splitlines():
-             yf.write(f"  {line}\n")
+        # Use single line with escaped newlines for the private key
+        single_line_key = firebase_private_key.replace('\n', '\\n')
+        yf.write(f"FIREBASE_PRIVATE_KEY: '{single_line_key}'\n")
         yf.write(f"NODE_ENV: 'production'\n")
         yf.write(f"CORS_ORIGIN: '*'\n") # Allow all origins for testing/production Cloud Run
         

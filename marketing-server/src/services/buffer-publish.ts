@@ -19,6 +19,7 @@ export interface BufferPostInput {
     channelIds: string[];        // Buffer channel IDs to post to
     text: string;                // Post caption/text
     mediaUrls?: string[];        // Public image URLs to attach
+    videoUrl?: string;           // Public video URL to attach
     scheduledAt?: string;        // ISO 8601 datetime
 }
 
@@ -172,6 +173,12 @@ export async function publishToBuffer(input: BufferPostInput): Promise<BufferPos
                 variables.input.assets = {
                     images: input.mediaUrls.map(url => ({ url }))
                 };
+            }
+
+            if (input.videoUrl) {
+                if (!variables.input.assets) variables.input.assets = {};
+                //@ts-ignore
+                variables.input.assets.video = { url: input.videoUrl };
             }
 
             console.log(`[buffer] Creating post for channel ${channelId} via GraphQL`);

@@ -31,6 +31,13 @@ cd astrology_backend/backend
 npm install
 cd ../..
 
+# Install whatsapp-service dependencies
+echo "Installing whatsapp-service dependencies..."
+cd whatsapp-service
+npm install
+npm run build
+cd ..
+
 # Install Python dependencies for agents
 echo "Installing Python agent dependencies..."
 cd livekit_server/agent-starter-python
@@ -47,8 +54,9 @@ echo "Starting services with PM2..."
 pm2 stop all || true
 pm2 delete all || true
 
-# Start frontend
+# Start frontend and whatsapp service
 pm2 start ecosystem.monolith.config.cjs
+pm2 start ecosystem.whatsapp.config.cjs
 
 # Save PM2 state
 pm2 save

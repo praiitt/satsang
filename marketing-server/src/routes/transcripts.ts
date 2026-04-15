@@ -21,7 +21,7 @@ const COLLECTION = 'audio_transcripts';
  */
 router.get('/audio-files', requireAuth, async (_req: AuthedRequest, res) => {
   try {
-    const limit = parseInt((_req.query.limit as string) || '20', 10);
+    const limit = parseInt((_req.query?.limit as string) || '20', 10);
     const files = await listRecentMP3Files(limit);
 
     return res.json({
@@ -240,7 +240,7 @@ router.post('/transcribe', requireAuth, async (req: AuthedRequest, res) => {
  */
 router.get('/signed-url', requireAuth, async (req: AuthedRequest, res) => {
   try {
-    const gcsPath = req.query.gcsPath as string;
+    const gcsPath = req.query?.gcsPath as string;
 
     if (!gcsPath) {
       return res.status(400).json({ error: 'gcsPath query parameter is required' });

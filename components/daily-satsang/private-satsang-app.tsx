@@ -92,21 +92,28 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
     const meditationTitle = satsangPlan?.meditation_title ?? null;
     const meditationImageUrl = satsangPlan?.meditation_image_url ?? null;
 
-    // Fetch recent topics
+    // Fetch AI Smart Topics
+    const [isFetchingTopics, setIsFetchingTopics] = useState(true);
+
     useEffect(() => {
         const fetchTopics = async () => {
             try {
-                const res = await fetch(`/api/satsang/topics?guruId=${guruId}`);
+                setIsFetchingTopics(true);
+                const uid = auth.user?.uid || '';
+                const lang = language || 'hi';
+                const res = await fetch(`/api/satsang/smart-topics?guruId=${guruId}&userId=${uid}&language=${lang}`);
                 if (res.ok) {
                     const data = await res.json();
                     setRecentTopics(data.topics || []);
                 }
             } catch (error) {
-                console.error('Error fetching topics:', error);
+                console.error('Error fetching smart topics:', error);
+            } finally {
+                setIsFetchingTopics(false);
             }
         };
         fetchTopics();
-    }, [guruId]);
+    }, [guruId, auth.user?.uid, language]);
 
     // Poll for track updates if the song is still pending
     useEffect(() => {
@@ -194,6 +201,7 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
             const { plan } = await res.json();
             setGeneratedPlanId(planId);
             setSatsangPlan(plan);
+            setTopic(plan.topic);
             setIsPlanReady(true);
         } catch (error) {
             console.error('Error fetching existing plan:', error);
@@ -255,6 +263,7 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
 
             setGeneratedPlanId(planId);
             setSatsangPlan(plan);
+            setTopic(plan.topic);
             setIsPlanReady(true); // Move to "Ready" state
 
         } catch (error) {
@@ -301,16 +310,18 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
             newRoom.on(RoomEvent.Disconnected, async () => {
                 console.log('[PrivateSatsang] Room disconnected — stopping recording & fetching satsang song...');
                 
-                // Stop egress recording FIRST so full session is captured
+                // Wait 4 seconds before explicitly stopping egress so the final buffers are flushed properly
                 const ids = [...egressIdsRef.current];
                 const currentRoomName = targetRoomName;
                 if (ids.length > 0) {
                     egressIdsRef.current = []; // Clear to prevent double-stop
-                    fetch('/api/egress/stop', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ roomName: currentRoomName, egressIds: ids }),
-                    }).catch(e => console.warn('[PrivateSatsang] stop egress on disconnect error', e));
+                    setTimeout(() => {
+                        fetch('/api/egress/stop', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ roomName: currentRoomName, egressIds: ids }),
+                        }).catch(e => console.warn('[PrivateSatsang] stop egress on disconnect error', e));
+                    }, 4000);
                 }
                 
                 try {
@@ -359,7 +370,7 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
             // Mark session start time for coin deduction
             sessionStartTimeRef.current = Date.now();
 
-            // Start Session Recording
+            // Start Session Recording immediately
             const targetRoomName = newRoom.name;
             const startEgress = async (retries = 3) => {
                 try {
@@ -386,7 +397,7 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
                     if (retries > 0) setTimeout(() => startEgress(retries - 1), 2000);
                 }
             };
-            setTimeout(() => startEgress(), 1000);
+            startEgress();
 
         } catch (error) {
             console.error('Error connecting to room:', error);
@@ -555,17 +566,32 @@ export function PrivateSatsangApp({ guruId, guruName, traditionSlug = 'hinduism'
                             <span>✨</span> {t('privateSatsang.suggestTopic')}
                         </button>
 
-                        {recentTopics.length > 0 && (
+                        {isFetchingTopics ? (
+                            <div className="pt-2 animate-pulse">
+                                <p className="text-xs text-center text-orange-300/60 mb-3 uppercase tracking-widest flex items-center justify-center gap-2">
+                                    <span className="w-4 h-4 rounded-full border-2 border-orange-400 border-t-transparent animate-spin"></span>
+                                    Divining Topics...
+                                </p>
+                                <div className="flex flex-wrap justify-center gap-2">
+                                    {[1, 2, 3].map((i) => (
+                                        <div key={i} className="h-8 w-24 bg-white/10 rounded-full"></div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : recentTopics.length > 0 && (
                             <div className="pt-2 animate-in fade-in slide-in-from-bottom-2 duration-700 delay-200">
-                                <p className="text-xs text-center text-white/40 mb-3 uppercase tracking-widest">{t('privateSatsang.recentlyDiscussed')}</p>
+                                <p className="text-xs text-center text-orange-200/60 mb-3 uppercase tracking-widest flex justify-center gap-2 items-center">
+                                    <span>✨</span> {t('privateSatsang.smartTopics') || 'Smart AI Topics'} <span>✨</span>
+                                </p>
                                 <div className="flex flex-wrap justify-center gap-2">
                                     {recentTopics.map((tObj, i) => (
                                         <button
                                             key={i}
                                             onClick={() => handleTopicSubmit(tObj.topic, tObj.planId)}
-                                            className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-orange-500/10 hover:border-orange-500/30 text-xs text-gray-300 hover:text-orange-200 transition-all cursor-pointer whitespace-nowrap"
+                                            className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-orange-500/10 hover:border-orange-500/30 text-xs text-gray-300 hover:text-orange-200 transition-all cursor-pointer whitespace-nowrap whitespace-normal max-w-full truncate"
+                                            title={tObj.topic}
                                         >
-                                            {tObj.topic}
+                                            {tObj.topic.length > 40 ? tObj.topic.substring(0, 40) + '...' : tObj.topic}
                                         </button>
                                     ))}
                                 </div>

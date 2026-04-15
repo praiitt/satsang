@@ -145,7 +145,7 @@ export function useSatsangLogic({
                     const hasMeditation = !!config.introMeditationAudioUrl;
                     console.log('[SatsangLogic] Meditation phase — rraasi audio available:', hasMeditation);
 
-                    prompt = `STARTING PHASE: MEDITATION
+                    prompt = `[INTERRUPT CURRENT SPEECH] STARTING PHASE: MEDITATION
                     Topic: "${topic}"
                     
                     Instructions for Agent:
@@ -157,7 +157,7 @@ export function useSatsangLogic({
                 }
                 case 'pravachan':
                     const durationMins = mins(durations.pravachan);
-                    prompt = `STARTING PHASE: PRAVACHAN (Discourse)
+                    prompt = `[INTERRUPT CURRENT SPEECH] STARTING PHASE: PRAVACHAN (Discourse)
                     Topic: "${topic}"
                     
                     Instructions for Agent:
@@ -167,7 +167,7 @@ export function useSatsangLogic({
                     4. Do not summarize or skip any points. Provide a very comprehensive and profound discourse.`;
                     break;
                 case 'qa':
-                    prompt = `STARTING PHASE: Q&A
+                    prompt = `[INTERRUPT CURRENT SPEECH] STARTING PHASE: Q&A
                     Topic: "${topic}"
                     
                     Instructions for Agent:
@@ -258,6 +258,8 @@ export function useSatsangLogic({
         };
     }, [isRunning, currentIndex]);
 
+    const [isSessionComplete, setIsSessionComplete] = useState(false);
+
     // Auto-advance
     useEffect(() => {
         if (remaining <= 0 && isRunning) {
@@ -270,10 +272,10 @@ export function useSatsangLogic({
                 setTimeout(() => setIsRunning(true), 100);
             } else {
                 setIsRunning(false); // End of session
+                setIsSessionComplete(true);
             }
         }
     }, [remaining, isRunning, currentIndex, phases.length]);
-
 
     // Actions
     const handleStart = useCallback(() => {
@@ -333,6 +335,7 @@ export function useSatsangLogic({
         remaining,
         overallSeconds,
         isRunning,
+        isSessionComplete,
         phases,
         handleStart,
         handlePause,

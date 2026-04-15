@@ -86,6 +86,7 @@ class FirebaseDB:
             track_data["userId"] = user_id
             track_data["status"] = track_data.get("status", "PENDING")
             track_data["tracks"] = track_data.get("tracks", [])  # Initialize tracks array for callback
+            track_data["isPublic"] = track_data.get("isPublic", False)
             
             # Save to 'music_tracks' collection
             if track_id:

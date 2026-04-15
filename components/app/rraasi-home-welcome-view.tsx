@@ -472,6 +472,23 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                 </div>
             </section>
 
+            {/* Google OAuth & Application Purpose Section for Verification */}
+            <section className="bg-background px-4 py-16 border-t border-border">
+                <div className="mx-auto max-w-4xl text-left">
+                    <h2 className="text-3xl font-bold mb-6 text-foreground">Welcome to RRAASI</h2>
+                    <p className="mb-4 text-lg text-muted-foreground">
+                        RRAASI is a comprehensive spiritual sanctuary offering services such as virtual Satsang, intelligent Tarot, Vedic Astrology, and specialized Music Distribution.
+                    </p>
+                    <p className="mb-4 text-lg text-muted-foreground">
+                        <strong>Purpose of the App & Creator Studio:</strong> Our platform includes a Creator Studio feature where users can generate AI-assisted spiritual healing tracks, mantras, and meditation music. We request the <code>youtube.upload</code> scope strictly to allow our users the convenience of instantly distributing these generated music tracks directly to their own YouTube channels. We only upload videos when explicitly triggered by the user in the app, and we never modify or read other channel contents.
+                    </p>
+                    <p className="text-sm mt-8 text-muted-foreground/70">
+                        RRAASI is a property of Absolute Dimension Pvt Ltd. 
+                        View our <Link href="/privacy" className="underline hover:text-primary">Privacy Policy</Link> for more details on YouTube data usage.
+                    </p>
+                </div>
+            </section>
+
             {/* Bottom CTA */}
             <section className="relative overflow-hidden bg-primary px-4 py-24 text-primary-foreground">
                 <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-soft-light" />

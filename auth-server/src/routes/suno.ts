@@ -44,6 +44,10 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
                     status: data.status,
                     createdAt: data.createdAt,
                     isPublic: data.isPublic,
+                    story: data.story,
+                    lyrics: data.lyrics,
+                    healingBenefits: data.healingBenefits,
+                    tags: data.tags,
                     // Primary track data from array
                     audioUrl: firstTrack.audioUrl,
                     imageUrl: firstTrack.imageUrl,
@@ -730,6 +734,10 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
         tracksQuery = tracksQuery.where('status', '==', 'COMPLETED');
         countQuery = countQuery.where('status', '==', 'COMPLETED');
 
+        // Only show tracks that are explicitly public
+        tracksQuery = tracksQuery.where('isPublic', '==', true);
+        countQuery = countQuery.where('isPublic', '==', true);
+
         // Apply Sorting & Pagination
         // Note: Firestore requires an index for 'category' + 'createdAt' DESC if filtering by category.
         // Also 'audioUrl' filter + sort might need index.
@@ -764,6 +772,91 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
             error: 'Failed to fetch community tracks',
             details: error instanceof Error ? error.message : String(error)
         });
+    }
+});
+
+/**
+ * POST /api/suno/publish
+ * Toggle the public visibility of a music track
+ */
+router.post('/publish', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const { trackId, isPublic } = req.body;
+        const userId = req.user!.uid;
+
+        if (!trackId) {
+            return res.status(400).json({ error: 'trackId is required' });
+        }
+
+        const db = getDb();
+        const docRef = db.collection('music_tracks').doc(trackId);
+        const doc = await docRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const trackData = doc.data();
+        if (trackData?.userId !== userId) {
+            return res.status(403).json({ error: 'Unauthorized to publish this track' });
+        }
+
+        const newPublicStatus = !!isPublic;
+        await docRef.update({ 
+            isPublic: newPublicStatus,
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        console.log(`[Suno Publish] User ${userId} marked track ${trackId} as isPublic=${newPublicStatus}`);
+        res.json({ success: true, isPublic: newPublicStatus });
+    } catch (error) {
+        console.error('[Suno Publish] Error:', error);
+        res.status(500).json({ error: 'Failed to update track visibility' });
+    }
+});
+
+/**
+ * POST /api/suno/publish/bulk
+ * Toggle the public visibility of multiple music tracks
+ */
+router.post('/publish/bulk', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const { trackIds, isPublic } = req.body;
+        const userId = req.user!.uid;
+
+        if (!Array.isArray(trackIds) || trackIds.length === 0) {
+            return res.status(400).json({ error: 'trackIds array is required' });
+        }
+
+        const db = getDb();
+        const batch = db.batch();
+        const newPublicStatus = !!isPublic;
+        
+        // Due to the possibility of large arrays, let's chunk it manually
+        // But Firestore batch supports up to 500 operations which is usually enough for UI scale
+        if (trackIds.length > 500) {
+            return res.status(400).json({ error: 'Too many tracks. Max 500.' });
+        }
+
+        const fetchPromises = trackIds.map(async (trackId) => {
+            const docRef = db.collection('music_tracks').doc(trackId);
+            const doc = await docRef.get();
+            if (doc.exists && doc.data()?.userId === userId) {
+                batch.update(docRef, { 
+                    isPublic: newPublicStatus,
+                    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        });
+
+        await Promise.all(fetchPromises);
+        await batch.commit();
+
+        console.log(`[Suno Publish Bulk] User ${userId} marked ${trackIds.length} tracks as isPublic=${newPublicStatus}`);
+        res.json({ success: true, count: trackIds.length, isPublic: newPublicStatus });
+    } catch (error) {
+        console.error('[Suno Publish Bulk] Error:', error);
+        res.status(500).json({ error: 'Failed to bulk update track visibility' });
     }
 });
 

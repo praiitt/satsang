@@ -83,7 +83,7 @@ const nextConfig: NextConfig = {
     const AUTH_URL = process.env.NODE_ENV === 'development'
       ? 'http://localhost:4000'
       : (process.env.AUTH_SERVER_URL || process.env.AUTH_SERVICE_URL || 'https://satsang-auth-server-6ougd45dya-el.a.run.app');
-    const MARKETING_SERVER_URL = process.env.MARKETING_SERVER_URL || 'http://localhost:4001';
+    const MARKETING_SERVER_URL = process.env.MARKETING_SERVER_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:4001' : 'https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-marketing-server');
     const BACKEND_URL = process.env.BACKEND_SERVICE_URL || 'http://localhost:3003';
 
     console.log('[Next.Config] AUTH_URL:', AUTH_URL);

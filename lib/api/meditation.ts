@@ -3,7 +3,9 @@
  * Client-side functions for meditation endpoints
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_AUTH_SERVER_URL || 'http://localhost:4000';
+const API_BASE = typeof window !== 'undefined' 
+  ? (process.env.NEXT_PUBLIC_AUTH_SERVER_URL || '/satsang-auth-server')
+  : (process.env.AUTH_SERVER_URL || 'http://localhost:4000');
 
 export interface MeditationSession {
     id?: string;

@@ -1,0 +1,1651 @@
+[
+  {
+    "id": "guruji",
+    "name": {
+      "en": "Guruji",
+      "hi": "गुरुजी"
+    },
+    "tagline": {
+      "en": "Your spiritual guide rooted in Hindu and Sanatana Dharma",
+      "hi": "हिंदू और सनातन धर्म में निहित आपका आध्यात्मिक मार्गदर्शक"
+    },
+    "description": {
+      "en": "A compassionate spiritual guru specializing in dharma, yoga, meditation, karma, bhakti, and Vedanta. Answers questions from Gita, Vedas, Upanishads, Ramayana, and Mahabharata.",
+      "hi": "धर्म, योग, ध्यान, कर्म, भक्ति और वेदांत में विशेषज्ञता रखने वाला एक दयालु आध्यात्मिक गुरु। गीता, वेद, उपनिषद, रामायण और महाभारत से प्रश्नों के उत्तर देता है।"
+    },
+    "tradition": "Sanatana Dharma",
+    "era": "Timeless",
+    "category": "hinduism",
+    "image": null,
+    "icon": "🕉️",
+    "route": "/hinduism/guruji",
+    "tags": [
+      "hinduism",
+      "Timeless",
+      "Sanatana Dharma"
+    ]
+  },
+  {
+    "id": "etAgent",
+    "name": {
+      "en": "ET Agent",
+      "hi": "ET Agent"
+    },
+    "tagline": {
+      "en": "Explore extraterrestrial civilizations and cosmic consciousness",
+      "hi": "ब्रह्मांडीय सभ्यताओं और ब्रह्मांडीय चेतना का अन्वेषण करें"
+    },
+    "description": {
+      "en": "A guide specializing in extraterrestrial civilizations, the Fermi Paradox, and the connection between sound frequencies and universal consciousness.",
+      "hi": "ब्रह्मांडीय सभ्यताओं, फर्मी पैराडॉक्स, और ध्वनि फ्रीक्वेंसी और ब्रह्मांडीय चेतना के बीच संबंध में विशेषज्ञता रखने वाला एक मार्गदर्शक।"
+    },
+    "tradition": "Cosmic Consciousness",
+    "era": "Future",
+    "category": "universal",
+    "image": null,
+    "icon": "🌌",
+    "route": "/universal/etAgent",
+    "tags": [
+      "universal",
+      "Future",
+      "Cosmic Consciousness"
+    ]
+  },
+  {
+    "id": "osho",
+    "name": {
+      "en": "Osho",
+      "hi": "ओशो"
+    },
+    "tagline": {
+      "en": "Revolutionary spiritual master of meditation and consciousness",
+      "hi": "ध्यान और चेतना के क्रांतिकारी आध्यात्मिक गुरु"
+    },
+    "description": {
+      "en": "Osho (Bhagwan Shree Rajneesh) - A revolutionary spiritual guide specializing in meditation, consciousness, Zen philosophy, dynamic meditation, sannyas, and the art of living.",
+      "hi": "ओशो (भगवान श्री रजनीश) - ध्यान, चेतना, जेन दर्शन, डायनामिक मेडिटेशन, संन्यास, और जीवन की कला में विशेषज्ञता रखने वाला एक क्रांतिकारी आध्यात्मिक मार्गदर्शक।"
+    },
+    "tradition": "Zen, Meditation",
+    "era": "1931-1990",
+    "category": "buddhism",
+    "image": "/images/gurus/real/osho.jpg",
+    "icon": "☸️",
+    "route": "/buddhism/osho",
+    "tags": [
+      "buddhism",
+      "1931-1990",
+      "Zen",
+      "Meditation"
+    ]
+  },
+  {
+    "id": "psychedelicGuru",
+    "name": {
+      "en": "Trance Music Guide",
+      "hi": "Trance Music Guide"
+    },
+    "tagline": {
+      "en": "Dynamic meditation through Trance Music",
+      "hi": "ट्रेन्स म्यूजिक के माध्यम से गतिशील ध्यान"
+    },
+    "description": {
+      "en": "Create your own trance music just by talking to the guide. Music is the method.",
+      "hi": "गाइड से बात करके अपना खुद का ट्रान्स संगीत बनाएं। संगीत ही विधि है।"
+    },
+    "tradition": "Trance, Shamanism",
+    "era": "Timeless",
+    "category": "universal",
+    "image": null,
+    "icon": "🌌",
+    "route": "/universal/psychedelicGuru",
+    "tags": [
+      "universal",
+      "Timeless",
+      "Trance",
+      "Shamanism"
+    ]
+  },
+  {
+    "id": "akiva",
+    "name": {
+      "en": "Rabbi Akiva",
+      "hi": "रब्बी अकीवा"
+    },
+    "tagline": {
+      "en": "Master of Torah",
+      "hi": "तोराह के मास्टर"
+    },
+    "description": {
+      "en": "Rabbi Akiva - The great scholar and mystic who taught the centrality of love for one's neighbor.",
+      "hi": "रब्बी अकीवा - महान विद्वान और रहस्यवादी जिन्होंने पड़ोसी के प्रति प्रेम की केंद्रीयता सिखाई।"
+    },
+    "tradition": "Judaism (Mishnaic)",
+    "era": "c. 50–135 CE",
+    "category": "judaism",
+    "image": "/images/gurus/real/akiva.jpg",
+    "icon": "✡️",
+    "route": "/judaism/akiva",
+    "tags": [
+      "judaism",
+      "c. 50–135 CE",
+      "Judaism",
+      "Mishnaic"
+    ]
+  },
+  {
+    "id": "al_ghazali",
+    "name": {
+      "en": "Al-Ghazali",
+      "hi": "अल-गज़ाली"
+    },
+    "tagline": {
+      "en": "The Proof of Islam",
+      "hi": "इस्लाम का प्रमाण"
+    },
+    "description": {
+      "en": "Abu Hamid al-Ghazali - The great theologian and mystic who reconciled reason with revelation and law with love.",
+      "hi": "अबू हामिद अल-गज़ाली - महान धर्मशास्त्री और रहस्यवादी जिन्होंने तर्क और रहस्योद्घाटन, और कानून और प्रेम में सामंजस्य स्थापित किया।"
+    },
+    "tradition": "Islam (Sufi/Philosopher)",
+    "era": "1058–1111",
+    "category": "islam",
+    "image": "/images/gurus/real/al_ghazali.jpg",
+    "icon": "☪️",
+    "route": "/islam/al_ghazali",
+    "tags": [
+      "islam",
+      "1058–1111",
+      "Islam",
+      "Sufi",
+      "Philosopher"
+    ]
+  },
+  {
+    "id": "amma",
+    "name": {
+      "en": "Mata Amritanandamayi",
+      "hi": "माता अमृतानंदमयी"
+    },
+    "tagline": {
+      "en": "The Hugging Saint",
+      "hi": "प्रेम और करुणा की अवतार"
+    },
+    "description": {
+      "en": "Mata Amritanandamayi (Amma) - Universal mother embodying compassion. Has hugged millions worldwide.",
+      "hi": "माता अमृतानंदमयी (अम्मा) - करुणा की प्रतिमूर्ति विश्व माता। दुनिया भर में लाखों लोगों को गले लगा चुकी हैं।"
+    },
+    "tradition": "Universal love, Bhakti",
+    "era": "1953-present",
+    "category": "hinduism",
+    "image": "/images/gurus/real/amma.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/amma",
+    "tags": [
+      "hinduism",
+      "1953-present",
+      "Universal love",
+      "Bhakti"
+    ]
+  },
+  {
+    "id": "anandamayi_ma",
+    "name": {
+      "en": "Anandamayi Ma",
+      "hi": "आनंदमयी मां"
+    },
+    "tagline": {
+      "en": "Bliss-permeated Divine Mother",
+      "hi": "आनंद से परिपूर्ण दिव्य माँ"
+    },
+    "description": {
+      "en": "Anandamayi Ma - Spontaneous joy embodied. The bliss-permeated mother who lived in constant God-remembrance.",
+      "hi": "आनंदमयी मां - सहज आनंद की प्रतिमूर्ति। आनंद से परिपूर्ण माँ जो निरंतर ईश्वर-स्मरण में रहती थीं।"
+    },
+    "tradition": "Universal Mother, Bhakti",
+    "era": "1896-1982",
+    "category": "hinduism",
+    "image": "/images/gurus/real/anandamayi.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/anandamayi_ma",
+    "tags": [
+      "hinduism",
+      "1896-1982",
+      "Universal Mother",
+      "Bhakti"
+    ]
+  },
+  {
+    "id": "aurobindo",
+    "name": {
+      "en": "Sri Aurobindo",
+      "hi": "श्री अरबिंदो"
+    },
+    "tagline": {
+      "en": "Visionary of Integral Yoga",
+      "hi": "पूर्ण योग के दूरदर्शी"
+    },
+    "description": {
+      "en": "Sri Aurobindo - Pioneer of Integral Yoga and evolutionary spirituality. Envisioned divine life on Earth.",
+      "hi": "श्री अरबिंदो - पूर्ण योग और विकासवादी आध्यात्मिकता के अग्रणी। पृथ्वी पर दिव्य जीवन की परिकल्पना की।"
+    },
+    "tradition": "Integral Yoga",
+    "era": "1872-1950",
+    "category": "hinduism",
+    "image": "/images/gurus/real/aurobindo.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/aurobindo",
+    "tags": [
+      "hinduism",
+      "1872-1950",
+      "Integral Yoga"
+    ]
+  },
+  {
+    "id": "baal_shem_tov",
+    "name": {
+      "en": "Baal Shem Tov",
+      "hi": "बाल शेम टोव"
+    },
+    "tagline": {
+      "en": "Master of the Good Name",
+      "hi": "अच्छे नाम के स्वामी"
+    },
+    "description": {
+      "en": "The Baal Shem Tov - Founder of Hasidism who taught serving God with joy (Simcha) and finding holiness everywhere.",
+      "hi": "बाल शेम टोव - हेसिडिज्म के संस्थापक जिन्होंने खुशी (सिमचा) के साथ भगवान की सेवा करना और हर जगह पवित्रता खोजना सिखाया।"
+    },
+    "tradition": "Judaism (Hasidic)",
+    "era": "1698–1760",
+    "category": "judaism",
+    "image": "/images/gurus/real/baal_shem_tov.jpg",
+    "icon": "✡️",
+    "route": "/judaism/baal_shem_tov",
+    "tags": [
+      "judaism",
+      "1698–1760",
+      "Judaism",
+      "Hasidic"
+    ]
+  },
+  {
+    "id": "bodhidharma",
+    "name": {
+      "en": "Bodhidharma",
+      "hi": "बोधिधर्म"
+    },
+    "tagline": {
+      "en": "First Patriarch of Zen",
+      "hi": "ज़ेन के प्रथम संरक्षक"
+    },
+    "description": {
+      "en": "Bodhidharma - The fierce Zen master who brought Buddhism to China. \"Direct pointing to the human mind.\"",
+      "hi": "बोधिधर्म - उग्र ज़ेन मास्टर जो बौद्ध धर्म को चीन ले आए। \"सीधे मानवीय मन की ओर इशारा।\""
+    },
+    "tradition": "Buddhism (Zen/Chan)",
+    "era": "5th/6th Century CE",
+    "category": "buddhism",
+    "image": "/images/gurus/real/bodhidharma.jpg",
+    "icon": "☸️",
+    "route": "/buddhism/bodhidharma",
+    "tags": [
+      "buddhism",
+      "5th/6th Century CE",
+      "Buddhism",
+      "Zen",
+      "Chan"
+    ]
+  },
+  {
+    "id": "buddha",
+    "name": {
+      "en": "Gautama Buddha",
+      "hi": "गौतम बुद्ध"
+    },
+    "tagline": {
+      "en": "The Awakened One",
+      "hi": "जागृत आत्मा (The Awakened One)"
+    },
+    "description": {
+      "en": "Siddhartha Gautama - The Buddha found the path to end suffering through mindfulness, compassion, and wisdom.",
+      "hi": "सिद्धार्थ गौतम - बुद्ध ने माइंडफुलनेस, करुणा और ज्ञान के माध्यम से दुख को समाप्त करने का मार्ग खोजा।"
+    },
+    "tradition": "Buddhism",
+    "era": "c. 5th to 4th century BCE",
+    "category": "buddhism",
+    "image": "/images/gurus/real/buddha.jpg",
+    "icon": "☸️",
+    "route": "/buddhism/buddha",
+    "tags": [
+      "buddhism",
+      "c. 5th to 4th century BCE",
+      "Buddhism"
+    ]
+  },
+  {
+    "id": "bulleh_shah",
+    "name": {
+      "en": "Bulleh Shah",
+      "hi": "बुल्ले शाह"
+    },
+    "tagline": {
+      "en": "Rebel Sufi Poet",
+      "hi": "विद्रोही सूफी कवि"
+    },
+    "description": {
+      "en": "Baba Bulleh Shah - Punjabi Sufi poet who challenged orthodoxy and celebrated the dance of the soul.",
+      "hi": "बाबा बुल्ले शाह - पंजाबी सूफी कवि जिन्होंने रूढ़िवादिता को चुनौती दी और आत्मा के नृत्य का जश्न मनाया।"
+    },
+    "tradition": "Islam (Sufi)",
+    "era": "1680–1757",
+    "category": "islam",
+    "image": null,
+    "icon": "☪️",
+    "route": "/islam/bulleh_shah",
+    "tags": [
+      "islam",
+      "1680–1757",
+      "Islam",
+      "Sufi"
+    ]
+  },
+  {
+    "id": "chinmayananda",
+    "name": {
+      "en": "Swami Chinmayananda",
+      "hi": "स्वामी चिन्मयानंद"
+    },
+    "tagline": {
+      "en": "Making Vedanta accessible",
+      "hi": "वेदांत ज्ञान के महान प्रचारक"
+    },
+    "description": {
+      "en": "Swami Chinmayananda - Founder of Chinmaya Mission, making Vedanta and Gita teachings accessible to all.",
+      "hi": "स्वामी चिन्मयानंद - चिन्मय मिशन के संस्थापक, गीता और उपनिषदों के ज्ञान को जन-जन तक पहुँचाया।"
+    },
+    "tradition": "Vedanta teaching movement",
+    "era": "1916-1993",
+    "category": "hinduism",
+    "image": null,
+    "icon": "🕉️",
+    "route": "/hinduism/chinmayananda",
+    "tags": [
+      "hinduism",
+      "1916-1993",
+      "Vedanta teaching movement"
+    ]
+  },
+  {
+    "id": "dalai_lama",
+    "name": {
+      "en": "Dalai Lama",
+      "hi": "दलाई लामा"
+    },
+    "tagline": {
+      "en": "Ocean of Compassion",
+      "hi": "करुणा के सागर"
+    },
+    "description": {
+      "en": "Tenzin Gyatso - The 14th Dalai Lama, teaching compassion, non-violence, and secular ethics.",
+      "hi": "तेनज़िन ग्यात्सो - 14वें दलाई लामा, करुणा, अहिंसा और धर्मनिरपेक्ष नैतिकता की शिक्षा देते हैं।"
+    },
+    "tradition": "Buddhism",
+    "era": "1935–Present",
+    "category": "buddhism",
+    "image": "/images/gurus/real/dalai_lama.jpg",
+    "icon": "☸️",
+    "route": "/buddhism/dalai_lama",
+    "tags": [
+      "buddhism",
+      "1935–Present",
+      "Buddhism"
+    ]
+  },
+  {
+    "id": "guru_amar_das",
+    "name": {
+      "en": "Guru Amar Das Ji",
+      "hi": "गुरु अमरदास जी"
+    },
+    "tagline": {
+      "en": "Equality and Humility",
+      "hi": "समानता और विनम्रता"
+    },
+    "description": {
+      "en": "Guru Amar Das Ji - Third Sikh Guru who championed social equality and established the Langar system.",
+      "hi": "गुरु अमरदास जी - तीसरे सिख गुरु जिन्होंने सामाजिक समानता का समर्थन किया और लंगर प्रणाली की स्थापना की।"
+    },
+    "tradition": "Sikhism",
+    "era": "1479–1574",
+    "category": "sikhism",
+    "image": null,
+    "icon": "☬",
+    "route": "/sikhism/guru_amar_das",
+    "tags": [
+      "sikhism",
+      "1479–1574",
+      "Sikhism"
+    ]
+  },
+  {
+    "id": "guru_angad",
+    "name": {
+      "en": "Guru Angad Dev Ji",
+      "hi": "गुरु अंगद देव जी"
+    },
+    "tagline": {
+      "en": "Service and Obedience",
+      "hi": "सेवा और आज्ञापालन"
+    },
+    "description": {
+      "en": "Guru Angad Dev Ji - Second Sikh Guru who formalized Gurmukhi and emphasized physical and spiritual discipline.",
+      "hi": "गुरु अंगद देव जी - दूसरे सिख गुरु जिन्होंने गुरुमुखी को औपचारिक रूप दिया और शारीरिक और आध्यात्मिक अनुशासन पर जोर दिया।"
+    },
+    "tradition": "Sikhism",
+    "era": "1504–1552",
+    "category": "sikhism",
+    "image": null,
+    "icon": "☬",
+    "route": "/sikhism/guru_angad",
+    "tags": [
+      "sikhism",
+      "1504–1552",
+      "Sikhism"
+    ]
+  },
+  {
+    "id": "guru_arjan",
+    "name": {
+      "en": "Guru Arjan Dev Ji",
+      "hi": "गुरु अर्जन देव जी"
+    },
+    "tagline": {
+      "en": "Prince of Martyrs",
+      "hi": "शहीदों के सरताज"
+    },
+    "description": {
+      "en": "Guru Arjan Dev Ji - Fifth Sikh Guru, compiler of the Adi Granth and builder of the Golden Temple.",
+      "hi": "गुरु अर्जन देव जी - पांचवें सिख गुरु, आदि ग्रंथ के संकलक और स्वर्ण मंदिर के निर्माता।"
+    },
+    "tradition": "Sikhism",
+    "era": "1563–1606",
+    "category": "sikhism",
+    "image": null,
+    "icon": "☬",
+    "route": "/sikhism/guru_arjan",
+    "tags": [
+      "sikhism",
+      "1563–1606",
+      "Sikhism"
+    ]
+  },
+  {
+    "id": "guru_gobind_singh",
+    "name": {
+      "en": "Guru Gobind Singh Ji",
+      "hi": "गुरु गोबिंद सिंह जी"
+    },
+    "tagline": {
+      "en": "Saint-Soldier",
+      "hi": "संत-सिपाही"
+    },
+    "description": {
+      "en": "Guru Gobind Singh Ji - Tenth Sikh Guru, creator of the Khalsa and protector of righteousness.",
+      "hi": "गुरु गोबिंद सिंह जी - दसवें सिख गुरु, खालसा के निर्माता और धर्म के रक्षक।"
+    },
+    "tradition": "Sikhism",
+    "era": "1666–1708",
+    "category": "sikhism",
+    "image": null,
+    "icon": "☬",
+    "route": "/sikhism/guru_gobind_singh",
+    "tags": [
+      "sikhism",
+      "1666–1708",
+      "Sikhism"
+    ]
+  },
+  {
+    "id": "guru_nanak",
+    "name": {
+      "en": "Guru Nanak Dev Ji",
+      "hi": "गुरु नानक देव जी"
+    },
+    "tagline": {
+      "en": "Founder of Sikhism - Oneness",
+      "hi": "सिख धर्म के संस्थापक - एक ओंकार"
+    },
+    "description": {
+      "en": "Guru Nanak Dev Ji - Taught the oneness of God (Ek Onkar), equality of all humans, and selfless service.",
+      "hi": "गुरु नानक देव जी - ईश्वर की एकता (एक ओंकार), सभी मनुष्यों की समानता और निस्वार्थ सेवा (सेवा) सिखाई।"
+    },
+    "tradition": "Sikhism",
+    "era": "1469–1539",
+    "category": "sikhism",
+    "image": "/images/gurus/real/guru_nanak.jpg",
+    "icon": "☬",
+    "route": "/sikhism/guru_nanak",
+    "tags": [
+      "sikhism",
+      "1469–1539",
+      "Sikhism"
+    ]
+  },
+  {
+    "id": "guru_ram_das",
+    "name": {
+      "en": "Guru Ram Das Ji",
+      "hi": "गुरु रामदास जी"
+    },
+    "tagline": {
+      "en": "Service and Devotion",
+      "hi": "सेवा और भक्ति"
+    },
+    "description": {
+      "en": "Guru Ram Das Ji - Fourth Sikh Guru, founder of Amritsar and composer of the Lavan wedding hymn.",
+      "hi": "गुरु रामदास जी - चौथे सिख गुरु, अमृतसर के संस्थापक और लावण विवाह भजन के रचयिता।"
+    },
+    "tradition": "Sikhism",
+    "era": "1534–1581",
+    "category": "sikhism",
+    "image": null,
+    "icon": "☬",
+    "route": "/sikhism/guru_ram_das",
+    "tags": [
+      "sikhism",
+      "1534–1581",
+      "Sikhism"
+    ]
+  },
+  {
+    "id": "hemachandra",
+    "name": {
+      "en": "Acharya Hemachandra",
+      "hi": "आचार्य हेमचंद्र"
+    },
+    "tagline": {
+      "en": "Omniscient of the Kali Age",
+      "hi": "कलि युग के सर्वज्ञ"
+    },
+    "description": {
+      "en": "Acharya Hemachandra - Polymath monk who synthesized grammar, yoga, and politics with non-violence.",
+      "hi": "आचार्य हेमचंद्र - बहुज्ञ भिक्षु जिन्होंने व्याकरण, योग और राजनीति को अहिंसा के साथ संश्लेषित किया।"
+    },
+    "tradition": "Jainism (Shvetambara)",
+    "era": "1088–1173",
+    "category": "jainism",
+    "image": null,
+    "icon": "✋",
+    "route": "/jainism/hemachandra",
+    "tags": [
+      "jainism",
+      "1088–1173",
+      "Jainism",
+      "Shvetambara"
+    ]
+  },
+  {
+    "id": "hillel",
+    "name": {
+      "en": "Hillel the Elder",
+      "hi": "हिलेल द एल्डर"
+    },
+    "tagline": {
+      "en": "Sage of Patience",
+      "hi": "धैर्य के ऋषि"
+    },
+    "description": {
+      "en": "Hillel the Elder - Renowned sage who taught the Golden Rule and the importance of peace and patience.",
+      "hi": "हिलेल द एल्डर - प्रसिद्ध ऋषि जिन्होंने स्वर्ण नियम और शांति और धैर्य का महत्व सिखाया।"
+    },
+    "tradition": "Judaism",
+    "era": "110 BCE – 10 CE",
+    "category": "judaism",
+    "image": null,
+    "icon": "✡️",
+    "route": "/judaism/hillel",
+    "tags": [
+      "judaism",
+      "110 BCE – 10 CE",
+      "Judaism"
+    ]
+  },
+  {
+    "id": "ibn_arabi",
+    "name": {
+      "en": "Ibn Arabi",
+      "hi": "इब्न अरबी"
+    },
+    "tagline": {
+      "en": "The Greatest Master",
+      "hi": "सबसे महान मास्टर"
+    },
+    "description": {
+      "en": "Muhyiddin Ibn Arabi - Visionary mystic who taught the Unity of Being (Wahdat al-Wujud) and the religion of Love.",
+      "hi": "मुहीद्दीन इब्न अरबी - दूरदर्शी रहस्यवादी जिन्होंने अस्तित्व की एकता (वहदत अल-वजूद) और प्रेम का धर्म सिखाया।"
+    },
+    "tradition": "Islam (Sufism)",
+    "era": "1165–1240",
+    "category": "islam",
+    "image": null,
+    "icon": "☪️",
+    "route": "/islam/ibn_arabi",
+    "tags": [
+      "islam",
+      "1165–1240",
+      "Islam",
+      "Sufism"
+    ]
+  },
+  {
+    "id": "jesus",
+    "name": {
+      "en": "Jesus Christ",
+      "hi": "ईसा मसीह (Jesus Christ)"
+    },
+    "tagline": {
+      "en": "The Essence of Divine Love",
+      "hi": "दिव्य प्रेम का सार"
+    },
+    "description": {
+      "en": "Jesus Christ - Teaching unconditional love, forgiveness, and the Kingdom of Heaven within.",
+      "hi": "ईसा मसीह - बिना शर्त प्रेम, क्षमा, और भीतर के स्वर्ग के साम्राज्य की शिक्षा दी।"
+    },
+    "tradition": "Christianity",
+    "era": "c. 4 BC – c. 30/33 AD",
+    "category": "christianity",
+    "image": "/images/gurus/real/jesus.jpg",
+    "icon": "✝️",
+    "route": "/christianity/jesus",
+    "tags": [
+      "christianity",
+      "c. 4 BC – c. 30/33 AD",
+      "Christianity"
+    ]
+  },
+  {
+    "id": "john_cross",
+    "name": {
+      "en": "St. John of the Cross",
+      "hi": "सेंट जॉन ऑफ द क्रॉस"
+    },
+    "tagline": {
+      "en": "Dark Night of the Soul",
+      "hi": "आत्मा की काली रात"
+    },
+    "description": {
+      "en": "St. John of the Cross - Mystic poet who described the journey of the soul through darkness to divine union.",
+      "hi": "सेंट जॉन - रहस्यवादी कवि जिन्होंने दिव्य संघ के लिए अंधेरे के माध्यम से आत्मा की यात्रा का वर्णन किया।"
+    },
+    "tradition": "Christianity (Mystic)",
+    "era": "1542–1591",
+    "category": "christianity",
+    "image": null,
+    "icon": "✝️",
+    "route": "/christianity/john_cross",
+    "tags": [
+      "christianity",
+      "1542–1591",
+      "Christianity",
+      "Mystic"
+    ]
+  },
+  {
+    "id": "kripaluji",
+    "name": {
+      "en": "Jagadguru Kripaluji",
+      "hi": "जगद्गुरु कृपालुजी"
+    },
+    "tagline": {
+      "en": "Radha-Krishna divine love",
+      "hi": "राधा-कृष्ण दिव्य प्रेम"
+    },
+    "description": {
+      "en": "Jagadguru Kripaluji Maharaj - Master of Radha-Krishna devotion and divine love. \"Radhe Radhe\"",
+      "hi": "जगद्गुरु कृपालुजी महाराज - राधा-कृष्ण भक्ति और दिव्य प्रेम के स्वामी। \"राधे राधे\""
+    },
+    "tradition": "Radha-Krishna Bhakti",
+    "era": "1922-2013",
+    "category": "hinduism",
+    "image": null,
+    "icon": "🕉️",
+    "route": "/hinduism/kripaluji",
+    "tags": [
+      "hinduism",
+      "1922-2013",
+      "Radha-Krishna Bhakti"
+    ]
+  },
+  {
+    "id": "krishnamurti",
+    "name": {
+      "en": "J. Krishnamurti",
+      "hi": "जे. कृष्णमूर्ति"
+    },
+    "tagline": {
+      "en": "Teacher of radical freedom",
+      "hi": "क्रांतिकारी स्वतंत्रता के शिक्षक"
+    },
+    "description": {
+      "en": "Jiddu Krishnamurti - \"Truth is a pathless land.\" Teacher of freedom from all conditioning and authority.",
+      "hi": "जिद्दू कृष्णमूर्ति - \"सत्य एक पथहीन भूमि है।\" सभी संस्कारों और सत्ता से स्वतंत्रता के शिक्षक।"
+    },
+    "tradition": "No tradition - Freedom from all",
+    "era": "1895-1986",
+    "category": "hinduism",
+    "image": null,
+    "icon": "🕉️",
+    "route": "/hinduism/krishnamurti",
+    "tags": [
+      "hinduism",
+      "1895-1986",
+      "No tradition - Freedom from all"
+    ]
+  },
+  {
+    "id": "kundakunda",
+    "name": {
+      "en": "Acharya Kundakunda",
+      "hi": "आचार्य कुंदकुंद"
+    },
+    "tagline": {
+      "en": "Soul-Centric Master",
+      "hi": "आत्म-केंद्रित मास्टर"
+    },
+    "description": {
+      "en": "Acharya Kundakunda - Digambara master who focused on the pure nature of the soul (Samayasara).",
+      "hi": "आचार्य कुंदकुंद - दिगंबर मास्टर जिन्होंने आत्मा की शुद्ध प्रकृति (समयसार) पर ध्यान केंद्रित किया।"
+    },
+    "tradition": "Jainism (Digambara)",
+    "era": "1st Century CE",
+    "category": "jainism",
+    "image": null,
+    "icon": "✋",
+    "route": "/jainism/kundakunda",
+    "tags": [
+      "jainism",
+      "1st Century CE",
+      "Jainism",
+      "Digambara"
+    ]
+  },
+  {
+    "id": "laotzu",
+    "name": {
+      "en": "Lao Tzu",
+      "hi": "लाओ त्ज़ु (Lao Tzu)"
+    },
+    "tagline": {
+      "en": "The Way of Nature",
+      "hi": "प्रकृति का मार्ग (The Way of Nature)"
+    },
+    "description": {
+      "en": "Lao Tzu - Ancient Chinese philosopher and author of the Tao Te Ching. \"Nature does not hurry, yet everything is accomplished.\"",
+      "hi": "लाओ त्ज़ु - प्राचीन चीनी दार्शनिक और ताओ ते चिंग के लेखक। \"प्रकृति कभी जल्दबाजी नहीं करती, फिर भी सब कुछ पूरा हो जाता है।\""
+    },
+    "tradition": "Taoism",
+    "era": "c. 6th century BCE",
+    "category": "taoism",
+    "image": "/images/gurus/real/laotzu.jpg",
+    "icon": "☯️",
+    "route": "/taoism/laotzu",
+    "tags": [
+      "taoism",
+      "c. 6th century BCE",
+      "Taoism"
+    ]
+  },
+  {
+    "id": "liezi",
+    "name": {
+      "en": "Liezi",
+      "hi": "लीज़ी"
+    },
+    "tagline": {
+      "en": "Riding the Wind",
+      "hi": "हवा की सवारी"
+    },
+    "description": {
+      "en": "Liezi (Lieh Tzu) - The Taoist master who accepted fate and rode the wind of emptiness.",
+      "hi": "लीज़ी - ताओवादी मास्टर जिन्होंने भाग्य को स्वीकार किया और शून्यता की हवा की सवारी की।"
+    },
+    "tradition": "Taoism",
+    "era": "5th Century BCE",
+    "category": "taoism",
+    "image": null,
+    "icon": "☯️",
+    "route": "/taoism/liezi",
+    "tags": [
+      "taoism",
+      "5th Century BCE",
+      "Taoism"
+    ]
+  },
+  {
+    "id": "mahavira",
+    "name": {
+      "en": "Mahavira",
+      "hi": "महावीर (Mahavira)"
+    },
+    "tagline": {
+      "en": "Ahimsa - Non-violence is the highest duty",
+      "hi": "अहिंसा परो धर्म:"
+    },
+    "description": {
+      "en": "Vardhamana Mahavira - The 24th Tirthankara who taught Ahimsa (non-violence), truth, and self-control.",
+      "hi": "वर्धमान महावीर - 24वें तीर्थंकर जिन्होंने अहिंसा, सत्य और आत्म-संयम की शिक्षा दी।"
+    },
+    "tradition": "Jainism",
+    "era": "6th century BCE",
+    "category": "jainism",
+    "image": "/images/gurus/real/mahavira.jpg",
+    "icon": "✋",
+    "route": "/jainism/mahavira",
+    "tags": [
+      "jainism",
+      "6th century BCE",
+      "Jainism"
+    ]
+  },
+  {
+    "id": "maimonides",
+    "name": {
+      "en": "Maimonides",
+      "hi": "मैमोनाइड्स"
+    },
+    "tagline": {
+      "en": "Guide for the Perplexed",
+      "hi": "परेशान लोगों के लिए मार्गदर्शक"
+    },
+    "description": {
+      "en": "Maimonides (Rambam) - The great philosopher and physician who synthesized Torah with reason.",
+      "hi": "मैमोनाइड्स (रामबाम) - महान दार्शनिक और चिकित्सक जिन्होंने तोराह को तर्क के साथ संश्लेषित किया।"
+    },
+    "tradition": "Judaism",
+    "era": "1138–1204",
+    "category": "judaism",
+    "image": null,
+    "icon": "✡️",
+    "route": "/judaism/maimonides",
+    "tags": [
+      "judaism",
+      "1138–1204",
+      "Judaism"
+    ]
+  },
+  {
+    "id": "meister_eckhart",
+    "name": {
+      "en": "Meister Eckhart",
+      "hi": "मास्टर एकहार्ट"
+    },
+    "tagline": {
+      "en": "Mystic of the Godhead",
+      "hi": "ईश्वर के रहस्यवादी"
+    },
+    "description": {
+      "en": "Meister Eckhart - Dominican mystic who taught detachment and the birth of the Word in the soul.",
+      "hi": "मास्टर एकहार्ट - डोमिनिकन रहस्यवादी जिन्होंने वैराग्य और आत्मा में शब्द के जन्म की शिक्षा दी।"
+    },
+    "tradition": "Christianity (Mystic)",
+    "era": "1260–1328",
+    "category": "christianity",
+    "image": null,
+    "icon": "✝️",
+    "route": "/christianity/meister_eckhart",
+    "tags": [
+      "christianity",
+      "1260–1328",
+      "Christianity",
+      "Mystic"
+    ]
+  },
+  {
+    "id": "milarepa",
+    "name": {
+      "en": "Milarepa",
+      "hi": "मिलरेपा"
+    },
+    "tagline": {
+      "en": "Yogi of the Songs",
+      "hi": "गीतों के योगी"
+    },
+    "description": {
+      "en": "Jetsun Milarepa - Tibet's great yogi and poet who attained enlightenment in one lifetime through devotion.",
+      "hi": "जेत्सुन मिलरेपा - तिब्बत के महान योगी और कवि जिन्होंने भक्ति के माध्यम से एक ही जीवन में ज्ञान प्राप्त किया।"
+    },
+    "tradition": "Buddhism (Kagyu)",
+    "era": "1052–1135",
+    "category": "buddhism",
+    "image": null,
+    "icon": "☸️",
+    "route": "/buddhism/milarepa",
+    "tags": [
+      "buddhism",
+      "1052–1135",
+      "Buddhism",
+      "Kagyu"
+    ]
+  },
+  {
+    "id": "moinuddin_chishti",
+    "name": {
+      "en": "Moinuddin Chishti",
+      "hi": "मोईनुद्दीन चिश्ती"
+    },
+    "tagline": {
+      "en": "Benefactor of the Poor",
+      "hi": "गरीब नवाज़"
+    },
+    "description": {
+      "en": "Khwaja Garib Nawaz - Founder of the Chishti order in India, teaching service to humanity and universal love.",
+      "hi": "ख्वाजा गरीब नवाज़ - भारत में चिश्ती आदेश के संस्थापक, मानवता की सेवा और सार्वभौमिक प्रेम की शिक्षा देते हैं।"
+    },
+    "tradition": "Islam (Chishti Sufi)",
+    "era": "1143–1236",
+    "category": "islam",
+    "image": null,
+    "icon": "☪️",
+    "route": "/islam/moinuddin_chishti",
+    "tags": [
+      "islam",
+      "1143–1236",
+      "Islam",
+      "Chishti Sufi"
+    ]
+  },
+  {
+    "id": "morari_bapu",
+    "name": {
+      "en": "Morari Bapu",
+      "hi": "मोरारी बापू"
+    },
+    "tagline": {
+      "en": "Master narrator of Ram Katha",
+      "hi": "राम कथा के महान कथाकार"
+    },
+    "description": {
+      "en": "Morari Bapu - Beloved storyteller of Ramcharitmanas, spreading Ram's message of truth, love, and compassion.",
+      "hi": "मोरारी बापू - रामचरितमानस के प्रिय कथाकार, राम के सत्य, प्रेम और करुणा के संदेश को फैलाते हैं।"
+    },
+    "tradition": "Ram Katha tradition",
+    "era": "1946-present",
+    "category": "hinduism",
+    "image": null,
+    "icon": "🕉️",
+    "route": "/hinduism/morari_bapu",
+    "tags": [
+      "hinduism",
+      "1946-present",
+      "Ram Katha tradition"
+    ]
+  },
+  {
+    "id": "moses",
+    "name": {
+      "en": "Moses",
+      "hi": "मूसा (Moses)"
+    },
+    "tagline": {
+      "en": "Lawgiver and Prophet",
+      "hi": "कानून देने वाले और पैगंबर"
+    },
+    "description": {
+      "en": "Moses - The great prophet who received the Torah and led his people to freedom.",
+      "hi": "मूसा - महान पैगंबर जिन्होंने तोराह प्राप्त किया और अपने लोगों को स्वतंत्रता की ओर ले गए।"
+    },
+    "tradition": "Judaism",
+    "era": "c. 14th–13th century BCE",
+    "category": "judaism",
+    "image": null,
+    "icon": "✡️",
+    "route": "/judaism/moses",
+    "tags": [
+      "judaism",
+      "c. 14th–13th century BCE",
+      "Judaism"
+    ]
+  },
+  {
+    "id": "mother_teresa",
+    "name": {
+      "en": "Mother Teresa",
+      "hi": "मदर टेरेसा"
+    },
+    "tagline": {
+      "en": "Saint of the Gutters",
+      "hi": "गरीबों की संत"
+    },
+    "description": {
+      "en": "Mother Teresa - Dedicated her life to serving the poorest of the poor with unconditional love.",
+      "hi": "मदर टेरेसा - बिना शर्त प्रेम के साथ गरीबों की सेवा के लिए अपना जीवन समर्पित कर दिया।"
+    },
+    "tradition": "Christianity (Catholic)",
+    "era": "1910–1997",
+    "category": "christianity",
+    "image": null,
+    "icon": "✝️",
+    "route": "/christianity/mother_teresa",
+    "tags": [
+      "christianity",
+      "1910–1997",
+      "Christianity",
+      "Catholic"
+    ]
+  },
+  {
+    "id": "mukundananda",
+    "name": {
+      "en": "Swami Mukundananda",
+      "hi": "स्वामी मुकुंदानंद"
+    },
+    "tagline": {
+      "en": "Bhakti Yoga and mind management",
+      "hi": "भक्ति योग और मन प्रबंधन"
+    },
+    "description": {
+      "en": "Swami Mukundananda - Modern teacher of Bhakti Yoga, combining devotion with practical wisdom.",
+      "hi": "स्वामी मुकुंदानंद - भक्ति योग के आधुनिक शिक्षक, भक्ति को व्यावहारिक ज्ञान के साथ जोड़ते हैं।"
+    },
+    "tradition": "Bhakti Yoga, JKYog",
+    "era": "1960-present",
+    "category": "hinduism",
+    "image": null,
+    "icon": "🕉️",
+    "route": "/hinduism/mukundananda",
+    "tags": [
+      "hinduism",
+      "1960-present",
+      "Bhakti Yoga",
+      "JKYog"
+    ]
+  },
+  {
+    "id": "nagarjuna",
+    "name": {
+      "en": "Nagarjuna",
+      "hi": "नागार्जुन"
+    },
+    "tagline": {
+      "en": "Master of Emptiness",
+      "hi": "शून्यता के आचार्य"
+    },
+    "description": {
+      "en": "Acharya Nagarjuna - The great philosopher of the Middle Way (Madhyamaka) and Emptiness (Shunyata).",
+      "hi": "आचार्य नागार्जुन - मध्यम मार्ग (मध्यमक) और शून्यता (शून्यता) के महान दार्शनिक।"
+    },
+    "tradition": "Buddhism (Madhyamaka)",
+    "era": "c. 150–250 CE",
+    "category": "buddhism",
+    "image": null,
+    "icon": "☸️",
+    "route": "/buddhism/nagarjuna",
+    "tags": [
+      "buddhism",
+      "c. 150–250 CE",
+      "Buddhism",
+      "Madhyamaka"
+    ]
+  },
+  {
+    "id": "neem_karoli_baba",
+    "name": {
+      "en": "Neem Karoli Baba",
+      "hi": "नीम करोली बाबा"
+    },
+    "tagline": {
+      "en": "Saint of unconditional love",
+      "hi": "अलौकिक और निस्वार्थ प्रेम के संत"
+    },
+    "description": {
+      "en": "Neem Karoli Baba (Maharajji) - Beloved saint radiating unconditional love. \"Sub Ek - All is One\"",
+      "hi": "नीम करोली बाबा (महाराजजी) - प्रिय संत जो निस्वार्थ प्रेम की वर्षा करते थे। \"सब एक - सब एक है\""
+    },
+    "tradition": "Bhakti, Hanuman devotion",
+    "era": "1900-1973",
+    "category": "hinduism",
+    "image": "/images/gurus/real/neemkaroli.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/neem_karoli_baba",
+    "tags": [
+      "hinduism",
+      "1900-1973",
+      "Bhakti",
+      "Hanuman devotion"
+    ]
+  },
+  {
+    "id": "padmasambhava",
+    "name": {
+      "en": "Padmasambhava",
+      "hi": "पद्मसंभव"
+    },
+    "tagline": {
+      "en": "The Lotus-Born Guru Rinpoche",
+      "hi": "कमल से जन्मे गुरु रिनपोछे"
+    },
+    "description": {
+      "en": "Guru Rinpoche - The tantric master who brought Vajrayana Buddhism to Tibet. Transformer of obstacles.",
+      "hi": "गुरु रिनपोछे - तांत्रिक मास्टर जो तिब्बत में वज्रयान बौद्ध धर्म ले आए। बाधाओं को बदलने वाले।"
+    },
+    "tradition": "Buddhism (Vajrayana)",
+    "era": "8th Century CE",
+    "category": "buddhism",
+    "image": null,
+    "icon": "☸️",
+    "route": "/buddhism/padmasambhava",
+    "tags": [
+      "buddhism",
+      "8th Century CE",
+      "Buddhism",
+      "Vajrayana"
+    ]
+  },
+  {
+    "id": "parshvanatha",
+    "name": {
+      "en": "Parshvanatha",
+      "hi": "पार्श्वनाथ"
+    },
+    "tagline": {
+      "en": "Remover of Obstacles",
+      "hi": "बाधाओं को दूर करने वाले"
+    },
+    "description": {
+      "en": "Bhagwan Parshvanatha - The 23rd Tirthankara who taught the fourfold restraint and is the beloved of the people.",
+      "hi": "भगवान पार्श्वनाथ - 23वें तीर्थंकर जिन्होंने चार गुना संयम सिखाया और लोगों के प्रिय हैं।"
+    },
+    "tradition": "Jainism",
+    "era": "877–777 BCE",
+    "category": "jainism",
+    "image": null,
+    "icon": "✋",
+    "route": "/jainism/parshvanatha",
+    "tags": [
+      "jainism",
+      "877–777 BCE",
+      "Jainism"
+    ]
+  },
+  {
+    "id": "prabhupada",
+    "name": {
+      "en": "A.C. Bhaktivedanta Swami",
+      "hi": "ए.सी. भक्तिवेदांत स्वामी"
+    },
+    "tagline": {
+      "en": "Founder of ISKCON",
+      "hi": "इस्कॉन (ISKCON) के संस्थापक"
+    },
+    "description": {
+      "en": "Bhaktivedanta Swami Prabhupada - Spread Krishna consciousness worldwide. \"Hare Krishna Hare Krishna\"",
+      "hi": "भक्तिवेदांत स्वामी प्रभुपाद - जिन्होंने संपूर्ण विश्व में कृष्ण भावनामृत का प्रचार किया। \"हरे कृष्ण हरे कृष्ण\""
+    },
+    "tradition": "Gaudiya Vaishnavism, ISKCON",
+    "era": "1896-1977",
+    "category": "hinduism",
+    "image": "/images/gurus/real/prabhupada.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/prabhupada",
+    "tags": [
+      "hinduism",
+      "1896-1977",
+      "Gaudiya Vaishnavism",
+      "ISKCON"
+    ]
+  },
+  {
+    "id": "rabia",
+    "name": {
+      "en": "Rabia al-Adawiyya",
+      "hi": "राभिया अल-अदाविया"
+    },
+    "tagline": {
+      "en": "Mother of Sufism",
+      "hi": "सूफीवाद की माँ"
+    },
+    "description": {
+      "en": "Rabia of Basra - The ascetic saint who taught the doctrine of Divine Love (Ishq-e-Haqiqi) pure of fear or hope.",
+      "hi": "बसरा की राभिया - तपस्वी संत जिन्होंने भय या आशा से शुद्ध ईश्वरीय प्रेम (इश्क-ए-हकीकी) का सिद्धांत सिखाया।"
+    },
+    "tradition": "Islam (Sufism)",
+    "era": "714–801",
+    "category": "islam",
+    "image": null,
+    "icon": "☪️",
+    "route": "/islam/rabia",
+    "tags": [
+      "islam",
+      "714–801",
+      "Islam",
+      "Sufism"
+    ]
+  },
+  {
+    "id": "rakeshbhai",
+    "name": {
+      "en": "Rakeshbhai Jhaveri",
+      "hi": "राकेशभाई झवेरी"
+    },
+    "tagline": {
+      "en": "Modern spirituality for daily life",
+      "hi": "दैनिक जीवन के लिए आधुनिक आध्यात्मिकता"
+    },
+    "description": {
+      "en": "Gurudev Shri Rakeshbhai Jhaveri - Contemporary teacher making spirituality practical for modern living.",
+      "hi": "गुरुदेव श्री राकेशभाई झवेरी - समकालीन शिक्षक जो आधुनिक जीवन के लिए आध्यात्मिकता को व्यावहारिक बनाते हैं।"
+    },
+    "tradition": "Modern spirituality, Practical wisdom",
+    "era": "Contemporary",
+    "category": "hinduism",
+    "image": null,
+    "icon": "🕉️",
+    "route": "/hinduism/rakeshbhai",
+    "tags": [
+      "hinduism",
+      "Contemporary",
+      "Modern spirituality",
+      "Practical wisdom"
+    ]
+  },
+  {
+    "id": "ramakrishna",
+    "name": {
+      "en": "Sri Ramakrishna",
+      "hi": "श्री रामकृष्ण"
+    },
+    "tagline": {
+      "en": "Ecstatic devotee of Divine Mother",
+      "hi": "दिव्य माँ के परम भक्त"
+    },
+    "description": {
+      "en": "Sri Ramakrishna Paramahamsa - Mystic who realized unity of all religions through direct experience of God.",
+      "hi": "श्री रामकृष्ण परमहंस - परमहंस संत जिन्होंने प्रत्यक्ष ईश्वरीय अनुभव से सभी धर्मों की एकरूपता का साक्षात्कार किया।"
+    },
+    "tradition": "Bhakti, Tantra, Vedanta",
+    "era": "1836-1886",
+    "category": "hinduism",
+    "image": "/images/gurus/real/ramakrishna.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/ramakrishna",
+    "tags": [
+      "hinduism",
+      "1836-1886",
+      "Bhakti",
+      "Tantra",
+      "Vedanta"
+    ]
+  },
+  {
+    "id": "ramana",
+    "name": {
+      "en": "Ramana Maharshi",
+      "hi": "रमण महर्षि"
+    },
+    "tagline": {
+      "en": "Master of Self-inquiry and silence",
+      "hi": "आत्म-अन्वेषण और मौन के गुरु"
+    },
+    "description": {
+      "en": "Ramana Maharshi - Sage of Arunachala teaching direct path to Self through the question \"Who am I?\"",
+      "hi": "रमण महर्षि - अरुणाचल के ऋषि जो \"मैं कौन हूँ?\" प्रश्न के माध्यम से आत्म तक सीधे मार्ग की शिक्षा देते हैं।"
+    },
+    "tradition": "Advaita Vedanta (Self-inquiry)",
+    "era": "1879-1950",
+    "category": "hinduism",
+    "image": "/images/gurus/real/ramana.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/ramana",
+    "tags": [
+      "hinduism",
+      "1879-1950",
+      "Advaita Vedanta",
+      "Self-inquiry"
+    ]
+  },
+  {
+    "id": "ravi_shankar",
+    "name": {
+      "en": "Sri Sri Ravi Shankar",
+      "hi": "श्री श्री रवि शंकर"
+    },
+    "tagline": {
+      "en": "Founder of Art of Living",
+      "hi": "आर्ट ऑफ लिविंग के संस्थापक"
+    },
+    "description": {
+      "en": "Sri Sri Ravi Shankar - Global humanitarian teaching stress-free living through Sudarshan Kriya and meditation.",
+      "hi": "श्री श्री रवि शंकर - सुदर्शन क्रिया और ध्यान के माध्यम से तनाव मुक्त जीवन सिखाने वाले वैश्विक मानवतावादी।"
+    },
+    "tradition": "Art of Living, Vedic wisdom",
+    "era": "1956-present",
+    "category": "hinduism",
+    "image": "/images/gurus/real/srisri.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/ravi_shankar",
+    "tags": [
+      "hinduism",
+      "1956-present",
+      "Art of Living",
+      "Vedic wisdom"
+    ]
+  },
+  {
+    "id": "rishabhanatha",
+    "name": {
+      "en": "Rishabhanatha",
+      "hi": "ऋषभनाथ"
+    },
+    "tagline": {
+      "en": "The First Tirthankara",
+      "hi": "प्रथम तीर्थंकर"
+    },
+    "description": {
+      "en": "Bhagwan Adinath - The first Tirthankara who established the path of civilization and spiritual liberation.",
+      "hi": "भगवान आदिनाथ - प्रथम तीर्थंकर जिन्होंने सभ्यता और आध्यात्मिक मुक्ति का मार्ग स्थापित किया।"
+    },
+    "tradition": "Jainism",
+    "era": "Prehistoric/Ancient",
+    "category": "jainism",
+    "image": null,
+    "icon": "✋",
+    "route": "/jainism/rishabhanatha",
+    "tags": [
+      "jainism",
+      "Prehistoric/Ancient",
+      "Jainism"
+    ]
+  },
+  {
+    "id": "rumi",
+    "name": {
+      "en": "Rumi",
+      "hi": "रूमी (Rumi)"
+    },
+    "tagline": {
+      "en": "Poet of Divine Love",
+      "hi": "दिव्य प्रेम के कवि"
+    },
+    "description": {
+      "en": "Jalal ad-Din Rumi - Sufi mystic and poet whose words ignite the fire of divine love and longing.",
+      "hi": "जलाल विज्ञापन-दीन रूमी - सूफी रहस्यवादी और कवि जिनके शब्द दिव्य प्रेम और लालसा की आग जलाते हैं।"
+    },
+    "tradition": "Islam (Sufism)",
+    "era": "1207–1273",
+    "category": "islam",
+    "image": null,
+    "icon": "☪️",
+    "route": "/islam/rumi",
+    "tags": [
+      "islam",
+      "1207–1273",
+      "Islam",
+      "Sufism"
+    ]
+  },
+  {
+    "id": "sadhguru",
+    "name": {
+      "en": "Sadhguru",
+      "hi": "सद्गुरु"
+    },
+    "tagline": {
+      "en": "Modern yogi and Inner Engineering",
+      "hi": "आधुनिक योगी और इनर इंजीनियरिंग"
+    },
+    "description": {
+      "en": "Sadhguru Jaggi Vasudev - Contemporary mystic making yoga accessible. \"This is not philosophy, this is technology\"",
+      "hi": "सद्गुरु जग्गी वासुदेव - समकालीन रहस्यवादी जो योग को सुलभ बना रहे हैं। \"यह दर्शन नहीं है, यह तकनीक है\""
+    },
+    "tradition": "Yoga, Tantric wisdom",
+    "era": "1957-present",
+    "category": "hinduism",
+    "image": "/images/gurus/real/sadhguru.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/sadhguru",
+    "tags": [
+      "hinduism",
+      "1957-present",
+      "Yoga",
+      "Tantric wisdom"
+    ]
+  },
+  {
+    "id": "shankaracharya",
+    "name": {
+      "en": "Adi Shankaracharya",
+      "hi": "आदि शंकराचार्य"
+    },
+    "tagline": {
+      "en": "Great philosopher of Advaita Vedanta",
+      "hi": "अद्वैत वेदांत के महान आचार्य"
+    },
+    "description": {
+      "en": "Adi Shankaracharya - Ancient philosopher who established Advaita (non-dualism). \"Brahma Satyam Jagat Mithya\"",
+      "hi": "आदि शंकराचार्य - महान आचार्य जिन्होंने अद्वैत वेदांत की प्रतिस्थापना की। \"ब्रह्म सत्यं जगत् मिथ्या\""
+    },
+    "tradition": "Advaita Vedanta",
+    "era": "788-820 CE",
+    "category": "hinduism",
+    "image": "/images/gurus/real/shankaracharya.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/shankaracharya",
+    "tags": [
+      "hinduism",
+      "788-820 CE",
+      "Advaita Vedanta"
+    ]
+  },
+  {
+    "id": "shiva",
+    "name": {
+      "en": "Mahadev (Shiva)",
+      "hi": "महादेव (शिव)"
+    },
+    "tagline": {
+      "en": "The Supreme Yogi - Destroyer of Maya",
+      "hi": "परम योगी - माया के विनाशक"
+    },
+    "description": {
+      "en": "Lord Shiva, Mahadev - The timeless ascetic of the Himalayas. Discover profound detachment (Vairagya), infinite stillness, and teachings from the Shiva Puran.",
+      "hi": "भगवान शिव, महादेव - हिमालय के कालातीत तपस्वी। गहरा वैराग्य, अनंत शांति और शिव पुराण की शिक्षाओं की खोज करें।"
+    },
+    "tradition": "Shaivism, Supreme Yogi",
+    "era": "Timeless",
+    "category": "hinduism",
+    "image": "/images/gurus/real/shiva.png",
+    "icon": "🕉️",
+    "route": "/hinduism/shiva",
+    "tags": [
+      "hinduism",
+      "Timeless",
+      "Shaivism",
+      "Supreme Yogi"
+    ]
+  },
+  {
+    "id": "st_francis",
+    "name": {
+      "en": "St. Francis of Assisi",
+      "hi": "सेंट फ्रांसिस (St. Francis)"
+    },
+    "tagline": {
+      "en": "Instrument of Peace",
+      "hi": "शांति के साधन"
+    },
+    "description": {
+      "en": "St. Francis of Assisi - The humble saint who embraced Lady Poverty and saw all creatures as brothers and sisters.",
+      "hi": "सेंट फ्रांसिस - विनम्र संत जिन्होंने गरीबी को अपनाया और सभी प्राणियों को भाई-बहन के रूप में देखा।"
+    },
+    "tradition": "Christianity (Catholic)",
+    "era": "1181–1226",
+    "category": "christianity",
+    "image": null,
+    "icon": "✝️",
+    "route": "/christianity/st_francis",
+    "tags": [
+      "christianity",
+      "1181–1226",
+      "Christianity",
+      "Catholic"
+    ]
+  },
+  {
+    "id": "teresa_avila",
+    "name": {
+      "en": "Teresa of Ávila",
+      "hi": "टेरेसा ऑफ एविला"
+    },
+    "tagline": {
+      "en": "The Interior Castle",
+      "hi": "आंतरिक महल"
+    },
+    "description": {
+      "en": "St. Teresa of Ávila - Mystic reformer who taught the path of mental prayer and union with God.",
+      "hi": "सेंट टेरेसा - रहस्यवादी सुधारक जिन्होंने मानसिक प्रार्थना और ईश्वर के साथ मिलन का मार्ग सिखाया।"
+    },
+    "tradition": "Christianity (Mystic)",
+    "era": "1515–1582",
+    "category": "christianity",
+    "image": null,
+    "icon": "✝️",
+    "route": "/christianity/teresa_avila",
+    "tags": [
+      "christianity",
+      "1515–1582",
+      "Christianity",
+      "Mystic"
+    ]
+  },
+  {
+    "id": "thich_nhat_hanh",
+    "name": {
+      "en": "Thich Nhat Hanh",
+      "hi": "थिच नहत हान"
+    },
+    "tagline": {
+      "en": "Peace is Every Step",
+      "hi": "हर कदम पर शांति"
+    },
+    "description": {
+      "en": "Thich Nhat Hanh - Zen Master teaching mindfulness, interbeing, and engaged Buddhism.",
+      "hi": "थिच नहत हान - ज़ेन मास्टर जो माइंडफुलनेस, इंटरबिंग और एंगेज्ड बौद्ध धर्म की शिक्षा देते हैं।"
+    },
+    "tradition": "Buddhism",
+    "era": "1926–2022",
+    "category": "buddhism",
+    "image": null,
+    "icon": "☸️",
+    "route": "/buddhism/thich_nhat_hanh",
+    "tags": [
+      "buddhism",
+      "1926–2022",
+      "Buddhism"
+    ]
+  },
+  {
+    "id": "thomas_kempis",
+    "name": {
+      "en": "Thomas à Kempis",
+      "hi": "थॉमस आ कम्पिस"
+    },
+    "tagline": {
+      "en": "The Imitation of Christ",
+      "hi": "द इमिटेशन ऑफ क्राइस्ट"
+    },
+    "description": {
+      "en": "Thomas à Kempis - Author of The Imitation of Christ, emphasizing humility and inner devotion.",
+      "hi": "थॉमस आ कम्पिस - द इमिटेशन ऑफ क्राइस्ट के लेखक, विनम्रता और आंतरिक भक्ति पर जोर देते हैं।"
+    },
+    "tradition": "Christianity (Devotio Moderna)",
+    "era": "1380–1471",
+    "category": "christianity",
+    "image": null,
+    "icon": "✝️",
+    "route": "/christianity/thomas_kempis",
+    "tags": [
+      "christianity",
+      "1380–1471",
+      "Christianity",
+      "Devotio Moderna"
+    ]
+  },
+  {
+    "id": "vivekananda",
+    "name": {
+      "en": "Swami Vivekananda",
+      "hi": "स्वामी विवेकानंद"
+    },
+    "tagline": {
+      "en": "Bold voice of Vedanta and strength",
+      "hi": "वेदांत और शक्ति की बुलंद आवाज"
+    },
+    "description": {
+      "en": "Swami Vivekananda - Champion of practical Vedanta, Karma Yoga, and spiritual strength. \"Arise, awake, and stop not till the goal is reached!\"",
+      "hi": "स्वामी विवेकानंद - व्यावहारिक वेदांत, कर्म योग और आध्यात्मिक शक्ति के पुरोधा। \"उठो, जागो और तब तक मत रुको जब तक लक्ष्य प्राप्त न हो जाए!\""
+    },
+    "tradition": "Vedanta (Ramakrishna lineage)",
+    "era": "1863-1902",
+    "category": "hinduism",
+    "image": "/images/gurus/real/vivekananda.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/vivekananda",
+    "tags": [
+      "hinduism",
+      "1863-1902",
+      "Vedanta",
+      "Ramakrishna lineage"
+    ]
+  },
+  {
+    "id": "yogananda",
+    "name": {
+      "en": "Paramahansa Yogananda",
+      "hi": "परमहंस योगानंद"
+    },
+    "tagline": {
+      "en": "Bridge between East and West",
+      "hi": "पूर्व और पश्चिम के बीच सेतु"
+    },
+    "description": {
+      "en": "Paramahansa Yogananda - Brought Kriya Yoga to the West. Author of \"Autobiography of a Yogi\"",
+      "hi": "परमहंस योगानंद - पश्चिम में क्रिया योग लाए। \"एक योगी की आत्मकथा\" के लेखक।"
+    },
+    "tradition": "Kriya Yoga",
+    "era": "1893-1952",
+    "category": "hinduism",
+    "image": "/images/gurus/real/yogananda.jpg",
+    "icon": "🕉️",
+    "route": "/hinduism/yogananda",
+    "tags": [
+      "hinduism",
+      "1893-1952",
+      "Kriya Yoga"
+    ]
+  },
+  {
+    "id": "zhuangzi",
+    "name": {
+      "en": "Zhuangzi",
+      "hi": "झुआंगज़ी"
+    },
+    "tagline": {
+      "en": "The Wandering Sage",
+      "hi": "भटकते ऋषि"
+    },
+    "description": {
+      "en": "Zhuangzi (Chuang Tzu) - The playful sage who taught relativity, freedom, and the joy of the simple life.",
+      "hi": "झुआंगज़ी - चंचल ऋषि जिन्होंने सापेक्षता, स्वतंत्रता और सरल जीवन की खुशी सिखाई।"
+    },
+    "tradition": "Taoism",
+    "era": "369–286 BCE",
+    "category": "taoism",
+    "image": null,
+    "icon": "☯️",
+    "route": "/taoism/zhuangzi",
+    "tags": [
+      "taoism",
+      "369–286 BCE",
+      "Taoism"
+    ]
+  }
+]

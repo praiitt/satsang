@@ -11,8 +11,11 @@ steps:
       '--build-arg', 'NEXT_PUBLIC_FIREBASE_APP_ID=1:469389287554:web:4482647b3c865a9d2b949b',
       '--build-arg', 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-KNZ2VKQ9BH',
       '--build-arg', 'NEXT_PUBLIC_ASSET_PREFIX=https://satsang-frontend-469389287554.asia-south1.run.app',
-      '--build-arg', 'NEXT_PUBLIC_AUTH_SERVER_URL=https://rraasi.com/satsang-auth-server',
-      '--build-arg', 'AUTH_SERVER_URL=https://rraasi.com/satsang-auth-server',
+      '--build-arg', 'NEXT_PUBLIC_AUTH_SERVER_URL=/satsang-auth-server',
+      '--build-arg', 'AUTH_SERVER_URL=https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-auth-server',
+      '--build-arg', 'MARKETING_SERVER_URL=https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-marketing-server',
+      '--build-arg', 'NEXT_PUBLIC_WA_SERVICE_URL=https://whatsapp-service-6ougd45dya-el.a.run.app',
+      '--build-arg', 'BACKEND_SERVICE_URL=https://rraasi.com',
       '.'
     ]
 images:

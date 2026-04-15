@@ -1,10 +1,13 @@
 import { Client, LocalAuth, MessageMedia } from 'whatsapp-web.js';
 import qrcode from 'qrcode';
 import axios from 'axios';
+import { logWhatsAppActivity } from './whatsapp-logger';
+import { downloadSession, uploadSession } from './whatsapp-session-sync';
 
 interface SendLog {
   phone: string;
   message: string;
+  mediaUrl?: string;
   status: 'sent' | 'failed';
   error?: string;
   timestamp: string;
@@ -21,6 +24,7 @@ class WhatsAppClientManager {
     this.client = new Client({
       authStrategy: new LocalAuth({ dataPath: '.wwebjs_auth' }),
       puppeteer: {
+        executablePath: process.env.CHROMIUM_PATH || undefined,
         headless: 'new' as any, // Use stable headless mode
         args: [
           '--no-sandbox',
@@ -45,16 +49,20 @@ class WhatsAppClientManager {
       }
     });
 
-    this.client.on('ready', () => {
+    this.client.on('ready', async () => {
       console.log('[WhatsApp] ✅ Client is ready!');
       this._isConnected = true;
       this._qrPending = false;
       this._qrBase64 = null;
+      // Backup session on ready
+      await uploadSession();
     });
 
-    this.client.on('authenticated', () => {
+    this.client.on('authenticated', async () => {
       console.log('[WhatsApp] 🔐 Authenticated');
       this._qrPending = false;
+      // Backup session on auth
+      await uploadSession();
     });
 
     this.client.on('auth_failure', (msg) => {
@@ -68,6 +76,52 @@ class WhatsAppClientManager {
       this._isConnected = false;
     });
 
+    // Initialize after trying to restore session
+    this.init();
+
+    // WhatsApp Bot Listener
+    this.client.on('message', async (msg) => {
+      // Log incoming message to Firestore
+      await logWhatsAppActivity({
+        from: msg.from,
+        to: msg.to || 'me',
+        body: msg.body,
+        status: 'received',
+        timestamp: new Date()
+      });
+
+      if (process.env.WHATSAPP_BOT_ENABLED !== 'true') return;
+      
+      // Don't reply to status updates or groups (optional, usually msg.from ends with @c.us for individuals)
+      if (msg.from.includes('@g.us')) return;
+
+      try {
+        console.log(`[WhatsAppBot] Message from ${msg.from}: ${msg.body}`);
+        
+        // Forward to marketing server
+        const botUrl = `${process.env.MARKETING_SERVER_URL || 'http://localhost:4001'}/whatsapp-bot/reply`;
+        const response = await axios.post<{ reply?: string }>(botUrl, {
+          sender: msg.from,
+          text: msg.body
+        }, {
+          headers: {
+            'X-Internal-Token': process.env.INTERNAL_SERVICE_TOKEN || ''
+          }
+        });
+
+        if (response.data && response.data.reply) {
+          console.log(`[WhatsAppBot] Sending reply to ${msg.from}`);
+          await msg.reply(response.data.reply);
+        }
+      } catch (err: any) {
+        console.error('[WhatsAppBot] Error processing message:', err.message);
+      }
+    });
+  }
+
+  private async init() {
+    console.log('[WhatsApp] Restoring session if exists...');
+    await downloadSession();
     console.log('[WhatsApp] Initializing client...');
     this.client.initialize();
   }
@@ -91,16 +145,16 @@ class WhatsAppClientManager {
     const chatId = this.formatPhone(phone);
     
     // Retry logic for "detached Frame" errors
-    let retries = 3;
+    let retries = 5; // Increased to 5
     while (retries > 0) {
       try {
         if (mediaUrl) {
           const response = await axios.get(mediaUrl, { 
             responseType: 'arraybuffer',
-            timeout: 10000 // 10s timeout for media fetching
+            timeout: 15000 // 15s timeout
           });
           const mimetype = response.headers['content-type'] || 'image/jpeg';
-          const base64Data = Buffer.from(response.data, 'binary').toString('base64');
+          const base64Data = Buffer.from(response.data as ArrayBuffer).toString('base64');
           const media = new MessageMedia(mimetype, base64Data, 'media');
           
           await this.client.sendMessage(chatId, media, { caption: message });
@@ -110,22 +164,36 @@ class WhatsAppClientManager {
         
         this._sendLogs.unshift({
           phone,
-          message: mediaUrl ? `[Media] ${message}` : message,
+          message,
+          mediaUrl,
           status: 'sent',
           timestamp: new Date().toISOString(),
         });
+
+        // Persist to Firestore
+        await logWhatsAppActivity({
+          from: 'me',
+          to: phone,
+          body: message,
+          mediaUrl,
+          status: 'sent',
+          timestamp: new Date()
+        });
+
         return; // Success
       } catch (err: any) {
         if (err.message.includes('detached Frame') && retries > 1) {
-          console.warn(`[WhatsApp] Detached frame error, retrying... (${retries - 1} left)`);
+          console.warn(`[WhatsApp] 🔄 Detached frame error, waiting and retrying... (${retries - 1} left)`);
           retries--;
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1s before retry
+          // Wait longer (2-3s) if it's a frame issue
+          await new Promise(resolve => setTimeout(resolve, 3000)); 
           continue;
         }
         
         this._sendLogs.unshift({
           phone,
-          message: mediaUrl ? `[Media Fail] ${message}` : message,
+          message,
+          mediaUrl,
           status: 'failed',
           error: err.message,
           timestamp: new Date().toISOString(),

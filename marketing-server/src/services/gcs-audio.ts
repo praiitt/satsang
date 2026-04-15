@@ -171,6 +171,32 @@ export async function getMP3SignedUrl(
 }
 
 /**
+ * Get a signed URL for uploading a file (temporary access)
+ */
+export async function getUploadSignedUrl(
+  gcsPath: string,
+  contentType: string,
+  expiresInMinutes: number = 15
+): Promise<string> {
+  try {
+    const bucket = getGcsBucket();
+    const file = bucket.file(gcsPath);
+
+    const [url] = await file.getSignedUrl({
+      version: 'v4',
+      action: 'write',
+      expires: Date.now() + expiresInMinutes * 60 * 1000,
+      contentType,
+    });
+
+    return url;
+  } catch (error: any) {
+    console.error('[gcs-audio] Error getting upload signed URL:', error);
+    throw new Error(`Failed to get upload signed URL: ${error.message}`);
+  }
+}
+
+/**
  * Upload an audio file from a URL to Google Cloud Storage
  * Downloads from the URL and uploads to GCS bucket
  */

@@ -79,26 +79,33 @@ def main():
     if os.path.exists(ENV_FILE):
         with open(ENV_FILE, 'r') as f:
             for line in f:
-                if '=' in line and not line.strip().startswith('#'):
-                    key, val = line.strip().split('=', 1)
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#'):
+                    continue
+                if '=' in stripped:
+                    key, val = stripped.split('=', 1)
                     key = key.strip()
                     val = val.strip().strip("'").strip('"')
                     # List of keys needed by marketing server
-                    if key in ['HEYGEN_API_KEY', 'SUNO_API_KEY', 'SARVAM_API_KEY', 'OPENAI_API_KEY', 
-                              'GEMINI_API_KEY', 'SENDGRID_API_KEY', 'TWILIO_ACCOUNT_SID', 
-                              'TWILIO_AUTH_TOKEN', 'TWILIO_WHATSAPP_NUMBER', 'LIVEKIT_EGRESS_GCP_BUCKET',
-                              'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'NEXT_PUBLIC_APP_URL']:
+                    target_keys = ['OPENAI_API_KEY', 'INTERNAL_SERVICE_TOKEN', 'SARVAM_API_KEY', 
+                                  'HEYGEN_API_KEY', 'SUNO_API_KEY', 'GEMINI_API_KEY', 
+                                  'SENDGRID_API_KEY', 'TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN', 
+                                  'TWILIO_WHATSAPP_NUMBER', 'LIVEKIT_EGRESS_GCP_BUCKET',
+                                  'YOUTUBE_CLIENT_ID', 'YOUTUBE_CLIENT_SECRET', 'NEXT_PUBLIC_APP_URL']
+                    if key in target_keys:
                         env_vars[key] = val
+                        print(f"✅ Found {key} in .env")
 
     with open(env_yaml_file, 'w') as yf:
         for k, v in env_vars.items():
+            # Escape single quotes and wrap in single quotes
+            escaped_v = str(v).replace("'", "''")
             if k == 'FIREBASE_PRIVATE_KEY':
-                safe_v = v.replace('\n', '\\n')
-                yf.write(f'{k}: "{safe_v}"\n')
-            else:
-                yf.write(f'{k}: "{v}"\n')
+                escaped_v = escaped_v.replace('\n', '\\n')
+            yf.write(f"{k}: '{escaped_v}'\n")
+            print(f"👉 Writing {k} to yaml...")
     
-    print(f"Generated {env_yaml_file}...")
+    print(f"✅ Generated {env_yaml_file} with {len(env_vars)} variables.")
 
     # 5. Deploy Cloud Function
     cmd = [

@@ -31,6 +31,7 @@ export default function DistributionPage() {
     const [soundcloudConnected, setSoundcloudConnected] = useState(false);
     const [youtubeInfo, setYoutubeInfo] = useState<{ email?: string; name?: string } | null>(null);
     const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [youtubeQuotaReached, setYoutubeQuotaReached] = useState(false);
 
     // Check for success params from OAuth callback
     useEffect(() => {
@@ -76,7 +77,9 @@ export default function DistributionPage() {
                 const res = await fetch(`/api/music/user-tracks?userId=${user.uid}&limit=50`);
                 const data = await res.json();
                 if (data.tracks) {
-                    setTracks(data.tracks);
+                    // Filter out tracks that have already been uploaded to YouTube
+                    const pendingTracks = data.tracks.filter((t: any) => !t.youtubeUrl && t.youtubeUploadStatus !== 'completed');
+                    setTracks(pendingTracks);
                 }
             } catch (error) {
                 toast.error('Failed to load tracks');
@@ -167,23 +170,28 @@ export default function DistributionPage() {
             });
 
             if (!data || !data.success) {
-                throw new Error('Upload failed with unknown error');
+                if (data?.error?.includes('QUOTA_EXCEEDED')) {
+                    setYoutubeQuotaReached(true);
+                    toast.error('YouTube daily upload limit reached.', { id: toastId });
+                } else {
+                    toast.error(data?.error || 'Upload failed with an unknown error', { id: toastId });
+                }
+                return;
             }
 
             toast.success(`Successfully uploaded to ${platform}!`, { id: toastId });
 
-            // Update local state to reflect change
-            setTracks(prev => prev.map(t => {
-                if (t.id === track.id) {
-                    return {
-                        ...t,
-                        youtubeId: data.videoId,
-                        youtubeUrl: data.url,
-                        youtubeUploadStatus: 'completed'
-                    };
-                }
-                return t;
-            }));
+            // Remove from list if uploaded to YouTube, or update state if SoundCloud
+            if (platform === 'youtube') {
+                setTracks(prev => prev.filter(t => t.id !== track.id));
+            } else {
+                setTracks(prev => prev.map(t => {
+                    if (t.id === track.id) {
+                        return { ...t /* add SC details if any */ };
+                    }
+                    return t;
+                }));
+            }
 
         } catch (error: any) {
             console.error(error);
@@ -207,6 +215,16 @@ export default function DistributionPage() {
 
     return (
         <div className="min-h-screen bg-black text-white p-8 space-y-8 pb-32">
+            {youtubeQuotaReached && (
+                <div className="bg-red-900/40 border border-red-500/50 text-red-100 px-6 py-4 rounded-xl flex items-start gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
+                    <AlertCircle className="w-6 h-6 text-red-400 shrink-0 mt-0.5" />
+                    <div>
+                        <h3 className="text-lg font-medium text-red-200">YouTube Daily Upload Limit Reached</h3>
+                        <p className="text-sm text-red-300 mt-1">Brand new YouTube channels are typically limited to ~6 videos per day. Your quota will automatically reset at <strong>Midnight Pacific Time (PT)</strong>.</p>
+                    </div>
+                </div>
+            )}
+            
             <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-white/10 pb-8">
                 <div>
                     <h1 className="text-4xl font-serif text-white mb-2">Music Distribution</h1>
@@ -345,7 +363,7 @@ export default function DistributionPage() {
                                         )}
                                         <Button
                                             className="bg-red-600 hover:bg-red-700 text-white w-full h-10 min-w-[180px]"
-                                            disabled={!youtubeConnected || uploadingId === track.id}
+                                            disabled={!youtubeConnected || uploadingId === track.id || youtubeQuotaReached}
                                             onClick={() => handleUpload(track, 'youtube')}
                                         >
                                             {uploadingId === track.id ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Youtube className="w-4 h-4 mr-2" />}

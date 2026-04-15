@@ -1,0 +1,6 @@
+2026/04/06-09:18:12.421 2e8f66 Reusing MANIFEST /Users/prakash/Documents/satsang/satsangapp/whatsapp-service/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/04/06-09:18:12.423 2e8f66 Recovering log #3
+2026/04/06-09:18:12.424 2e8f66 Reusing old log /Users/prakash/Documents/satsang/satsangapp/whatsapp-service/.wwebjs_auth/session/Default/Local Storage/leveldb/000003.log 
+2026/04/06-09:19:12.425 2e8f69 Level-0 table #5: started
+2026/04/06-09:19:12.430 2e8f69 Level-0 table #5: 20816 bytes OK
+2026/04/06-09:19:12.433 2e8f69 Delete type=0 #3

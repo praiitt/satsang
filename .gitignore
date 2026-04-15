@@ -253,3 +253,6 @@ temp/
 # Downloaded Suno MP3 files (for migration)
 dowloaded_mp3_suno/
 issue.local
+
+# Mobile App
+rraasi_mobile_react_native/

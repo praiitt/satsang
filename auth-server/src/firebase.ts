@@ -12,19 +12,33 @@ export function initFirebaseAdmin() {
   if (initialized) return;
 
   // Try loading from environment variables first (preferred for production/cloud)
+  console.log('[auth-server] Checking environment variables for Firebase Admin initialization...');
   if (process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: privateKey,
-      }),
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'rraasi-8a619.firebasestorage.app',
-    });
-    initialized = true;
-    console.log('[auth-server] ✅ Initialized Firebase Admin from environment variables');
-    return;
+    try {
+      console.log('[auth-server] Found FIREBASE_PRIVATE_KEY and FIREBASE_CLIENT_EMAIL');
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n');
+      console.log(`[auth-server] Private key length: ${privateKey.length}`);
+      console.log(`[auth-server] Private key starts with: ${privateKey.substring(0, 30)}...`);
+      
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey,
+        }),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'rraasi-8a619.firebasestorage.app',
+      });
+      initialized = true;
+      console.log('[auth-server] ✅ Initialized Firebase Admin from environment variables');
+      return;
+    } catch (e: any) {
+      console.error('[auth-server] ❌ Failed to initialize from environment variables:', e);
+      // Don't throw yet, try file fallback
+    }
+  } else {
+    console.log('[auth-server] Environment variables for Firebase Admin are incomplete or missing.');
+    if (!process.env.FIREBASE_PRIVATE_KEY) console.log('[auth-server] Missing FIREBASE_PRIVATE_KEY');
+    if (!process.env.FIREBASE_CLIENT_EMAIL) console.log('[auth-server] Missing FIREBASE_CLIENT_EMAIL');
   }
 
   // Initialize Firebase Admin with service account

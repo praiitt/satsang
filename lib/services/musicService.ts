@@ -1,74 +1,91 @@
 import { getAdminDb } from '@/lib/firebase-admin';
+import OpenAI from 'openai';
 
-export async function getRandomMeditationTrack() {
+const getOpenAI = () => new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
+
+export async function getRandomMeditationTrack(topic?: string) {
     const db = getAdminDb();
+    const openai = getOpenAI();
 
-    // Fetch from both tags and merge
-    const [meditationSnap, healingSnap] = await Promise.all([
-        db.collection('music_tracks')
-            .where('tags', 'array-contains', 'meditation')
+    try {
+        // Fetch up to 100 recent tracks that are published and have some healing benefits
+        // Since Firestore requires a compound index for != null, we might just fetch recent COMPLETED tracks and filter in memory.
+        const snapshot = await db.collection('music_tracks')
             .where('status', '==', 'COMPLETED')
-            .limit(50)
-            .get(),
-        db.collection('music_tracks')
-            .where('tags', 'array-contains', 'healing')
-            .where('status', '==', 'COMPLETED')
-            .limit(50)
-            .get(),
-    ]);
-
-    const tracks: any[] = [];
-
-    meditationSnap.forEach(doc => {
-        const data = doc.data();
-        if (data.audioUrl || (data.tracks && data.tracks.length > 0)) {
-            tracks.push({ id: doc.id, ...data });
-        }
-    });
-
-    healingSnap.forEach(doc => {
-        const data = doc.data();
-        if (data.audioUrl || (data.tracks && data.tracks.length > 0)) {
-            tracks.push({ id: doc.id, ...data });
-        }
-    });
-
-    if (tracks.length === 0) {
-        // Fallback: fetch any completed track
-        const fallbackSnap = await db.collection('music_tracks')
-            .where('status', '==', 'COMPLETED')
-            .limit(20)
+            .orderBy('createdAt', 'desc')
+            .limit(100)
             .get();
 
-        fallbackSnap.forEach(doc => {
+        const candidates: any[] = [];
+        snapshot.forEach(doc => {
             const data = doc.data();
-            if (data.audioUrl || (data.tracks && data.tracks.length > 0)) {
-                tracks.push({ id: doc.id, ...data });
+            // Stricter filtering for healingBenefits presence
+            if (data.healingBenefits && (data.audioUrl || (data.tracks && data.tracks.length > 0))) {
+                candidates.push({
+                    id: doc.id,
+                    title: data.title || 'Bhajan',
+                    healingBenefits: Array.isArray(data.healingBenefits) ? data.healingBenefits.join(', ') : data.healingBenefits,
+                    audioUrl: data.audioUrl || data.tracks?.[0]?.audioUrl,
+                    imageUrl: data.imageUrl || null,
+                    tags: data.tags || []
+                });
             }
         });
-    }
 
-    if (tracks.length === 0) {
+        if (candidates.length === 0) {
+            console.warn('[musicService] No healing tracks found, returning fallback');
+            return null;
+        }
+
+        let selectedTrack = candidates[Math.floor(Math.random() * candidates.length)];
+
+        // Use AI (Agent) to select the most relevant track if a topic is provided
+        if (topic && candidates.length > 1) {
+            try {
+                // Prepare a simplified context for the LLM to save tokens
+                const choices = candidates.map(c => ({ id: c.id, title: c.title, benefits: c.healingBenefits }));
+                
+                const prompt = `You are a spiritual music curator for a Private Satsang.
+The current Satsang topic is: "${topic}".
+Here are the available healing tracks:
+${JSON.stringify(choices, null, 2)}
+
+Select the SINGLE best track ID that aligns with the topic's emotional and spiritual needs.
+Return ONLY a JSON object: {"selectedId": "the-id-here"}`;
+
+                const aiResponse = await openai.chat.completions.create({
+                    model: 'gpt-4o-mini',
+                    messages: [{ role: 'system', content: prompt }],
+                    temperature: 0.3,
+                    response_format: { type: 'json_object' }
+                });
+
+                const aiContent = aiResponse.choices[0].message.content;
+                if (aiContent) {
+                    const parsed = JSON.parse(aiContent);
+                    if (parsed.selectedId) {
+                        const match = candidates.find(c => c.id === parsed.selectedId);
+                        if (match) selectedTrack = match;
+                        console.log(`[musicService] AI selected track ${selectedTrack.title} for topic "${topic}"`);
+                    }
+                }
+            } catch (aiErr) {
+                console.warn('[musicService] AI selection failed, falling back to random:', aiErr);
+            }
+        }
+
+        return {
+            id: selectedTrack.id,
+            title: selectedTrack.title,
+            audioUrl: selectedTrack.audioUrl,
+            imageUrl: selectedTrack.imageUrl,
+            category: selectedTrack.tags?.[0] || 'meditation',
+            duration: null,
+        };
+    } catch (error) {
+        console.error('[musicService] Error in getRandomMeditationTrack:', error);
         return null;
     }
-
-    // Pick a random track
-    const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
-
-    // Resolve audioUrl — check if it's inside tracks[] array (new format)
-    let audioUrl = randomTrack.audioUrl;
-    if (!audioUrl && randomTrack.tracks && randomTrack.tracks.length > 0) {
-        audioUrl = randomTrack.tracks[0].audioUrl;
-    }
-
-    if (!audioUrl) return null;
-
-    return {
-        id: randomTrack.id,
-        title: randomTrack.title || 'Bhajan',
-        audioUrl,
-        imageUrl: randomTrack.imageUrl || null,
-        category: randomTrack.tags?.[0] || 'meditation',
-        duration: randomTrack.duration || null,
-    };
 }

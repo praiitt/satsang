@@ -16,7 +16,8 @@ import {
     Gift,
     TrendingUp,
     Copy,
-    CheckCircle2
+    CheckCircle2,
+    Music
 } from 'lucide-react';
 import { Button } from '@/components/livekit/button';
 import { LogoutButton } from '@/components/auth/logout-button';

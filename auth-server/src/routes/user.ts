@@ -11,6 +11,27 @@ const db = getDb();
 // Helper to get user doc ref
 const userRef = (uid: string) => db.collection('users').doc(uid);
 
+// GET /list - Fetch all registered users (admin-ish)
+router.get('/list', requireAuth, async (req: AuthedRequest, res) => {
+    try {
+        const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
+        const snapshot = await db.collection('users')
+            .orderBy('updatedAt', 'desc')
+            .limit(limit)
+            .get();
+
+        const users = snapshot.docs.map(doc => ({
+            uid: doc.id,
+            ...doc.data()
+        }));
+
+        return res.json({ success: true, users });
+    } catch (error) {
+        console.error('Error listing users:', error);
+        return res.status(500).json({ error: 'Failed to list users' });
+    }
+});
+
 // GET /profile - Get extended user profile
 router.get('/profile', requireAuth, async (req: AuthedRequest, res) => {
     try {

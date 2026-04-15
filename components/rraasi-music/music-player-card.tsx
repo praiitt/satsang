@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Play, Pause, BarChart3, Download, Video } from 'lucide-react';
+import { Play, Pause, BarChart3, Download, Video, Info, Globe, Lock } from 'lucide-react';
 import { VideoPlayerModal } from './video-player-modal';
+import { MusicInfoModal } from './music-info-modal';
 import { useMusicPlayer, MusicTrack } from '@/contexts/music-player-context';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/livekit/button';
@@ -30,6 +31,16 @@ interface MusicPlayerCardProps {
     videoStatus?: 'generating' | 'completed' | 'failed' | null; // New prop
     enableDownload?: boolean; // New prop for server component usage
     shareId?: string; // New prop for overriding share link ID
+    story?: string;
+    lyrics?: string;
+    healingBenefits?: string[];
+    tags?: string[];
+    isPublic?: boolean; // New prop
+    isOwner?: boolean; // New prop
+    selectionMode?: boolean; // New prop for bulk select
+    isSelected?: boolean; // New prop for bulk select
+    onToggleSelection?: () => void; // New prop for bulk select
+    onPublishToggle?: (newStatus: boolean) => void; // New prop
 }
 
 export function MusicPlayerCard({
@@ -53,11 +64,22 @@ export function MusicPlayerCard({
     videoStatus,
     enableDownload = false,
     shareId,
+    story,
+    lyrics,
+    healingBenefits,
+    tags,
+    isPublic = false,
+    isOwner = false,
+    selectionMode = false,
+    isSelected = false,
+    onToggleSelection,
+    onPublishToggle,
 }: MusicPlayerCardProps) {
     // ... existing hooks ...
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
     const { profile } = useUserProfile();
     const [showVideoModal, setShowVideoModal] = useState(false);
+    const [showInfoModal, setShowInfoModal] = useState(false);
 
     // ... existing logic ...
 
@@ -118,8 +140,47 @@ export function MusicPlayerCard({
         }
     };
 
+    const handleCardClick = (e: React.MouseEvent) => {
+        if (selectionMode && onToggleSelection) {
+            e.preventDefault();
+            e.stopPropagation();
+            onToggleSelection();
+            return;
+        }
+        // Could also trigger handlePlayClick if not in selection mode,
+        // but current UI uses the play button for this. Let's keep it as is.
+    };
+
     return (
-        <div className="group relative rounded-2xl bg-white dark:bg-gray-800 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <div 
+            className={cn(
+                "group relative rounded-2xl bg-white dark:bg-gray-800 shadow-md transition-all duration-300",
+                selectionMode ? "cursor-pointer" : "hover:shadow-xl hover:-translate-y-1",
+                isSelected ? "ring-4 ring-amber-500 shadow-amber-500/20 scale-[0.98]" : ""
+            )}
+            onClick={selectionMode ? handleCardClick : undefined}
+        >
+            {/* Selection Checkbox Overlay */}
+            {selectionMode && (
+                <div 
+                    className="absolute top-3 left-3 z-40 cursor-pointer pointer-events-auto"
+                    onClick={(e) => { e.stopPropagation(); onToggleSelection?.(); }}
+                >
+                    <div className={cn(
+                        "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors backdrop-blur-md",
+                        isSelected 
+                            ? "bg-amber-500 border-amber-500 text-white" 
+                            : "bg-black/40 border-white/50 hover:bg-black/60 shadow-md"
+                    )}>
+                        {isSelected && (
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="w-3.5 h-3.5">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* Background Image with Overlay - Isolate overflow here */}
             <div className="absolute inset-0 z-0 h-full w-full overflow-hidden rounded-2xl">
                 {imageUrl ? (
@@ -208,8 +269,9 @@ export function MusicPlayerCard({
                         <SocialShareMenu
                             title={title}
                             text={`Check out this AI spiritual track: "${title}"\n${description || ''}`}
-                            url={`https://rraasi.com/track/${shareId || trackId}`}
-                            className="bg-black/20 backdrop-blur-md rounded-full pointer-events-auto"
+                            url={`https://www.rraasi.com/track/${shareId || trackId}`}
+                            className="pointer-events-auto"
+                            iconClassName="h-8 w-8 min-h-8 min-w-8 bg-black/20 backdrop-blur-md hover:bg-black/40 text-white [&_svg]:w-4 [&_svg]:h-4 border-none"
                         />
                         <TrackActionsMenu
                             trackId={trackId}
@@ -218,6 +280,35 @@ export function MusicPlayerCard({
                             trackDuration={duration ? parseFloat(duration) : undefined}
                             userName={profile?.name}
                         />
+                        {(story || lyrics || (healingBenefits && healingBenefits.length > 0) || description || (tags && tags.length > 0)) && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowInfoModal(true);
+                                }}
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-500/20 backdrop-blur-md hover:bg-amber-500/40 text-amber-50 transition-colors border border-amber-500/20"
+                                title="Learn more about this Track"
+                            >
+                                <Info className="h-4 w-4" />
+                            </button>
+                        )}
+                        {isOwner && onPublishToggle && !isPending && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onPublishToggle(!isPublic);
+                                }}
+                                className={cn(
+                                    "flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition-colors border",
+                                    isPublic 
+                                        ? "bg-green-500/20 hover:bg-green-500/40 text-green-400 border-green-500/30" 
+                                        : "bg-gray-500/20 hover:bg-gray-500/40 text-gray-300 border-gray-500/30"
+                                )}
+                                title={isPublic ? "Public in Community (Click to make Private)" : "Private (Click to publish to Community)"}
+                            >
+                                {isPublic ? <Globe className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+                            </button>
+                        )}
                         {(onDownload || enableDownload) && !isPending && (
                             <button
                                 onClick={(e) => {
@@ -290,45 +381,57 @@ export function MusicPlayerCard({
                 />
             )}
 
+            {/* Music Info Modal */}
+            <MusicInfoModal
+                isOpen={showInfoModal}
+                onClose={() => setShowInfoModal(false)}
+                title={title}
+                story={story}
+                lyrics={lyrics}
+                healingBenefits={healingBenefits}
+                tags={tags}
+                description={description}
+            />
+
             {/* Video Action Button (Overlay helper) */}
             {videoUrl && !isPending && (
-                <div className="absolute top-4 right-16 z-30 animate-in fade-in zoom-in duration-300">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 animate-in fade-in zoom-in duration-300">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowVideoModal(true);
                         }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/10 transition-all hover:scale-105 shadow-lg group/vid"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white border border-white/20 transition-all hover:scale-105 shadow-xl group/vid"
                     >
-                        <Video className="w-3.5 h-3.5 text-amber-400 group-hover/vid:text-amber-300" />
-                        <span className="text-[10px] font-bold tracking-wide uppercase">Watch Video</span>
+                        <Video className="w-4 h-4 text-amber-400 group-hover/vid:text-amber-300" />
+                        <span className="text-[11px] font-bold tracking-wide uppercase">Watch Video</span>
                     </button>
                 </div>
             )}
 
             {/* Create Video Button */}
             {!videoUrl && !isPending && videoStatus !== 'generating' && onGenerateVideo && (
-                <div className="absolute top-4 right-16 z-30 animate-in fade-in zoom-in duration-300 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 animate-in fade-in zoom-in duration-300 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
                             onGenerateVideo();
                         }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md text-white border border-white/10 transition-all hover:scale-105 shadow-lg group/vid"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white border border-white/20 transition-all hover:scale-105 shadow-xl group/vid"
                         title="Generate Music Video (Cost: Credits)"
                     >
-                        <Video className="w-3.5 h-3.5 text-white group-hover/vid:text-amber-300" />
-                        <span className="text-[10px] font-bold tracking-wide uppercase">Create Video</span>
+                        <Video className="w-4 h-4 text-white group-hover/vid:text-amber-300" />
+                        <span className="text-[11px] font-bold tracking-wide uppercase">Create Video</span>
                     </button>
                 </div>
             )}
 
             {/* Video Generating Indicator */}
             {videoStatus === 'generating' && !isPending && (
-                <div className="absolute top-4 right-16 z-30 animate-pulse">
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-500/20 backdrop-blur-md text-amber-200 border border-amber-500/30">
-                        <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-bounce" />
-                        <span className="text-[10px] font-medium">Making Video...</span>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 animate-pulse">
+                    <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md text-amber-200 border border-amber-500/30 shadow-xl">
+                        <div className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />
+                        <span className="text-[11px] font-bold uppercase">Making Video...</span>
                     </div>
                 </div>
             )}

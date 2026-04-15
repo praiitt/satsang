@@ -387,7 +387,8 @@ Capabilities:
                         "tags": [mood, "meditation", "dance", "healing"],
                         "category": "dance_meditation",  # Flag for webhook to save to dance_trans collection
                         "bpm": bpm,
-                        "userId": self.user_id
+                        "userId": self.user_id,
+                        "isPublic": False
                     }
                     
                     self.db.collection('music_tracks').document(task_id).set(track_data)

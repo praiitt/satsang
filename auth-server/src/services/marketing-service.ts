@@ -49,43 +49,86 @@ export class MarketingService {
     }
 
     /**
-     * Generates personalized content using OpenAI
+     * Generates a WhatsApp-specific message using OpenAI
      */
-    private static async generateAIContent(context: MarketingContext) {
-        const { serviceOfInterest, userName, zodiacSign } = context;
-        const sign = zodiacSign || 'seeker';
+    static async generateWhatsAppContent(theme: string, userName?: string) {
         const name = userName || 'Friend';
-
-        const systemPrompt = `You are the voice of RRAASI, a conscious AI platform for spirituality. 
-    Your tone is mystical, warm, welcoming, and slightly urgent (FOMO - "Fear Of Missing Out" on spiritual growth).
-    Generate two messages for a new user interested in "${serviceOfInterest}".
+        const systemPrompt = `You are the voice of RRAASI, an AI platform for spirituality.
+    Generate a warm, mystical, and concise WhatsApp message for a user.
+    Theme: ${theme}
+    User Name: ${name}
     
-    1. A short WhatsApp message (max 30 words).
-    2. A slightly longer Email body paragraph (max 60 words).
-    
-    Mention that thousands of others are already finding clarity/peace here (Social Proof).
-    Use their name (${name}) and zodiac sign (${sign}) if relevant logic applies.
-    Response must be valid JSON: { "whatsapp": "...", "email": "..." }`;
+    Rules:
+    - Max 50 words.
+    - Use 1-2 relevant emojis.
+    - Include a clear, natural CTA to https://rraasi.com.
+    - Tone: Compassionate, modern Indian spirituality.
+    - Format: Respond ONLY with the message text.`;
 
         try {
             const completion = await this.getOpenAI().chat.completions.create({
                 messages: [{ role: "system", content: systemPrompt }],
-                model: "gpt-4o-mini", // Cost efficient
+                model: "gpt-4o-mini",
+            });
+            return completion.choices[0].message.content || `Namaste ${name}, explore the spiritual dimension with RRAASI. Explore now: https://rraasi.com`;
+        } catch (error) {
+            console.error('WhatsApp Gen Error:', error);
+            return `Namaste ${name}, welcome to RRAASI. Your journey to spiritual clarity starts here: https://rraasi.com`;
+        }
+    }
+
+    /**
+     * Sends bulk WhatsApp messages
+     */
+    static async sendBulkWhatsApp(users: { phone: string; name: string }[], messageTemplate: string) {
+        const client = this.getTwilio();
+        const twilioNumber = process.env.TWILIO_WHATSAPP_NUMBER;
+        if (!client || !twilioNumber) {
+            throw new Error('Twilio not configured for WhatsApp');
+        }
+
+        const stats = { success: 0, failed: 0, details: [] as any[] };
+
+        for (const user of users) {
+          try {
+            const personalizedMessage = messageTemplate.replace(/\{\{name\}\}/g, user.name || 'Friend');
+            const res = await client.messages.create({
+              from: twilioNumber,
+              to: user.phone.startsWith('whatsapp:') ? user.phone : `whatsapp:${user.phone}`,
+              body: personalizedMessage,
+            });
+            stats.success++;
+            stats.details.push({ phone: user.phone, sid: res.sid, status: 'sent' });
+          } catch (e: any) {
+            stats.failed++;
+            stats.details.push({ phone: user.phone, error: e.message, status: 'failed' });
+          }
+        }
+        return stats;
+    }
+
+    /**
+     * Generates personalized content using OpenAI (Legacy/Welcome)
+     */
+    private static async generateAIContent(context: MarketingContext) {
+        const { serviceOfInterest, userName } = context;
+        const name = userName || 'Friend';
+
+        const systemPrompt = `You are the voice of RRAASI, a conscious AI platform for spirituality. 
+    Generate two messages for a new user interested in "${serviceOfInterest}".
+    1. A short WhatsApp message (max 30 words).
+    2. A slightly longer Email body paragraph (max 60 words).
+    JSON: { "whatsapp": "...", "email": "..." }`;
+
+        try {
+            const completion = await this.getOpenAI().chat.completions.create({
+                messages: [{ role: "system", content: systemPrompt }],
+                model: "gpt-4o-mini",
                 response_format: { type: "json_object" },
             });
-
-            const content = JSON.parse(completion.choices[0].message.content || '{}');
-            return {
-                whatsapp: content.whatsapp || `Welcome to RRAASI, ${name}. Your journey begins now.`,
-                email: content.email || `We are honored to have you, ${name}. Join our community of seekers finding their path.`
-            };
-        } catch (error) {
-            console.error('OpenAI Gen Error:', error);
-            // Fallback
-            return {
-                whatsapp: `Welcome to RRAASI, ${name}! Your spiritual journey in ${serviceOfInterest} starts now.`,
-                email: `Welcome to RRAASI. We are excited to guide you on your path in ${serviceOfInterest}.`
-            };
+            return JSON.parse(completion.choices[0].message.content || '{}');
+        } catch {
+            return { whatsapp: `Welcome to RRAASI, ${name}!`, email: `Welcome to RRAASI.` };
         }
     }
 

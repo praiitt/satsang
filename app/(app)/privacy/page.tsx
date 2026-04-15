@@ -55,7 +55,20 @@ export default function PrivacyPage() {
                 </section>
 
                 <section>
-                    <h2 className="text-xl font-semibold mb-3 text-foreground">6. Contact Us</h2>
+                    <h2 className="text-xl font-semibold mb-3 text-foreground">6. Third-Party Services (YouTube API)</h2>
+                    <p className="mb-2">
+                        Our platform offers features that interact with third-party services, such as our Music Distribution suite that allows you to upload generated tracks directly to your YouTube channel. To provide this functionality, we use YouTube API Services.
+                    </p>
+                    <ul className="list-disc pl-5 mt-2 space-y-1 mb-2">
+                        <li>By using our Music Distribution feature, you are agreeing to be bound by the <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">YouTube Terms of Service</a> and <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google Privacy Policy</a>.</li>
+                        <li>When you authenticate with YouTube, we request the <code>youtube.upload</code> scope to upload videos to your channel upon your explicit click. We do not access, view, or modify any other videos or data on your YouTube channel.</li>
+                        <li>We do not share your YouTube data with any internal or external parties beyond what is required to upload the video on your behalf.</li>
+                        <li>You can revoke our access to your YouTube account at any time via the <a href="https://security.google.com/settings/security/permissions" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google Security Settings page</a>.</li>
+                    </ul>
+                </section>
+
+                <section>
+                    <h2 className="text-xl font-semibold mb-3 text-foreground">7. Contact Us</h2>
                     <p>
                         If you have any questions about this privacy policy or our privacy practices, please contact us at support@rraasi.com.
                     </p>

@@ -19,12 +19,27 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
+        const openai = getOpenAI();
         const db = getAdminDb();
+
+        // 0. Translate topic to target language if necessary
+        const translationPrompt = `Translate the following spiritually themed topic to the language "${language}". 
+      If it is already in ${language}, return it as is. 
+      If it is in a different script (like Romanized Hindi "kaise ho") but the target is Hindi, convert it to professional Devanagari Hindi.
+      Topic: "${topic}"
+      Return ONLY the translated/converted topic string without any quotations or extra punctuation.`;
+
+        const translationCompletion = await openai.chat.completions.create({
+            messages: [{ role: 'system', content: translationPrompt }],
+            model: 'gpt-4o',
+        });
+        const translatedTopic = translationCompletion.choices[0].message.content?.trim() || topic;
+        console.log('[Satsang Generate] Translated topic:', topic, '->', translatedTopic);
 
         // 1. Check for existing plan with same topic and guruId to avoid redundant generation
         const existingPlans = await db.collection('satsang_plans')
             .where('guruId', '==', guruId)
-            .where('topic', '==', topic.trim())
+            .where('topic', '==', translatedTopic.trim())
             .get();
 
         if (!existingPlans.empty) {
@@ -36,7 +51,7 @@ export async function POST(req: Request) {
             
             if (validPlan) {
                 const plan = validPlan.data();
-                console.log('[Satsang Generate] Reusing existing plan for topic:', topic, 'id:', validPlan.id);
+                console.log('[Satsang Generate] Reusing existing plan for topic:', translatedTopic, 'id:', validPlan.id);
                 return NextResponse.json({
                     planId: validPlan.id,
                     plan: plan
@@ -56,14 +71,14 @@ export async function POST(req: Request) {
       - If ${guruName} is known for specific concepts (like self-inquiry, radical Zen, devotion, integral yoga, etc.), use them heavily.
       - The linguistic style and phrasing must match how ${guruName} actually spoke.
 
-      Topic: "${topic}"
+      Topic: "${translatedTopic}"
       Language: ${language} (Output must be in this language. Match the guru's authentic tone exactly).
       
       Generate a structured, profound, and spiritually deep plan for a "Private Satsang" session led by ${guruName}.
       
       The output must be valid JSON with the following fields:
 
-      1. "intro_text": A warm, characteristic, and deeply engaging introduction by ${guruName}. Keep it brief (2-3 sentences max). You MUST end this introduction with a direct, compassionate question that invites the seeker to immediately share their thoughts, struggles, or questions regarding the topic.
+      1. "intro_text": A warm, characteristic, and deeply engaging introduction by ${guruName}. Keep it brief (2-3 sentences max). CRITICAL INSTRUCTION: You MUST write ONLY statements and blessings. You MUST NOT use any question marks (?). NEVER ask if the seeker is ready. NEVER ask for permission to begin. Just state the opening thought and conclude the intro with a full stop or exclamation mark.
       2. "pravachan_points": An array of strings. Each string is a substantial, high-quality paragraph of the discourse. 
          - Generate 7-10 detailed, spiritually profound paragraphs.
          - Address the topic exclusively through the lens of ${guruName}.
@@ -75,7 +90,6 @@ export async function POST(req: Request) {
       JSON Output:
         `;
 
-        const openai = getOpenAI();
         const completion = await openai.chat.completions.create({
             messages: [{ role: 'system', content: prompt }],
             model: 'gpt-4o',
@@ -99,7 +113,7 @@ export async function POST(req: Request) {
         try {
             // Use the shared service instead of fetching from the API route over HTTP
             // This prevents issues when running the dev server on different ports (like 3001)
-            const musicData = await getRandomMeditationTrack();
+            const musicData = await getRandomMeditationTrack(translatedTopic);
 
             if (musicData) {
                 meditationTrackId = musicData.id;
@@ -118,10 +132,12 @@ export async function POST(req: Request) {
         // 2.5 LRYICS CREATOR AGENT & SUNO INTEGRATION (FIRE AND FORGET)
         const triggerSunoAsync = async (planId: string) => {
             try {
-                const lyricsPrompt = `Based on the following Satsang discourse regarding "${topic}", create the foundation for a deeply meditative 4 to 5-minute chakra meditation track.
-Respond in JSON format with two fields:
+                const lyricsPrompt = `Based on the following Satsang discourse regarding "${translatedTopic}", create the foundation for a deeply meditative 4 to 5-minute chakra meditation track.
+Respond in JSON format with these exact fields:
 1. "lyrics": Create highly professional, poetic, and profoundly meaningful lyrics or a guided meditation script in ${language}. Ensure the words carry deep emotional resonance, spiritual weight, and perfectly capture the crux of the discourse. You MUST include explicit song structure tags like [Intro], [Visualization], [Mantra], [Deepening], [Outro]. Provide enough content to sustain a 4-5 minute meditation.
 2. "style_tags": A comma-separated list of musical styles and instruments. You MUST include exactly: "chakra meditation, chakra songs", followed by mood-appropriate descriptors (e.g., "chakra meditation, chakra songs, healing frequencies, singing bowls, peaceful").
+3. "story": A spiritual, evocative "Behind the Music" story (2-3 paragraphs) explaining the significance of this track and its connection to ${guruName}'s teachings on this topic.
+4. "healing_benefits": An array of 4-6 specific spiritual or emotional benefits one might experience while listening.
 
 Discourse outline:
 ${planData.pravachan_points?.join('\\n')}
@@ -153,7 +169,7 @@ ${planData.pravachan_points?.join('\\n')}
                             body: JSON.stringify({
                                 prompt: lyricsData.lyrics,
                                 tags: lyricsData.style_tags,
-                                title: `Satsang Meditation: ${topic}`,
+                                title: `Satsang Meditation: ${translatedTopic}`,
                                 instrumental: false,
                                 model: 'V3_5',
                                 customMode: true,
@@ -163,19 +179,36 @@ ${planData.pravachan_points?.join('\\n')}
                         
                         const sunoResult = await sunoResponse.json();
                         let sunoTaskId: string | null = null;
-                        
-                        // Grab task ID from various possible Suno API response formats
-                        if (sunoResult?.data?.task_id) {
-                            sunoTaskId = sunoResult.data.task_id;
-                        } else if (sunoResult?.data?.taskId) {
-                            sunoTaskId = sunoResult.data.taskId;
-                        } else if (typeof sunoResult?.data === 'string') {
-                            sunoTaskId = sunoResult.data;
-                        } else if (Array.isArray(sunoResult?.data) && sunoResult.data.length > 0) {
-                            sunoTaskId = sunoResult.data[0]?.id || null;
+
+                        // Log the full Suno API response for debugging
+                        console.log(`[Satsang Generate] Suno API HTTP status: ${sunoResponse.status}`);
+                        console.log(`[Satsang Generate] Suno API response: ${JSON.stringify(sunoResult)}`);
+
+                        if (!sunoResponse.ok) {
+                            console.error(`[Satsang Generate] Suno API HTTP error: ${sunoResponse.status}`, sunoResult);
+                        } else {
+                            // Grab task ID from various possible Suno API response formats
+                            // Format 1: { code: 200, data: { task_id: "..." } }  (current sunoapi.org)
+                            // Format 2: { data: { taskId: "..." } }
+                            // Format 3: { data: "task_id_string" }
+                            // Format 4: { data: [{ id: "..." }] }
+                            // Format 5: { task_id: "..." } (top-level)
+                            // Format 6: { taskId: "..." } (top-level)
+                            // Format 7: { data: { id: "..." } }
+                            sunoTaskId =
+                                sunoResult?.data?.task_id ||
+                                sunoResult?.data?.taskId ||
+                                sunoResult?.data?.id ||
+                                sunoResult?.task_id ||
+                                sunoResult?.taskId ||
+                                (typeof sunoResult?.data === 'string' ? sunoResult.data : null) ||
+                                (Array.isArray(sunoResult?.data) && sunoResult.data.length > 0
+                                    ? (sunoResult.data[0]?.id || sunoResult.data[0]?.task_id || null)
+                                    : null) ||
+                                null;
                         }
-                        
-                        console.log(`[Satsang Generate] Initiated background Suno task: ${sunoTaskId}`, sunoResult);
+
+                        console.log(`[Satsang Generate] Extracted Suno task ID: ${sunoTaskId}`);
                         
                         if (sunoTaskId) {
                             await db.collection('satsang_plans').doc(planId).update({
@@ -187,12 +220,15 @@ ${planData.pravachan_points?.join('\\n')}
                             await db.collection('music_tracks').doc(sunoTaskId).set({
                                 id: sunoTaskId,
                                 userId: userId,
-                                title: `Satsang Meditation: ${topic}`,
+                                title: `Satsang Meditation: ${translatedTopic}`,
                                 lyrics: lyricsData.lyrics || '',
                                 tags: lyricsData.style_tags || '',
+                                story: lyricsData.story || '',
+                                healingBenefits: lyricsData.healing_benefits || [],
                                 status: 'PENDING',
                                 createdAt: new Date().toISOString(),
-                                source: 'private_satsang'
+                                source: 'private_satsang',
+                                isPublic: false
                             });
                         }
                     }
@@ -210,7 +246,7 @@ ${planData.pravachan_points?.join('\\n')}
             id: planRef.id,
             userId,
             guruId,
-            topic,
+            topic: translatedTopic,
             createdAt: new Date().toISOString(),
             status: 'ready',
             ...planData,

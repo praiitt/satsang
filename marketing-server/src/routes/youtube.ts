@@ -14,7 +14,7 @@ const INTEGRATION_TOKENS_COLLECTION = 'integration_tokens';
 
 // GET /youtube-auth/init?userId=...
 router.get('/init', async (req, res) => {
-    const { userId, appUrl } = req.query;
+    const { userId, appUrl } = (req.query || {}) as any;
 
     if (!userId) {
         return res.status(400).json({ error: 'UserId is required' });
@@ -44,7 +44,7 @@ router.get('/init', async (req, res) => {
 
 // GET /youtube-auth/callback?code=...&state=...
 router.get('/callback', async (req, res) => {
-    const { code, state, error } = req.query;
+    const { code, state, error } = (req.query || {}) as any;
 
     if (error) {
         return res.status(400).json({ error: `OAuth Error: ${error}` });
@@ -109,7 +109,7 @@ router.get('/callback', async (req, res) => {
 
 // GET /youtube-auth/status?userId=...
 router.get('/status', async (req, res) => {
-    const { userId } = req.query;
+    const { userId } = (req.query || {}) as any;
     if (!userId) return res.status(400).json({ error: 'userId required' });
 
     try {

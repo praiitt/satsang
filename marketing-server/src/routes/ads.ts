@@ -2,11 +2,13 @@ import { Router } from 'express';
 import { getDb } from '../firebase.js';
 import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 import { generateAdContent, generateAdImage } from '../services/gemini.js';
-import { generateDalleImage } from '../services/openai.js';
+import { generateDalleImage, generateAdContentGPT } from '../services/openai.js';
 import { getBufferChannels, publishToBuffer, isBufferConfigured } from '../services/buffer-publish.js';
+import { getUploadSignedUrl } from '../services/gcs-audio.js';
 
 const router = Router();
 const COLLECTION = 'ad_briefs';
+const GCS_BUCKET = process.env.LIVEKIT_EGRESS_GCP_BUCKET || 'rraasi-agent-recordings';
 
 // ─── BRIEF CRUD ───────────────────────────────────────────────────────────────
 
@@ -71,16 +73,32 @@ router.patch('/briefs/:id', requireAuth, async (req: AuthedRequest, res) => {
 });
 
 // List briefs
-router.get('/briefs', requireAuth, async (req, res) => {
+router.get('/briefs', requireAuth, async (req: AuthedRequest, res) => {
   try {
     const db = getDb();
-    const limit = Math.min(parseInt(String(req.query.limit ?? '20'), 10) || 20, 100);
-    const snap = await db.collection(COLLECTION).orderBy('createdAt', 'desc').limit(limit).get();
+    if (!db) throw new Error('Firestore DB not initialized');
+    
+    const limitNum = Math.min(parseInt(String(req.query?.limit ?? '20'), 10) || 20, 100);
+    console.log(`[ads] Listing briefs for user: ${req.user?.uid}, limit: ${limitNum}`);
+    
+    const colRef = db.collection(COLLECTION);
+    if (!colRef) throw new Error(`Collection "${COLLECTION}" not found`);
+    
+    const query = colRef.orderBy('createdAt', 'desc');
+    if (!query) throw new Error('Failed to create query with orderBy');
+    
+    const snap = await query.limit(limitNum).get();
     const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    
+    console.log(`[ads] Successfully fetched ${items.length} briefs`);
     return res.json({ items });
-  } catch (e) {
+  } catch (e: any) {
     console.error('[ads] list briefs error:', e);
-    return res.status(500).json({ error: 'failed to list briefs', details: e instanceof Error ? e.message : String(e) });
+    return res.status(500).json({ 
+      error: 'failed to list briefs', 
+      details: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined
+    });
   }
 });
 
@@ -138,6 +156,21 @@ router.delete('/briefs/:briefId/variants/:variantId', requireAuth, async (req, r
   }
 });
 
+// Patch a variant (shallow merge)
+router.patch('/briefs/:briefId/variants/:variantId', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const db = getDb();
+    const { briefId, variantId } = req.params;
+    const patch = { ...(req.body ?? {}), updatedAt: Date.now() };
+    await db.collection(COLLECTION).doc(briefId).collection('variants').doc(variantId).set(patch, { merge: true });
+    const snap = await db.collection(COLLECTION).doc(briefId).collection('variants').doc(variantId).get();
+    return res.json({ id: snap.id, ...snap.data() });
+  } catch (e) {
+    console.error('[ads] patch variant error:', e);
+    return res.status(500).json({ error: 'failed to update variant' });
+  }
+});
+
 // ─── AI GENERATION ────────────────────────────────────────────────────────────
 
 /**
@@ -158,15 +191,37 @@ router.post('/briefs/:id/generate', requireAuth, async (req: AuthedRequest, res)
 
     const variants = [];
     for (const lang of targetLanguages) {
-      const content = await generateAdContent({
-        topic: brief.topic || brief.title || 'Spiritual Satsang',
-        objective: brief.objective || 'Awareness',
-        audience: brief.audience || 'Spiritual seekers',
-        cta: brief.cta || 'Download the Rraasi app',
-        platform,
-        tone: brief.tone || 'inspirational',
-        language: lang,
-      });
+      let content;
+      let usedModel = 'gemini';
+
+      try {
+        content = await generateAdContent({
+          topic: brief.topic || brief.title || 'Spiritual Satsang',
+          objective: brief.objective || 'Awareness',
+          audience: brief.audience || 'Spiritual seekers',
+          cta: brief.cta || 'Download the Rraasi app',
+          platform,
+          tone: brief.tone || 'inspirational',
+          language: lang,
+        });
+      } catch (geminiError) {
+        console.warn(`[ads] Gemini failed for ${lang}, falling back to GPT:`, geminiError);
+        try {
+          content = await generateAdContentGPT({
+            topic: brief.topic || brief.title || 'Spiritual Satsang',
+            objective: brief.objective || 'Awareness',
+            audience: brief.audience || 'Spiritual seekers',
+            cta: brief.cta || 'Download the Rraasi app',
+            platform,
+            tone: brief.tone || 'inspirational',
+            language: lang,
+          });
+          usedModel = 'gpt-4o';
+        } catch (gptError) {
+          console.error(`[ads] Both Gemini and GPT failed for ${lang}:`, gptError);
+          throw new Error(`AI generation failed for language ${lang}. Both providers unavailable.`);
+        }
+      }
 
       // Save as a variant
       const now = Date.now();
@@ -180,7 +235,7 @@ router.post('/briefs/:id/generate', requireAuth, async (req: AuthedRequest, res)
         imagePrompt: content.imagePrompt,
         status: 'ready',
         createdAt: now,
-        generatedBy: 'gemini',
+        generatedBy: usedModel,
       });
       const snap = await variantRef.get();
       variants.push({ id: variantRef.id, ...snap.data() });
@@ -258,6 +313,40 @@ router.post('/briefs/:id/generate-image', requireAuth, async (req: AuthedRequest
   }
 });
 
+/**
+ * POST /briefs/:id/generate-upload-url
+ * Generate a signed URL for uploading a file (image or video)
+ */
+router.post('/briefs/:id/generate-upload-url', requireAuth, async (req: AuthedRequest, res) => {
+  try {
+    const { fileName, contentType } = req.body;
+    const briefId = req.params.id;
+
+    if (!fileName || !contentType) {
+      return res.status(400).json({ error: 'fileName and contentType are required' });
+    }
+
+    // Determine target folder based on content type
+    const isVideo = contentType.startsWith('video/');
+    const folder = isVideo ? 'videos' : 'images';
+    const cleanFileName = fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const gcsPath = `ads/${briefId}/${folder}/${Date.now()}-${cleanFileName}`;
+
+    const uploadUrl = await getUploadSignedUrl(gcsPath, contentType);
+    const publicUrl = `https://storage.googleapis.com/${GCS_BUCKET}/${gcsPath}`;
+
+    return res.json({
+      uploadUrl,
+      publicUrl,
+      gcsPath,
+      isVideo,
+    });
+  } catch (e: any) {
+    console.error('[ads] generate-upload-url error:', e);
+    return res.status(500).json({ error: 'Failed to generate upload URL', details: e.message });
+  }
+});
+
 // ─── BUFFER INTEGRATION ───────────────────────────────────────────────────────
 
 /**
@@ -319,11 +408,13 @@ router.post('/briefs/:id/publish', requireAuth, async (req: AuthedRequest, res) 
     }
 
     const mediaUrls = variant.imageUrl ? [variant.imageUrl] : [];
+    const videoUrl = variant.videoUrl || null;
 
     const result = await publishToBuffer({
       channelIds,
       text: postText,
       mediaUrls,
+      videoUrl,
       scheduledAt,
     });
 
@@ -470,7 +561,7 @@ router.get('/briefs/:id/video-status', requireAuth, async (req: AuthedRequest, r
   try {
     const db = getDb();
     const briefId = req.params.id;
-    const { videoId, variantId } = req.query as { videoId?: string; variantId?: string };
+    const { videoId, variantId } = (req.query || {}) as { videoId?: string; variantId?: string };
 
     if (!videoId) return res.status(400).json({ error: 'videoId query param required' });
 

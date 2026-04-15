@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/livekit/button';
 
@@ -13,17 +14,27 @@ interface VideoPlayerModalProps {
 
 export function VideoPlayerModal({ isOpen, onClose, videoUrl, title }: VideoPlayerModalProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        if (isOpen && videoRef.current) {
-            videoRef.current.play().catch(e => console.log('Auto-play blocked', e));
+        setMounted(true);
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+            if (videoRef.current) {
+                videoRef.current.play().catch(e => console.log('Auto-play blocked', e));
+            }
+        } else {
+            document.body.style.overflow = '';
         }
+        return () => {
+            document.body.style.overflow = '';
+        };
     }, [isOpen]);
 
-    if (!isOpen) return null;
+    if (!isOpen || !mounted) return null;
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
+    return createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 animate-in fade-in duration-200">
             <div className="relative w-full max-w-4xl bg-black rounded-2xl overflow-hidden shadow-2xl border border-white/10 flex flex-col">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 bg-gradient-to-b from-black/80 to-transparent absolute top-0 left-0 right-0 z-10">
@@ -77,6 +88,7 @@ export function VideoPlayerModal({ isOpen, onClose, videoUrl, title }: VideoPlay
                     </Button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

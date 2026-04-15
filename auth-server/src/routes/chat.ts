@@ -6,7 +6,7 @@ const router = Router();
 // GET /chat/history?userId=...&agentId=...&limit=20
 router.get('/history', async (req: Request, res: Response) => {
     try {
-        const { userId, agentId, limit = '20' } = req.query;
+        const { userId, agentId, limit = '20' } = (req.query || {}) as any;
 
         if (!userId) {
             res.status(400).json({ error: 'Missing userId' });
@@ -43,7 +43,7 @@ router.get('/history', async (req: Request, res: Response) => {
 // GET /chat/recordings?userId=...&limit=10
 router.get('/recordings', async (req: Request, res: Response) => {
     try {
-        const { userId, limit = '10' } = req.query;
+        const { userId, limit = '10' } = (req.query || {}) as any;
 
         if (!userId) {
             res.status(400).json({ error: 'Missing userId' });
@@ -82,7 +82,7 @@ router.get('/recordings', async (req: Request, res: Response) => {
 // GET /chat/feed?limit=10
 router.get('/feed', async (req: Request, res: Response) => {
     try {
-        const { limit = '10' } = req.query;
+        const { limit = '10' } = (req.query || {}) as any;
         const db = getDb();
 
         // Fetch public recordings

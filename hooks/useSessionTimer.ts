@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const FREE_TRIAL_DURATION_MS = 15 * 60 * 1000; // 15 minutes in milliseconds
+const FREE_TRIAL_DURATION_MS = 2 * 60 * 1000; // 2 minutes in milliseconds
 const STORAGE_KEY = 'satsang_session_start_time';
 
 interface UseSessionTimerReturn {
@@ -15,7 +15,7 @@ interface UseSessionTimerReturn {
 
 /**
  * Hook to track session time for free trial
- * Tracks time from when session starts until 15 minutes elapse
+ * Tracks time from when session starts until 2 minutes elapse
  */
 export function useSessionTimer(isSessionActive: boolean): UseSessionTimerReturn {
   const [timeRemaining, setTimeRemaining] = useState(FREE_TRIAL_DURATION_MS);

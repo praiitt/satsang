@@ -35,6 +35,42 @@ router.post('/welcome', async (req, res) => {
 
 
 /**
+ * POST /marketing/whatsapp/generate
+ * Generates WhatsApp-specific content based on a theme
+ */
+router.post('/whatsapp/generate', async (req, res) => {
+    try {
+        const { theme, userName } = req.body;
+        if (!theme) return res.status(400).json({ error: 'Theme is required' });
+
+        const content = await MarketingService.generateWhatsAppContent(theme, userName);
+        return res.json({ success: true, content });
+    } catch (error) {
+        console.error('WhatsApp Generate Error:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+/**
+ * POST /marketing/whatsapp/send-bulk
+ * Sends bulk WhatsApp messages to a list of users
+ */
+router.post('/whatsapp/send-bulk', async (req, res) => {
+    try {
+        const { users, messageTemplate } = req.body;
+        if (!users || !Array.isArray(users) || !messageTemplate) {
+            return res.status(400).json({ error: 'Users (array) and messageTemplate are required' });
+        }
+
+        const stats = await MarketingService.sendBulkWhatsApp(users, messageTemplate);
+        return res.json({ success: true, stats });
+    } catch (error) {
+        console.error('WhatsApp Bulk Send Error:', error);
+        return res.status(500).json({ error: 'Internal Server Error' });
+    }
+});
+
+/**
  * GET /marketing/logs
  * Fetch recent marketing logs
  */

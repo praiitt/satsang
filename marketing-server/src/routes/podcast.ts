@@ -225,9 +225,12 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
 
     // Kick off HeyGen clip creation for each turn (in parallel)
 
+    // Destructure options for easier access
+    const { voiceIdHost, voiceIdGuest, resolution } = options ?? {};
+
     const createdTurns: TurnRecord[] = [];
     for (const turn of normalizedTurns) {
-      const avatarId = mapSpeakerToAvatar(turn.speaker, hostAvatarId, guestAvatarId);
+      const avatarId = mapSpeakerToAvatar(turn.speaker, hostAvatarId!, guestAvatarId!);
       const avatarType = turn.speaker === 'host' ? hostAvatarType : guestAvatarType;
       const voiceId = turn.speaker === 'host' ? voiceIdHost : voiceIdGuest;
 

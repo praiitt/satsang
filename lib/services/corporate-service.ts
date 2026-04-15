@@ -17,7 +17,9 @@ const EMPLOYEES_COLLECTION = 'organization_employees'; // Kept for legacy/cachin
 // Actually, backend uses 'users' collection updates now. 
 // So 'getEmployees' needs to query 'users' collection where organizationId == orgId.
 
-const AUTH_SERVER_URL = process.env.NEXT_PUBLIC_AUTH_SERVER_URL || 'http://localhost:4000';
+const AUTH_SERVER_URL = typeof window !== 'undefined' 
+  ? (process.env.NEXT_PUBLIC_AUTH_SERVER_URL || '/satsang-auth-server')
+  : (process.env.AUTH_SERVER_URL || 'http://localhost:4000');
 
 export class CorporateService {
 

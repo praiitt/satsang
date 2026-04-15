@@ -12,8 +12,8 @@ const COLLECTION = 'satsang_plans';
  */
 router.get('/', requireAuth, async (req: AuthedRequest, res) => {
   try {
-    const limit = parseInt((req.query.limit as string) || '50', 10);
-    const offset = parseInt((req.query.offset as string) || '0', 10);
+    const limit = parseInt((req.query?.limit as string) || '50', 10);
+    const offset = parseInt((req.query?.offset as string) || '0', 10);
     
     const db = getDb();
     const query = db.collection(COLLECTION)

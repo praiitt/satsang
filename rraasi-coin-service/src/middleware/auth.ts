@@ -29,10 +29,16 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
             next();
         } catch (error) {
-            console.error('Token verification failed:', error);
+            console.error('[AuthMiddleware] Token verification failed:', error);
+            // Log the project ID being used for verification
+            const apps = admin.apps;
+            if (apps.length > 0) {
+                console.log('[AuthMiddleware] Verification project:', (apps[0]?.options as any)?.projectId);
+            }
             res.status(401).json({
                 success: false,
-                error: 'Invalid or expired token'
+                error: 'Invalid or expired token',
+                details: process.env.NODE_ENV === 'development' ? error : undefined
             });
         }
 

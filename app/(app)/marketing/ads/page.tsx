@@ -6,7 +6,7 @@ import {
   Download, Copy, Send, Sparkles, Image as ImageIcon, Video, Trash2, 
   ChevronDown, ChevronUp, ChevronRight, RefreshCw, ExternalLink, Bot, Play, Edit3,
   Layout, Target, Users, Megaphone, CheckCircle2, AlertCircle, X,
-  ArrowRight, Plus, Search, Filter, Monitor, Smartphone, MessageSquare
+  ArrowRight, Plus, Search, Filter, Monitor, Smartphone, MessageSquare, Upload
 } from 'lucide-react';
 import { Button } from '@/components/livekit/button';
 import { getCurrentUser } from '@/lib/auth-api';
@@ -30,7 +30,7 @@ interface AdBrief {
 
 interface AdVariant {
   id: string;
-  type: 'text' | 'image';
+  type: 'text' | 'image' | 'video';
   platform?: string;
   caption?: string;
   hashtags?: string[];
@@ -120,11 +120,14 @@ export default function AdsPage() {
   const [copied, setCopied] = useState<string | null>(null);
   const [notLoggedIn, setNotLoggedIn] = useState(false);
   const [imageProvider, setImageProvider] = useState<'gemini' | 'dalle'>('dalle');
+  const [uploadingMedia, setUploadingMedia] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState<AdVariant | null>(null);
   const [showVideoConfigModal, setShowVideoConfigModal] = useState<AdVariant | null>(null);
-  const [videoConfig, setVideoConfig] = useState<{ script: string; avatarId: string; avatarType: 'avatar' | 'talking_photo' }>({ script: '', avatarId: '', avatarType: 'avatar' });
+  const [videoConfig, setVideoConfig] = useState<{ script: string; avatarId: string; voiceId: string; avatarType: 'avatar' | 'talking_photo' }>({ script: '', avatarId: '', voiceId: '', avatarType: 'avatar' });
   const [selectedChannels, setSelectedChannels] = useState<string[]>([]);
   const [scheduledAt, setScheduledAt] = useState('');
 
@@ -134,6 +137,7 @@ export default function AdsPage() {
 
   const [selectedPlatform, setSelectedPlatform] = useState('instagram');
   const [searchQuery, setSearchQuery] = useState('');
+  const variantsRef = useRef<HTMLDivElement>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -145,6 +149,14 @@ export default function AdsPage() {
     languages: ['english'],
     channels: ['instagram'],
   });
+
+  const handleSelectBrief = (brief: AdBrief) => {
+    setSelectedBrief(brief);
+    // Smooth scroll to content
+    setTimeout(() => {
+      variantsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   const authHeaders = async () => {
     await getCurrentUser().catch(() => { });
@@ -350,6 +362,7 @@ export default function AdsPage() {
           variantId: variant.id, 
           avatarId: videoConfig.avatarId, 
           avatarType: videoConfig.avatarType,
+          voiceId: videoConfig.voiceId,
           customScript: videoConfig.script 
         }),
       });
@@ -441,9 +454,106 @@ export default function AdsPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
-    } catch (e) {
-      console.error('Download failed:', e);
+    } catch (err: any) {
+      console.error('[ads] download error:', err);
       setError('Failed to download image.');
+    }
+  };
+
+  const handleLocalUpload = async (variant: AdVariant, file: File) => {
+    if (!file) return;
+    setUploadingMedia(variant.id);
+    setError(null);
+    
+    try {
+      // 1. Get signed URL
+      const res = await fetch(`${API}/briefs/${selectedBrief?.id}/generate-upload-url`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileName: file.name,
+          contentType: file.type
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to get upload URL');
+      const { uploadUrl, publicUrl, isVideo } = data;
+
+      // 2. Upload to GCS
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type },
+        body: file
+      });
+      
+      if (!uploadRes.ok) throw new Error('Upload to storage failed');
+
+      // 3. Update variant in Firestore
+      const updateData: any = {};
+      if (isVideo) {
+        updateData.videoUrl = publicUrl;
+        updateData.videoStatus = 'ready';
+        updateData.videoError = null;
+      } else {
+        updateData.imageUrl = publicUrl;
+      }
+
+      const patchRes = await fetch(`${API}/briefs/${selectedBrief?.id}/variants/${variant.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updateData)
+      });
+
+      if (!patchRes.ok) throw new Error('Failed to update variant data');
+
+      // Refresh variants
+      if (selectedBrief) {
+        const variantsRes = await fetch(`${API}/briefs/${selectedBrief.id}/variants`);
+        const { items } = await variantsRes.json();
+        setVariants(items);
+      }
+      
+    } catch (err: any) {
+      console.error('[ads] Upload error:', err);
+      setError(err.message || 'Failed to upload media. Please try again.');
+    } finally {
+      setUploadingMedia(null);
+      // Reset input value to allow re-uploading the same file
+      if (imageInputRef.current) imageInputRef.current.value = '';
+      if (videoInputRef.current) videoInputRef.current.value = '';
+    }
+  };
+
+  const handleCreateManualVariant = async (file: File) => {
+    if (!selectedBrief || !file) return;
+    setLoadingVariants(true);
+    setError(null);
+    
+    try {
+      // 1. Create a dummy variant first to get an ID
+      const headers = await authHeaders();
+      const variantRes = await fetch(`${API}/briefs/${selectedBrief.id}/variants`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          type: 'text',
+          platform: selectedPlatform,
+          status: 'ready',
+          caption: file.type.startsWith('video/') ? `Uploaded video for ${selectedPlatform}` : `Uploaded image for ${selectedPlatform}`
+        })
+      });
+      const newVariant = await variantRes.json();
+      if (!variantRes.ok) throw new Error(newVariant.error || 'Failed to create variant placeholder');
+
+      // 2. Reuse handleLocalUpload logic to upload the actual file
+      await handleLocalUpload(newVariant, file);
+      
+    } catch (err: any) {
+      console.error('[ads] Manual variant creation failed:', err);
+      setError(err.message || 'Failed to create manual variant');
+    } finally {
+      setLoadingVariants(false);
     }
   };
 
@@ -539,9 +649,27 @@ export default function AdsPage() {
           </motion.div>
         )}
 
-        {/* --- Create Campaign Form --- */}
-        <AnimatePresence>
-          {showCreateForm && (
+        {notLoggedIn ? (
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="py-20 text-center">
+            <div className="h-20 w-20 rounded-3xl bg-rose-500/10 flex items-center justify-center mx-auto mb-6 border border-rose-500/20">
+              <AlertCircle className="h-10 w-10 text-rose-500" />
+            </div>
+            <h2 className="text-3xl font-black text-white tracking-tighter mb-4">Authentication Required</h2>
+            <p className="text-white/40 text-sm max-w-md mx-auto mb-8">
+              Your session has expired or you are not logged in. Please log in to securely access the Marketing Ads Studio.
+            </p>
+            <button
+              onClick={() => window.location.href = `/login?returnUrl=${encodeURIComponent('/marketing/ads')}`}
+              className="rounded-2xl bg-orange-500 px-8 py-4 text-sm font-black text-black shadow-xl hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-2"
+            >
+              Sign In to Continue <ArrowRight className="h-4 w-4" />
+            </button>
+          </motion.div>
+        ) : (
+          <>
+            {/* --- Create Campaign Form --- */}
+            <AnimatePresence>
+              {showCreateForm && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
@@ -647,8 +775,8 @@ export default function AdsPage() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  onClick={() => setSelectedBrief(brief)}
-                  className={`group relative w-full text-left p-5 rounded-3xl border transition-all ${
+                  onClick={() => handleSelectBrief(brief)}
+                  className={`group relative w-full text-left p-5 rounded-3xl border transition-all hover:scale-[1.02] active:scale-[0.98] ${
                     selectedBrief?.id === brief.id 
                     ? 'bg-orange-500/10 border-orange-500/30' 
                     : 'bg-white/5 border-white/5 hover:bg-white/10'
@@ -664,7 +792,7 @@ export default function AdsPage() {
                       className="h-8 w-8 rounded-lg bg-white/5 flex items-center justify-center hover:bg-rose-500/20 hover:text-rose-400 text-white/20 transition-all opacity-0 group-hover:opacity-100"
                     ><Trash2 className="h-4 w-4" /></button>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setSelectedBrief(brief); }}
+                      onClick={(e) => { e.stopPropagation(); handleSelectBrief(brief); }}
                       className="h-8 w-8 rounded-lg bg-orange-500/10 flex items-center justify-center hover:bg-orange-500 text-white transition-all"
                     ><ChevronRight className="h-4 w-4" /></button>
                   </div>
@@ -729,7 +857,8 @@ export default function AdsPage() {
                 </Card>
 
                 {/* Automation Bar */}
-                <Card className="p-1 px-6 bg-[#1a1c20] border-orange-500/20">
+                <div ref={variantsRef}>
+                  <Card className="p-1 px-6 bg-[#1a1c20] border-orange-500/20">
                   <div className="flex items-center justify-between py-4">
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 rounded-xl bg-orange-500/10 flex items-center justify-center border border-orange-500/20">
@@ -764,9 +893,25 @@ export default function AdsPage() {
                       >
                         {generatingText ? <RefreshCw className="h-4 w-4 animate-spin mx-auto" /> : 'Generate Now'}
                       </button>
+                      <button
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'file';
+                          input.accept = 'image/*,video/*';
+                          input.onchange = (e) => {
+                            const file = (e.target as HTMLInputElement).files?.[0];
+                            if (file) handleCreateManualVariant(file);
+                          };
+                          input.click();
+                        }}
+                        className="h-10 px-6 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-xs hover:bg-white/10 active:scale-95 transition-all flex items-center gap-2"
+                      >
+                        <Upload className="h-4 w-4" /> Upload Media
+                      </button>
                     </div>
                   </div>
                 </Card>
+              </div>
 
                 {/* Posts Feed */}
                 <div className="space-y-8">
@@ -900,6 +1045,11 @@ export default function AdsPage() {
                                             onClick={() => handleDownloadImage(linkedImage?.imageUrl || (variant as any).imageUrl, variant.id)}
                                             className="h-10 w-10 rounded-full bg-white/10 text-white backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all"
                                           ><Download className="h-4 w-4" /></button>
+                                          <button 
+                                            onClick={() => { setUploadingMedia(variant.id); imageInputRef.current?.click(); }}
+                                            className="h-10 w-10 rounded-full bg-white/10 text-white backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all"
+                                            title="Upload local image"
+                                          ><Upload className="h-4 w-4" /></button>
                                         </div>
                                       </div>
                                     ) : (
@@ -912,6 +1062,15 @@ export default function AdsPage() {
                                         >
                                           {generatingImage === variant.id ? 'Rendering...' : 'Generate AI Image'}
                                         </button>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] text-white/20 uppercase font-bold tracking-widest">or</span>
+                                          <button 
+                                            onClick={() => { setUploadingMedia(variant.id); imageInputRef.current?.click(); }}
+                                            className="text-[11px] font-black uppercase text-white/40 hover:text-white"
+                                          >
+                                            {uploadingMedia === variant.id ? 'Uploading...' : 'Upload Local'}
+                                          </button>
+                                        </div>
                                       </div>
                                     )}
                                   </div>
@@ -923,8 +1082,21 @@ export default function AdsPage() {
                                     </div>
 
                                     {variant.videoUrl ? (
-                                      <div className="relative group rounded-3xl overflow-hidden border border-white/5 aspect-video bg-black/40">
-                                        <video src={variant.videoUrl} className="w-full h-full object-contain" controls />
+                                      <div className="relative group rounded-3xl overflow-hidden border border-white/5 aspect-video bg-black/40 shadow-2xl">
+                                        <video 
+                                          src={variant.videoUrl} 
+                                          className="w-full h-full object-contain" 
+                                          controls
+                                          playsInline
+                                        />
+                                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button 
+                                            onClick={() => { setUploadingMedia(variant.id); videoInputRef.current?.click(); }}
+                                            className="h-8 px-3 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[10px] font-bold text-white hover:bg-orange-500 transition-colors"
+                                          >
+                                            Replace
+                                          </button>
+                                        </div>
                                       </div>
                                       ) : variant.videoStatus === 'failed' ? (
                                         <div className="relative group aspect-video rounded-3xl bg-red-500/5 border border-red-500/20 flex flex-col items-center justify-center gap-3 p-6 overflow-hidden">
@@ -942,13 +1114,20 @@ export default function AdsPage() {
                                                 setVideoConfig({
                                                   script: (variant.caption || '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
                                                   avatarId: '',
+                                                  voiceId: '',
                                                   avatarType: 'avatar'
                                                 });
                                                 setShowVideoConfigModal(variant);
                                               }}
                                               className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-[10px] font-bold text-white transition-colors"
                                             >
-                                              Try Again
+                                              Try AI Again
+                                            </button>
+                                            <button 
+                                              onClick={() => { setUploadingMedia(variant.id); videoInputRef.current?.click(); }}
+                                              className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/40 border border-orange-500/50 rounded-xl text-[10px] font-bold text-white transition-colors"
+                                            >
+                                              Upload Custom
                                             </button>
                                           </div>
                                         </div>
@@ -957,44 +1136,51 @@ export default function AdsPage() {
                                         <RefreshCw className="h-6 w-6 text-orange-400 animate-spin" />
                                         <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest text-center">Video generating...</span>
                                         <span className="text-[8px] text-white/30 text-center uppercase tracking-wider">Updates via Webhook</span>
-                                        
-                                        {/* Hover overlay to allow retry if stuck */}
                                         <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity rounded-3xl backdrop-blur-sm z-10">
-                                          <span className="text-[10px] text-white/50 uppercase tracking-wider">Taking too long?</span>
                                           <button 
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              setVideoConfig({
-                                                script: (variant.caption || '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
-                                                avatarId: '',
-                                                avatarType: 'avatar'
-                                              });
-                                              setShowVideoConfigModal(variant);
-                                            }}
-                                            className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/40 border border-orange-500/50 rounded-xl text-[10px] font-bold text-white transition-colors"
+                                            onClick={() => { setUploadingMedia(variant.id); videoInputRef.current?.click(); }}
+                                            className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-[10px] font-bold text-white transition-colors"
                                           >
-                                            Generate Again
+                                            Skip & Upload Custom
                                           </button>
                                         </div>
                                       </div>
                                     ) : (
-                                      <button 
-                                        onClick={() => {
-                                          setVideoConfig({
-                                            script: (variant.caption || '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
-                                            avatarId: '',
-                                            avatarType: 'avatar'
-                                          });
-                                          setShowVideoConfigModal(variant);
-                                        }}
-                                        disabled={generatingVideo === variant.id}
-                                        className="w-full aspect-video rounded-3xl bg-white/5 border border-dashed border-white/10 flex flex-col items-center justify-center gap-4 group hover:bg-white/10 transition-all"
-                                      >
-                                        <div className="h-12 w-12 rounded-2xl bg-white/5 group-hover:bg-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-all">
-                                          <Video className="h-6 w-6 text-white/10 group-hover:text-orange-400" />
-                                        </div>
-                                        <span className="text-[11px] font-black uppercase text-white/30 group-hover:text-white">Configure AI Video</span>
-                                      </button>
+                                      <div className="space-y-3">
+                                        <button 
+                                          onClick={() => {
+                                            setVideoConfig({
+                                              script: (variant.caption || '').replace(/#\w+/g, '').replace(/\s+/g, ' ').trim().substring(0, 500),
+                                              avatarId: '',
+                                              voiceId: '',
+                                              avatarType: 'avatar'
+                                            });
+                                            setShowVideoConfigModal(variant);
+                                          }}
+                                          disabled={generatingVideo === variant.id}
+                                          className="w-full aspect-video rounded-3xl bg-white/5 border border-dashed border-white/10 flex flex-col items-center justify-center gap-3 group hover:bg-white/10 transition-all"
+                                        >
+                                          <div className="h-10 w-10 rounded-xl bg-white/5 group-hover:bg-orange-500/20 flex items-center justify-center group-hover:scale-110 transition-all">
+                                            <Bot className="h-5 w-5 text-white/10 group-hover:text-orange-400" />
+                                          </div>
+                                          <span className="text-[10px] font-black uppercase text-white/30 group-hover:text-white">AI Talking Avatar</span>
+                                        </button>
+                                        
+                                        <button 
+                                            onClick={() => { setUploadingMedia(variant.id); videoInputRef.current?.click(); }}
+                                            className="w-full py-4 bg-orange-500/5 border border-orange-500/20 rounded-3xl text-[10px] font-black uppercase text-orange-400 hover:bg-orange-500 hover:text-black transition-all flex items-center justify-center gap-3"
+                                          >
+                                            {uploadingMedia === variant.id ? (
+                                              <>
+                                                <RefreshCw className="h-4 w-4 animate-spin" /> Uploading...
+                                              </>
+                                            ) : (
+                                              <>
+                                                <Upload className="h-4 w-4" /> Upload Custom Video
+                                              </>
+                                            )}
+                                        </button>
+                                      </div>
                                     )}
                                   </div>
                                 </div>
@@ -1010,6 +1196,8 @@ export default function AdsPage() {
             )}
           </div>
         </div>
+        </>
+        )}
       </div>
 
       {/* --- Modals --- */}
@@ -1106,6 +1294,32 @@ export default function AdsPage() {
                           <option value="talking_photo">Talking Photo</option>
                         </select>
                       </div>
+
+                      <div className="mt-6 text-left">
+                        <label className="text-xs font-bold text-white/60 uppercase tracking-widest mb-2 block">Voice Option</label>
+                        <select
+                          value={videoConfig.voiceId}
+                          onChange={e => setVideoConfig(p => ({ ...p, voiceId: e.target.value }))}
+                          className="w-full rounded-2xl bg-black/40 border border-white/20 px-4 py-3 text-sm text-white outline-none focus:border-orange-500/50 transition-all cursor-pointer mb-3"
+                        >
+                          <option value="">Default (Auto-detect)</option>
+                          <option value="dc5370c68baa4905be87f702758df4b0">English Male (Christopher)</option>
+                          <option value="c3d3f9e8316c4982a536968989508d8e">English Female (Sara)</option>
+                          <option value="hi-IN-MadhurNeural">Hindi Male (Madhur)</option>
+                          <option value="hi-IN-SwaraNeural">Hindi Female (Swara)</option>
+                          <option value="custom">Custom Voice ID...</option>
+                        </select>
+                        
+                        {videoConfig.voiceId === 'custom' || (!['', 'dc5370c68baa4905be87f702758df4b0', 'c3d3f9e8316c4982a536968989508d8e', 'hi-IN-MadhurNeural', 'hi-IN-SwaraNeural'].includes(videoConfig.voiceId)) ? (
+                          <input 
+                            type="text" 
+                            value={videoConfig.voiceId === 'custom' ? '' : videoConfig.voiceId}
+                            onChange={e => setVideoConfig(p => ({ ...p, voiceId: e.target.value }))}
+                            placeholder="Enter HeyGen Voice ID..."
+                            className="w-full rounded-2xl bg-black/40 border border-white/20 px-4 py-3 text-sm text-orange-400 font-mono focus:border-orange-500/50 outline-none transition-all shadow-inner"
+                          />
+                        ) : null}
+                      </div>
                     </div>
                   </div>
     
@@ -1166,6 +1380,27 @@ export default function AdsPage() {
           background: rgba(249, 115, 22, 0.2);
         }
       `}</style>
+      {/* Hidden File Inputs */}
+      <input 
+        type="file" ref={imageInputRef} className="hidden" accept="image/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && variants.find(v => v.id === uploadingMedia)) {
+            const v = variants.find(v => v.id === uploadingMedia);
+            if (v) handleLocalUpload(v, file);
+          }
+        }}
+      />
+      <input 
+        type="file" ref={videoInputRef} className="hidden" accept="video/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file && variants.find(v => v.id === uploadingMedia)) {
+            const v = variants.find(v => v.id === uploadingMedia);
+            if (v) handleLocalUpload(v, file);
+          }
+        }}
+      />
     </div>
   );
 }

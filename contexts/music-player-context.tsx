@@ -8,10 +8,16 @@ export interface MusicTrack {
     audioUrl: string;
     category?: string;
     prompt?: string;
+    description?: string;
     createdAt?: string;
     duration?: number;
     artist?: string;
     imageUrl?: string;
+    story?: string;
+    lyrics?: string;
+    healingBenefits?: string[];
+    tags?: string[];
+    metadata?: any;
 }
 
 interface MusicPlayerContextType {

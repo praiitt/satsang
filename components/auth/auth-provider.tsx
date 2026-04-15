@@ -14,8 +14,9 @@ interface AuthContextType {
   sendOTP: (phoneNumber: string) => Promise<ConfirmationResult>;
   verifyOTP: (confirmationResult: ConfirmationResult, code: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithFacebook: () => Promise<void>;
+  sendEmailLink: (email: string) => Promise<void>;
+  processEmailLink: (email: string, emailLink: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -59,19 +60,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const checkAuth = useCallback(async () => {
+    console.log('[DEBUG-AUTH] checkAuth started');
     try {
+      console.log('[DEBUG-AUTH] Calling getCurrentUser()');
       const userInfo = await getCurrentUser();
+      console.log('[DEBUG-AUTH] getCurrentUser returned:', userInfo ? userInfo.uid : 'null');
       setUser(userInfo);
     } catch (error) {
-      console.error('[AuthProvider] checkAuth failed:', error);
+      console.error('[DEBUG-AUTH] checkAuth failed:', error);
       setUser(null);
     } finally {
+      console.log('[DEBUG-AUTH] checkAuth finally block executing. Setting loading to false.');
       setLoading(false);
     }
   }, []);
 
   // Check authentication status on mount only (no polling)
   useEffect(() => {
+    console.log('[DEBUG-AUTH] AuthProvider mounted. Calling checkAuth().');
     checkAuth();
   }, [checkAuth]);
 
@@ -133,41 +139,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async (): Promise<void> => {
     await checkAuth();
   }, [checkAuth]);
-  const signUpWithEmail = useCallback(async (email: string, password: string): Promise<void> => {
+
+  const sendEmailLink = useCallback(async (email: string): Promise<void> => {
     try {
       const auth = getFirebaseAuth();
-      const { createUserWithEmailAndPassword } = await import('firebase/auth');
+      const { sendSignInLinkToEmail } = await import('firebase/auth');
 
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      const idToken = await result.user.getIdToken();
+      const actionCodeSettings = {
+        // URL you want to redirect back to. Ensure it's in the authorized domains list.
+        url: typeof window !== 'undefined' ? `${window.location.origin}/login` : '',
+        handleCodeInApp: true,
+      };
 
-      // Exchange for session cookie
-      await sessionLogin(idToken);
-
-      // Refresh user
-      await checkAuth();
+      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+      
+      // Save the email locally so you don't need to ask the user for it again
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('emailForSignIn', email);
+      }
     } catch (error: any) {
-      console.error('Error signing up with email:', error);
-      throw new Error(error.message || 'Failed to sign up');
+      console.error('Error sending email link:', error);
+      throw new Error(error.message || 'Failed to send login link');
     }
-  }, [checkAuth]);
+  }, []);
 
-  const signInWithEmail = useCallback(async (email: string, password: string): Promise<void> => {
+  const processEmailLink = useCallback(async (email: string, emailLink: string): Promise<void> => {
+    console.log('[DEBUG] processEmailLink start for email:', email);
     try {
       const auth = getFirebaseAuth();
-      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      const { signInWithEmailLink } = await import('firebase/auth');
 
-      const result = await signInWithEmailAndPassword(auth, email, password);
+      console.log('[DEBUG] calling signInWithEmailLink...');
+      const result = await signInWithEmailLink(auth, email, emailLink);
+      console.log('[DEBUG] signInWithEmailLink resolved. Getting idToken...');
       const idToken = await result.user.getIdToken();
 
       // Exchange for session cookie
+      console.log('[DEBUG] Exchanging for session cookie with API...');
       await sessionLogin(idToken);
+      console.log('[DEBUG] session cookie exchanged successfully.');
 
       // Refresh user
+      console.log('[DEBUG] Calling checkAuth...');
       await checkAuth();
+      console.log('[DEBUG] checkAuth completed in processEmailLink.');
+
+      // Clear email from storage
+      if (typeof window !== 'undefined') {
+        window.localStorage.removeItem('emailForSignIn');
+      }
     } catch (error: any) {
-      console.error('Error signing in with email:', error);
-      throw new Error(error.message || 'Failed to sign in');
+      console.error('Error signing in with email link:', error);
+      throw new Error(error.message || 'Failed to sign in with email link');
     }
   }, [checkAuth]);
 
@@ -221,8 +244,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         verifyOTP,
         signInWithGoogle,
         signInWithFacebook,
-        signUpWithEmail,
-        signInWithEmail,
+        sendEmailLink,
+        processEmailLink,
         logout,
         refreshUser,
       }}
