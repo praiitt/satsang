@@ -14,27 +14,18 @@ export async function downloadSession(): Promise<boolean> {
     const bucket = storage.bucket(BUCKET_NAME);
     const file = bucket.file(SESSION_FILE);
 
-    const [exists] = await file.exists();
-    if (!exists) {
-      console.log('[SessionSync] No remote session found in GCS.');
-      return false;
-    }
+    console.log('[SessionSync] Force-deleting remote session from GCS to clear corruption...');
+    await file.delete({ ignoreNotFound: true }).catch(() => {});
 
-    console.log('[SessionSync] Downloading remote session...');
-    const tempZip = path.join(process.cwd(), 'session_tmp.zip');
-    await file.download({ destination: tempZip });
-
-    console.log('[SessionSync] Extracting session...');
     if (fs.existsSync(SESSION_DIR)) {
+      console.log('[SessionSync] Force-deleting local .wwebjs_auth...');
       fs.rmSync(SESSION_DIR, { recursive: true, force: true });
     }
-    await extract(tempZip, { dir: path.resolve(SESSION_DIR, '..') });
     
-    fs.unlinkSync(tempZip);
-    console.log('[SessionSync] ✅ Session restored successfully.');
-    return true;
+    console.log('[SessionSync] Corrupted session cleared. Session Sync is now disabled to prevent crashes.');
+    return false;
   } catch (err) {
-    console.error('[SessionSync] ❌ Failed to restore session:', err);
+    console.error('[SessionSync] Failed to clear session:', err);
     return false;
   }
 }
@@ -42,47 +33,6 @@ export async function downloadSession(): Promise<boolean> {
 let isUploading = false;
 
 export async function uploadSession(): Promise<void> {
-  if (isUploading) {
-    console.log('[SessionSync] Upload already in progress, skipping...');
-    return;
-  }
-  isUploading = true;
-  try {
-    if (!fs.existsSync(SESSION_DIR)) {
-        console.log('[SessionSync] No local session directory to upload.');
-        return;
-    }
-
-    console.log('[SessionSync] Zipping session directory...');
-    const tempZip = path.join(process.cwd(), 'session_upload.zip');
-    const output = fs.createWriteStream(tempZip);
-    const archive = archiver('zip', { zlib: { level: 9 } });
-
-    await new Promise<void>((resolve, reject) => {
-      output.on('close', resolve);
-      archive.on('error', reject);
-      archive.pipe(output);
-      // We need to add the folder itself or its contents
-      // To match LocalAuth structure, we add the .wwebjs_auth folder's contents under a folder named .wwebjs_auth
-      archive.directory(SESSION_DIR, '.wwebjs_auth');
-      archive.finalize();
-    });
-
-    console.log('[SessionSync] Uploading session to GCS...');
-    const bucket = storage.bucket(BUCKET_NAME);
-    await bucket.upload(tempZip, {
-      destination: SESSION_FILE,
-      metadata: {
-        contentType: 'application/zip',
-        cacheControl: 'no-cache',
-      },
-    });
-
-    fs.unlinkSync(tempZip);
-    console.log('[SessionSync] ✅ Session uploaded successfully.');
-  } catch (err) {
-    console.error('[SessionSync] ❌ Failed to upload session:', err);
-  } finally {
-    isUploading = false;
-  }
+  console.log('[SessionSync] Session upload is disabled to prevent Chrome lockfile corruption.');
+  return;
 }

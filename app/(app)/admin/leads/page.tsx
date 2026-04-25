@@ -226,7 +226,12 @@ export default function LeadsAdminPage() {
                     <h1 className="text-3xl font-bold text-gray-900 dark:text-white">🎵 Poet Lead Engine</h1>
                     <p className="text-gray-500 dark:text-gray-400 mt-1">Discover spiritual poets and convert them to RRAASI creators</p>
                 </div>
-                <div className="flex gap-2">
+            <div className="flex gap-2">
+                    <a href="/admin/facebook-leads">
+                        <Button className="bg-indigo-600 hover:bg-indigo-700 text-white border-none">
+                            📘 Facebook Leads
+                        </Button>
+                    </a>
                     <Button variant="dotted" onClick={fetchLeads} disabled={loading} className="text-amber-500 border-amber-500/30">
                         <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} /> Refresh
                     </Button>

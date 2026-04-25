@@ -256,3 +256,10 @@ issue.local
 
 # Mobile App
 rraasi_mobile_react_native/
+
+# WhatsApp service — browser session data (large binary files, not needed in git)
+**/.wwebjs_auth/
+**/.wwebjs_cache/
+
+# auth-server deployment yaml (auto-generated, contains secrets)
+auth-server/.env.yaml

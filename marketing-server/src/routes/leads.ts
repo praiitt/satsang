@@ -4,6 +4,11 @@ import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 import { runInstagramScrape } from '../services/scrapers/instagram-scraper.js';
 import { runYoutubeScrape } from '../services/scrapers/youtube-scraper.js';
 import admin from 'firebase-admin';
+import multer from 'multer';
+import csvParser from 'csv-parser';
+import { Readable } from 'stream';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 const router = Router();
 const COLLECTION = 'leads';
@@ -106,6 +111,119 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
     } catch (e: any) {
         console.error('[leads] create error:', e);
         return res.status(500).json({ error: 'Failed to create lead', details: e.message });
+    }
+});
+
+/**
+ * POST /leads/upload-csv - Upload and parse CSV to create leads
+ */
+router.post('/upload-csv', requireAuth, upload.single('file'), (req: AuthedRequest, res) => {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+
+    const results: any[] = [];
+    const stream = Readable.from(req.file.buffer.toString());
+
+    stream
+        .pipe(csvParser())
+        .on('data', (data) => results.push(data))
+        .on('end', async () => {
+            try {
+                const db = getDb();
+                const now = Date.now();
+                const createdLeads = [];
+
+                for (const row of results) {
+                    // Extract common fields, adjust according to actual CSV format
+                    const name = row.Name || row.name || row.FullName || 'Unknown';
+                    const email = row.Email || row.email || null;
+                    const phone = row.Phone || row.phone || row.PhoneNumber || null;
+                    const platform = row.Platform || row.platform || 'meta_ads';
+
+                    if (!name || (!email && !phone)) continue;
+
+                    const lead = {
+                        name: String(name),
+                        handle: row.handle || '',
+                        platform,
+                        profileUrl: '',
+                        language: row.language || 'hindi',
+                        location: row.location || '',
+                        phone: phone ? String(phone) : null,
+                        email: email ? String(email) : null,
+                        whatsappUrl: null,
+                        website: null,
+                        bestContactMethod: phone ? 'phone' : 'email',
+                        tags: [],
+                        poetScore: 0,
+                        status: 'new',
+                        notes: 'Imported via CSV',
+                        sampleGenerated: false,
+                        sampleUrl: null,
+                        discoveredAt: now,
+                        contactedAt: null,
+                        convertedAt: null,
+                        createdBy: req.user!.uid,
+                    };
+
+                    const docRef = await db.collection(COLLECTION).add(lead);
+                    createdLeads.push({ id: docRef.id, ...lead });
+                }
+
+                res.json({ success: true, count: createdLeads.length, items: createdLeads });
+            } catch (e: any) {
+                console.error('[leads] CSV processing error:', e);
+                res.status(500).json({ error: 'Failed to process CSV', details: e.message });
+            }
+        });
+});
+
+/**
+ * POST /leads/meta-webhook - Receive real-time leads from Meta Ads
+ */
+router.post('/meta-webhook', async (req, res) => {
+    try {
+        const db = getDb();
+        const entry = req.body?.entry;
+        
+        if (!entry || !Array.isArray(entry)) {
+            return res.status(400).json({ error: 'Invalid Meta webhook payload' });
+        }
+
+        const now = Date.now();
+        const createdLeads = [];
+
+        for (const e of entry) {
+            const changes = e.changes || [];
+            for (const change of changes) {
+                if (change.field === 'leadgen') {
+                    const leadgen = change.value;
+                    const leadId = leadgen.leadgen_id;
+                    const formId = leadgen.form_id;
+
+                    // In a production scenario, you would fetch the lead details using the Graph API and leadId.
+                    // For now, we store the raw event or parse provided fields if they exist in the payload
+                    
+                    const lead = {
+                        name: `Meta Lead ${leadId}`,
+                        platform: 'meta_ads',
+                        metaLeadId: leadId,
+                        metaFormId: formId,
+                        status: 'new',
+                        notes: `Received via Meta Webhook`,
+                        discoveredAt: now,
+                        createdBy: 'system',
+                        // ... map other fields dynamically
+                    };
+
+                    const docRef = await db.collection(COLLECTION).add(lead);
+                    createdLeads.push({ id: docRef.id, ...lead });
+                }
+            }
+        }
+        res.json({ success: true, processed: createdLeads.length });
+    } catch (e: any) {
+        console.error('[leads] Meta webhook error:', e);
+        res.status(500).json({ error: 'Failed to process Meta webhook', details: e.message });
     }
 });
 
@@ -373,6 +491,58 @@ router.post('/:id/send-whatsapp', requireAuth, async (req, res) => {
     } catch (e: any) {
         console.error('[leads] send-whatsapp error:', e);
         return res.status(500).json({ error: 'Failed to send WhatsApp', details: e.message });
+    }
+});
+
+// ─── AI VOICE CALLING ────────────────────────────────────────────────────────
+
+/**
+ * POST /leads/:id/ai-call
+ * Initiate an outbound Twilio call connected to the AI Voice Bot
+ */
+router.post('/:id/ai-call', requireAuth, async (req, res) => {
+    try {
+        const db = getDb();
+        const doc = await db.collection(COLLECTION).doc(req.params.id).get();
+        if (!doc.exists) return res.status(404).json({ error: 'Lead not found' });
+
+        const lead = doc.data() as any;
+        const phone = lead.phone || req.body.phone;
+        
+        if (!phone) return res.status(400).json({ error: 'No phone number on this lead' });
+
+        const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+        const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+        const TWILIO_PHONE_NUMBER = process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_WHATSAPP_NUMBER; 
+        
+        // Use the marketing server URL for the TwiML webhook. In production, this must be a public HTTPS URL.
+        const APP_URL = process.env.MARKETING_SERVER_URL || process.env.NEXT_PUBLIC_APP_URL || 'https://www.rraasi.com';
+
+        if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_PHONE_NUMBER) {
+            return res.status(500).json({ error: 'Twilio Voice credentials not configured' });
+        }
+
+        // We use the twilio SDK to initiate the call
+        const twilio = (await import('twilio')).default;
+        const client = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
+
+        const call = await client.calls.create({
+            to: phone.startsWith('+') ? phone : '+91' + phone,
+            from: TWILIO_PHONE_NUMBER.replace('whatsapp:', ''), // Ensure it's a standard number, not whatsapp:
+            url: `${APP_URL}/twilio-bot/twiml?leadId=${req.params.id}` // We will route this to twilio-bot.ts
+        });
+
+        // Update lead status
+        await db.collection(COLLECTION).doc(req.params.id).set({
+            status: 'contacted',
+            contactedAt: Date.now(),
+            lastOutreach: { channel: 'ai_call', sentAt: Date.now(), callSid: call.sid, status: call.status }
+        }, { merge: true });
+
+        return res.json({ success: true, callSid: call.sid, status: call.status });
+    } catch (e: any) {
+        console.error('[leads] ai-call error:', e);
+        return res.status(500).json({ error: 'Failed to initiate AI call', details: e.message });
     }
 });
 

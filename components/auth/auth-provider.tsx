@@ -17,6 +17,7 @@ interface AuthContextType {
   signInWithFacebook: () => Promise<void>;
   sendEmailLink: (email: string) => Promise<void>;
   processEmailLink: (email: string, emailLink: string) => Promise<void>;
+  signInWithEmailPwd: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -234,6 +235,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [checkAuth]);
 
+  const signInWithEmailPwd = useCallback(async (email: string, password: string): Promise<void> => {
+    try {
+      const auth = getFirebaseAuth();
+      const { signInWithEmailAndPassword } = await import('firebase/auth');
+      
+      const result = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await result.user.getIdToken();
+
+      // Exchange for session cookie
+      await sessionLogin(idToken);
+
+      // Refresh user
+      await checkAuth();
+    } catch (error: any) {
+      console.error('Error signing in with email and password:', error);
+      throw new Error(error.message || 'Failed to sign in with email and password');
+    }
+  }, [checkAuth]);
+
   return (
     <AuthContext.Provider
       value={{
@@ -246,6 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         signInWithFacebook,
         sendEmailLink,
         processEmailLink,
+        signInWithEmailPwd,
         logout,
         refreshUser,
       }}

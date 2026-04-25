@@ -9,7 +9,11 @@ SERVICE_NAME="satsang-frontend"
 echo "🚀 Deploying Frontend to Cloud Run ($SERVICE_NAME)..."
 
 # 1. Build and push image using Cloud Build (uses cloudbuild.yaml)
-echo "📦 Building container image..."
+# ⚠️  CRITICAL: NEXT_PUBLIC_* vars MUST be set as --build-arg inside cloudbuild.yaml,
+#    NOT here. They are baked into the Next.js bundle at build time by the Dockerfile.
+#    Adding them only as Cloud Run env vars will NOT work — Firebase will throw
+#    auth/invalid-api-key and the app will crash on load.
+echo "📦 Building container image via cloudbuild.yaml..."
 gcloud builds submit --config cloudbuild.yaml --project $PROJECT_ID .
 
 # ─────────────────────────────────────────────────────────────
@@ -63,7 +67,8 @@ add_env LIVEKIT_EGRESS_GCP_CREDENTIALS
 # Auth & Backend URLs
 add_env AUTH_SERVER_URL
 add_env MARKETING_SERVER_URL
-# NEXT_PUBLIC_WA_SERVICE_URL=https://whatsapp-service-6ougd45dya-el.a.run.app
+add_env INTERNAL_SERVICE_TOKEN
+add_env NEXT_PUBLIC_WA_SERVICE_URL
 
 # YouTube
 add_env YOUTUBE_CLIENT_ID
@@ -75,7 +80,7 @@ echo ""
 # 3. Deploy to Cloud Run with all env vars
 echo "🚀 Deploying to Cloud Run..."
 gcloud run deploy $SERVICE_NAME \
-  --image gcr.io/$PROJECT_ID/$SERVICE_NAME:fresh \
+  --image gcr.io/$PROJECT_ID/$SERVICE_NAME:latest \
   --platform managed \
   --region $REGION \
   --allow-unauthenticated \

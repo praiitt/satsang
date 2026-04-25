@@ -51,3 +51,4 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
 app.listen(PORT, () => {
   console.log(`🟢 WhatsApp Service running on http://localhost:${PORT}`);
 });
+// Triggering restart

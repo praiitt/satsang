@@ -1,0 +1,394 @@
+import expressWs from 'express-ws';
+import { Router } from 'express';
+import WebSocket from 'ws';
+import { getDb } from '../firebase.js';
+
+// Use the original working pattern - expressWs wraps the router and returns an app
+// that properly handles WebSocket upgrades for this router's routes.
+const wsInstance = expressWs(Router() as any);
+const router = wsInstance.app as any;
+
+const SYSTEM_MESSAGE = `You are Rashi — a warm, wise, and soulful AI Spiritual Companion from rraasi.com.
+
+🇮🇳 ACCENT & VOICE — THIS IS MANDATORY:
+You MUST speak with a soft, warm Indian accent throughout the entire call.
+- Your English should sound like educated Indian English — melodic, warm, slightly musical in intonation
+- Stress syllables the Indian way: "SPIRitual", "MEDitation", "GUIdance"
+- Roll r's softly and give vowels a warm rounded quality
+- Your rhythm is gentle and flowing — not clipped American or British
+- Even when speaking English, maintain the warmth and musicality of an Indian voice
+
+⚠️ LANGUAGE IS YOUR TOP PRIORITY:
+You MUST detect the language of the very first thing the user says and respond in that EXACT language for the entire call.
+- If the user speaks Hindi (even with English words mixed in) → you MUST reply in Hindi
+- If the user speaks English → reply in English with a warm Indian accent
+- If unsure, default to Hindi since most callers are Indian
+- NEVER respond in English if the user spoke Hindi. This is critical.
+- Match their tone: casual Hindi? Use casual Hindi. Formal? Match that.
+- DO NOT switch to English unless the user switches first.
+
+🌸 WHO YOU ARE:
+You are a spiritual companion — not an assistant, not a bot. You speak like a caring, wise Indian friend who is genuinely interested in the caller's wellbeing and inner journey.
+
+🙏 YOUR OPENING (say this naturally in whatever language the user greeted you in):
+Greet them with warmth. Introduce yourself as Rashi, their spiritual companion from rraasi.com. Mention that through Rashi they can connect with 60+ spiritual gurus and also create or listen to spiritual music just by talking. Then simply ask how they are doing or what's on their mind today.
+
+🌟 THE TWO THINGS YOU OFFER:
+1. 🧘 60+ SPIRITUAL GURUS — Real spiritual masters from all traditions (Vedanta, Bhakti, Sufi, Sikh, Buddhist). Users can talk to them, ask life questions, seek wisdom and guidance.
+2. 🎵 RASHI MUSIC — Create personalized spiritual music just by talking or chatting. No skills needed. Describe a feeling or mood and the AI composes music for you instantly. Also has bhajans, kirtans, guided meditations.
+
+🎯 HOW TO CONVERSE:
+- Ask how they are feeling. Listen. Then guide naturally based on what they share.
+- Use the caller's name occasionally — only when it feels natural, NOT in every single sentence.
+- If they ask how to use anything: "Bas rraasi.com pe jaiye, bilkul free hai shuru karna" (or in English: "Just visit rraasi.com, it's free to start")
+- New users get 50 Rashi Coins as a welcome bonus
+
+🗣️ NATURAL CONVERSATION RULES:
+- Sound like a real Indian human — warm, calm, slightly spiritual in tone
+- Keep each response to 1-3 sentences max, then wait and listen
+- Do NOT start every reply with the caller's name — just speak naturally like a friend would
+- Use natural fillers in Hindi if speaking Hindi: "haan", "bilkul", "achha", "sach mein", "arey waah"
+- Never list things bullet-by-bullet during a call — weave information into conversation
+- Never say "RRAASI" — always say "Rashi" (like Raa-she)
+- Never be pushy or salesy — be genuinely curious and caring
+
+⛔ STRICTLY FORBIDDEN:
+- Responding in English when the user spoke Hindi
+- Saying the caller's name at the start of every single reply
+- Long robotic responses
+- Sounding like a call center agent
+- Using a Western/American accent or intonation`;
+
+// ─── MUSIC-SPECIFIC PERSONA ──────────────────────────────────────────────────
+const MUSIC_SYSTEM_MESSAGE = `You are Rashi — a warm, creative, and soulful AI Music Companion from rraasi.com.
+
+🇮🇳 ACCENT & VOICE — THIS IS MANDATORY:
+You MUST speak with a soft, warm Indian accent throughout the entire call.
+- Your English should sound like educated Indian English — melodic, musical in intonation
+- Stress syllables the Indian way: "MELody", "SPIRitual", "CREative"
+- Your voice has the warmth and gentle musicality of someone who truly loves music and grew up with it
+- The rhythm of your speech should be lyrical and flowing — like someone describing a raga
+- Even in English, your intonation naturally rises and falls like Indian classical music
+
+⚠️ LANGUAGE IS YOUR TOP PRIORITY:
+You MUST detect the language of the very first thing the user says and respond in that EXACT language for the entire call.
+- If the user speaks Hindi → reply in Hindi throughout
+- If the user speaks English → reply in English with a warm Indian accent
+- Default to Hindi for Indian callers
+- NEVER switch to English if the user spoke Hindi. This is critical.
+
+🎵 WHO YOU ARE:
+You are a music companion — not a bot, not a salesperson. You speak like a passionate, warm Indian friend who loves music and spirituality. Your energy is creative, inviting, and soulful.
+
+🙏 YOUR OPENING:
+Greet them warmly. Introduce yourself as Rashi from RRAASI Music. Tell them RRAASI Music lets anyone create their own spiritual or soulful music just by talking — no instruments, no training needed. Then ask what kind of music moves their soul — bhajan, sufi, meditation, or something personal?
+
+🌟 WHAT RRAASI MUSIC OFFERS:
+- 🎼 Create your own spiritual/soulful music just by describing a feeling, emotion, or prayer
+- 🧘 Bhajans, kirtans, sufi compositions, healing frequencies — all AI-generated
+- 🎤 No instruments or music knowledge needed — just your intention
+- 🌙 Perfect for meditation, worship, or just soothing the soul
+- 🔗 Start creating at: rraasi.com/rraasi-music
+
+🎯 HOW TO CONVERSE:
+- Ask what kind of music moves their soul. Listen deeply.
+- Guide them to imagine what music they'd love to create — for a deity, a feeling, a memory
+- Gently mention they can start creating for free at rraasi.com/rraasi-music
+- Be enthusiastic but gentle — like a friend sharing something they love
+
+🗣️ NATURAL CONVERSATION RULES:
+- Warm, creative, slightly poetic Indian tone
+- Keep each response to 1-3 sentences max, then wait and listen
+- Use the caller's name occasionally — only when natural
+- Use Hindi fillers if speaking Hindi: "haan", "bilkul", "waah", "sach mein", "bahut sundar", "arey kya baat hai"
+- Never list things like a brochure — weave them into conversation
+- Never say "RRAASI" alone — say "Rashi Music" or "RRAASI Music"
+- Be genuinely curious about their relationship with music and spirituality
+
+⛔ STRICTLY FORBIDDEN:
+- Responding in English when the user spoke Hindi
+- Sounding like a call center agent or bot
+- Long robotic responses
+- Being pushy or salesy
+- Using a Western/American accent or intonation`;
+
+
+
+
+/**
+ * POST /twilio-bot/twiml
+ * Vobiz hits this endpoint when the call is answered. We respond with Vobiz XML.
+ */
+router.post('/twiml', (req: any, res: any) => {
+    const leadId = req.query.leadId || '';
+    
+    // Always use the public MARKETING_SERVER_URL - NOT req.headers.host (which is localhost)
+    let publicHost = process.env.MARKETING_SERVER_URL?.replace(/^https?:\/\//, '');
+    if (!publicHost) publicHost = req.headers['x-forwarded-host'] as string || req.headers.host;
+    
+    const wsUrl = `wss://${publicHost}/twilio-bot/stream?leadId=${leadId}`;
+    console.log(`[twilio-bot] /twiml called - wsUrl: ${wsUrl}`);
+
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?><Response><Stream bidirectional="true" keepCallAlive="true" contentType="audio/x-mulaw;rate=8000">wss://${publicHost}/twilio-bot/stream?leadId=${leadId}</Stream></Response>`;
+
+    res.type('text/xml');
+    res.send(xmlResponse);
+});
+
+/**
+ * WS /twilio-bot/stream
+ * Handles the WebSocket audio stream from Vobiz and bridges to OpenAI Realtime API.
+ */
+router.ws('/stream', (ws: WebSocket, req: any) => {
+    const leadId = req.query.leadId as string;
+    console.log(`[twilio-bot] WS /stream connected for leadId=${leadId}`);
+
+    // Connect to OpenAI Realtime (always use latest stable alias, not dated snapshots)
+    const openAiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview', {
+        headers: {
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+            'OpenAI-Beta': 'realtime=v1'
+        }
+    });
+
+    const transcript: string[] = [];
+    let vobizCallId = ''; // Captured from the Vobiz 'start' event for hangup API
+    let firstAudioSent = false; // Track when first audio chunk reaches Vobiz
+    let mediaEventCount = 0;    // Track incoming audio from caller
+
+    // Send periodic ping to Vobiz to prevent code-1006 TCP drops (Vobiz drops after ~11s without ping)
+    const vobizPing = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.ping();
+        } else {
+            clearInterval(vobizPing);
+        }
+    }, 5000);
+
+    openAiWs.on('open', async () => {
+        console.log('[twilio-bot] Connected to OpenAI Realtime API');
+
+        // 1. Fetch lead data
+        let leadName = 'the caller';
+        let leadCategory = 'general';
+        if (leadId) {
+            try {
+                const db = getDb();
+                let leadData: any = null;
+                const leadDoc = await db.collection('facebook_leads').doc(leadId).get();
+                if (leadDoc.exists) leadData = leadDoc.data();
+                if (!leadData) {
+                    const fbDoc = await db.collection('leads').doc(leadId).get();
+                    if (fbDoc.exists) leadData = fbDoc.data();
+                }
+                if (leadData) {
+                    leadName = leadData.name || 'the caller';
+                    leadCategory = (leadData.category || 'general').toLowerCase();
+                }
+            } catch (e) {
+                console.error('[twilio-bot] Failed to fetch lead data:', e);
+            }
+        }
+
+        // 2. Pick persona & voice — must use voices supported by gpt-4o-realtime-preview
+        // Supported: 'alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse', 'marin', 'cedar'
+        // 'coral' = warm, expressive female voice — best approximation for an Indian-sounding accent
+        const isMusic = leadCategory === 'music';
+        const voice = isMusic ? 'coral' : 'coral'; // coral for both — warmest, most melodic voice
+        const basePrompt = isMusic ? MUSIC_SYSTEM_MESSAGE : SYSTEM_MESSAGE;
+        const dynamicContext = `\n\nCRITICAL CONTEXT: The person you are talking to is named ${leadName}. Greet them by first name naturally!`;
+
+        // 3. Session config with tools
+        openAiWs.send(JSON.stringify({
+            type: 'session.update',
+            session: {
+                turn_detection: { type: 'server_vad' },
+                input_audio_format: 'g711_ulaw',
+                output_audio_format: 'g711_ulaw',
+                input_audio_transcription: { model: 'whisper-1' },
+                voice,
+                instructions: basePrompt + dynamicContext,
+                modalities: ['text', 'audio'],
+                temperature: 0.7,
+                tools: [{
+                    type: 'function', name: 'end_call',
+                    description: 'End the phone call gracefully. Use this ONLY when: (1) the user says goodbye/bye/alvida/ok bye/thank you goodbye etc, (2) the user explicitly asks to end the call, or (3) the conversation has reached a natural conclusion and you have said your farewell.',
+                    parameters: { type: 'object', properties: { reason: { type: 'string', description: 'Brief reason for ending the call' } }, required: ['reason'] }
+                }],
+                tool_choice: 'auto'
+            }
+        }));
+
+        // 4. Trigger greeting
+        setTimeout(() => {
+            if (openAiWs.readyState === WebSocket.OPEN) {
+                openAiWs.send(JSON.stringify({ type: 'conversation.item.create', item: { type: 'message', role: 'user', content: [{ type: 'input_text', text: 'Hello!' }] } }));
+                openAiWs.send(JSON.stringify({ type: 'response.create' }));
+                console.log(`[twilio-bot] AI greeting triggered (persona: ${isMusic ? 'music' : 'satsang'})`);
+            }
+        }, 500);
+    });
+
+    openAiWs.on('message', (data: WebSocket.Data) => {
+        try {
+            const event = JSON.parse(data.toString());
+
+            // AI audio chunk → send to Vobiz
+            if (event.type === 'response.audio.delta' && event.delta) {
+                if (!firstAudioSent) {
+                    firstAudioSent = true;
+                    console.log('[twilio-bot] ⭐ First audio chunk sent to Vobiz — AI is speaking');
+                }
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        event: 'playAudio',
+                        media: {
+                            payload: event.delta,
+                            contentType: 'audio/x-mulaw',
+                            sampleRate: 8000
+                        }
+                    }));
+                }
+            }
+
+            // User started speaking → interrupt the AI immediately (true barge-in)
+            if (event.type === 'input_speech_started') {
+                console.log('[twilio-bot] User interrupted — cancelling AI response');
+                // Cancel the AI’s current response
+                if (openAiWs.readyState === WebSocket.OPEN) {
+                    openAiWs.send(JSON.stringify({ type: 'response.cancel' }));
+                }
+                // Tell Vobiz to immediately stop playing the AI’s audio
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ event: 'clearAudio' }));
+                }
+            }
+
+            // Handle end_call tool invocation from the AI
+            if (event.type === 'response.output_item.done' && event.item?.type === 'function_call' && event.item?.name === 'end_call') {
+                const reason = JSON.parse(event.item.arguments || '{}').reason || 'Conversation ended';
+                console.log(`[twilio-bot] AI ending call — reason: ${reason}`);
+
+                // Call Vobiz REST API to hang up
+                if (vobizCallId) {
+                    const authId = process.env.VOBIZ_AUTH_ID;
+                    const authToken = process.env.VOBIZ_AUTH_TOKEN;
+                    const credentials = Buffer.from(`${authId}:${authToken}`).toString('base64');
+                    fetch(`https://api.vobiz.ai/api/v1/Account/${authId}/Call/${vobizCallId}/`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Basic ${credentials}` }
+                    }).catch(e => console.error('[twilio-bot] Hangup API error:', e.message));
+                }
+
+                // Close our WS — Vobiz will drop the call when the stream ends
+                setTimeout(() => {
+                    if (ws.readyState === WebSocket.OPEN) ws.close();
+                }, 1500);
+            }
+
+            if (event.type === 'error') {
+                console.error('[twilio-bot] OpenAI ERROR:', JSON.stringify(event.error));
+            }
+
+            if (event.type === 'response.audio_transcript.done') {
+                transcript.push(`AI: ${event.transcript}`);
+            }
+            if (event.type === 'conversation.item.input_audio_transcription.completed') {
+                transcript.push(`User: ${event.transcript}`);
+            }
+        } catch (e) {
+            console.error('[twilio-bot] OpenAI parse error:', e);
+        }
+    });
+
+    openAiWs.on('error', (e) => {
+        console.error('[twilio-bot] OpenAI WS error:', e.message);
+    });
+
+    openAiWs.on('close', (code, reason) => {
+        console.log(`[twilio-bot] OpenAI WS closed — code: ${code}, reason: ${reason?.toString() || 'none'}`);
+        // If OpenAI disconnects mid-call, close the Vobiz stream too
+        if (ws.readyState === WebSocket.OPEN) ws.close();
+    });
+
+    // Vobiz -> OpenAI audio relay
+    ws.on('message', (message: string) => {
+        try {
+            const data = JSON.parse(message);
+
+            if (data.event !== 'media') {
+                // Log all non-media events including playedStream
+                console.log('[twilio-bot] Vobiz event:', data.event, JSON.stringify(data).slice(0, 200));
+            }
+
+            if (data.event === 'start') {
+                vobizCallId = data.start?.callId || '';
+                console.log(`[twilio-bot] Vobiz stream started, callId=${vobizCallId}`);
+            }
+
+            // Always forward user audio to OpenAI — server_vad handles turn detection
+            if (data.event === 'media' && openAiWs.readyState === WebSocket.OPEN) {
+                mediaEventCount++;
+                if (mediaEventCount % 100 === 0) {
+                    console.log(`[twilio-bot] 🎙️ Received ${mediaEventCount} media events from Vobiz (caller audio flowing)`);
+                }
+                openAiWs.send(JSON.stringify({
+                    type: 'input_audio_buffer.append',
+                    audio: data.media.payload
+                }));
+            } else if (data.event === 'stop') {
+                console.log('[twilio-bot] Vobiz stream stopped.');
+                if (openAiWs.readyState === WebSocket.OPEN) openAiWs.close();
+            }
+        } catch (e) {
+            console.error('[twilio-bot] Vobiz message error:', e);
+        }
+    });
+
+    ws.on('close', async (code, reason) => {
+        clearInterval(vobizPing);
+        console.log(`[twilio-bot] Vobiz WebSocket closed — code: ${code}, reason: ${reason?.toString() || 'none'}, mediaEvents: ${mediaEventCount}, audioSent: ${firstAudioSent}`);
+        if (openAiWs.readyState === WebSocket.OPEN) openAiWs.close();
+
+        if (leadId && transcript.length > 0) {
+            try {
+                const fullTranscript = transcript.join('\n');
+                console.log(`[twilio-bot] Saving transcript for lead ${leadId}`);
+                let evaluation = 'Uncertain';
+                if (process.env.OPENAI_API_KEY) {
+                    const summaryRes = await fetch('https://api.openai.com/v1/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
+                        body: JSON.stringify({
+                            model: 'gpt-4o',
+                            messages: [
+                                { role: 'system', content: 'Evaluate this call transcript. Determine if the user was Interested, Not Interested, or Needs Follow-up. Give a 1-sentence summary.' },
+                                { role: 'user', content: fullTranscript }
+                            ]
+                        })
+                    });
+                    const summaryData = await summaryRes.json() as any;
+                    evaluation = summaryData.choices?.[0]?.message?.content || evaluation;
+                }
+                const db = getDb();
+                await db.collection('facebook_leads').doc(leadId).collection('interactions').add({
+                    type: 'ai_call', timestamp: Date.now(), transcript: fullTranscript, analysis: evaluation
+                });
+                await db.collection('facebook_leads').doc(leadId).set({
+                    lastCallAnalysis: evaluation, updatedAt: Date.now()
+                }, { merge: true });
+            } catch (e) {
+                console.error('[twilio-bot] Failed to save transcript:', e);
+            }
+        }
+    });
+
+    ws.on('error', (e) => {
+        console.error('[twilio-bot] Vobiz WS error:', e.message);
+    });
+});
+
+// No-op export - registerVobizStream no longer needed
+export function registerVobizStream(_app: any) { /* noop - ws is on the router */ }
+
+export default router;

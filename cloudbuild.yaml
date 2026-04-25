@@ -1,22 +1,54 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: [
-      'build',
-      '-t', 'gcr.io/rraasi-8a619/satsang-frontend:fresh',
-      '--build-arg', 'NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBkxVOuhaVrU3Xz5M1_v0iWKKRQUwWd3TU',
-      '--build-arg', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=rraasi-8a619.firebaseapp.com',
-      '--build-arg', 'NEXT_PUBLIC_FIREBASE_PROJECT_ID=rraasi-8a619',
-      '--build-arg', 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=rraasi-8a619.firebasestorage.app',
-      '--build-arg', 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=469389287554',
-      '--build-arg', 'NEXT_PUBLIC_FIREBASE_APP_ID=1:469389287554:web:4482647b3c865a9d2b949b',
-      '--build-arg', 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-KNZ2VKQ9BH',
-      '--build-arg', 'NEXT_PUBLIC_ASSET_PREFIX=https://satsang-frontend-469389287554.asia-south1.run.app',
-      '--build-arg', 'NEXT_PUBLIC_AUTH_SERVER_URL=/satsang-auth-server',
-      '--build-arg', 'AUTH_SERVER_URL=https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-auth-server',
-      '--build-arg', 'MARKETING_SERVER_URL=https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-marketing-server',
-      '--build-arg', 'NEXT_PUBLIC_WA_SERVICE_URL=https://whatsapp-service-6ougd45dya-el.a.run.app',
-      '--build-arg', 'BACKEND_SERVICE_URL=https://rraasi.com',
-      '.'
-    ]
+    args:
+      - build
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/satsang-frontend:latest'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBkxVOuhaVrU3Xz5M1_v0iWKKRQUwWd3TU'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=rraasi-8a619.firebaseapp.com'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_PROJECT_ID=rraasi-8a619'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=rraasi-8a619.firebasestorage.app'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=469389287554'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_APP_ID=1:469389287554:web:4482647b3c865a9d2b949b'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-KNZ2VKQ9BH'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_AUTH_SERVER_URL=/satsang-auth-server'
+      - '--build-arg'
+      - 'AUTH_SERVER_URL=https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-auth-server'
+      - '--build-arg'
+      - 'MARKETING_SERVER_URL=https://satsang-marketing-server-6ougd45dya-el.a.run.app'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_APP_URL=https://rraasi.com'
+      - '--build-arg'
+      - 'NEXT_PUBLIC_WA_SERVICE_URL=https://whatsapp-service-6ougd45dya-el.a.run.app'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/satsang-frontend:latest']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - satsang-frontend
+      - '--image=gcr.io/$PROJECT_ID/satsang-frontend:latest'
+      - '--region=asia-south1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - >-
+        --set-env-vars=MARKETING_SERVER_URL=https://satsang-marketing-server-6ougd45dya-el.a.run.app,AUTH_SERVER_URL=https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-auth-server,NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBkxVOuhaVrU3Xz5M1_v0iWKKRQUwWd3TU,NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=rraasi-8a619.firebaseapp.com,NEXT_PUBLIC_FIREBASE_PROJECT_ID=rraasi-8a619,NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=rraasi-8a619.firebasestorage.app,NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=469389287554,NEXT_PUBLIC_FIREBASE_APP_ID=1:469389287554:web:4482647b3c865a9d2b949b,NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=G-KNZ2VKQ9BH,NEXT_PUBLIC_APP_URL=https://rraasi.com,NEXT_PUBLIC_WA_SERVICE_URL=https://whatsapp-service-6ougd45dya-el.a.run.app,NEXT_PUBLIC_AUTH_SERVER_URL=/satsang-auth-server
+
 images:
-  - 'gcr.io/rraasi-8a619/satsang-frontend:fresh'
+  - 'gcr.io/$PROJECT_ID/satsang-frontend:latest'
+
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY

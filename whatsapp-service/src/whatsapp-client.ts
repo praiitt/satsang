@@ -23,6 +23,10 @@ class WhatsAppClientManager {
   constructor() {
     this.client = new Client({
       authStrategy: new LocalAuth({ dataPath: '.wwebjs_auth' }),
+      webVersionCache: {
+        type: 'remote',
+        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+      },
       puppeteer: {
         executablePath: process.env.CHROMIUM_PATH || undefined,
         headless: 'new' as any, // Use stable headless mode
@@ -182,14 +186,18 @@ class WhatsAppClientManager {
 
         return; // Success
       } catch (err: any) {
-        if (err.message.includes('detached Frame') && retries > 1) {
-          console.warn(`[WhatsApp] 🔄 Detached frame error, waiting and retrying... (${retries - 1} left)`);
-          retries--;
-          // Wait longer (2-3s) if it's a frame issue
-          await new Promise(resolve => setTimeout(resolve, 3000)); 
-          continue;
+        const isFatalError = 
+          err.message.includes('detached Frame') || 
+          err.message.includes('Execution context was destroyed') || 
+          err.message.includes('Protocol error') || 
+          err.message.includes('timed out');
+
+        if (isFatalError) {
+          console.error(`[WhatsApp] 🚨 Fatal browser crash error detected (${err.message}). Auto-restarting service...`);
+          // Force process to exit. Since it's run via ts-node-dev --respawn or pm2, it will automatically restart!
+          process.exit(1);
         }
-        
+
         this._sendLogs.unshift({
           phone,
           message,

@@ -3,6 +3,7 @@ import { http } from '@google-cloud/functions-framework';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
+import expressWs from 'express-ws';
 import { initFirebaseAdmin } from './firebase.js';
 import adsRoutes from './routes/ads.js';
 import podcastRoutes from './routes/podcast.js';
@@ -14,8 +15,11 @@ import satsangPlansRoutes from './routes/satsang-plans.js';
 import webhooksRoutes from './routes/webhooks.js';
 import whatsappBotRoutes from './routes/whatsapp-bot.js';
 import leadsRoutes from './routes/leads.js';
+import twilioBotRoutes, { registerVobizStream } from './routes/twilio-bot.js';
+import facebookLeadsRoutes from './routes/facebook-leads.js';
 
-const app = express();
+// Setup Express with WebSocket support
+const { app, getWss } = expressWs(express());
 
 initFirebaseAdmin();
 
@@ -48,6 +52,12 @@ app.use('/satsang-plans', satsangPlansRoutes);
 app.use('/webhooks', webhooksRoutes);
 app.use('/whatsapp-bot', whatsappBotRoutes);
 app.use('/leads', leadsRoutes);
+app.use('/twilio-bot', twilioBotRoutes);
+app.use('/facebook-leads', facebookLeadsRoutes);
+
+// Register the Vobiz WebSocket stream directly on the app-level expressWs instance
+// so that WebSocket upgrades are correctly intercept by the http.Server
+registerVobizStream(app);
 
 app.get('/', (_req, res) => res.json({ name: 'satsang-marketing-server', ok: true }));
 

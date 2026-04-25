@@ -18,10 +18,11 @@ export async function logWhatsAppActivity(log: WhatsAppLog) {
     }
 
     try {
-        await db.collection('whatsapp_logs').add({
-            ...log,
-            timestamp: admin.firestore.FieldValue.serverTimestamp()
-        });
+        const dataToSave: any = { ...log, timestamp: admin.firestore.FieldValue.serverTimestamp() };
+        if (dataToSave.mediaUrl === undefined) delete dataToSave.mediaUrl;
+        if (dataToSave.error === undefined) delete dataToSave.error;
+
+        await db.collection('whatsapp_logs').add(dataToSave);
         console.log(`[WhatsAppLogger] Logged ${log.status} to Firestore`);
     } catch (err) {
         console.error('[WhatsAppLogger] Failed to log to Firestore:', err);
