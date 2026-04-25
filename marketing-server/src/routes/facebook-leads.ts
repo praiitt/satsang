@@ -789,4 +789,175 @@ router.delete('/:id', requireAuth, async (req, res) => {
   }
 });
 
+// ─── META GRAPH API WEBHOOK ──────────────────────────────────────────────────
+
+/**
+ * GET /facebook-leads/webhook
+ * Facebook calls this once to verify we own the endpoint.
+ */
+router.get('/webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode === 'subscribe' && token === process.env.META_WEBHOOK_VERIFY_TOKEN) {
+    console.log('[fb-webhook] ✅ Webhook verified by Facebook');
+    return res.status(200).send(challenge);
+  }
+  console.warn('[fb-webhook] ❌ Verification failed — token mismatch or wrong mode');
+  return res.status(403).json({ error: 'Verification failed' });
+});
+
+/**
+ * POST /facebook-leads/webhook
+ * Facebook sends this every time a lead submits a Lead Ad form.
+ * Auto-flow: Save to Firestore → Register in Firebase Auth → Send welcome email
+ */
+router.post('/webhook', async (req, res) => {
+  // Always respond 200 FIRST — Facebook retries if we take >20s
+  res.sendStatus(200);
+
+  const body = req.body;
+  if (!body || body.object !== 'page') return;
+
+  for (const entry of (body.entry || [])) {
+    for (const change of (entry.changes || [])) {
+      if (change.field !== 'leadgen') continue;
+
+      const leadgenId = change.value?.leadgen_id;
+      if (!leadgenId) continue;
+
+      console.log(`[fb-webhook] 📥 New lead event — leadgen_id: ${leadgenId}`);
+
+      try {
+        // 1. Fetch full lead data from Meta Graph API
+        const pageToken = process.env.META_PAGE_ACCESS_TOKEN;
+        if (!pageToken) {
+          console.error('[fb-webhook] META_PAGE_ACCESS_TOKEN not set — cannot fetch lead data');
+          continue;
+        }
+
+        const graphUrl = `https://graph.facebook.com/v21.0/${leadgenId}?fields=field_data,created_time,ad_id,form_id,ad_name,form_name&access_token=${pageToken}`;
+        const { data: leadData } = await axios.get(graphUrl);
+
+        // 2. Parse field_data array into a flat map
+        const fields: Record<string, string> = {};
+        for (const f of (leadData.field_data || [])) {
+          const key = (f.name || '').toLowerCase().replace(/ /g, '_');
+          if (key) fields[key] = f.values?.[0] || '';
+        }
+
+        const firstName = fields['first_name'] || '';
+        const lastName = fields['last_name'] || '';
+        const name = (fields['full_name'] || `${firstName} ${lastName}`.trim() || 'Unknown').trim();
+        const email = (fields['email'] || '').toLowerCase().trim() || null;
+        const phone = formatPhone(
+          fields['phone_number'] || fields['mobile_number'] || fields['phone'] || ''
+        ) || null;
+        const category = (process.env.META_LEAD_CATEGORY || 'general').toLowerCase();
+
+        if (!email && !phone) {
+          console.warn(`[fb-webhook] Lead ${leadgenId} has no email or phone — skipping`);
+          continue;
+        }
+
+        // 3. Dedup by email then phone
+        const db = getDb();
+        let existingDocId: string | null = null;
+
+        if (email) {
+          const snap = await db.collection(COLLECTION).where('email', '==', email).limit(1).get();
+          if (!snap.empty) existingDocId = snap.docs[0].id;
+        }
+        if (!existingDocId && phone) {
+          const snap = await db.collection(COLLECTION).where('phone', '==', phone).limit(1).get();
+          if (!snap.empty) existingDocId = snap.docs[0].id;
+        }
+
+        if (existingDocId) {
+          console.log(`[fb-webhook] Duplicate lead (${email || phone}) — updating meta fields only`);
+          await db.collection(COLLECTION).doc(existingDocId).update({
+            metaLeadgenId: leadgenId,
+            metaAdId: leadData.ad_id || null,
+            metaFormId: leadData.form_id || null,
+            metaAdName: leadData.ad_name || null,
+          });
+          continue;
+        }
+
+        // 4. Save new lead to Firestore
+        const lead = {
+          name,
+          email,
+          phone,
+          source: 'facebook_webhook',
+          category,
+          status: 'new',
+          registeredInAuth: false,
+          waSent: false,
+          emailSent: false,
+          metaLeadgenId: leadgenId,
+          metaAdId: leadData.ad_id || null,
+          metaFormId: leadData.form_id || null,
+          metaAdName: leadData.ad_name || null,
+          metaFormName: leadData.form_name || null,
+          discoveredAt: Date.now(),
+        };
+
+        const ref = await db.collection(COLLECTION).add(lead);
+        const docId = ref.id;
+        console.log(`[fb-webhook] ✅ Lead saved: ${docId} — ${name} (${email || phone})`);
+
+        // 5. Auto-register in Firebase Auth (skip if no email)
+        if (email) {
+          try {
+            const authRes = await axios.post(
+              `${AUTH_SERVER_URL()}/admin/create-user`,
+              { email, displayName: name, password: PASSWORD },
+              { headers: { 'x-internal-token': INTERNAL_TOKEN() } }
+            );
+            const { uid, alreadyExists } = authRes.data;
+
+            await db.collection(COLLECTION).doc(docId).update({
+              registeredInAuth: true,
+              firebaseUid: uid,
+              status: 'registered',
+              registeredAt: Date.now(),
+            });
+            console.log(`[fb-webhook] ✅ Registered in Firebase Auth: uid=${uid} (already=${alreadyExists})`);
+
+            // 6. Auto-send welcome email
+            try {
+              await sendEarlyAccessWelcomeEmail({ 
+                to: email as string, 
+                name, 
+                email: email as string, 
+                category 
+              });
+              await db.collection(COLLECTION).doc(docId).update({
+                emailSent: true,
+                emailSentAt: Date.now(),
+              });
+              console.log(`[fb-webhook] ✅ Welcome email sent to ${email}`);
+            } catch (emailErr: any) {
+              console.error('[fb-webhook] Email send failed:', emailErr.message);
+              await db.collection(COLLECTION).doc(docId).update({
+                emailSent: false,
+                emailError: emailErr.message,
+              });
+            }
+          } catch (authErr: any) {
+            console.error('[fb-webhook] Auth registration failed:', authErr.response?.data || authErr.message);
+          }
+        } else {
+          console.log(`[fb-webhook] No email for ${name} — skipping registration & email`);
+        }
+
+      } catch (err: any) {
+        console.error(`[fb-webhook] Error processing leadgen_id ${leadgenId}:`, err.response?.data || err.message);
+      }
+    }
+  }
+});
+
 export default router;

@@ -35,6 +35,10 @@ VOBIZ_ID=$(load_env_var VOBIZ_AUTH_ID)
 VOBIZ_TOKEN=$(load_env_var VOBIZ_AUTH_TOKEN)
 VOBIZ_FROM=$(load_env_var VOBIZ_FROM_NUMBER)
 INTERNAL_TOKEN=$(load_env_var INTERNAL_SERVICE_TOKEN)
+META_VERIFY_TOKEN=$(load_env_var META_WEBHOOK_VERIFY_TOKEN)
+META_PAGE_TOKEN=$(load_env_var META_PAGE_ACCESS_TOKEN)
+META_PAGE=$(load_env_var META_PAGE_ID)
+META_CATEGORY=$(load_env_var META_LEAD_CATEGORY)
 
 if [ -z "$OPENAI_KEY" ]; then echo "❌ OPENAI_API_KEY not found in ../.env"; exit 1; fi
 if [ -z "$SENDGRID_KEY" ]; then echo "❌ SENDGRID_API_KEY not found in ../.env"; exit 1; fi
@@ -70,6 +74,10 @@ EMAIL_FROM=satsang@rraasi.com,\
 EMAIL_FROM_NAME=RRAASI Spiritual Platform,\
 FIREBASE_SERVICE_ACCOUNT_PATH=/app/dist/rraasiServiceAccount.json,\
 WHATSAPP_SERVICE_URL=https://whatsapp-service-6ougd45dya-el.a.run.app,\
+META_WEBHOOK_VERIFY_TOKEN=${META_VERIFY_TOKEN},\
+META_PAGE_ACCESS_TOKEN=${META_PAGE_TOKEN},\
+META_PAGE_ID=${META_PAGE},\
+META_LEAD_CATEGORY=${META_CATEGORY:-general},\
 OPENAI_API_KEY=${OPENAI_KEY}"
 
 echo ""
