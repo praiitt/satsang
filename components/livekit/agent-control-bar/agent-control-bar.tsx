@@ -4,7 +4,7 @@
 import { type HTMLAttributes, useCallback, useState } from 'react';
 import { Track } from 'livekit-client';
 import { useChat, useRemoteParticipants } from '@livekit/components-react';
-import { ChatTextIcon, Moon, PhoneDisconnectIcon, Sun } from '@phosphor-icons/react/dist/ssr';
+import { ChatTextIcon, Moon, PhoneDisconnectIcon, SpeakerHigh, SpeakerSlash, Sun } from '@phosphor-icons/react/dist/ssr';
 import { useSession } from '@/components/app/session-provider';
 import { TrackToggle } from '@/components/livekit/agent-control-bar/track-toggle';
 import { Button } from '@/components/livekit/button';
@@ -48,6 +48,7 @@ export function AgentControlBar({
   const { send } = useChat();
   const participants = useRemoteParticipants();
   const [chatOpen, setChatOpen] = useState(false);
+  const [agentMuted, setAgentMuted] = useState(false);
   const publishPermissions = usePublishPermissions();
   const { isSessionActive, endSession } = useSession();
   const { sleep, wake, agentIsSleeping } = useAgentControl();
@@ -92,6 +93,19 @@ export function AgentControlBar({
       console.error('[AgentControlBar] Failed to toggle agent sleep:', error);
     }
   }, [agentIsSleeping, sleep, wake]);
+
+  const handleToggleAgentMute = useCallback(() => {
+    // Mute/unmute the agent's audio by disabling its remote audio track subscriptions
+    const agentParticipant = participants.find((p) => p.isAgent);
+    if (agentParticipant) {
+      agentParticipant.audioTrackPublications.forEach((pub) => {
+        if (pub.track) {
+          pub.setSubscribed(!agentMuted);
+        }
+      });
+    }
+    setAgentMuted((prev) => !prev);
+  }, [agentMuted, participants]);
 
   const visibleControls = {
     leave: controls?.leave ?? true,
@@ -153,6 +167,25 @@ export function AgentControlBar({
             />
           </div>
         )}
+
+        {/* Agent Voice Mute Toggle */}
+        <Button
+          size="icon"
+          variant={agentMuted ? 'secondary' : 'ghost'}
+          onClick={handleToggleAgentMute}
+          className={cn(
+            'rounded-full h-12 w-12 transition-colors',
+            agentMuted && 'bg-red-500/20 text-red-400'
+          )}
+          title={agentMuted ? 'Unmute agent voice' : 'Mute agent voice'}
+          aria-label={agentMuted ? 'Unmute agent voice' : 'Mute agent voice'}
+        >
+          {agentMuted ? (
+            <SpeakerSlash weight="fill" className="h-6 w-6" />
+          ) : (
+            <SpeakerHigh weight="fill" className="h-6 w-6" />
+          )}
+        </Button>
 
         {/* Agent Sleep Toggle */}
         <Button
