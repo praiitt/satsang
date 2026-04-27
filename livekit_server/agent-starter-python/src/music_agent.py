@@ -930,21 +930,21 @@ async def entrypoint(ctx: JobContext):
             except json.JSONDecodeError:
                 # Plain text message, use directly
                 logger.info(f"📩 Plain text message, sending to agent: {payload_str[:100]}")
-                asyncio.create_task(session.chat(payload_str))
+                asyncio.create_task(session.generate_reply(user_input=payload_str))
                 return
             
             # Handle chat messages (from useChat hook, topic = "lk-chat-topic")
             if isinstance(payload, dict) and 'message' in payload:
                 chat_text = payload['message']
                 logger.info(f"📩 Chat message received: {chat_text}")
-                asyncio.create_task(session.chat(chat_text))
+                asyncio.create_task(session.generate_reply(user_input=chat_text))
                 return
             
             # Handle text field as fallback
             if isinstance(payload, dict) and 'text' in payload:
                 chat_text = payload['text']
                 logger.info(f"📩 Text message received: {chat_text}")
-                asyncio.create_task(session.chat(chat_text))
+                asyncio.create_task(session.generate_reply(user_input=chat_text))
                 return
             
             logger.debug(f"Ignoring non-chat data: {payload_str[:100]}")

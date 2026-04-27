@@ -790,18 +790,13 @@ async def entrypoint(ctx: JobContext):
         })
         logger.info(f"📝 Captured Agent Speech: {content_str}")
 
-    # Fallback: Capture transcription directly from room
+     # Fallback: Capture transcription directly from room
     @ctx.room.on("transcription_received")
     def on_transcription_received(segments: List[api.TranscriptionSegment], participant: api.Participant, publication: api.TrackPublication):
         if participant.identity == agent.user_id or participant.identity.startswith(agent.user_id):
             text = " ".join([seg.text for seg in segments])
             if text.strip():
                 logger.info(f"🔍 DEBUG: Room transcription received: {text}")
-                # Check if this is a duplicate of what session captured (naive check via timestamp or content?)
-                # For now, just append if it's new. 
-                # Note: this might duplicate if session event also fires.
-                # But since session event isn't firing, this is safe.
-                
                 agent.state.chat_history.append({
                     "role": "user",
                     "content": text,
@@ -831,13 +826,13 @@ async def entrypoint(ctx: JobContext):
             try:
                 payload = json.loads(payload_str)
             except Exception:
-                asyncio.create_task(session.chat(payload_str))
+                asyncio.create_task(session.generate_reply(user_input=payload_str))
                 return
             if isinstance(payload, dict):
                 if 'message' in payload:
-                    asyncio.create_task(session.chat(payload['message']))
+                    asyncio.create_task(session.generate_reply(user_input=payload['message']))
                 elif 'text' in payload:
-                    asyncio.create_task(session.chat(payload['text']))
+                    asyncio.create_task(session.generate_reply(user_input=payload['text']))
         except Exception:
             pass
     def _handle_room_data(data, participant=None, kind=None, topic=None):
@@ -852,24 +847,10 @@ async def entrypoint(ctx: JobContext):
     # Inject publish function for music playback
     agent._publish_data_fn = ctx.room.local_participant.publish_data
     
-    # Handle chat messages
-    @ctx.room.on("data_received")
-    def on_data_received(data_packet):
-        """Handle incoming chat messages"""
-        try:
-            message = data_packet.data.decode('utf-8')
-            logger.info(f"📩 Chat message: {message}")
-            
-            try:
-                data = json.loads(message)
-                if isinstance(data, dict):
-                    message = data.get('message') or data.get('text') or message
-            except json.JSONDecodeError:
-                pass
-            
-            asyncio.create_task(session.chat(message))
-        except Exception as e:
-            logger.error(f"Error handling chat: {e}")
+    
+    # NOTE: _handle_room_data (registered above) already handles all chat messages.
+    # The duplicate @ctx.room.on("data_received") handler below was removed to prevent
+    # double-processing and the broken session.chat() call.
     
     # Handle metadata updates
     @ctx.room.on("participant_metadata_changed")

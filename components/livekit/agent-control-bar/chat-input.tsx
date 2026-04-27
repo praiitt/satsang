@@ -56,13 +56,13 @@ export function ChatInput({
     }
   };
 
-  const isDisabled = isSending || !isAgentAvailable || message.trim().length === 0;
+  const isDisabled = isSending || message.trim().length === 0;
 
   useEffect(() => {
-    if (chatOpen && isAgentAvailable) return;
-    // when not disabled refocus on input
+    if (!chatOpen) return;
+    // refocus on input when chat opens
     inputRef.current?.focus();
-  }, [chatOpen, isAgentAvailable]);
+  }, [chatOpen]);
 
   return (
     <motion.div
