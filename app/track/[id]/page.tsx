@@ -12,7 +12,7 @@ interface Props {
 }
 
 // Fetch track helper
-async function getTrack(id: string) {
+async function getTrack(id: string, searchParams?: any) {
     try {
         const db = getAdminDb();
         const doc = await db.collection('music_tracks').doc(id).get();
@@ -22,11 +22,35 @@ async function getTrack(id: string) {
         const data = doc.data();
         let trackAudioUrl = data?.audioUrl || data?.audio_url;
         let trackImageUrl = data?.imageUrl || data?.image_url;
+        let story = data?.story;
+        let lyrics = data?.lyrics;
+        let healingBenefits = data?.healingBenefits;
+        let tags = data?.tags || tree_metadata_tags(data);
+        let category = data?.category || "Music";
+        let title = data?.title || 'Spiritual Music by RRAASI';
+        let description = data?.description || data?.prompt;
         
-        // If audioUrl is missing at the root, check if there's a nested tracks array
-        if (!trackAudioUrl && data?.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
-            trackAudioUrl = data.tracks[0].audioUrl || data.tracks[0].streamAudioUrl || data.tracks[0].sourceAudioUrl;
-            trackImageUrl = data.tracks[0].imageUrl || data.tracks[0].sourceImageUrl || trackImageUrl;
+        const v = searchParams?.v;
+
+        // If a specific version is requested and we have tracks
+        if (data?.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
+            let targetTrack = null;
+            if (v) {
+                targetTrack = data.tracks.find((t: any) => t.sunoId === v || t.id === v);
+            }
+            if (!targetTrack) {
+                targetTrack = data.tracks[0];
+            }
+            
+            trackAudioUrl = targetTrack.audioUrl || targetTrack.streamAudioUrl || targetTrack.sourceAudioUrl || trackAudioUrl;
+            trackImageUrl = targetTrack.imageUrl || targetTrack.sourceImageUrl || trackImageUrl;
+            story = targetTrack.story || story;
+            lyrics = targetTrack.lyrics || lyrics;
+            healingBenefits = targetTrack.healingBenefits || healingBenefits;
+            tags = targetTrack.tags || tags;
+            title = targetTrack.title || targetTrack.trackName || title;
+            description = targetTrack.description || targetTrack.caption || targetTrack.prompt || description;
+            category = targetTrack.category || category;
         }
 
         // Safe date parsing
@@ -37,7 +61,6 @@ async function getTrack(id: string) {
             } else if (data.createdAt._seconds) {
                 createdAt = new Date(data.createdAt._seconds * 1000).toISOString();
             } else {
-                // Try parsing as a generic date object if it's something else
                 try {
                     createdAt = new Date(data.createdAt).toISOString();
                 } catch {
@@ -46,16 +69,21 @@ async function getTrack(id: string) {
             }
         }
 
+        const displayTitle = title ? title.replace(/^Satsang Medita*tion:\s*/i, '').trim() : 'Spiritual Music by RRAASI';
+
         return {
             id: doc.id,
             ...data,
+            title: displayTitle,
+            description: description,
             audioUrl: trackAudioUrl,
             imageUrl: trackImageUrl,
             createdAt: createdAt,
-            story: data?.story,
-            lyrics: data?.lyrics,
-            healingBenefits: data?.healingBenefits,
-            tags: data?.tags || tree_metadata_tags(data),
+            story: story,
+            lyrics: lyrics,
+            healingBenefits: healingBenefits,
+            tags: tags,
+            category: category,
         };
     } catch (error) {
         console.error("Error fetching track:", error);
@@ -76,11 +104,12 @@ export async function generateMetadata(
     props: Props
 ): Promise<Metadata> {
     const params = await props.params;
+    const searchParams = await props.searchParams;
     // read route params
     const id = params.id;
 
     // fetch data
-    const track = await getTrack(id);
+    const track = await getTrack(id, searchParams);
 
     if (!track) {
         return {
@@ -89,8 +118,9 @@ export async function generateMetadata(
     }
 
     const title = track.title || 'Spiritual Music by RRAASI';
-    const description = track.description || track.prompt || (tree_metadata_tags(track.metadata)) || "Listen to this beautiful spiritual composition created by RRAASI AI.";
+    const description = track.description || "Listen to this beautiful spiritual composition created by RRAASI AI.";
     const imageUrl = track.imageUrl || 'https://www.rraasi.com/icon.png';
+    const trackUrl = searchParams.v ? `https://www.rraasi.com/track/${id}?v=${searchParams.v}` : `https://www.rraasi.com/track/${id}`;
 
     return {
         title: `${title} | RRAASI Music`,
@@ -99,7 +129,7 @@ export async function generateMetadata(
             title: title,
             description: description,
             images: [imageUrl],
-            url: `https://www.rraasi.com/track/${id}`,
+            url: trackUrl,
             type: 'music.song',
             audio: track.audioUrl,
         },
@@ -114,7 +144,8 @@ export async function generateMetadata(
 
 export default async function TrackPage(props: Props) {
     const params = await props.params;
-    const track = await getTrack(params.id);
+    const searchParams = await props.searchParams;
+    const track = await getTrack(params.id, searchParams);
 
     if (!track) {
         return (
@@ -156,8 +187,8 @@ export default async function TrackPage(props: Props) {
                     title={track.title}
                     audioUrl={track.audioUrl}
                     imageUrl={track.imageUrl}
-                    category={track.category || "Music"}
-                    description={track.description || track.prompt}
+                    category={track.category}
+                    description={track.description}
                     createdAt={track.createdAt}
                     status={track.status}
                     metadata={track.metadata}
@@ -166,6 +197,7 @@ export default async function TrackPage(props: Props) {
                     healingBenefits={track.healingBenefits}
                     tags={track.tags}
                     enableDownload={true}
+                    shareId={searchParams.v ? `${track.id}?v=${searchParams.v}` : track.id}
                 />
 
                 {/* Journey of this Track Section */}

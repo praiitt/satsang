@@ -109,6 +109,8 @@ export function MusicPlayerCard({
     // Determine uniqueness (fallback to audioUrl if ID is missing for legacy)
     const trackId = id || audioUrl;
 
+    const displayTitle = title ? title.replace(/^Satsang Medita*tion:\s*/i, '').trim() : 'Untitled';
+
     // Check if THIS track is the one playing globally
     const isCurrentTrack = currentTrack?.id === trackId || currentTrack?.audioUrl === audioUrl;
     const isActuallyPlaying = isCurrentTrack && isPlaying;
@@ -128,7 +130,7 @@ export function MusicPlayerCard({
             // Fallback: Play single track
             const track: MusicTrack = {
                 id: trackId,
-                title,
+                title: displayTitle,
                 audioUrl,
                 category,
                 prompt,
@@ -186,7 +188,7 @@ export function MusicPlayerCard({
                 {imageUrl ? (
                     <img
                         src={imageUrl}
-                        alt={title}
+                        alt={displayTitle}
                         className={cn(
                             "h-full w-full object-cover transition-transform duration-700 group-hover:scale-110",
                             isPending && "grayscale blur-sm opacity-50"
@@ -267,15 +269,15 @@ export function MusicPlayerCard({
                     )}
                     <div className="flex items-center gap-1">
                         <SocialShareMenu
-                            title={title}
-                            text={`Check out this AI spiritual track: "${title}"\n${description || ''}`}
+                            title={displayTitle}
+                            text={`Check out this AI spiritual track: "${displayTitle}"\n${description || ''}`}
                             url={`https://www.rraasi.com/track/${shareId || trackId}`}
                             className="pointer-events-auto"
                             iconClassName="h-8 w-8 min-h-8 min-w-8 bg-black/20 backdrop-blur-md hover:bg-black/40 text-white [&_svg]:w-4 [&_svg]:h-4 border-none"
                         />
                         <TrackActionsMenu
                             trackId={trackId}
-                            trackTitle={title}
+                            trackTitle={displayTitle}
                             trackDate={createdAt}
                             trackDuration={duration ? parseFloat(duration) : undefined}
                             userName={profile?.name}
@@ -354,7 +356,7 @@ export function MusicPlayerCard({
                                 "text-lg font-bold leading-tight tracking-tight text-white shadow-black drop-shadow-md truncate",
                                 isActuallyPlaying && "text-amber-400"
                             )}>
-                                {title}
+                                {displayTitle}
                             </h3>
                             <span className="text-xs font-medium opacity-80">
                                 {isPending ? "Generating..." : (isActuallyPlaying ? "Now Playing" : "Play Track")}
@@ -377,7 +379,7 @@ export function MusicPlayerCard({
                     isOpen={showVideoModal}
                     onClose={() => setShowVideoModal(false)}
                     videoUrl={videoUrl}
-                    title={title}
+                    title={displayTitle}
                 />
             )}
 
@@ -385,7 +387,7 @@ export function MusicPlayerCard({
             <MusicInfoModal
                 isOpen={showInfoModal}
                 onClose={() => setShowInfoModal(false)}
-                title={title}
+                title={displayTitle}
                 story={story}
                 lyrics={lyrics}
                 healingBenefits={healingBenefits}
