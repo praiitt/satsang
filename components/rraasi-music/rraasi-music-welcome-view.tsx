@@ -196,7 +196,7 @@ export const RRaaSiMusicWelcomeView = ({
           if (t.tracks && Array.isArray(t.tracks) && t.tracks.length > 0) {
             return t.tracks.map((sub: any, idx: number) => ({
               id: sub.sunoId || `${t.id}_${idx}`,
-              shareId: t.id,
+              shareId: sub.sunoId ? `${t.id}?v=${sub.sunoId}` : t.id,
               title: `${t.title || t.trackName || 'Untitled'} (${idx + 1})`,
               audioUrl: sub.audioUrl || sub.audio_url,
               imageUrl: sub.imageUrl || sub.sourceImageUrl || t.imageUrl || t.image_url || t.thumbnailUrl,
@@ -460,7 +460,7 @@ export const RRaaSiMusicWelcomeView = ({
         if (t.tracks && Array.isArray(t.tracks) && t.tracks.length > 0) {
           return t.tracks.map((sub: any, idx: number) => ({
             id: sub.sunoId || `${t.id}_${idx}`, // Unique ID for player
-            shareId: t.id, // Parent Document ID for sharing
+            shareId: sub.sunoId ? `${t.id}?v=${sub.sunoId}` : t.id, // Parent Document ID for sharing
             title: `${t.title || 'Untitled'} (${idx + 1})`,
             audioUrl: sub.audioUrl,
             imageUrl: sub.imageUrl || sub.sourceImageUrl || t.imageUrl || t.image_url || t.thumbnailUrl,

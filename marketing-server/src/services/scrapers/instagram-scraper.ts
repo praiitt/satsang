@@ -119,6 +119,11 @@ export async function runInstagramScrape(options: InstagramScrapeOptions): Promi
                 engagementRate: post.likesCount ? (post.likesCount / (post.ownerFollowersCount || 1)) * 100 : 0
             });
 
+            const followersCount = post.ownerFollowersCount || post.followersCount || 0;
+            if (followersCount < 5000) {
+                continue; // Skip accounts with <5000 followers
+            }
+
             if (poetScore < 10) continue; // Skip very low scores
 
             const lead = {

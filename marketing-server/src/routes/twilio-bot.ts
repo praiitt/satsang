@@ -2,6 +2,7 @@ import expressWs from 'express-ws';
 import { Router } from 'express';
 import WebSocket from 'ws';
 import { getDb } from '../firebase.js';
+import { generateSunoTrack } from '../services/suno.js';
 
 // Use the original working pattern - expressWs wraps the router and returns an app
 // that properly handles WebSocket upgrades for this router's routes.
@@ -153,8 +154,10 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
 
     const transcript: string[] = [];
     let vobizCallId = ''; // Captured from the Vobiz 'start' event for hangup API
+    let vobizStreamSid = ''; // Captured from the Vobiz 'start' event for clear API
     let firstAudioSent = false; // Track when first audio chunk reaches Vobiz
     let mediaEventCount = 0;    // Track incoming audio from caller
+    let firebaseUid = '';       // Captured for tool calling
 
     // Send periodic ping to Vobiz to prevent code-1006 TCP drops (Vobiz drops after ~11s without ping)
     const vobizPing = setInterval(() => {
@@ -184,6 +187,7 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                 if (leadData) {
                     leadName = leadData.name || 'the caller';
                     leadCategory = (leadData.category || 'general').toLowerCase();
+                    firebaseUid = leadData.firebaseUid || '';
                 }
             } catch (e) {
                 console.error('[twilio-bot] Failed to fetch lead data:', e);
@@ -214,6 +218,18 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                     type: 'function', name: 'end_call',
                     description: 'End the phone call gracefully. Use this ONLY when: (1) the user says goodbye/bye/alvida/ok bye/thank you goodbye etc, (2) the user explicitly asks to end the call, or (3) the conversation has reached a natural conclusion and you have said your farewell.',
                     parameters: { type: 'object', properties: { reason: { type: 'string', description: 'Brief reason for ending the call' } }, required: ['reason'] }
+                }, {
+                    type: 'function', name: 'generate_music',
+                    description: 'Generate a personalized spiritual song or music track based on the users intentions, feelings, or lyrics. Use this ONLY when the user explicitly agrees to create a song or gives you enough details (mood/intent) to make one.',
+                    parameters: { 
+                        type: 'object', 
+                        properties: { 
+                            prompt: { type: 'string', description: 'A detailed Suno ai music prompt outlining genre, mood, rhythm, and lyrical themes/content.' },
+                            title: { type: 'string', description: 'A short catchy title for the track.' },
+                            intention: { type: 'string', description: 'The underlying spiritual or emotional intention.' }
+                        }, 
+                        required: ['prompt', 'title'] 
+                    }
                 }],
                 tool_choice: 'auto'
             }
@@ -252,7 +268,7 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
             }
 
             // User started speaking → interrupt the AI immediately (true barge-in)
-            if (event.type === 'input_speech_started') {
+            if (event.type === 'input_audio_buffer.speech_started') {
                 console.log('[twilio-bot] User interrupted — cancelling AI response');
                 // Cancel the AI’s current response
                 if (openAiWs.readyState === WebSocket.OPEN) {
@@ -260,7 +276,11 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                 }
                 // Tell Vobiz to immediately stop playing the AI’s audio
                 if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({ event: 'clearAudio' }));
+                    if (vobizStreamSid) {
+                        // Send standard Twilio clear, but also include streamId just in case Vobiz expects it
+                        ws.send(JSON.stringify({ event: 'clear', streamSid: vobizStreamSid, streamId: vobizStreamSid })); 
+                    }
+                    ws.send(JSON.stringify({ event: 'clearAudio' })); // Vobiz custom fallback just in case
                 }
             }
 
@@ -284,6 +304,48 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                 setTimeout(() => {
                     if (ws.readyState === WebSocket.OPEN) ws.close();
                 }, 1500);
+            }
+
+            // Handle generate_music tool invocation from the AI
+            if (event.type === 'response.output_item.done' && event.item?.type === 'function_call' && event.item?.name === 'generate_music') {
+                const args = JSON.parse(event.item.arguments || '{}');
+                console.log(`[twilio-bot] AI generating music — title: ${args.title}`);
+
+                if (!firebaseUid) {
+                    console.log(`[twilio-bot] Cannot generate music: No firebaseUid associated with lead ${leadId}`);
+                    if (openAiWs.readyState === WebSocket.OPEN) {
+                        openAiWs.send(JSON.stringify({ 
+                            type: 'conversation.item.create', 
+                            item: { type: 'message', role: 'system', content: [{ type: 'input_text', text: 'System instruction: Softly and nicely tell the user that they must register their account first. You cannot create the song until they click the link sent to their WhatsApp to finish account setup.' }] } 
+                        }));
+                        openAiWs.send(JSON.stringify({ type: 'response.create' }));
+                    }
+                } else {
+                    generateSunoTrack({
+                        firebaseUid,
+                        prompt: args.prompt,
+                        title: args.title,
+                        metadata: { intention: args.intention || 'Soulful creation' }
+                    }).then(taskId => {
+                        console.log(`[twilio-bot] Successfully initiated track via Suno service: ${taskId}`);
+                        if (openAiWs.readyState === WebSocket.OPEN) {
+                            openAiWs.send(JSON.stringify({ 
+                                type: 'conversation.item.create', 
+                                item: { type: 'message', role: 'system', content: [{ type: 'input_text', text: 'System instruction: Briefly confirm to the user enthusiastically that their song is being generated right now and they will find it in their My Music dashboard on rraasi.com. Ask if there is anything else.' }] } 
+                            }));
+                            openAiWs.send(JSON.stringify({ type: 'response.create', response: { instructions: "Be brief, joyful, and remind them to check their My Music dashboard." } }));
+                        }
+                    }).catch(e => {
+                        console.error('[twilio-bot] Generate Suno Error:', e);
+                        if (openAiWs.readyState === WebSocket.OPEN) {
+                            openAiWs.send(JSON.stringify({ 
+                                type: 'conversation.item.create', 
+                                item: { type: 'message', role: 'system', content: [{ type: 'input_text', text: 'System instruction: Tell the user there was a brief technical issue generating the song right now, and to try again shortly.' }] } 
+                            }));
+                            openAiWs.send(JSON.stringify({ type: 'response.create' }));
+                        }
+                    });
+                }
             }
 
             if (event.type === 'error') {
@@ -323,7 +385,9 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
 
             if (data.event === 'start') {
                 vobizCallId = data.start?.callId || '';
-                console.log(`[twilio-bot] Vobiz stream started, callId=${vobizCallId}`);
+                // Twilio uses streamSid, Vobiz uses streamId
+                vobizStreamSid = data.streamSid || data.start?.streamSid || data.start?.streamId || data.streamId || '';
+                console.log(`[twilio-bot] Vobiz stream started, callId=${vobizCallId}, streamSid=${vobizStreamSid}`);
             }
 
             // Always forward user audio to OpenAI — server_vad handles turn detection

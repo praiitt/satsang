@@ -9,9 +9,11 @@ type Params = { params: Promise<{ id: string }> };
 export async function POST(req: NextRequest, { params }: Params) {
     const { id } = await params;
     const cookie = req.headers.get('cookie') || '';
+    const body = await req.json().catch(() => ({}));
     const res = await fetch(`${MKT()}/facebook-leads/${id}/send-whatsapp`, {
         method: 'POST',
         headers: { 'Cookie': cookie, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
     });
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });

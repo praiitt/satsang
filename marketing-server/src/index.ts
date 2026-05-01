@@ -17,6 +17,7 @@ import whatsappBotRoutes from './routes/whatsapp-bot.js';
 import leadsRoutes from './routes/leads.js';
 import twilioBotRoutes, { registerVobizStream } from './routes/twilio-bot.js';
 import facebookLeadsRoutes from './routes/facebook-leads.js';
+import twilioWhatsappRoutes from './routes/twilio-whatsapp.js';
 
 // Setup Express with WebSocket support
 const { app, getWss } = expressWs(express());
@@ -37,6 +38,10 @@ app.use(
 // Google Cloud Functions already parses the body. We only need express.json() for local dev.
 if (!process.env.FUNCTION_TARGET) {
     app.use(express.json());
+    app.use(express.urlencoded({ extended: true }));
+} else {
+    // GCF parses json, but might need help with urlencoded if not handled by GCP natively
+    app.use(express.urlencoded({ extended: true }));
 }
 
 app.use(cookieParser());
@@ -54,6 +59,7 @@ app.use('/whatsapp-bot', whatsappBotRoutes);
 app.use('/leads', leadsRoutes);
 app.use('/twilio-bot', twilioBotRoutes);
 app.use('/facebook-leads', facebookLeadsRoutes);
+app.use('/twilio-whatsapp', twilioWhatsappRoutes);
 
 // Register the Vobiz WebSocket stream directly on the app-level expressWs instance
 // so that WebSocket upgrades are correctly intercept by the http.Server

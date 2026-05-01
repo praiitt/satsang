@@ -162,8 +162,9 @@ async function scrapeVideoComments(
         const authorName = comment.authorDisplayName || 'Unknown';
         const handle = authorChannelId || authorName.toLowerCase().replace(/\s+/g, '_');
         
-        // Quality Filter: Check if commenter is an active creator (>100 subs)
+        // Quality Filter: Check if commenter is an active creator (>5000 subs)
         if (!authorChannelId) continue;
+        let subCount = 0;
         try {
             const channelRes = await fetch(
                 `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${authorChannelId}&key=${YOUTUBE_API_KEY}`
@@ -172,9 +173,9 @@ async function scrapeVideoComments(
 
             const channelData = await channelRes.json() as any;
             const stats = channelData.items?.[0]?.statistics;
-            const subCount = parseInt(stats?.subscriberCount || '0', 10);
+            subCount = parseInt(stats?.subscriberCount || '0', 10);
             
-            if (subCount < 100) {
+            if (subCount < 5000) {
                 // console.log(`[youtube-scraper] Skipping lead ${authorName} (only ${subCount} subs)`);
                 continue;
             }
@@ -186,10 +187,15 @@ async function scrapeVideoComments(
 
         const language = detectLanguage(text);
 
-        const poetScore = computePoetScore({
+        let poetScore = computePoetScore({
             bio: text,
             hashtags: [],
         });
+
+        // Boost score because they are a verified creator (>5k subs) leaving a poetic comment
+        if (subCount >= 5000) poetScore += 40;
+        if (subCount >= 10000) poetScore += 10;
+        if (subCount >= 50000) poetScore += 20;
 
         if (poetScore < 5) continue;
 

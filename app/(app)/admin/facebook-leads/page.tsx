@@ -145,9 +145,30 @@ export default function FacebookLeadsPage() {
   useEffect(() => { 
     fetchLeads();
     fetchWaStatus();
-    const interval = setInterval(fetchWaStatus, 5000);
+    const interval = setInterval(() => {
+      fetchWaStatus();
+      // Only poll for leads if we are not actively loading or performing an action
+      // to prevent UI jitter
+      if (!loading && !actionLoading) {
+        // Silently fetch leads to update the list without showing the loading spinner
+        fetch('/api/facebook-leads')
+          .then(res => res.json())
+          .then(data => {
+            if (data.items) {
+              setLeads(prevLeads => {
+                // Only update if there's a difference to avoid unnecessary re-renders
+                if (JSON.stringify(prevLeads) !== JSON.stringify(data.items)) {
+                  return data.items;
+                }
+                return prevLeads;
+              });
+            }
+          })
+          .catch(e => console.error('Silent fetch failed:', e));
+      }
+    }, 5000);
     return () => clearInterval(interval);
-  }, [fetchLeads, fetchWaStatus]);
+  }, [fetchLeads, fetchWaStatus, loading, actionLoading]);
 
   // ── CSV Import ─────────────────────────────────────────────────────────────
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -220,11 +241,15 @@ export default function FacebookLeadsPage() {
     }
   };
 
-  const sendWA = async (lead: FbLead) => {
+  const sendWA = async (lead: FbLead, provider: 'twilio' | 'web' = 'web') => {
     if (!lead.phone) { toast.warning('No phone number for this lead'); return; }
     setActionLoading(`wa-${lead.id}`);
     try {
-      const res = await fetch(`/api/facebook-leads/${lead.id}/send-whatsapp`, { method: 'POST' });
+      const res = await fetch(`/api/facebook-leads/${lead.id}/send-whatsapp`, { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider })
+      });
       if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
       toast.success(`WhatsApp sent to ${lead.name}!`);
       fetchLeads();
@@ -314,7 +339,7 @@ export default function FacebookLeadsPage() {
   };
 
   // ── Bulk SSE Action ────────────────────────────────────────────────────────
-  const runBulkAction = async (type: 'wa' | 'email' | 'register') => {
+  const runBulkAction = async (type: 'wa' | 'email' | 'register', provider: 'twilio' | 'web' = 'web') => {
     const ids = Array.from(selected);
     if (ids.length === 0) { toast.warning('Select at least one lead'); return; }
 
@@ -337,7 +362,7 @@ export default function FacebookLeadsPage() {
       const res = await fetch(endpoints[type], {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ leadIds: ids }),
+        body: JSON.stringify({ leadIds: ids, provider }),
         signal: abortRef.current.signal,
       });
 
@@ -622,10 +647,16 @@ export default function FacebookLeadsPage() {
             <UserPlus className="w-4 h-4" /> Register All
           </button>
           <button
-            onClick={() => runBulkAction('wa')}
+            onClick={() => runBulkAction('wa', 'web')}
             className="flex items-center gap-1.5 bg-green-500 hover:bg-green-400 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors"
           >
             <MessageCircle className="w-4 h-4" /> Send WA to All
+          </button>
+          <button
+            onClick={() => runBulkAction('wa', 'twilio')}
+            className="flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors"
+          >
+            <MessageCircle className="w-4 h-4" /> Send Twilio WA
           </button>
           <button
             onClick={() => runBulkAction('email')}
@@ -856,33 +887,63 @@ export default function FacebookLeadsPage() {
                       {lead.registeredInAuth ? 'Registered ✓' : 'Register'}
                     </button>
 
-                    <button
-                      title={
-                        !lead.registeredInAuth ? 'Register the user first before sending WA'
-                        : lead.waSent && !lead.waFailed ? 'Already sent'
-                        : !lead.phone ? 'No phone number'
-                        : 'Send WhatsApp welcome message'
-                      }
-                      onClick={() => sendWA(lead)}
-                      disabled={!!actionLoading || !lead.registeredInAuth || !lead.phone || (lead.waSent && !lead.waFailed)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all',
-                        !lead.registeredInAuth
-                          ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 cursor-not-allowed'
-                          : lead.waSent && !lead.waFailed
-                            ? 'bg-green-100 text-green-500 dark:bg-green-900/10 cursor-default'
-                            : lead.waFailed
-                              ? 'bg-red-600 hover:bg-red-700 text-white shadow-sm active:scale-95'
-                              : !lead.phone
-                                ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 cursor-not-allowed'
-                                : 'bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow active:scale-95 disabled:opacity-40'
-                      )}
-                    >
-                      {actionLoading === `wa-${lead.id}`
-                        ? <RefreshCw className="w-3 h-3 animate-spin" />
-                        : <MessageCircle className="w-3 h-3" />}
-                      {lead.waSent && !lead.waFailed ? 'WA Sent ✓' : lead.waFailed ? 'Retry WA' : 'Send WA'}
-                    </button>
+                    <div className="flex gap-1">
+                      <button
+                        title={
+                          !lead.registeredInAuth ? 'Register the user first before sending WA'
+                          : lead.waSent && !lead.waFailed ? 'Already sent'
+                          : !lead.phone ? 'No phone number'
+                          : 'Send WhatsApp (Web)'
+                        }
+                        onClick={() => sendWA(lead, 'web')}
+                        disabled={!!actionLoading || !lead.registeredInAuth || !lead.phone || (lead.waSent && !lead.waFailed)}
+                        className={cn(
+                          'flex-1 inline-flex justify-center items-center gap-1.5 text-xs font-semibold px-2 py-1.5 rounded-lg transition-all',
+                          !lead.registeredInAuth
+                            ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 cursor-not-allowed'
+                            : lead.waSent && !lead.waFailed
+                              ? 'bg-green-100 text-green-500 dark:bg-green-900/10 cursor-default'
+                              : lead.waFailed
+                                ? 'bg-red-600 hover:bg-red-700 text-white shadow-sm active:scale-95'
+                                : !lead.phone
+                                  ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 cursor-not-allowed'
+                                  : 'bg-green-600 hover:bg-green-700 text-white shadow-sm hover:shadow active:scale-95 disabled:opacity-40'
+                        )}
+                      >
+                        {actionLoading === `wa-${lead.id}`
+                          ? <RefreshCw className="w-3 h-3 animate-spin" />
+                          : <MessageCircle className="w-3 h-3" />}
+                        {lead.waSent && !lead.waFailed ? '✓' : lead.waFailed ? 'Retry' : 'WA (Web)'}
+                      </button>
+
+                      <button
+                        title={
+                          !lead.registeredInAuth ? 'Register the user first before sending WA'
+                          : lead.waSent && !lead.waFailed ? 'Already sent'
+                          : !lead.phone ? 'No phone number'
+                          : 'Send WhatsApp (Twilio)'
+                        }
+                        onClick={() => sendWA(lead, 'twilio')}
+                        disabled={!!actionLoading || !lead.registeredInAuth || !lead.phone || (lead.waSent && !lead.waFailed)}
+                        className={cn(
+                          'flex-1 inline-flex justify-center items-center gap-1.5 text-xs font-semibold px-2 py-1.5 rounded-lg transition-all',
+                          !lead.registeredInAuth
+                            ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 cursor-not-allowed'
+                            : lead.waSent && !lead.waFailed
+                              ? 'bg-emerald-100 text-emerald-500 dark:bg-emerald-900/10 cursor-default'
+                              : lead.waFailed
+                                ? 'bg-red-600 hover:bg-red-700 text-white shadow-sm active:scale-95'
+                                : !lead.phone
+                                  ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 cursor-not-allowed'
+                                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm hover:shadow active:scale-95 disabled:opacity-40'
+                        )}
+                      >
+                        {actionLoading === `wa-${lead.id}`
+                          ? <RefreshCw className="w-3 h-3 animate-spin" />
+                          : <MessageCircle className="w-3 h-3" />}
+                        {lead.waSent && !lead.waFailed ? '✓' : lead.waFailed ? 'Retry' : 'WA (Twilio)'}
+                      </button>
+                    </div>
 
                     <button
                       title={!lead.phone ? 'No phone number' : 'Initiate AI Voice Call'}

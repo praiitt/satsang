@@ -6,6 +6,7 @@ import axios from 'axios';
 import { getDb } from '../firebase.js';
 import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 import { sendEarlyAccessWelcomeEmail } from '../services/sendgrid.js';
+import twilio from 'twilio';
 
 const upload = multer({ storage: multer.memoryStorage() });
 const router = Router();
@@ -429,11 +430,23 @@ router.post('/:id/send-whatsapp', requireAuth, async (req, res) => {
       ? buildMusicWAMessage(lead.name, lead.email || '')
       : buildWAMessage(lead.name, lead.email || '');
 
-    await axios.post(
-      `${WA_SERVICE_URL()}/send`,
-      { phone, message },
-      { headers: { 'x-internal-token': INTERNAL_TOKEN() } }
-    );
+    const provider = req.body.provider || req.query.provider || 'web';
+
+    if (provider === 'twilio') {
+        const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+        const twilioFrom = process.env.TWILIO_WHATSAPP_NUMBER || '';
+        await client.messages.create({
+            body: message,
+            from: twilioFrom.includes('whatsapp:') ? twilioFrom : `whatsapp:${twilioFrom}`,
+            to: `whatsapp:${phone}`
+        });
+    } else {
+        await axios.post(
+          `${WA_SERVICE_URL()}/send`,
+          { phone, message },
+          { headers: { 'x-internal-token': INTERNAL_TOKEN() } }
+        );
+    }
 
     await db.collection(COLLECTION).doc(req.params.id).update({
       waSent: true,
@@ -517,7 +530,7 @@ router.post('/:id/send-email', requireAuth, async (req, res) => {
  * Uses Server-Sent Events so the UI can show live progress.
  */
 router.post('/bulk-send-whatsapp', requireAuth, async (req, res) => {
-  const { leadIds } = req.body as { leadIds: string[] };
+  const { leadIds, provider = 'web' } = req.body as { leadIds: string[], provider?: string };
 
   if (!Array.isArray(leadIds) || leadIds.length === 0) {
     return res.status(400).json({ error: 'leadIds array is required' });
@@ -588,11 +601,21 @@ router.post('/bulk-send-whatsapp', requireAuth, async (req, res) => {
 
         const sendWithRetry = async (attempt = 1): Promise<void> => {
           try {
-            await axios.post(
-              `${WA_SERVICE_URL()}/send`,
-              { phone, message },
-              { headers: { 'x-internal-token': INTERNAL_TOKEN() }, timeout: 30000 }
-            );
+            if (provider === 'twilio') {
+                const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+                const twilioFrom = process.env.TWILIO_WHATSAPP_NUMBER || '';
+                await client.messages.create({
+                    body: message,
+                    from: twilioFrom.includes('whatsapp:') ? twilioFrom : `whatsapp:${twilioFrom}`,
+                    to: `whatsapp:${phone}`
+                });
+            } else {
+                await axios.post(
+                  `${WA_SERVICE_URL()}/send`,
+                  { phone, message },
+                  { headers: { 'x-internal-token': INTERNAL_TOKEN() }, timeout: 30000 }
+                );
+            }
           } catch (err: any) {
              const statusCode = err.response?.status;
              const isNetworkError = err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET';
@@ -838,7 +861,30 @@ router.post('/webhook', async (req, res) => {
         }
 
         const graphUrl = `https://graph.facebook.com/v21.0/${leadgenId}?fields=field_data,created_time,ad_id,form_id,ad_name,form_name&access_token=${pageToken}`;
-        const { data: leadData } = await axios.get(graphUrl);
+        let leadData: any = {};
+        let isTestLead = false;
+
+        try {
+          const res = await axios.get(graphUrl);
+          leadData = res.data;
+        } catch (apiErr: any) {
+          console.error(`[fb-webhook] Graph API failed for leadgen_id ${leadgenId}:`, apiErr.response?.data || apiErr.message);
+          // If the ID doesn't exist, it's likely a webhook test from the Meta App Dashboard
+          if (apiErr.response?.data?.error?.code === 100) {
+            console.log(`[fb-webhook] This appears to be a Meta Test Lead (${leadgenId}). Will save dummy data.`);
+            isTestLead = true;
+            leadData = {
+              field_data: [
+                { name: 'full_name', values: ['Test Lead'] },
+                { name: 'email', values: [`test_${leadgenId}@example.com`] },
+                { name: 'phone_number', values: ['+919999999999'] }
+              ]
+            };
+          } else {
+            // Other API error — we can't get lead data, but we should record the failure
+            leadData = { error: apiErr.response?.data || apiErr.message };
+          }
+        }
 
         // 2. Parse field_data array into a flat map
         const fields: Record<string, string> = {};
@@ -849,16 +895,16 @@ router.post('/webhook', async (req, res) => {
 
         const firstName = fields['first_name'] || '';
         const lastName = fields['last_name'] || '';
-        const name = (fields['full_name'] || `${firstName} ${lastName}`.trim() || 'Unknown').trim();
+        const name = (fields['full_name'] || `${firstName} ${lastName}`.trim() || `Meta Lead ${leadgenId}`).trim();
         const email = (fields['email'] || '').toLowerCase().trim() || null;
         const phone = formatPhone(
           fields['phone_number'] || fields['mobile_number'] || fields['phone'] || ''
         ) || null;
         const category = (process.env.META_LEAD_CATEGORY || 'general').toLowerCase();
 
-        if (!email && !phone) {
+        if (!email && !phone && !isTestLead) {
           console.warn(`[fb-webhook] Lead ${leadgenId} has no email or phone — skipping`);
-          continue;
+          // Still save it as an incomplete lead so we know the webhook fired
         }
 
         // 3. Dedup by email then phone

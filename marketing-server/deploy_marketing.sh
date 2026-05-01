@@ -39,6 +39,7 @@ META_VERIFY_TOKEN=$(load_env_var META_WEBHOOK_VERIFY_TOKEN)
 META_PAGE_TOKEN=$(load_env_var META_PAGE_ACCESS_TOKEN)
 META_PAGE=$(load_env_var META_PAGE_ID)
 META_CATEGORY=$(load_env_var META_LEAD_CATEGORY)
+SUNO_KEY=$(load_env_var SUNO_API_KEY)
 
 if [ -z "$OPENAI_KEY" ]; then echo "❌ OPENAI_API_KEY not found in ../.env"; exit 1; fi
 if [ -z "$SENDGRID_KEY" ]; then echo "❌ SENDGRID_API_KEY not found in ../.env"; exit 1; fi
@@ -78,6 +79,7 @@ META_WEBHOOK_VERIFY_TOKEN=${META_VERIFY_TOKEN},\
 META_PAGE_ACCESS_TOKEN=${META_PAGE_TOKEN},\
 META_PAGE_ID=${META_PAGE},\
 META_LEAD_CATEGORY=${META_CATEGORY:-general},\
+SUNO_API_KEY=${SUNO_KEY},\
 OPENAI_API_KEY=${OPENAI_KEY}"
 
 echo ""
