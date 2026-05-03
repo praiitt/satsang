@@ -1,8 +1,60 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getStorage } from 'firebase-admin/storage';
+import { getAuth } from 'firebase-admin/auth';
 import { initAdmin } from '@/lib/firebase-admin';
 export const dynamic = 'force-dynamic';
+
+export async function PATCH(
+    request: NextRequest,
+    { params }: { params: Promise<{ trackId: string }> }
+) {
+    try {
+        await initAdmin();
+        const db = getFirestore();
+        const { trackId } = await params;
+        const body = await request.json();
+
+        if (!trackId) {
+            return NextResponse.json({ error: 'Track ID required' }, { status: 400 });
+        }
+
+        const { isPublic } = body;
+        if (typeof isPublic !== 'boolean') {
+            return NextResponse.json({ error: 'isPublic boolean required' }, { status: 400 });
+        }
+
+        // Verify Auth Token to protect the API
+        const authHeader = request.headers.get('authorization');
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        const token = authHeader.split('Bearer ')[1];
+        try {
+            await getAuth().verifyIdToken(token);
+        } catch (e) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+
+        const trackDoc = await db.collection('music_tracks').doc(trackId).get();
+        if (!trackDoc.exists) {
+            return NextResponse.json({ error: 'Track not found' }, { status: 404 });
+        }
+
+        await db.collection('music_tracks').doc(trackId).update({
+            isPublic
+        });
+
+        return NextResponse.json({
+            success: true,
+            message: `Track marked as ${isPublic ? 'Public' : 'Private'}`
+        });
+
+    } catch (error) {
+        console.error('Error updating track:', error);
+        return NextResponse.json({ error: 'Failed to update track' }, { status: 500 });
+    }
+}
 
 export async function DELETE(
     request: NextRequest,

@@ -3,7 +3,8 @@
 import { useAuth } from '@/components/auth/auth-provider';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Music, Search, Share2, MessageCircle, Copy, Check, Play, Users, Calendar, Globe, Lock, X, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { Music, Search, Share2, MessageCircle, Copy, Check, Play, Users, Calendar, Globe, Lock, X, ChevronLeft, ChevronRight, ExternalLink, RefreshCw } from 'lucide-react';
+import { getAuth } from 'firebase/auth';
 
 interface AdminTrack {
     id: string;
@@ -40,6 +41,7 @@ export default function AdminMusicDashboard() {
     const [copied, setCopied] = useState(false);
     const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
     const [playingId, setPlayingId] = useState<string | null>(null);
+    const [actionLoading, setActionLoading] = useState<string | null>(null);
     const shareModalRef = useRef<HTMLDivElement>(null);
 
     const isAdmin = true; // Temporarily allow any logged-in user to view the admin page just like facebook-leads
@@ -63,6 +65,33 @@ export default function AdminMusicDashboard() {
             console.error(e);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function toggleVisibility(track: AdminTrack) {
+        if (!confirm(`Are you sure you want to make this track ${track.isPublic ? 'Private' : 'Public'}?`)) return;
+        setActionLoading(`toggle-${track.id}`);
+        try {
+            const token = await getAuth().currentUser?.getIdToken();
+            const res = await fetch(`/api/admin/music/tracks/${track.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: JSON.stringify({ isPublic: !track.isPublic })
+            });
+            if (!res.ok) throw new Error('Failed to update visibility');
+            
+            // Optimistic update
+            setTracks(prev => prev.map(t => 
+                t.id === track.id ? { ...t, isPublic: !t.isPublic } : t
+            ));
+        } catch (e) {
+            console.error(e);
+            alert('Failed to update track visibility');
+        } finally {
+            setActionLoading(null);
         }
     }
 
@@ -275,6 +304,24 @@ export default function AdminMusicDashboard() {
                                         >
                                             <Share2 className="w-3.5 h-3.5" />
                                             Share
+                                        </button>
+                                        <button
+                                            onClick={() => toggleVisibility(track)}
+                                            disabled={actionLoading === `toggle-${track.id}`}
+                                            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold transition-all border ${
+                                                track.isPublic 
+                                                ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border-blue-500/20' 
+                                                : 'bg-zinc-500/10 hover:bg-zinc-500/20 text-zinc-400 border-zinc-500/20'
+                                            }`}
+                                        >
+                                            {actionLoading === `toggle-${track.id}` ? (
+                                                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                                            ) : track.isPublic ? (
+                                                <Globe className="w-3.5 h-3.5" />
+                                            ) : (
+                                                <Lock className="w-3.5 h-3.5" />
+                                            )}
+                                            {track.isPublic ? 'Public' : 'Private'}
                                         </button>
                                         {(track.userPhone || track.userEmail) && (
                                             <button
