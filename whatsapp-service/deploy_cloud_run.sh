@@ -36,7 +36,7 @@ gcloud beta run deploy $SERVICE_NAME \
   --concurrency 100 \
   --max-instances 1 \
   --min-instances 1 \
-  --set-env-vars "NODE_ENV=production,WHATSAPP_BOT_ENABLED=true,MARKETING_SERVER_URL=https://satsang-marketing-server-6ougd45dya-el.a.run.app,CORS_ORIGIN=https://rraasi.com\\,https://www.rraasi.com,WHATSAPP_SESSION_BUCKET=$BUCKET_NAME,INTERNAL_SERVICE_TOKEN=satsang_internal_agent_secret_2024" \
+  --set-env-vars "^@^NODE_ENV=production@WHATSAPP_BOT_ENABLED=true@MARKETING_SERVER_URL=https://satsang-marketing-server-6ougd45dya-el.a.run.app@CORS_ORIGIN=https://rraasi.com,https://www.rraasi.com,https://satsang-frontend-6ougd45dya-el.a.run.app@WHATSAPP_SESSION_BUCKET=$BUCKET_NAME@INTERNAL_SERVICE_TOKEN=satsang_internal_agent_secret_2024" \
   --project $PROJECT_ID
 
 echo ""

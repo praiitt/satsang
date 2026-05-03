@@ -3,6 +3,7 @@
 /* eslint-disable prettier/prettier */
 import React, { useEffect, useRef, useState } from 'react';
 import type { ConfirmationResult } from 'firebase/auth';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { toastAlert } from '@/components/livekit/alert-toast';
 import { Button } from '@/components/livekit/button';
 import { getFirebaseAuth } from '@/lib/firebase-client';
@@ -38,8 +39,14 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
   const [error, setError] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(false);
   const [otpSupported, setOtpSupported] = useState(false);
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('EarlyFreeAccess');
   const [emailAuthMethod, setEmailAuthMethod] = useState<'password' | 'link'>('password');
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const [changePwdCurrentPwd, setChangePwdCurrentPwd] = useState('');
+  const [changePwdNew, setChangePwdNew] = useState('');
+  const [changePwdConfirm, setChangePwdConfirm] = useState('');
+  const [changePwdLoading, setChangePwdLoading] = useState(false);
+  const [changePwdError, setChangePwdError] = useState<string | null>(null);
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
   const otpInputRef = useRef<HTMLInputElement>(null);
 
@@ -253,6 +260,47 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
     setOtpCode('');
     setError(null);
     confirmationResultRef.current = null;
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangePwdError(null);
+
+    if (!changePwdNew || changePwdNew.length < 6) {
+      setChangePwdError('New password must be at least 6 characters');
+      return;
+    }
+    if (changePwdNew !== changePwdConfirm) {
+      setChangePwdError('Passwords do not match');
+      return;
+    }
+
+    setChangePwdLoading(true);
+    try {
+      const auth = getFirebaseAuth();
+      const user = auth.currentUser;
+      if (!user || !user.email) throw new Error('Not logged in');
+
+      // Re-authenticate first
+      const credential = EmailAuthProvider.credential(user.email, changePwdCurrentPwd);
+      await reauthenticateWithCredential(user, credential);
+
+      // Update password
+      await updatePassword(user, changePwdNew);
+
+      toastAlert({ title: 'Password Updated!', description: 'Your password has been changed successfully.' });
+      setShowChangePassword(false);
+      setChangePwdCurrentPwd('');
+      setChangePwdNew('');
+      setChangePwdConfirm('');
+    } catch (err: unknown) {
+      const msg = (err as any)?.code === 'auth/wrong-password'
+        ? 'Current password is incorrect'
+        : err instanceof Error ? err.message : 'Failed to change password';
+      setChangePwdError(msg);
+    } finally {
+      setChangePwdLoading(false);
+    }
   };
 
   const handleResendOTP = async () => {
@@ -624,6 +672,74 @@ export function PhoneAuthForm({ onSuccess, className, service }: PhoneAuthFormPr
                 ? (language === 'hi' ? 'ईमेल से जारी रखें' : 'Continue with Email instead')
                 : (language === 'hi' ? 'फ़ोन नंबर से जारी रखें' : 'Continue with Phone instead')}
             </button>
+          </div>
+        )}
+
+        {/* Change Password (shown when on email+password mode) */}
+        {step === 'phone' && authMode === 'email' && emailAuthMethod === 'password' && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => { setShowChangePassword(v => !v); setChangePwdError(null); }}
+              className="text-xs text-muted-foreground hover:text-foreground underline w-full text-center transition-colors"
+            >
+              {showChangePassword ? 'Cancel' : '🔑 Change Password'}
+            </button>
+
+            {showChangePassword && (
+              <form onSubmit={handleChangePassword} className="mt-4 space-y-3 border border-border rounded-xl p-4 bg-muted/30">
+                <p className="text-sm font-semibold text-foreground mb-1">Change Password</p>
+
+                {changePwdError && (
+                  <div className="bg-destructive/10 text-destructive border-destructive/20 rounded-lg border p-2 text-xs">
+                    {changePwdError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-xs font-medium text-foreground mb-1 block">Current Password</label>
+                  <input
+                    type="password"
+                    value={changePwdCurrentPwd}
+                    onChange={e => setChangePwdCurrentPwd(e.target.value)}
+                    placeholder="Your current password"
+                    className="border-input bg-background text-foreground focus:ring-ring h-10 w-full rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
+                    required
+                    disabled={changePwdLoading}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-foreground mb-1 block">New Password</label>
+                  <input
+                    type="password"
+                    value={changePwdNew}
+                    onChange={e => setChangePwdNew(e.target.value)}
+                    placeholder="Min 6 characters"
+                    className="border-input bg-background text-foreground focus:ring-ring h-10 w-full rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
+                    required
+                    disabled={changePwdLoading}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-foreground mb-1 block">Confirm New Password</label>
+                  <input
+                    type="password"
+                    value={changePwdConfirm}
+                    onChange={e => setChangePwdConfirm(e.target.value)}
+                    placeholder="Repeat new password"
+                    className="border-input bg-background text-foreground focus:ring-ring h-10 w-full rounded-lg border px-3 text-sm focus:ring-2 focus:outline-none"
+                    required
+                    disabled={changePwdLoading}
+                  />
+                </div>
+
+                <Button type="submit" disabled={changePwdLoading} className="h-10 w-full text-sm">
+                  {changePwdLoading ? 'Updating...' : 'Update Password'}
+                </Button>
+              </form>
+            )}
           </div>
         )}
       </div>

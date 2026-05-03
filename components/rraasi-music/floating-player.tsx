@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { useMusicPlayer, MusicTrack } from '@/contexts/music-player-context';
+import { useMusicPlayer } from '@/contexts/music-player-context';
 import {
     Play,
     Pause,
@@ -13,10 +13,11 @@ import {
     Minimize2,
     X,
     ListMusic,
-    Music
+    Music,
+    Repeat,
+    Repeat1
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/livekit/button';
 
 export function FloatingPlayer() {
     const {
@@ -33,12 +34,13 @@ export function FloatingPlayer() {
         setExpanded,
         volume,
         setVolume,
-        closePlayer
+        closePlayer,
+        repeatMode,
+        cycleRepeatMode,
     } = useMusicPlayer();
 
     const [isHovered, setIsHovered] = useState(false);
 
-    // If no track is loaded, don't render anything
     if (!currentTrack) return null;
 
     const formatTime = (time: number) => {
@@ -51,6 +53,41 @@ export function FloatingPlayer() {
     const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
         const time = (parseFloat(e.target.value) / 100) * duration;
         seek(time);
+    };
+
+    // Repeat button — cycles off → all → one
+    const RepeatButton = ({ size = 'sm' }: { size?: 'sm' | 'lg' }) => {
+        const isLg = size === 'lg';
+        const iconSize = isLg ? 'w-6 h-6' : 'w-4 h-4';
+        const btnSize = isLg ? 'p-4' : 'p-2';
+
+        const label =
+            repeatMode === 'off' ? 'Repeat: Off' :
+            repeatMode === 'all' ? 'Repeat: All' :
+            'Repeat: One';
+
+        return (
+            <button
+                onClick={cycleRepeatMode}
+                title={label}
+                className={cn(
+                    btnSize,
+                    'transition-all duration-200 rounded-full relative',
+                    repeatMode === 'off'
+                        ? 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                        : 'text-amber-500 hover:text-amber-600'
+                )}
+            >
+                {repeatMode === 'one'
+                    ? <Repeat1 className={iconSize} />
+                    : <Repeat className={iconSize} />
+                }
+                {/* Small dot indicator when active */}
+                {repeatMode !== 'off' && (
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-500" />
+                )}
+            </button>
+        );
     };
 
     // Full Screen / Expanded Player Overlay
@@ -93,7 +130,7 @@ export function FloatingPlayer() {
                 </div>
 
                 {/* Seek Bar */}
-                <div className="mb-8 w-full max-w-2xl mx-auto">
+                <div className="mb-6 w-full max-w-2xl mx-auto">
                     <input
                         type="range"
                         min="0"
@@ -108,8 +145,10 @@ export function FloatingPlayer() {
                     </div>
                 </div>
 
-                {/* Controls */}
-                <div className="flex items-center justify-center gap-8 mb-12">
+                {/* Controls with Repeat */}
+                <div className="flex items-center justify-center gap-6 mb-8">
+                    <RepeatButton size="lg" />
+
                     <button onClick={prevTrack} className="p-4 text-gray-900 dark:text-white hover:opacity-75 transition-opacity">
                         <SkipBack className="w-8 h-8" />
                     </button>
@@ -124,9 +163,19 @@ export function FloatingPlayer() {
                     <button onClick={nextTrack} className="p-4 text-gray-900 dark:text-white hover:opacity-75 transition-opacity">
                         <SkipForward className="w-8 h-8" />
                     </button>
+
+                    {/* Spacer to balance the layout */}
+                    <div className="w-14" />
                 </div>
 
-                {/* Volume - Simplified for mobile view */}
+                {/* Repeat label */}
+                <p className="text-center text-xs text-gray-400 mb-4">
+                    {repeatMode === 'off' && 'No repeat'}
+                    {repeatMode === 'all' && '🔁 Repeating all tracks'}
+                    {repeatMode === 'one' && '🔂 Repeating this track'}
+                </p>
+
+                {/* Volume */}
                 <div className="flex items-center justify-center gap-4 text-gray-500">
                     <Volume2 className="w-5 h-5" />
                     <input
@@ -149,7 +198,7 @@ export function FloatingPlayer() {
         <div
             className={cn(
                 "fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 transform",
-                "pb-safe md:pb-0" // Add safe area padding for mobile if needed
+                "pb-safe md:pb-0"
             )}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
@@ -176,7 +225,6 @@ export function FloatingPlayer() {
                                     <Music className="w-6 h-6" />
                                 </div>
                             )}
-                            {/* Hover expand indicator */}
                             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Maximize2 className="w-5 h-5 text-white" />
                             </div>
@@ -186,14 +234,20 @@ export function FloatingPlayer() {
                             <span className="font-semibold text-gray-900 dark:text-white truncate text-sm md:text-base">
                                 {currentTrack.title}
                             </span>
-                            <span className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            <span className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
                                 {currentTrack.artist || 'Rraasi Music'}
+                                {repeatMode !== 'off' && (
+                                    <span className="text-amber-500 text-[10px] font-bold">
+                                        {repeatMode === 'one' ? '🔂' : '🔁'}
+                                    </span>
+                                )}
                             </span>
                         </div>
                     </div>
 
                     {/* Center: Controls (Desktop) */}
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="hidden md:flex items-center gap-3">
+                        <RepeatButton />
                         <button onClick={prevTrack} className="p-2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors">
                             <SkipBack className="w-5 h-5" />
                         </button>
@@ -210,33 +264,30 @@ export function FloatingPlayer() {
 
                     {/* Right: Actions / Mobile Play */}
                     <div className="flex items-center gap-3">
-                        {/* Mobile Controls (Prev, Play, Next) */}
-                        <div className="flex items-center gap-3 md:hidden">
+                        {/* Mobile Controls */}
+                        <div className="flex items-center gap-2 md:hidden">
+                            <RepeatButton />
                             <button
                                 onClick={(e) => { e.stopPropagation(); prevTrack(); }}
                                 className="p-2 text-gray-500 dark:text-gray-400"
                             >
-                                <SkipBack className="w-6 h-6" />
+                                <SkipBack className="w-5 h-5" />
                             </button>
                             <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    togglePlayPause();
-                                }}
+                                onClick={(e) => { e.stopPropagation(); togglePlayPause(); }}
                                 className="p-2 text-gray-900 dark:text-white"
                             >
-                                {isPlaying ? <Pause className="w-8 h-8 fill-current" /> : <Play className="w-8 h-8 fill-current" />}
+                                {isPlaying ? <Pause className="w-7 h-7 fill-current" /> : <Play className="w-7 h-7 fill-current" />}
                             </button>
                             <button
                                 onClick={(e) => { e.stopPropagation(); nextTrack(); }}
                                 className="p-2 text-gray-500 dark:text-gray-400"
                             >
-                                <SkipForward className="w-6 h-6" />
+                                <SkipForward className="w-5 h-5" />
                             </button>
-                            {/* Mobile Close Button */}
                             <button
                                 onClick={(e) => { e.stopPropagation(); closePlayer(); }}
-                                className="p-1 text-gray-400 hover:text-red-500 ml-2"
+                                className="p-1 text-gray-400 hover:text-red-500 ml-1"
                             >
                                 <X className="w-5 h-5" />
                             </button>
@@ -263,7 +314,6 @@ export function FloatingPlayer() {
                                 <Maximize2 className="w-5 h-5" />
                             </button>
 
-                            {/* Desktop Close Button */}
                             <button
                                 onClick={closePlayer}
                                 className="p-2 text-gray-400 hover:text-red-500 transition-colors border-l border-gray-200 dark:border-gray-700 pl-3 ml-1"

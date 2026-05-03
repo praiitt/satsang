@@ -303,7 +303,7 @@ router.post('/:id/register', requireAuth, async (req, res) => {
 
     const authRes = await axios.post(
       `${AUTH_SERVER_URL()}/admin/create-user`,
-      { email: lead.email, displayName: lead.name, password: PASSWORD },
+      { email: lead.email, displayName: lead.name, phone: lead.phone, password: PASSWORD },
       { headers: { 'x-internal-token': INTERNAL_TOKEN() } }
     );
 

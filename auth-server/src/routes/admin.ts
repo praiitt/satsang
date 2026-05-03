@@ -21,7 +21,7 @@ function requireInternalToken(req: any, res: any, next: any) {
  */
 router.post('/create-user', requireInternalToken, async (req, res) => {
   try {
-    const { email, displayName, password } = req.body;
+    const { email, displayName, password, phone } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'email and password are required' });
@@ -47,6 +47,7 @@ router.post('/create-user', requireInternalToken, async (req, res) => {
       email,
       password,
       displayName: displayName || email.split('@')[0],
+      ...(phone ? { phoneNumber: phone } : {}),
       emailVerified: false,
     });
 
@@ -59,6 +60,7 @@ router.post('/create-user', requireInternalToken, async (req, res) => {
       uid: userRecord.uid,
       email,
       displayName: displayName || email.split('@')[0],
+      phone: phone || null,
       role: 'user',
       earlyAccess: true,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
@@ -95,7 +97,7 @@ router.post('/bulk-create-users', requireInternalToken, async (req, res) => {
     const db = getDb();
 
     for (const lead of leads) {
-      const { email, displayName } = lead;
+      const { email, displayName, phone } = lead;
       if (!email) {
         results.push({ email, success: false, error: 'Missing email' });
         continue;
@@ -115,6 +117,7 @@ router.post('/bulk-create-users', requireInternalToken, async (req, res) => {
           email,
           password,
           displayName: displayName || email.split('@')[0],
+          ...(phone ? { phoneNumber: phone } : {}),
           emailVerified: false,
         });
 
@@ -124,6 +127,7 @@ router.post('/bulk-create-users', requireInternalToken, async (req, res) => {
           uid: userRecord.uid,
           email,
           displayName: displayName || email.split('@')[0],
+          phone: phone || null,
           role: 'user',
           earlyAccess: true,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),

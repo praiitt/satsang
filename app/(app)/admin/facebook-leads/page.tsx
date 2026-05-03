@@ -31,6 +31,8 @@ interface FbLead {
   firebaseUid?: string;
   callInitiatedAt?: number;
   lastCallAnalysis?: string;
+  callRecordingUrl?: string;
+  callDuration?: string | number;
 }
 
 interface ProgressEvent {
@@ -491,6 +493,9 @@ export default function FacebookLeadsPage() {
             <a href="/admin/leads" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm flex items-center gap-1">
               Leads <ChevronRight className="w-3 h-3" />
             </a>
+            <a href="/admin/users" className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-sm flex items-center gap-1">
+              Users <ChevronRight className="w-3 h-3" />
+            </a>
             <span className="text-gray-600 dark:text-gray-300 text-sm font-medium">Facebook Leads</span>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">📘 Facebook Leads</h1>
@@ -862,7 +867,25 @@ export default function FacebookLeadsPage() {
                         <span className="truncate">{lead.lastCallAnalysis || 'Called'}</span>
                       </span>
                     )}
+                    
+                    {/* Call Recording Player */}
+                    {lead.callRecordingUrl && (
+                      <div className="mt-1 flex items-center gap-2 max-w-[200px]">
+                        <audio 
+                          controls 
+                          src={lead.callRecordingUrl} 
+                          className="h-8 w-full max-w-[200px] rounded-lg"
+                          title="Call Recording"
+                        />
+                        {lead.callDuration && (
+                          <span className="text-[10px] text-gray-400 shrink-0">
+                            {lead.callDuration}s
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
+
                 </td>
 
                 {/* Actions */}

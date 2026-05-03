@@ -13,9 +13,12 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { getFirebaseAuth } from '@/lib/firebase-client';
 import Link from 'next/link';
 import { useMusicPlayer } from '@/contexts/music-player-context';
+import { cn } from '@/lib/utils';
 import { PlaylistList } from './playlist-list';
+import { SearchBar } from './search-bar';
 import { PlaylistQuickAccess } from './playlist-quick-access';
 import { RecordingsModal } from '@/components/app/recordings-modal';
+import { useFavorites } from '@/hooks/use-favorites';
 
 function MusicIcon() {
   return (
@@ -59,6 +62,7 @@ interface MusicTrack {
   tags?: string[];
   isPublic?: boolean;
   metadata?: any;
+  source?: string;
 }
 
 interface RRaaSiMusicWelcomeViewProps {
@@ -71,7 +75,8 @@ export const RRaaSiMusicWelcomeView = ({
 }: React.ComponentProps<'div'> & RRaaSiMusicWelcomeViewProps) => {
   const { language } = useLanguage();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const { playPlaylist } = useMusicPlayer();
+  const { currentTrack, isPlaying, playTrack, playPlaylist, togglePlayPause } = useMusicPlayer();
+  const { isFavorite, toggleFavorite, fetchFavoriteTracks, favoriteIds } = useFavorites();
   const searchParams = useSearchParams();
   const intentionParam = searchParams.get('intention');
 
@@ -83,7 +88,11 @@ export const RRaaSiMusicWelcomeView = ({
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const [hasMore, setHasMore] = useState(true);
+  const [favoriteTracks, setFavoriteTracks] = useState<MusicTrack[]>([]);
+  const [loadingFavorites, setLoadingFavorites] = useState(false);
+  const [myMusicFilter, setMyMusicFilter] = useState<'all' | 'favorites'>('all');
   const [myTracksLoading, setMyTracksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
@@ -166,27 +175,84 @@ export const RRaaSiMusicWelcomeView = ({
     return typeof value === 'string' ? value : key;
   };
 
-  // Reset pagination when category changes
+  // Reset pagination when category or search changes
   useEffect(() => {
+    if (activeCategory === 'favorites') return; // Favorites handled separately
     setPage(1);
     setHasMore(true);
     setMusicTracks([]); // Clear existing tracks
     fetchMusic(1, true); // Fetch first page
-  }, [activeCategory]);
+  }, [activeCategory, searchQuery]);
+
+  // Load favorites when favorites tab is active
+  useEffect(() => {
+    if (activeCategory !== 'favorites') return;
+    const loadFavorites = async () => {
+      setLoadingFavorites(true);
+      const data = await fetchFavoriteTracks();
+      const tracks: MusicTrack[] = (data.tracks || []).flatMap((t: any) => {
+        if (t.tracks && Array.isArray(t.tracks) && t.tracks.length > 0) {
+          return t.tracks.map((sub: any, idx: number) => ({
+            id: sub.sunoId || `${t.id}_${idx}`,
+            shareId: t.id,
+            title: `${t.title || 'Untitled'} (${idx + 1})`,
+            audioUrl: sub.audioUrl,
+            imageUrl: sub.imageUrl || sub.sourceImageUrl || t.imageUrl,
+            prompt: t.prompt,
+            description: t.description,
+            category: t.category,
+            metadata: t.metadata,
+            createdAt: t.createdAt,
+            status: t.status,
+            story: t.story,
+            lyrics: t.lyrics,
+            healingBenefits: t.healingBenefits,
+            tags: t.tags,
+            isPublic: t.isPublic ?? false,
+          }));
+        }
+        return [{
+          id: t.id,
+          shareId: t.id,
+          title: t.title || 'Untitled',
+          audioUrl: t.audioUrl,
+          imageUrl: t.imageUrl,
+          prompt: t.prompt,
+          description: t.description,
+          category: t.category,
+          metadata: t.metadata,
+          createdAt: t.createdAt,
+          status: t.status,
+          story: t.story,
+          lyrics: t.lyrics,
+          healingBenefits: t.healingBenefits,
+          tags: t.tags,
+          isPublic: t.isPublic ?? false,
+        }];
+      });
+      setFavoriteTracks(tracks.filter(t => !!t.audioUrl));
+      setLoadingFavorites(false);
+    };
+    loadFavorites();
+  }, [activeCategory, fetchFavoriteTracks]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchMyMusic();
+      fetchMyMusic(1, true);
     } else if (!authLoading) {
       setMyTracks([]);
       setMyTracksLoading(false);
     }
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, searchQuery]);
 
-  const fetchMyMusic = async () => {
-    setMyTracksLoading(true);
+  const fetchMyMusic = async (pageNum = 1, isNew = false) => {
+    if (pageNum === 1) setMyTracksLoading(true);
     try {
-      const response = await fetch('/api/rraasi-music/my-tracks');
+      let url = `/api/rraasi-music/my-tracks?page=${pageNum}&limit=50`;
+      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
+      if (activeCategory !== 'all') url += `&category=${activeCategory}`;
+      
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         console.log('[My Music] Raw API response:', data);
@@ -213,6 +279,7 @@ export const RRaaSiMusicWelcomeView = ({
               healingBenefits: sub.healingBenefits || t.healingBenefits,
               tags: sub.tags || t.tags,
               isPublic: sub.isPublic ?? t.isPublic ?? t.is_public ?? false,
+              source: t.source,
             }));
           }
           return [{
@@ -234,6 +301,7 @@ export const RRaaSiMusicWelcomeView = ({
             healingBenefits: t.healingBenefits,
             tags: t.tags,
             isPublic: t.isPublic ?? t.is_public ?? false,
+            source: t.source,
           }];
         });
 
@@ -268,7 +336,19 @@ export const RRaaSiMusicWelcomeView = ({
           index === self.findIndex((t) => (t.audioUrl === track.audioUrl))
         );
 
-        console.log('[My Music] After deduplication:', uniqueTracks.length);
+        // Sort: newest first, but satsang tracks always go to the bottom
+        uniqueTracks.sort((a, b) => {
+          const aIsSatsang = a.source === 'private_satsang';
+          const bIsSatsang = b.source === 'private_satsang';
+          if (aIsSatsang && !bIsSatsang) return 1;  // a goes after b
+          if (!aIsSatsang && bIsSatsang) return -1; // b goes after a
+          // Within same group, sort newest first
+          const timeA = new Date(a.createdAt || 0).getTime();
+          const timeB = new Date(b.createdAt || 0).getTime();
+          return timeB - timeA;
+        });
+
+        console.log('[My Music] After deduplication and sorting:', uniqueTracks.length);
         setMyTracks(uniqueTracks);
       } else {
         console.error('[My Music] API error:', response.status, response.statusText);
@@ -365,6 +445,13 @@ export const RRaaSiMusicWelcomeView = ({
   const handlePublishToggle = async (trackId: string, newStatus: boolean) => {
     if (!user?.uid) return;
 
+    // Find the track to get the true document ID
+    const track = myTracks.find(t => t.id === trackId || t.shareId === trackId);
+    if (!track) return;
+    
+    // The document ID in Firestore is the base ID before any query parameters (like ?v=...)
+    const documentId = track.shareId ? track.shareId.split('?')[0] : trackId;
+
     // Optimistic update
     setMyTracks(prev => prev.map(t =>
       (t.shareId === trackId || t.id === trackId) ? { ...t, isPublic: newStatus } : t
@@ -381,7 +468,7 @@ export const RRaaSiMusicWelcomeView = ({
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ trackId, isPublic: newStatus })
+        body: JSON.stringify({ trackId: documentId, isPublic: newStatus })
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
@@ -402,6 +489,13 @@ export const RRaaSiMusicWelcomeView = ({
     if (selectedTracks.size === 0) return;
     
     const selectedIds = Array.from(selectedTracks);
+    
+    // Extract actual document IDs
+    const documentIdsToPublish = selectedIds.map(id => {
+      const t = myTracks.find(track => track.shareId === id || track.id === id);
+      return t?.shareId ? t.shareId.split('?')[0] : id;
+    });
+
     // Optimistic update
     setMyTracks(prev => prev.map(t => 
       (selectedIds.includes(t.shareId || t.id)) ? { ...t, isPublic: makePublic } : t
@@ -420,7 +514,7 @@ export const RRaaSiMusicWelcomeView = ({
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ trackIds: selectedIds, isPublic: makePublic })
+        body: JSON.stringify({ trackIds: documentIdsToPublish, isPublic: makePublic })
       });
       
       const result = await response.json();
@@ -449,6 +543,7 @@ export const RRaaSiMusicWelcomeView = ({
     try {
       // Build API URL with category
       let url = `/api/rraasi-music/community-tracks?page=${pageNum}&limit=30&category=${activeCategory}`;
+      if (searchQuery) url += `&search=${encodeURIComponent(searchQuery)}`;
 
       const response = await fetch(url);
 
@@ -863,6 +958,41 @@ export const RRaaSiMusicWelcomeView = ({
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main tracks grid */}
           <div className="flex-1">
+            {/* My Music sub-filter: All / Favorites */}
+            {isAuthenticated && !authLoading && !myTracksLoading && (
+              <div className="flex gap-2 mb-5">
+                <button
+                  onClick={() => setMyMusicFilter('all')}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
+                    myMusicFilter === 'all'
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  🎵 All My Tracks
+                </button>
+                <button
+                  onClick={() => setMyMusicFilter('favorites')}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
+                    myMusicFilter === 'favorites'
+                      ? "bg-rose-500 text-white shadow-md"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  ❤️ Favorites
+                  {favoriteIds.size > 0 && (
+                    <span className={cn(
+                      "text-xs font-bold px-1.5 py-0.5 rounded-full",
+                      myMusicFilter === 'favorites' ? "bg-white/30 text-white" : "bg-rose-100 dark:bg-rose-900/40 text-rose-600"
+                    )}>
+                      {Array.from(favoriteIds).filter(id => myTracks.some(t => t.id === id)).length}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
             {authLoading || myTracksLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[1, 2, 3].map((i) => (
@@ -886,51 +1016,70 @@ export const RRaaSiMusicWelcomeView = ({
                   Create Your First Spiritual Track
                 </Button>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {myTracks.map((track, index) => (
-                  <MusicPlayerCard
-                    key={track.id}
-                    id={track.id}
-                    shareId={track.shareId}
-                    title={track.title || 'Untitled'}
-                    audioUrl={track.audioUrl}
-                    imageUrl={track.imageUrl}
-                    category={track.category || 'other'}
-                    prompt={track.prompt}
-                    description={track.description}
-                    createdAt={track.createdAt}
-                    onPlay={() => playPlaylist(myTracks, index)}
-                    status={track.status}
-                    videoUrl={track.videoUrl}
-                    videoStatus={track.videoStatus}
-                    story={track.story}
-                    lyrics={track.lyrics}
-                    healingBenefits={track.healingBenefits}
-                    metadata={track.metadata}
-                    tags={track.tags}
-                    isPublic={track.isPublic}
-                    isOwner={true}
-                    selectionMode={selectionMode}
-                    isSelected={selectedTracks.has(track.shareId || track.id)}
-                    onToggleSelection={() => {
-                      const id = track.shareId || track.id;
-                      setSelectedTracks(prev => {
-                        const newSet = new Set(prev);
-                        if (newSet.has(id)) newSet.delete(id);
-                        else newSet.add(id);
-                        return newSet;
-                      });
-                    }}
-                    onPublishToggle={(newStatus) => handlePublishToggle(track.shareId || track.id, newStatus)}
-                    onGenerateVideo={() => handleGenerateVideo(track.id, track.shareId)}
-                    onSync={() => handleSync(track.id)}
-                    isSyncing={syncingTrackId === track.id}
-                    onDownload={() => handleDownload(track)}
-                  />
-                ))}
-              </div>
-            )}
+            ) : (() => {
+                const displayedTracks = myMusicFilter === 'favorites'
+                  ? myTracks.filter(t => isFavorite(t.id))
+                  : myTracks;
+
+                if (displayedTracks.length === 0 && myMusicFilter === 'favorites') {
+                  return (
+                    <div className="text-center py-16 bg-rose-50 dark:bg-rose-900/10 rounded-2xl border border-rose-100 dark:border-rose-900/20">
+                      <Heart className="w-12 h-12 text-rose-300 mx-auto mb-3" />
+                      <p className="text-gray-500 dark:text-gray-400 mb-1 font-medium">No favorites in My Music yet</p>
+                      <p className="text-gray-400 dark:text-gray-500 text-sm">Tap the ❤️ on any of your tracks to add it here.</p>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {displayedTracks.map((track, index) => (
+                      <MusicPlayerCard
+                        key={track.id}
+                        id={track.id}
+                        shareId={track.shareId}
+                        title={track.title || 'Untitled'}
+                        audioUrl={track.audioUrl}
+                        imageUrl={track.imageUrl}
+                        category={track.category || 'other'}
+                        prompt={track.prompt}
+                        description={track.description}
+                        createdAt={track.createdAt}
+                        onPlay={() => playPlaylist(displayedTracks, index)}
+                        status={track.status}
+                        videoUrl={track.videoUrl}
+                        videoStatus={track.videoStatus}
+                        story={track.story}
+                        lyrics={track.lyrics}
+                        healingBenefits={track.healingBenefits}
+                        metadata={track.metadata}
+                        tags={track.tags}
+                        isPublic={track.isPublic}
+                        isOwner={true}
+                        selectionMode={selectionMode}
+                        isSelected={selectedTracks.has(track.shareId || track.id)}
+                        onToggleSelection={() => {
+                          const id = track.shareId || track.id;
+                          setSelectedTracks(prev => {
+                            const newSet = new Set(prev);
+                            if (newSet.has(id)) newSet.delete(id);
+                            else newSet.add(id);
+                            return newSet;
+                          });
+                        }}
+                        onPublishToggle={(newStatus) => handlePublishToggle(track.shareId || track.id, newStatus)}
+                        onGenerateVideo={() => handleGenerateVideo(track.id, track.shareId)}
+                        onSync={() => handleSync(track.id)}
+                        isSyncing={syncingTrackId === track.id}
+                        onDownload={() => handleDownload(track)}
+                        isFavorite={isFavorite(track.id)}
+                        onToggleFavorite={() => toggleFavorite(track.id)}
+                        source={track.source}
+                      />
+                    ))}
+                  </div>
+                );
+              })()}
           </div>
 
           {/* Playlist Quick Access Sidebar */}
@@ -974,9 +1123,11 @@ export const RRaaSiMusicWelcomeView = ({
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             {mt('browse.title')}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
+          <p className="text-gray-600 dark:text-gray-400 text-lg mb-6">
             {mt('browse.subtitle')}
           </p>
+          
+          <SearchBar onSearch={(term) => setSearchQuery(term)} initialValue={searchQuery} />
         </div >
 
         {/* Category Filter & Toggles */}
@@ -1003,9 +1154,56 @@ export const RRaaSiMusicWelcomeView = ({
           </button>
         </div >
 
-        {/* Music Content - Grid or Playlists */}
+        {/* Music Content - Grid, Favorites, or Playlists */}
         {
-          activeCategory === 'playlists' ? (
+          activeCategory === 'favorites' ? (
+            isAuthenticated ? (
+              loadingFavorites ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {[1,2,3,4,5].map(i => (
+                    <div key={i} className="h-64 bg-zinc-900/50 rounded-2xl animate-pulse border border-white/5" />
+                  ))}
+                </div>
+              ) : favoriteTracks.length === 0 ? (
+                <div className="text-center py-20 bg-zinc-900/30 rounded-3xl border border-white/5 border-dashed">
+                  <Heart className="w-16 h-16 text-zinc-700 mx-auto mb-4" />
+                  <p className="text-zinc-500 text-lg mb-2">No favorites yet!</p>
+                  <p className="text-zinc-600 text-sm">Tap the ❤️ on any track to save it here.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {favoriteTracks.map((track, index) => (
+                    <MusicPlayerCard
+                      key={track.id}
+                      id={track.id}
+                      title={track.title}
+                      audioUrl={track.audioUrl}
+                      imageUrl={track.imageUrl}
+                      category={track.category}
+                      prompt={track.prompt}
+                      description={track.description}
+                      createdAt={track.createdAt}
+                      story={track.story}
+                      lyrics={track.lyrics}
+                      healingBenefits={track.healingBenefits}
+                      tags={track.tags}
+                      shareId={track.shareId}
+                      onPlay={() => playPlaylist(favoriteTracks, index)}
+                      isFavorite={true}
+                      onToggleFavorite={async () => {
+                        await toggleFavorite(track.id);
+                        setFavoriteTracks(prev => prev.filter(t => t.id !== track.id));
+                      }}
+                    />
+                  ))}
+                </div>
+              )
+            ) : (
+              <div className="text-center py-20 text-zinc-500">
+                <p>Please log in to view your favorites.</p>
+              </div>
+            )
+          ) : activeCategory === 'playlists' ? (
             isAuthenticated ? (
               <PlaylistList
                 onPlayPlaylist={async (id) => {
@@ -1088,6 +1286,8 @@ export const RRaaSiMusicWelcomeView = ({
                     videoUrl={track.videoUrl}
                     videoStatus={track.videoStatus}
                     onPlay={() => playPlaylist(musicTracks, index)} // Use playlist
+                    isFavorite={isFavorite(track.id)}
+                    onToggleFavorite={() => toggleFavorite(track.id)}
                   />
                 ))}
               </div>

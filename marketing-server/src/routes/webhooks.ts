@@ -117,4 +117,94 @@ router.post('/heygen', async (req, res) => {
   }
 });
 
+/**
+ * POST /webhooks/vobiz
+ * Receives call completion events from Vobiz.
+ */
+router.post('/vobiz', async (req, res) => {
+  try {
+    const payload = req.body ?? {};
+    
+    // eslint-disable-next-line no-console
+    console.log(`[webhook] 📥 Received Vobiz event:`, JSON.stringify(payload));
+
+    // Vobiz payload structure might vary, attempt to extract useful fields
+    const recordingUrl = payload.recording_url || payload.recordingUrl || payload.RecordingUrl || payload.audio_url || payload.audioUrl;
+    const phoneRaw = payload.to || payload.To || payload.phone || payload.caller_id || payload.callerId;
+    const duration = payload.duration || payload.Duration || payload.call_duration;
+    const callStatus = payload.status || payload.Status || payload.call_status;
+    const summary = payload.summary || payload.Summary || payload.analysis || payload.transcript;
+
+    if (!phoneRaw) {
+      return res.status(400).json({ error: 'Missing phone number in Vobiz payload' });
+    }
+
+    // Clean phone number to match the format in DB
+    const phoneClean = String(phoneRaw).replace(/\D/g, '');
+
+    const db = getDb();
+    
+    // Find the lead by phone number
+    const leadsSnapshot = await db.collection('facebook_leads').get();
+    let leadId = null;
+    let leadRef = null;
+
+    for (const doc of leadsSnapshot.docs) {
+      const data = doc.data();
+      if (data.phone) {
+        const leadPhoneClean = String(data.phone).replace(/\D/g, '');
+        // Match last 10 digits in case of country code mismatches
+        if (leadPhoneClean.endsWith(phoneClean.slice(-10)) || phoneClean.endsWith(leadPhoneClean.slice(-10))) {
+          leadId = doc.id;
+          leadRef = doc.ref;
+          break;
+        }
+      }
+    }
+
+    // If not found in facebook_leads, check the users collection
+    if (!leadRef) {
+      const usersSnapshot = await db.collection('users').get();
+      for (const doc of usersSnapshot.docs) {
+        const data = doc.data();
+        const userPhone = data.phone || data.phoneNumber;
+        if (userPhone) {
+          const userPhoneClean = String(userPhone).replace(/\D/g, '');
+          if (userPhoneClean.endsWith(phoneClean.slice(-10)) || phoneClean.endsWith(userPhoneClean.slice(-10))) {
+            leadId = doc.id;
+            leadRef = doc.ref;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!leadRef) {
+      // eslint-disable-next-line no-console
+      console.log(`[webhook] ⚠️ No lead or user found for phone: ${phoneRaw}`);
+      return res.status(404).json({ error: 'Lead/User not found for phone number' });
+    }
+
+    const updateData: any = {
+      updatedAt: Date.now()
+    };
+
+    if (recordingUrl) updateData.callRecordingUrl = recordingUrl;
+    if (duration) updateData.callDuration = duration;
+    if (callStatus) updateData.callStatus = callStatus;
+    if (summary) updateData.lastCallAnalysis = summary;
+
+    await leadRef.update(updateData);
+
+    // eslint-disable-next-line no-console
+    console.log(`[webhook] ✅ Updated lead ${leadId} with Vobiz call data`);
+
+    return res.json({ success: true, leadId });
+  } catch (error: any) {
+    // eslint-disable-next-line no-console
+    console.error('[webhook] Error processing Vobiz event:', error);
+    return res.status(500).json({ error: 'Failed to process webhook', details: error.message });
+  }
+});
+
 export default router;

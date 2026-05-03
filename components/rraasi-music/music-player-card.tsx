@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Play, Pause, BarChart3, Download, Video, Info, Globe, Lock } from 'lucide-react';
+import { Play, Pause, BarChart3, Download, Video, Info, Globe, Lock, Heart } from 'lucide-react';
 import { VideoPlayerModal } from './video-player-modal';
 import { MusicInfoModal } from './music-info-modal';
 import { useMusicPlayer, MusicTrack } from '@/contexts/music-player-context';
@@ -41,6 +41,9 @@ interface MusicPlayerCardProps {
     isSelected?: boolean; // New prop for bulk select
     onToggleSelection?: () => void; // New prop for bulk select
     onPublishToggle?: (newStatus: boolean) => void; // New prop
+    isFavorite?: boolean; // Favorite state
+    onToggleFavorite?: () => void; // Toggle favorite
+    source?: string; // Track source (e.g. 'private_satsang')
 }
 
 export function MusicPlayerCard({
@@ -74,6 +77,9 @@ export function MusicPlayerCard({
     isSelected = false,
     onToggleSelection,
     onPublishToggle,
+    isFavorite = false,
+    onToggleFavorite,
+    source,
 }: MusicPlayerCardProps) {
     // ... existing hooks ...
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
@@ -257,9 +263,16 @@ export function MusicPlayerCard({
             <div className="relative z-10 flex h-64 flex-col justify-between p-5 text-white pointer-events-none">
                 {/* Top Row: Category & Status */}
                 <div className="relative z-30 flex items-center justify-between pointer-events-auto">
-                    <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm">
-                        {category}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-white/20 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm">
+                            {category}
+                        </span>
+                        {source === 'private_satsang' && (
+                            <span className="rounded-full bg-amber-500/80 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm text-white flex items-center gap-1">
+                                🕉️ Satsang
+                            </span>
+                        )}
+                    </div>
                     {isActuallyPlaying && (
                         <div className="flex gap-0.5 items-end h-4 absolute left-1/2 -translate-x-1/2 bottom-1">
                             <span className="w-1 bg-amber-400 h-full animate-music-bar-1 shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
@@ -268,6 +281,23 @@ export function MusicPlayerCard({
                         </div>
                     )}
                     <div className="flex items-center gap-1">
+                        {onToggleFavorite && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleFavorite();
+                                }}
+                                className={cn(
+                                    "flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition-all duration-200 border",
+                                    isFavorite
+                                        ? "bg-rose-500/30 hover:bg-rose-500/50 text-rose-400 border-rose-500/40 scale-110"
+                                        : "bg-black/30 hover:bg-rose-500/20 text-white/70 hover:text-rose-400 border-white/10"
+                                )}
+                                title={isFavorite ? "Remove from Favorites" : "Add to Favorites"}
+                            >
+                                <Heart className={cn("h-4 w-4 transition-all", isFavorite && "fill-rose-400")} />
+                            </button>
+                        )}
                         <SocialShareMenu
                             title={displayTitle}
                             text={`Check out this AI spiritual track: "${displayTitle}"\n${description || ''}`}

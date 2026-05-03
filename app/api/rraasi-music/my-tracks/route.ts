@@ -46,13 +46,23 @@ export async function GET(request: NextRequest) {
             ? 'http://localhost:4000'
             : (process.env.AUTH_SERVER_URL || 'https://satsang-auth-server-6ougd45dya-el.a.run.app');
 
-        const url = `${authServerUrl}/suno/my-tracks`;
+        const search = searchParams.get('search') || '';
+        const category = searchParams.get('category') || '';
+        const page = searchParams.get('page') || '1';
+        
+        const url = new URL(`${authServerUrl}/suno/my-tracks`);
+        url.searchParams.append('limit', limit.toString());
+        url.searchParams.append('page', page);
+        if (search) url.searchParams.append('search', search);
+        if (category) url.searchParams.append('category', category);
+
+        const urlString = url.toString();
 
         console.log(`[My Tracks API] ✅ Authenticated! Fetching tracks for UID: ${user.uid}`);
-        console.log(`[My Tracks API] Target URL: ${url}`);
+        console.log(`[My Tracks API] Target URL: ${urlString}`);
 
         // Forward cookies for authentication (reuse cookieHeader from above)
-        const response = await fetch(url, {
+        const response = await fetch(urlString, {
             headers: {
                 'Cookie': cookieHeader || ''
             }

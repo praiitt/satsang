@@ -19,11 +19,20 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        const url = `${AUTH_URL}/suno/community-tracks?page=${page}&limit=${limit}`;
+        const search = searchParams.get('search') || '';
+        const category = searchParams.get('category') || '';
 
-        console.log(`[API Proxy] Fetching community tracks from: ${url}`);
+        const url = new URL(`${AUTH_URL}/suno/community-tracks`);
+        url.searchParams.append('page', page);
+        url.searchParams.append('limit', limit);
+        if (search) url.searchParams.append('search', search);
+        if (category) url.searchParams.append('category', category);
+        
+        const urlString = url.toString();
 
-        const response = await fetch(url, {
+        console.log(`[API Proxy] Fetching community tracks from: ${urlString}`);
+
+        const response = await fetch(urlString, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

@@ -18,6 +18,11 @@ export function TrackActionsMenu({ trackId, trackTitle, trackDate, trackDuration
     const [addingTo, setAddingTo] = useState<string | null>(null);
     const [isGeneratingLicense, setIsGeneratingLicense] = useState(false);
     const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+    const [playlistSearch, setPlaylistSearch] = useState('');
+
+    const filteredPlaylists = playlists.filter(p => 
+        p.name.toLowerCase().includes(playlistSearch.toLowerCase())
+    );
 
     // Close menu when clicking outside (simple implementation)
     useEffect(() => {
@@ -146,13 +151,27 @@ export function TrackActionsMenu({ trackId, trackTitle, trackDate, trackDuration
                     {/* Playlist Section */}
                     <div className="p-2 border-b border-white/5 bg-zinc-900/50">
                         <span className="text-[10px] uppercase tracking-wider font-semibold text-zinc-500 px-3 py-1 block">Add to Playlist</span>
+                        {playlists.length > 5 && (
+                            <div className="px-2 pb-2">
+                                <input
+                                    type="text"
+                                    placeholder="Search playlists..."
+                                    value={playlistSearch}
+                                    onChange={(e) => setPlaylistSearch(e.target.value)}
+                                    className="w-full bg-black/50 border border-white/10 rounded-md px-3 py-1.5 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-purple-500/50"
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     <div className="max-h-40 overflow-y-auto">
-                        {playlists.length === 0 ? (
-                            <div className="p-3 text-sm text-zinc-500 text-center">No playlists yet</div>
+                        {filteredPlaylists.length === 0 ? (
+                            <div className="p-3 text-sm text-zinc-500 text-center">
+                                {playlists.length === 0 ? "No playlists yet" : "No matching playlists"}
+                            </div>
                         ) : (
-                            playlists.map(playlist => (
+                            filteredPlaylists.map(playlist => (
                                 <button
                                     key={playlist.id}
                                     onClick={() => handleAddToPlaylist(playlist.id)}

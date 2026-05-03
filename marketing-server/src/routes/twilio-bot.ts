@@ -3,6 +3,8 @@ import { Router } from 'express';
 import WebSocket from 'ws';
 import { getDb } from '../firebase.js';
 import { generateSunoTrack } from '../services/suno.js';
+import twilio from 'twilio';
+import axios from 'axios';
 
 // Use the original working pattern - expressWs wraps the router and returns an app
 // that properly handles WebSocket upgrades for this router's routes.
@@ -41,7 +43,7 @@ Greet them with warmth. Introduce yourself as Rashi, their spiritual companion f
 🎯 HOW TO CONVERSE:
 - Ask how they are feeling. Listen. Then guide naturally based on what they share.
 - Use the caller's name occasionally — only when it feels natural, NOT in every single sentence.
-- If they ask how to use anything: "Bas rraasi.com pe jaiye, bilkul free hai shuru karna" (or in English: "Just visit rraasi.com, it's free to start")
+- If they ask how to use anything, how to login, or want a link to a guru or music: use your "send_whatsapp_link" tool to instantly text them the direct link, and say "Main abhi aapke WhatsApp par ek link bhej rahi hoon, us par click karke aap shuru kar sakte hain" (or similar in English).
 - New users get 50 Rashi Coins as a welcome bonus
 
 🗣️ NATURAL CONVERSATION RULES:
@@ -94,7 +96,7 @@ Greet them warmly. Introduce yourself as Rashi from RRAASI Music. Tell them RRAA
 🎯 HOW TO CONVERSE:
 - Ask what kind of music moves their soul. Listen deeply.
 - Guide them to imagine what music they'd love to create — for a deity, a feeling, a memory
-- Gently mention they can start creating for free at rraasi.com/rraasi-music
+- If they ask how to create music themselves, or want the link to the music page, use your "send_whatsapp_link" tool to instantly text them the direct link, and say "Main aapko WhatsApp par link bhej rahi hoon" (or similar in English).
 - Be enthusiastic but gentle — like a friend sharing something they love
 
 🗣️ NATURAL CONVERSATION RULES:
@@ -158,6 +160,7 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
     let firstAudioSent = false; // Track when first audio chunk reaches Vobiz
     let mediaEventCount = 0;    // Track incoming audio from caller
     let firebaseUid = '';       // Captured for tool calling
+    let callerPhone = '';       // Captured for WhatsApp messaging
 
     // Send periodic ping to Vobiz to prevent code-1006 TCP drops (Vobiz drops after ~11s without ping)
     const vobizPing = setInterval(() => {
@@ -188,6 +191,7 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                     leadName = leadData.name || 'the caller';
                     leadCategory = (leadData.category || 'general').toLowerCase();
                     firebaseUid = leadData.firebaseUid || '';
+                    callerPhone = leadData.phone || leadData.phoneNumber || '';
                 }
             } catch (e) {
                 console.error('[twilio-bot] Failed to fetch lead data:', e);
@@ -229,6 +233,20 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                             intention: { type: 'string', description: 'The underlying spiritual or emotional intention.' }
                         }, 
                         required: ['prompt', 'title'] 
+                    }
+                }, {
+                    type: 'function', name: 'send_whatsapp_link',
+                    description: 'Send a helpful link to the user via WhatsApp. Use this when the user asks how to login, how to access a guru, or how to create music.',
+                    parameters: {
+                        type: 'object',
+                        properties: {
+                            link_type: { 
+                                type: 'string', 
+                                enum: ['music', 'satsang', 'login', 'general'],
+                                description: 'The type of link the user is asking for.' 
+                            }
+                        },
+                        required: ['link_type']
                     }
                 }],
                 tool_choice: 'auto'
@@ -345,6 +363,64 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                             openAiWs.send(JSON.stringify({ type: 'response.create' }));
                         }
                     });
+                }
+            }
+
+            // Handle send_whatsapp_link tool invocation
+            if (event.type === 'response.output_item.done' && event.item?.type === 'function_call' && event.item?.name === 'send_whatsapp_link') {
+                const args = JSON.parse(event.item.arguments || '{}');
+                console.log(`[twilio-bot] AI sending WhatsApp link — type: ${args.link_type}`);
+
+                if (!callerPhone) {
+                    console.log(`[twilio-bot] Cannot send WhatsApp: No phone number associated with lead ${leadId}`);
+                    if (openAiWs.readyState === WebSocket.OPEN) {
+                        openAiWs.send(JSON.stringify({ 
+                            type: 'conversation.item.create', 
+                            item: { type: 'message', role: 'system', content: [{ type: 'input_text', text: 'System instruction: Tell the user you don\'t have their phone number on file to send the link, but they can visit rraasi.com directly.' }] } 
+                        }));
+                        openAiWs.send(JSON.stringify({ type: 'response.create' }));
+                    }
+                } else {
+                    let message = 'Namaste from Rashi! 🙏✨\n\nHere is the link you requested:\n';
+                    if (args.link_type === 'music') {
+                        message += '🎵 Create your own spiritual music: https://www.rraasi.com/rraasi-music\n\nJust login and start creating!';
+                    } else if (args.link_type === 'satsang') {
+                        message += '🧘 Connect with our spiritual gurus: https://www.rraasi.com/satsang';
+                    } else if (args.link_type === 'login') {
+                        message += '🔐 Login to your account: https://www.rraasi.com/login';
+                    } else {
+                        message += 'Explore rraasi: https://www.rraasi.com';
+                    }
+
+                    try {
+                        const WA_SERVICE_URL = process.env.NEXT_PUBLIC_WA_SERVICE_URL || process.env.WA_SERVICE_URL || 'http://localhost:4002';
+                        const INTERNAL_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || '';
+                        
+                        // Send via WhatsApp Web automation service
+                        await axios.post(
+                            `${WA_SERVICE_URL}/send`,
+                            { phone: callerPhone, message },
+                            { headers: { 'x-internal-token': INTERNAL_TOKEN } }
+                        );
+                        
+                        console.log(`[twilio-bot] Successfully sent WhatsApp link to ${callerPhone}`);
+                        if (openAiWs.readyState === WebSocket.OPEN) {
+                            openAiWs.send(JSON.stringify({ 
+                                type: 'conversation.item.create', 
+                                item: { type: 'message', role: 'system', content: [{ type: 'input_text', text: 'System instruction: Confirm to the user that you just sent the link to their WhatsApp.' }] } 
+                            }));
+                            openAiWs.send(JSON.stringify({ type: 'response.create', response: { instructions: "Be warm and brief." } }));
+                        }
+                    } catch (e: any) {
+                        console.error('[twilio-bot] WhatsApp Web Error:', e.message);
+                        if (openAiWs.readyState === WebSocket.OPEN) {
+                            openAiWs.send(JSON.stringify({ 
+                                type: 'conversation.item.create', 
+                                item: { type: 'message', role: 'system', content: [{ type: 'input_text', text: 'System instruction: Briefly tell the user there was an issue sending the WhatsApp message.' }] } 
+                            }));
+                            openAiWs.send(JSON.stringify({ type: 'response.create' }));
+                        }
+                    }
                 }
             }
 

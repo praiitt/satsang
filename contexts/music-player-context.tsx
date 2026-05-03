@@ -20,6 +20,8 @@ export interface MusicTrack {
     metadata?: any;
 }
 
+export type RepeatMode = 'off' | 'one' | 'all';
+
 interface MusicPlayerContextType {
     // State
     currentTrack: MusicTrack | null;
@@ -30,6 +32,7 @@ interface MusicPlayerContextType {
     duration: number;
     isExpanded: boolean; // For mobile full-screen view
     volume: number;
+    repeatMode: RepeatMode;
 
     // Actions
     playTrack: (track: MusicTrack) => void;
@@ -44,6 +47,7 @@ interface MusicPlayerContextType {
     setExpanded: (expanded: boolean) => void;
     clearQueue: () => void;
     closePlayer: () => void;
+    cycleRepeatMode: () => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -57,25 +61,33 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     const [duration, setDuration] = useState(0);
     const [isExpanded, setIsExpanded] = useState(false);
     const [volume, setVolumeState] = useState(1);
+    const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
+    // Keep mutable refs so event handlers always see latest values without re-binding
+    const queueRef = useRef(queue);
+    const currentTrackRef = useRef(currentTrack);
+    const repeatModeRef = useRef(repeatMode);
+
+    useEffect(() => { queueRef.current = queue; }, [queue]);
+    useEffect(() => { currentTrackRef.current = currentTrack; }, [currentTrack]);
+    useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
 
     // Initialize audio element
     useEffect(() => {
         if (typeof window !== 'undefined') {
             audioRef.current = new Audio();
-            audioRef.current.preload = 'metadata'; // Preload metadata only
+            audioRef.current.preload = 'metadata';
         }
     }, []);
 
-    // Handle audio events
+    // Handle audio events — only bind once
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio) return;
 
         const handleTimeUpdate = () => {
             setCurrentTime(audio.currentTime);
-            // Avoid division by zero
             const dur = audio.duration || 1;
             setProgress((audio.currentTime / dur) * 100);
         };
@@ -85,14 +97,50 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
         };
 
         const handleEnded = () => {
-            setIsPlaying(false);
-            nextTrack(); // Auto-play next track
+            const mode = repeatModeRef.current;
+            const track = currentTrackRef.current;
+            const q = queueRef.current;
+
+            if (mode === 'one') {
+                // Repeat same track
+                audio.currentTime = 0;
+                audio.play().then(() => setIsPlaying(true)).catch(console.error);
+                return;
+            }
+
+            if (!track || q.length === 0) {
+                setIsPlaying(false);
+                return;
+            }
+
+            const idx = q.findIndex(t => t.id === track.id);
+
+            if (mode === 'all') {
+                // Go to next, or loop back to first
+                const nextIdx = (idx + 1) % q.length;
+                const nextTrack = q[nextIdx];
+                setCurrentTrack(nextTrack);
+                audio.src = nextTrack.audioUrl;
+                audio.load();
+                audio.play().then(() => setIsPlaying(true)).catch(console.error);
+            } else {
+                // mode === 'off'
+                if (idx === -1 || idx === q.length - 1) {
+                    setIsPlaying(false);
+                } else {
+                    const nextTrack = q[idx + 1];
+                    setCurrentTrack(nextTrack);
+                    audio.src = nextTrack.audioUrl;
+                    audio.load();
+                    audio.play().then(() => setIsPlaying(true)).catch(console.error);
+                }
+            }
         };
 
         const handleError = (e: Event) => {
-            console.error("Audio playback error:", e);
+            console.error('Audio playback error:', e);
             setIsPlaying(false);
-        }
+        };
 
         audio.addEventListener('timeupdate', handleTimeUpdate);
         audio.addEventListener('durationchange', handleDurationChange);
@@ -105,7 +153,7 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
             audio.removeEventListener('ended', handleEnded);
             audio.removeEventListener('error', handleError);
         };
-    }, [queue, currentTrack]); // Re-bind if queue changes to ensure nextTrack has latest queue
+    }, []); // Bind only once — use refs for latest values
 
     // Sync volume
     useEffect(() => {
@@ -118,26 +166,18 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     const playTrack = useCallback((track: MusicTrack) => {
         if (!audioRef.current) return;
 
-        const isSameTrack = currentTrack?.id === track.id;
+        const isSameTrack = currentTrackRef.current?.id === track.id;
 
-        // If it's the same track and paused, just resume
         if (isSameTrack && audioRef.current.paused) {
-            audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error("Play error:", e));
+            audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error('Play error:', e));
             return;
         }
 
-        // If it's the same track and playing, do nothing (or pause? usually external 'play' means 'start this')
-        // But playTrack usually implies "start this new thing". 
-        // If called explicitly on the same track, we'll restart or seek? 
-        // Let's assume standard behavior: if clicked on card, it usually means play. 
-
-        // Set new track
         setCurrentTrack(track);
         audioRef.current.src = track.audioUrl;
         audioRef.current.load();
-        audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error("Play error:", e));
+        audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error('Play error:', e));
 
-        // Allow iOS/Mobile audio context to start
         if (navigator.mediaSession) {
             navigator.mediaSession.metadata = new MediaMetadata({
                 title: track.title,
@@ -146,7 +186,7 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
                 artwork: track.imageUrl ? [{ src: track.imageUrl }] : undefined
             });
         }
-    }, [currentTrack]);
+    }, []);
 
     const playPlaylist = useCallback((tracks: MusicTrack[], startIndex = 0) => {
         if (tracks.length === 0) return;
@@ -163,43 +203,76 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     }, []);
 
     const togglePlayPause = useCallback(() => {
-        if (!audioRef.current || !currentTrack) return;
-
-        if (isPlaying) {
+        if (!audioRef.current || !currentTrackRef.current) return;
+        if (audioRef.current.paused) {
+            audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error('Resume error:', e));
+        } else {
             audioRef.current.pause();
             setIsPlaying(false);
-        } else {
-            audioRef.current.play().then(() => setIsPlaying(true)).catch(e => console.error("Resume error:", e));
         }
-    }, [isPlaying, currentTrack]);
+    }, []);
 
     const nextTrack = useCallback(() => {
-        if (!currentTrack || queue.length === 0) return;
+        const track = currentTrackRef.current;
+        const q = queueRef.current;
+        const audio = audioRef.current;
+        if (!track || q.length === 0 || !audio) return;
 
-        const currentIndex = queue.findIndex(t => t.id === currentTrack.id);
-        if (currentIndex === -1 || currentIndex === queue.length - 1) {
-            // Loop or stop? Let's stop for now, or loop queue?
-            // Let's loop for now if user wants
-            setIsPlaying(false);
+        const idx = q.findIndex(t => t.id === track.id);
+        const mode = repeatModeRef.current;
+
+        if (mode === 'one') {
+            // Skip repeat-one when user explicitly presses next
+            const nextIdx = idx === q.length - 1 ? 0 : idx + 1;
+            const next = q[nextIdx];
+            setCurrentTrack(next);
+            audio.src = next.audioUrl;
+            audio.load();
+            audio.play().then(() => setIsPlaying(true)).catch(console.error);
             return;
         }
 
-        playTrack(queue[currentIndex + 1]);
-    }, [currentTrack, queue, playTrack]);
+        if (idx === q.length - 1) {
+            if (mode === 'all') {
+                const next = q[0];
+                setCurrentTrack(next);
+                audio.src = next.audioUrl;
+                audio.load();
+                audio.play().then(() => setIsPlaying(true)).catch(console.error);
+            } else {
+                setIsPlaying(false);
+            }
+            return;
+        }
+
+        const next = q[idx + 1];
+        setCurrentTrack(next);
+        audio.src = next.audioUrl;
+        audio.load();
+        audio.play().then(() => setIsPlaying(true)).catch(console.error);
+    }, []);
 
     const prevTrack = useCallback(() => {
-        if (!currentTrack || queue.length === 0) return;
+        const track = currentTrackRef.current;
+        const q = queueRef.current;
+        const audio = audioRef.current;
+        if (!track || !audio) return;
+
         // If played more than 3 seconds, restart current track
-        if (audioRef.current && audioRef.current.currentTime > 3) {
-            audioRef.current.currentTime = 0;
+        if (audio.currentTime > 3) {
+            audio.currentTime = 0;
             return;
         }
 
-        const currentIndex = queue.findIndex(t => t.id === currentTrack.id);
-        if (currentIndex > 0) {
-            playTrack(queue[currentIndex - 1]);
+        const idx = q.findIndex(t => t.id === track.id);
+        if (idx > 0) {
+            const prev = q[idx - 1];
+            setCurrentTrack(prev);
+            audio.src = prev.audioUrl;
+            audio.load();
+            audio.play().then(() => setIsPlaying(true)).catch(console.error);
         }
-    }, [currentTrack, queue, playTrack]);
+    }, []);
 
     const seek = useCallback((time: number) => {
         if (!audioRef.current) return;
@@ -208,8 +281,7 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     }, []);
 
     const setVolume = useCallback((vol: number) => {
-        const v = Math.max(0, Math.min(1, vol));
-        setVolumeState(v);
+        setVolumeState(Math.max(0, Math.min(1, vol)));
     }, []);
 
     const setExpanded = useCallback((expanded: boolean) => {
@@ -229,6 +301,14 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
         setCurrentTrack(null);
     }, []);
 
+    const cycleRepeatMode = useCallback(() => {
+        setRepeatMode(prev => {
+            if (prev === 'off') return 'all';
+            if (prev === 'all') return 'one';
+            return 'off';
+        });
+    }, []);
+
     return (
         <MusicPlayerContext.Provider
             value={{
@@ -240,6 +320,7 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
                 duration,
                 isExpanded,
                 volume,
+                repeatMode,
                 playTrack,
                 playPlaylist,
                 addToQueue,
@@ -251,7 +332,8 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
                 setVolume,
                 setExpanded,
                 clearQueue,
-                closePlayer // Export
+                closePlayer,
+                cycleRepeatMode,
             }}
         >
             {children}

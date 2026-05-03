@@ -227,6 +227,11 @@ export default function LeadsAdminPage() {
                     <p className="text-gray-500 dark:text-gray-400 mt-1">Discover spiritual poets and convert them to RRAASI creators</p>
                 </div>
             <div className="flex gap-2">
+                    <a href="/admin/users">
+                        <Button className="bg-emerald-600 hover:bg-emerald-700 text-white border-none">
+                            👤 Users
+                        </Button>
+                    </a>
                     <a href="/admin/facebook-leads">
                         <Button className="bg-indigo-600 hover:bg-indigo-700 text-white border-none">
                             📘 Facebook Leads

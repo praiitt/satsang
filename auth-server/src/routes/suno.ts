@@ -3,7 +3,7 @@ import { getDb } from '../firebase.js';
 import admin from 'firebase-admin';
 import { type AuthedRequest, requireAuth } from '../middleware/auth.js';
 import { getStorage } from 'firebase-admin/storage';
-
+import { generateSearchTerms } from '../utils/searchUtils.js';
 const router = Router();
 
 /**
@@ -20,12 +20,34 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
         console.log(`[Suno My Tracks] User email: ${req.user!.email}`);
         console.log(`[Suno My Tracks] Querying Firestore for userId: ${uid}`);
 
-        // Direct query - much more robust than parsing room names
-        const snapshot = await db.collection('music_tracks')
-            .where('userId', '==', uid)
-            .orderBy('createdAt', 'desc')
-            .limit(50)
-            .get();
+        const query = req.query || {};
+        const page = parseInt(String(query.page || '1'));
+        const limit = parseInt(String(query.limit || '50'));
+        const search = query.search as string;
+        const category = query.category as string;
+        
+        const offset = (page - 1) * limit;
+        
+        let tracksQuery: FirebaseFirestore.Query = db.collection('music_tracks').where('userId', '==', uid);
+        
+        if (category && category !== 'all') {
+            tracksQuery = tracksQuery.where('category', '==', category);
+        }
+        
+        if (search) {
+            const searchTerms = search.toLowerCase().split(/[\s,.\-!?"'()\[\]{}|\\/;:_]+/).filter(w => w.length >= 3).slice(0, 10);
+            if (searchTerms.length > 0) {
+                tracksQuery = tracksQuery.where('search_terms', 'array-contains-any', searchTerms);
+            }
+        }
+        
+        // When using array-contains or array-contains-any, orderBy might require an index on search_terms.
+        // We fallback to client-side sorting or just order if we know an index exists.
+        tracksQuery = tracksQuery.orderBy('createdAt', 'desc')
+            .offset(offset)
+            .limit(limit);
+
+        const snapshot = await tracksQuery.get();
 
         // Normalize tracks for backward compatibility
         const tracks = snapshot.docs.map(doc => {
@@ -494,6 +516,8 @@ router.post('/callback', async (req: Request, res: Response) => {
                             if (typeof existingData.isPublic !== 'undefined') trackData.isPublic = existingData.isPublic;
                         }
 
+                        trackData.search_terms = generateSearchTerms(trackData);
+
                         console.log(`[Suno Callback] Adding track ${newTrack.version} (${track.id}) to document ${taskId}`);
                         batch.set(docRef, trackData, { merge: true });
                     }
@@ -716,7 +740,8 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
         const limit = parseInt(String(limitStr || '50')); // Default increased to 50
 
         const category = query.category as string;
-        console.log(`[Suno Community Tracks] Resolved Params: page=${page}, limit=${limit}, category=${category}`);
+        const search = query.search as string;
+        console.log(`[Suno Community Tracks] Resolved Params: page=${page}, limit=${limit}, category=${category}, search=${search}`);
         const offset = (page - 1) * limit;
 
         const db = getDb();
@@ -738,6 +763,14 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
         tracksQuery = tracksQuery.where('isPublic', '==', true);
         countQuery = countQuery.where('isPublic', '==', true);
 
+        if (search) {
+            const searchTerms = search.toLowerCase().split(/[\s,.\-!?"'()\[\]{}|\\/;:_]+/).filter(w => w.length >= 3).slice(0, 10);
+            if (searchTerms.length > 0) {
+                tracksQuery = tracksQuery.where('search_terms', 'array-contains-any', searchTerms);
+                countQuery = countQuery.where('search_terms', 'array-contains-any', searchTerms);
+            }
+        }
+
         // Apply Sorting & Pagination
         // Note: Firestore requires an index for 'category' + 'createdAt' DESC if filtering by category.
         // Also 'audioUrl' filter + sort might need index.
@@ -746,7 +779,7 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
             .offset(offset)
             .limit(limit);
 
-        console.log(`[Suno Community Tracks] Querying: category=${category || 'all'}, offset=${offset}, limit=${limit}`);
+        console.log(`[Suno Community Tracks] Querying: category=${category || 'all'}, search=${search}, offset=${offset}, limit=${limit}`);
 
         // Get count
         const countSnapshot = await countQuery.count().get();
@@ -1188,6 +1221,120 @@ router.post('/callback/video', async (req: Request, res: Response) => {
     } catch (error) {
         console.error('[Suno Video Callback] Error:', error);
         res.status(200).json({ status: 'error' }); // Always 200 to acknowledge
+    }
+});
+
+/**
+ * GET /api/suno/favorites
+ * Get all favorited tracks for the authenticated user
+ */
+router.get('/favorites', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const uid = req.user!.uid;
+        const db = getDb();
+
+        const favSnapshot = await db
+            .collection('favorites')
+            .doc(uid)
+            .collection('tracks')
+            .orderBy('favoritedAt', 'desc')
+            .get();
+
+        if (favSnapshot.empty) {
+            return res.json({ tracks: [], total: 0 });
+        }
+
+        // Get the track IDs
+        const favDocs = favSnapshot.docs.map(d => ({ trackId: d.id, favoritedAt: d.data().favoritedAt }));
+
+        // Fetch all the actual track documents in parallel
+        const trackPromises = favDocs.map(async ({ trackId, favoritedAt }) => {
+            const trackDoc = await db.collection('music_tracks').doc(trackId).get();
+            if (!trackDoc.exists) return null;
+            return { id: trackDoc.id, favoritedAt, ...trackDoc.data() };
+        });
+
+        const tracks = (await Promise.all(trackPromises)).filter(Boolean);
+
+        res.json({ tracks, total: tracks.length });
+    } catch (error) {
+        console.error('[Favorites] Error fetching favorites:', error);
+        res.status(500).json({ error: 'Failed to fetch favorites' });
+    }
+});
+
+/**
+ * POST /api/suno/favorites
+ * Add a track to the user's favorites
+ */
+router.post('/favorites', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const uid = req.user!.uid;
+        const { trackId } = req.body;
+
+        if (!trackId) {
+            return res.status(400).json({ error: 'trackId is required' });
+        }
+
+        const db = getDb();
+        await db
+            .collection('favorites')
+            .doc(uid)
+            .collection('tracks')
+            .doc(trackId)
+            .set({ favoritedAt: admin.firestore.FieldValue.serverTimestamp() });
+
+        res.json({ success: true, message: 'Track added to favorites' });
+    } catch (error) {
+        console.error('[Favorites] Error adding favorite:', error);
+        res.status(500).json({ error: 'Failed to add favorite' });
+    }
+});
+
+/**
+ * DELETE /api/suno/favorites/:trackId
+ * Remove a track from the user's favorites
+ */
+router.delete('/favorites/:trackId', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const uid = req.user!.uid;
+        const { trackId } = req.params;
+
+        const db = getDb();
+        await db
+            .collection('favorites')
+            .doc(uid)
+            .collection('tracks')
+            .doc(trackId)
+            .delete();
+
+        res.json({ success: true, message: 'Track removed from favorites' });
+    } catch (error) {
+        console.error('[Favorites] Error removing favorite:', error);
+        res.status(500).json({ error: 'Failed to remove favorite' });
+    }
+});
+
+/**
+ * GET /api/suno/favorites/ids
+ * Get just the IDs of the user's favorited tracks (lightweight for UI state)
+ */
+router.get('/favorites/ids', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const uid = req.user!.uid;
+        const db = getDb();
+
+        const favSnapshot = await db
+            .collection('favorites')
+            .doc(uid)
+            .collection('tracks')
+            .get();
+
+        const ids = favSnapshot.docs.map(d => d.id);
+        res.json({ ids });
+    } catch (error) {
+        console.error('[Favorites] Error fetching favorite IDs:', error);
+        res.status(500).json({ error: 'Failed to fetch favorite IDs' });
     }
 });
 
