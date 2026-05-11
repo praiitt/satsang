@@ -116,6 +116,7 @@ export const RRaaSiMusicWelcomeView = ({
   // Coin Balance State
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
   const [showBuyCoins, setShowBuyCoins] = useState(false);
+  const [playlistLinkCopied, setPlaylistLinkCopied] = useState(false);
 
   // Multiselect State
   const [selectionMode, setSelectionMode] = useState(false);
@@ -1110,17 +1111,35 @@ export const RRaaSiMusicWelcomeView = ({
                       <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2"><path d="M8 5v14l11-7z" /></svg>
                       Play All
                     </Button>
-                    <Button
+                     <Button
                       variant="outline"
-                      onClick={() => {
+                      onClick={async () => {
                         const url = `${window.location.origin}/playlist/${selectedCuratedPlaylist.id}`;
-                        navigator.clipboard.writeText(url);
-                        toast.success('Playlist link copied to clipboard!');
+                        // Try native share API first (works great on mobile)
+                        if (navigator.share) {
+                          try {
+                            await navigator.share({
+                              title: selectedCuratedPlaylist.name || 'RRAASI Playlist',
+                              text: 'Listen to this spiritual playlist on RRAASI',
+                              url,
+                            });
+                          } catch { /* user cancelled */ }
+                        } else {
+                          // Fallback: copy to clipboard
+                          try {
+                            await navigator.clipboard.writeText(url);
+                          } catch {
+                            // Last resort: prompt
+                            window.prompt('Copy this link:', url);
+                          }
+                          setPlaylistLinkCopied(true);
+                          setTimeout(() => setPlaylistLinkCopied(false), 2500);
+                        }
                       }}
                       className="rounded-full border-amber-300 dark:border-amber-700/50 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40"
                     >
                       <Share2 className="w-4 h-4 mr-2" />
-                      Share
+                      {playlistLinkCopied ? '✓ Copied!' : 'Share'}
                     </Button>
                     <Button 
                       variant="outline" 
