@@ -241,82 +241,23 @@ generate_music(
             result = None
             task_id = None
             
-            # Base callback URLs
+            # All music generation goes through Suno (fal.ai disabled for now)
             suno_callback_url = f"{callback_base}/suno/callback?userId={self.user_id}&category=rraasi_music"
-            fal_callback_url = f"{callback_base}/fal/callback?userId={self.user_id}&category=rraasi_music"
             
-            if is_instrumental:
-                # 1. Route instrumental requests to fal.ai
-                provider = "fal"
-                logger.info(f"Instrumental requested. Routing to fal.ai.")
-                try:
-                    try:
-                        from .fal_client import FalClient
-                    except ImportError:
-                        try:
-                            from fal_client import FalClient
-                        except ImportError:
-                            import sys as _sys
-                            import os as _os
-                            _src_dir = _os.path.dirname(_os.path.abspath(__file__))
-                            if _src_dir not in _sys.path:
-                                _sys.path.insert(0, _src_dir)
-                            from fal_client import FalClient
-                    
-                    fal_client = FalClient()
-                    model_id = "fal-ai/aiva" if "orchestral" in style.lower() else "fal-ai/stable-audio"
-                    
-                    result = await fal_client.generate_music(
-                        prompt=style,
-                        model_id=model_id,
-                        callback_url=fal_callback_url
-                    )
-                except Exception as e:
-                    logger.error(f"Fal.ai generation failed: {e}")
-                    raise
-            else:
-                # 2. Route vocal requests to Suno
-                provider = "suno"
-                try:
-                    result = await self.suno_client.generate_music(
-                        prompt=lyrics,
-                        is_instrumental=is_instrumental,
-                        custom_mode=True,
-                        style=style,
-                        title=title,
-                        model="V3_5",
-                        callback_url=suno_callback_url
-                    )
-                except Exception as e:
-                    # 3. Suno Fallback to fal.ai
-                    logger.error(f"Suno generation failed synchronously: {e}. Falling back to fal.ai.")
-                    provider = "fal_fallback"
-                    try:
-                        try:
-                            from .fal_client import FalClient
-                        except ImportError:
-                            try:
-                                from fal_client import FalClient
-                            except ImportError:
-                                import sys as _sys
-                                import os as _os
-                                _src_dir = _os.path.dirname(_os.path.abspath(__file__))
-                                if _src_dir not in _sys.path:
-                                    _sys.path.insert(0, _src_dir)
-                                from fal_client import FalClient
-                        
-                        fal_client = FalClient()
-                        model_id = "fal-ai/stable-audio"
-                        fal_prompt = f"{style}. {lyrics}" if lyrics else style
-                        
-                        result = await fal_client.generate_music(
-                            prompt=fal_prompt,
-                            model_id=model_id,
-                            callback_url=fal_callback_url
-                        )
-                    except Exception as fallback_e:
-                        logger.error(f"Fal.ai fallback also failed: {fallback_e}")
-                        raise
+            logger.info(f"Routing to Suno ({'instrumental' if is_instrumental else 'vocal'}).")
+            try:
+                result = await self.suno_client.generate_music(
+                    prompt=lyrics if not is_instrumental else style,
+                    is_instrumental=is_instrumental,
+                    custom_mode=not is_instrumental,  # custom_mode only for vocal (needs lyrics)
+                    style=style,
+                    title=title,
+                    model="V3_5",
+                    callback_url=suno_callback_url
+                )
+            except Exception as e:
+                logger.error(f"Suno generation failed: {e}")
+                raise
             
             logger.info(f"API Result ({provider}): {result}")
             
