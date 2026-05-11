@@ -108,7 +108,16 @@ function ServiceCard({ emoji, title, desc, href, color, glow, badge, delay = 0 }
     );
 }
 
-// ─── Latest Community Tracks ─────────────────────────────────────────────────
+// ─── Latest Community Tracks (Image Cards) ───────────────────────────────────
+
+const CATEGORY_GRADIENTS: Record<string, string> = {
+    Devotional: 'from-orange-900/80 to-amber-900/60',
+    Meditation: 'from-indigo-900/80 to-purple-900/60',
+    Healing: 'from-teal-900/80 to-cyan-900/60',
+    Trance: 'from-violet-900/80 to-fuchsia-900/60',
+    Mantra: 'from-rose-900/80 to-pink-900/60',
+    Spiritual: 'from-zinc-900/80 to-slate-900/60',
+};
 
 function LatestTracks() {
     const [tracks, setTracks] = useState<any[]>([]);
@@ -135,50 +144,68 @@ function LatestTracks() {
             <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-xl font-bold text-white">Latest Community Creations</h3>
-                    <p className="text-sm text-white/40 mt-1">New spiritual tracks added daily by our community</p>
+                    <p className="text-sm text-white/40 mt-0.5">समुदाय की नई रचनाएँ · New tracks added daily</p>
                 </div>
                 <Link
                     href="/rraasi-music"
                     className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
                 >
-                    See all 1000+
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                    </svg>
+                    See all 1000+ →
                 </Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                {tracks.map((track, i) => (
-                    <motion.div
-                        key={track.id}
-                        initial={{ opacity: 0, y: 15 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.4, delay: i * 0.07 }}
-                    >
-                        <Link href="/rraasi-music" className="group block rounded-2xl border border-white/10 bg-white/5 p-4 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all">
-                            {/* Category badge */}
-                            <span className="mb-3 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
-                                {track.musicCategory || 'Spiritual'}
-                            </span>
-                            {/* Title */}
-                            <p className="text-sm font-semibold text-white leading-snug line-clamp-2 mb-3 group-hover:text-amber-300 transition-colors">
-                                {track.title}
-                            </p>
-                            {/* Style snippet */}
-                            {track.style && (
-                                <p className="text-[11px] text-white/30 line-clamp-1 mb-3">{track.style}</p>
-                            )}
-                            {/* Play indicator */}
-                            <div className="flex items-center gap-2 text-white/40 group-hover:text-amber-400 transition-colors">
-                                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-                                    <path d="M8 5v14l11-7z" />
-                                </svg>
-                                <span className="text-[10px] font-semibold uppercase tracking-wider">Play</span>
-                            </div>
-                        </Link>
-                    </motion.div>
-                ))}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {tracks.map((track, i) => {
+                    const cat = track.musicCategory || 'Spiritual';
+                    const grad = CATEGORY_GRADIENTS[cat] || CATEGORY_GRADIENTS.Spiritual;
+                    return (
+                        <motion.div
+                            key={track.id}
+                            initial={{ opacity: 0, y: 15 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.4, delay: i * 0.07 }}
+                        >
+                            <Link href="/rraasi-music" className="group block overflow-hidden rounded-2xl border border-white/10 hover:border-amber-500/40 transition-all hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(251,191,36,0.15)]">
+                                {/* Image / gradient cover */}
+                                <div className="relative aspect-square w-full overflow-hidden">
+                                    {track.imageUrl ? (
+                                        <img
+                                            src={track.imageUrl}
+                                            alt={track.title}
+                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                        />
+                                    ) : (
+                                        <div className={`h-full w-full bg-gradient-to-br ${grad} flex items-center justify-center`}>
+                                            <span className="text-5xl opacity-60">{cat === 'Trance' ? '🌀' : cat === 'Healing' ? '✨' : cat === 'Meditation' ? '📿' : '🎵'}</span>
+                                        </div>
+                                    )}
+                                    {/* Overlay on hover */}
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500 shadow-lg">
+                                            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-black ml-0.5">
+                                                <path d="M8 5v14l11-7z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    {/* Category pill */}
+                                    <span className="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 backdrop-blur-sm">
+                                        {cat}
+                                    </span>
+                                </div>
+                                {/* Info */}
+                                <div className="p-3 bg-white/5">
+                                    <p className="text-sm font-semibold text-white leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
+                                        {track.title}
+                                    </p>
+                                    {track.style && (
+                                        <p className="mt-1 text-[10px] text-white/30 line-clamp-1">{track.style}</p>
+                                    )}
+                                </div>
+                            </Link>
+                        </motion.div>
+                    );
+                })}
             </div>
         </motion.div>
     );
@@ -372,13 +399,14 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         className="text-center mb-16"
                     >
                         <span className="mb-4 inline-block rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-amber-400">
-                            ✦ Featured
+                            ✦ Featured · विशेष
                         </span>
                         <h2 className="text-4xl font-extrabold text-white sm:text-5xl">
                             RRAASI Music
                         </h2>
+                        <p className="mt-1 text-base text-amber-400/60 font-medium">आपकी आत्मा के लिए संगीत</p>
                         <p className="mt-4 text-lg text-white/50 max-w-2xl mx-auto">
-                            The world's first AI that creates personalized spiritual music — bhajans, mantras, healing frequencies — tuned to your soul.
+                            The world's first AI that creates personalized spiritual music — bhajans, mantras, trance &amp; healing frequencies — tuned to your soul.
                         </p>
                         {/* Social proof stats */}
                         <div className="mt-8 flex flex-wrap justify-center gap-6">
@@ -418,11 +446,11 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                                 </p>
                                 <div className="space-y-3 mb-8">
                                     {[
-                                        '🎼 Bhajans, Mantras & Healing Frequencies',
-                                        '🗣️ Vocals or Purely Instrumental',
+                                        '🎼 Bhajans, Mantras & Healing Frequencies · भजन, मंत्र',
+                                        '🌀 Trance & Psychedelic Spiritual Music · ट्रांस संगीत',
+                                        '🗣️ Vocals or Purely Instrumental · गायन या वाद्य',
                                         '🌐 Hindi, Sanskrit, English & 50+ Languages',
-                                        '🎬 AI Music Videos — ready for YouTube',
-                                        '📺 Publish directly to your YouTube channel',
+                                        '🎬 AI Music Videos — publish to YouTube',
                                     ].map(f => (
                                         <div key={f} className="flex items-center gap-3 text-white/70 text-sm">
                                             <div className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
@@ -445,10 +473,10 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         {/* Right — feature tiles */}
                         <div className="grid grid-cols-2 gap-4">
                             {[
-                                { icon: '🤖', title: 'AI Composer', desc: 'Voice-guided music creation in a natural conversation' },
-                                { icon: '📿', title: 'Sacred Sounds', desc: 'Solfeggio, 432Hz, binaural beats & Vedic scales' },
-                                { icon: '▶️', title: 'YouTube Ready', desc: 'Publish your music & videos straight to your channel' },
-                                { icon: '🎬', title: 'AI Music Video', desc: 'Auto-generate a visual music video for your track' },
+                                { icon: '🤖', title: 'AI Composer · AI संगीतकार', desc: 'Voice-guided creation — just describe what you feel' },
+                                { icon: '🌀', title: 'Trance Music · ट्रांस', desc: 'Psychedelic trance & shamanic soundscapes for the soul' },
+                                { icon: '▶️', title: 'YouTube Ready', desc: 'Publish music & videos straight to your channel' },
+                                { icon: '🎬', title: 'AI Music Video', desc: 'Auto-generate a visual music video for every track' },
                             ].map((f, i) => (
                                 <motion.div
                                     key={f.title}
@@ -655,53 +683,10 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                 </div>
             </section>
 
-            {/* ── COMING SOON ──────────────────────────────────────── */}
-            <section className="relative px-4 py-24">
-                <div className="mx-auto max-w-6xl">
-                    <div className="mb-16 text-center">
-                        <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">{t('rraasHome.comingSoonTitle')}</h2>
-                        <p className="text-xl text-muted-foreground">{t('rraasHome.comingSoonDesc')}</p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                        {[
-                            { icon: '📿', title: t('rraasHome.comingSoonMeditation'), desc: t('rraasHome.comingSoonMeditationDesc') },
-                            { icon: '💭', title: t('rraasHome.comingSoonDreams'), desc: t('rraasHome.comingSoonDreamsDesc') },
-                            { icon: '📖', title: t('rraasHome.comingSoonScripture'), desc: t('rraasHome.comingSoonScriptureDesc') },
-                        ].map((feature, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                whileInView={{ opacity: 1, scale: 1 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                                className="group relative overflow-hidden rounded-2xl border border-border bg-card p-8 text-center shadow-sm transition-all hover:shadow-md"
-                            >
-                                <div className="mb-6 text-5xl opacity-80 transition-transform group-hover:scale-110">{feature.icon}</div>
-                                <h3 className="mb-3 text-xl font-bold text-foreground">{feature.title}</h3>
-                                <p className="text-muted-foreground">{feature.desc}</p>
-                                <div className="absolute top-4 right-4 rounded-full bg-accent/20 px-3 py-1 text-xs font-medium text-accent-foreground">{t('rraasHome.comingSoonBadge')}</div>
-                            </motion.div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── GOOGLE OAUTH SECTION (required for verification) ── */}
-            <section className="bg-background px-4 py-16 border-t border-border">
-                <div className="mx-auto max-w-4xl text-left">
-                    <h2 className="text-3xl font-bold mb-6 text-foreground">Welcome to RRAASI</h2>
-                    <p className="mb-4 text-lg text-muted-foreground">
-                        RRAASI is a comprehensive spiritual sanctuary offering services such as virtual Satsang, intelligent Tarot, Vedic Astrology, and specialized Music Distribution.
-                    </p>
-                    <p className="mb-4 text-lg text-muted-foreground">
-                        <strong>Purpose of the App &amp; Creator Studio:</strong> Our platform includes a Creator Studio feature where users can generate AI-assisted spiritual healing tracks, mantras, and meditation music. We request the <code>youtube.upload</code> scope strictly to allow our users the convenience of instantly distributing these generated music tracks directly to their own YouTube channels. We only upload videos when explicitly triggered by the user in the app, and we never modify or read other channel contents.
-                    </p>
-                    <p className="text-sm mt-8 text-muted-foreground/70">
-                        RRAASI is a property of Absolute Dimension Pvt Ltd.{' '}
-                        <Link href="/privacy" className="underline hover:text-primary">Privacy Policy</Link>
-                    </p>
-                </div>
-            </section>
+            {/* OAuth verification content — hidden visually, kept for crawlers */}
+            <div className="sr-only">
+                <p>RRAASI is a comprehensive spiritual sanctuary offering virtual Satsang, AI Music Creation, Trance Music, Tarot, Vedic Astrology, and healing Music Distribution. We request the youtube.upload scope strictly to allow users to distribute their generated music tracks to their own YouTube channels. We only upload when explicitly triggered by the user. RRAASI is a property of Absolute Dimension Pvt Ltd.</p>
+            </div>
 
             {/* ── BOTTOM CTA ───────────────────────────────────────── */}
             <section className="relative overflow-hidden bg-primary px-4 py-24 text-primary-foreground">
