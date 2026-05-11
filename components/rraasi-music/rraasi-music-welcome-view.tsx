@@ -1000,15 +1000,32 @@ export const RRaaSiMusicWelcomeView = ({
                     const res = await fetch(`/api/playlists/${playlist.id}`);
                     if (res.ok) {
                       const data = await res.json();
-                      const tracks = (data.tracks || []).map((t: any) => ({
-                        id: t.id || t.trackId,
-                        title: t.title || 'Untitled',
-                        audioUrl: t.audioUrl || t.audio_url,
-                        imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
-                        category: t.category,
-                        status: t.status || (t.audioUrl || t.audio_url ? 'COMPLETED' : 'generating'),
-                        duration: t.duration,
-                      }));
+                      const tracks = (data.tracks || []).flatMap((t: any) => {
+                        // Suno-generated tracks store audio inside t.tracks[] array
+                        if (t.tracks && Array.isArray(t.tracks) && t.tracks.length > 0) {
+                          return t.tracks
+                            .filter((sub: any) => sub.audioUrl || sub.audio_url)
+                            .map((sub: any, idx: number) => ({
+                              id: sub.sunoId || `${t.id}_${idx}`,
+                              title: t.tracks.length > 1 ? `${t.title || 'Untitled'} (${idx + 1})` : (t.title || 'Untitled'),
+                              audioUrl: sub.audioUrl || sub.audio_url,
+                              imageUrl: sub.imageUrl || sub.sourceImageUrl || t.imageUrl || t.image_url || t.thumbnailUrl,
+                              category: t.category,
+                              duration: sub.duration || t.duration,
+                            }));
+                        }
+                        // Single track / legacy format
+                        const audioUrl = t.audioUrl || t.audio_url;
+                        if (!audioUrl) return []; // skip if no audio
+                        return [{
+                          id: t.id || t.trackId,
+                          title: t.title || 'Untitled',
+                          audioUrl,
+                          imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
+                          category: t.category,
+                          duration: t.duration,
+                        }];
+                      });
                       setSelectedCuratedPlaylist({ ...data, tracks });
                     } else {
                       toast.error('Failed to load playlist');
