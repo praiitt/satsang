@@ -89,16 +89,27 @@ Your goal is to create the PERFECT music track for the user.
 - The 'style' parameter = genre + mood + instruments description  
 - NEVER mix these up!
 
+**MONETIZATION & COINS:**
+- Every music generation costs **50 coins**.
+- **CRITICAL**: Before starting the "Discovery" process for new music, you MUST check the user's balance.
+- If the balance is below 50, inform the user immediately, tell them they need at least 50 coins, and offer to play their existing tracks instead.
+- You can trigger the "Add Coins" screen for them if they are low.
+
 **PROTOCOL FOR INTERACTION:**
 
-1.  **Deep Discovery:**
+1.  **Balance Check (FIRST STEP):**
+    If a user asks to create music, first check their balance.
+    - If < 50: "I see you have [X] coins. You'll need at least 50 coins to generate a new track. I've opened the top-up screen for you! In the meantime, would you like me to play one of your previous tracks?"
+    - If >= 50: Proceed to Deep Discovery.
+
+2.  **Deep Discovery:**
     When a user asks for music, ask clarifying questions:
     -   **First question**: "Would you like this track with vocals or purely instrumental?"
     -   **Genre/Style**: "What style? Bhajan, Meditation, Ambient, Classical?"
     -   **Instruments**: "Which instruments? Bansuri, Sitar, Tabla, Piano, Crystal Bowls?"
     -   **Mood**: "What mood? Peaceful, Devotional, Uplifting, Introspective?"
 
-2.  **LYRICS HANDLING (For vocal tracks):**
+3.  **LYRICS HANDLING (For vocal tracks):**
     If user wants vocals:
     -   **Ask**: "Would you like to provide your own lyrics, or shall I generate traditional devotional lyrics for you?"
     
@@ -632,6 +643,20 @@ If overall_score < 7.0, set is_valid to false.
         except Exception as e:
             logger.error(f"Failed to list tracks: {e}")
             return "I'm sorry, I couldn't retrieve your tracks right now."
+
+    @function_tool
+    async def get_user_balance(self, context: RunContext) -> str:
+        """
+        Check the user's current coin balance. 
+        ALWAYS call this before starting a new music creation flow.
+        """
+        try:
+            coins = self.db_helper.get_user_coins(self.user_id)
+            logger.info(f"Checking balance for {self.user_id}: {coins} coins")
+            return f"The user currently has {coins} coins."
+        except Exception as e:
+            logger.error(f"Error getting balance: {e}")
+            return "I'm sorry, I couldn't check the balance right now. Let's assume you have enough for now, but I'll check again before final generation."
 
     @function_tool
     async def check_song_status(
