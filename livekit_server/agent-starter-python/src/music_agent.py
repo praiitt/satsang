@@ -253,7 +253,15 @@ generate_music(
                     try:
                         from .fal_client import FalClient
                     except ImportError:
-                        from fal_client import FalClient
+                        try:
+                            from fal_client import FalClient
+                        except ImportError:
+                            import sys as _sys
+                            import os as _os
+                            _src_dir = _os.path.dirname(_os.path.abspath(__file__))
+                            if _src_dir not in _sys.path:
+                                _sys.path.insert(0, _src_dir)
+                            from fal_client import FalClient
                     
                     fal_client = FalClient()
                     model_id = "fal-ai/aiva" if "orchestral" in style.lower() else "fal-ai/stable-audio"
@@ -287,7 +295,15 @@ generate_music(
                         try:
                             from .fal_client import FalClient
                         except ImportError:
-                            from fal_client import FalClient
+                            try:
+                                from fal_client import FalClient
+                            except ImportError:
+                                import sys as _sys
+                                import os as _os
+                                _src_dir = _os.path.dirname(_os.path.abspath(__file__))
+                                if _src_dir not in _sys.path:
+                                    _sys.path.insert(0, _src_dir)
+                                from fal_client import FalClient
                         
                         fal_client = FalClient()
                         model_id = "fal-ai/stable-audio"
