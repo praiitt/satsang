@@ -106,6 +106,13 @@ export class CoinService {
             freeTierAvailable: false,
             subscriptionUnlimited: true
         },
+        music_video_creation: {
+            cost: 300,
+            name: 'AI Music Video Creation',
+            category: 'music',
+            freeTierAvailable: false,
+            subscriptionUnlimited: false // Always costs coins — video gen is expensive
+        },
 
         // Divination & Insights
         tarot_detailed: {
@@ -568,23 +575,41 @@ export class CoinService {
     async getTransactionHistory(userId: string, limit: number = 50) {
         try {
             const db = firestoreService.getDb();
-            const snapshot = await db.collection('coinTransactions')
-                .where('userId', '==', userId)
-                .orderBy('timestamp', 'desc')
-                .limit(limit)
-                .get();
+            let snapshot: any;
+
+            try {
+                // Try ordered query first (requires composite index)
+                snapshot = await db.collection('coinTransactions')
+                    .where('userId', '==', userId)
+                    .orderBy('timestamp', 'desc')
+                    .limit(limit)
+                    .get();
+            } catch (indexError: any) {
+                // Composite index not yet built — fallback: fetch without order, sort in memory
+                console.warn('coinTransactions index not ready, falling back to unordered query:', indexError.message);
+                snapshot = await db.collection('coinTransactions')
+                    .where('userId', '==', userId)
+                    .get();
+            }
 
             const transactions: any[] = [];
-            snapshot.forEach(doc => {
+            snapshot.forEach((doc: any) => {
                 transactions.push({
                     id: doc.id,
                     ...doc.data()
                 });
             });
 
+            // Sort in memory (newest first) — handles both code paths
+            transactions.sort((a: any, b: any) => {
+                const tsA = a.timestamp?._seconds ?? a.timestamp?.seconds ?? (a.timestamp instanceof Date ? a.timestamp.getTime() / 1000 : 0);
+                const tsB = b.timestamp?._seconds ?? b.timestamp?.seconds ?? (b.timestamp instanceof Date ? b.timestamp.getTime() / 1000 : 0);
+                return tsB - tsA;
+            });
+
             return {
                 success: true,
-                transactions
+                transactions: transactions.slice(0, limit)
             };
 
         } catch (error: any) {
