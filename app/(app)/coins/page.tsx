@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCoinBalance } from '@/hooks/useCoinBalance';
 import { coinClient } from '@/lib/services/coinClient';
 import { Button } from '@/components/livekit/button';
-import { Coins, History, Sparkles, TrendingUp, Package } from 'lucide-react';
+import { Coins, History, Sparkles, TrendingUp, Package, RefreshCw, Loader2 } from 'lucide-react';
 import { UpgradeModal } from '@/components/ui/upgrade-modal';
 import BuyCoinsModal from '@/components/rraasi-music/buy-coins-modal';
 
@@ -25,6 +25,11 @@ export default function CoinsPage() {
         }
         setLoadingTransactions(false);
     };
+
+    // Auto-load transactions on mount
+    useEffect(() => {
+        loadTransactions();
+    }, []);
 
     const loadFeatures = async () => {
         setLoadingFeatures(true);
@@ -100,12 +105,18 @@ export default function CoinsPage() {
                         onClick={loadTransactions}
                         className="bg-white dark:bg-gray-800 rounded-xl p-6 border-2 border-gray-200 dark:border-gray-700 hover:border-amber-400 transition-all text-left"
                     >
-                        <History className="h-6 w-6 text-amber-600 mb-2" />
+                        <div className="flex items-center justify-between mb-2">
+                            <History className="h-6 w-6 text-amber-600" />
+                            {loadingTransactions
+                                ? <Loader2 className="h-4 w-4 text-amber-500 animate-spin" />
+                                : <RefreshCw className="h-4 w-4 text-gray-400 hover:text-amber-500" />
+                            }
+                        </div>
                         <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
                             Transaction History
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                            View your coin usage and earnings
+                            {loadingTransactions ? 'Loading...' : `${transactions.length} recent transactions`}
                         </p>
                     </button>
 
@@ -212,7 +223,14 @@ export default function CoinsPage() {
                 {/* Empty States */}
                 {transactions.length === 0 && !loadingTransactions && (
                     <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                        No transactions yet. Start using RRAASI features to see your history!
+                        <History className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                        <p>No transactions found. Start using RRAASI features to see your history!</p>
+                    </div>
+                )}
+                {loadingTransactions && transactions.length === 0 && (
+                    <div className="text-center py-12">
+                        <Loader2 className="h-8 w-8 mx-auto text-amber-500 animate-spin" />
+                        <p className="text-gray-500 mt-2">Loading transactions...</p>
                     </div>
                 )}
             </div>
