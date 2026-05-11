@@ -393,118 +393,237 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         </p>
                     </motion.div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                        <ServiceCard
-                            emoji="🕉️"
-                            title="Live Satsang"
-                            desc="Real-time AI-guided satsang sessions with ancient wisdom teachers. Ask anything, explore everything."
-                            href="/login?returnUrl=/satsang&service=guru"
-                            color="from-orange-500/20 to-amber-500/20"
-                            glow="rgba(251,191,36,0.15)"
-                            delay={0}
-                        />
-                        <ServiceCard
-                            emoji="🔮"
-                            title="Mystic Tarot"
-                            desc="AI-powered tarot readings blending ancient card wisdom with your birth chart and current energy."
-                            href="/login?returnUrl=/tarot&service=tarot"
-                            color="from-purple-500/20 to-violet-500/20"
-                            glow="rgba(168,85,247,0.15)"
-                            badge="Early Access"
-                            delay={0.1}
-                        />
-                        <ServiceCard
-                            emoji="⭐"
-                            title="Vedic Jyotish"
-                            desc="Deep Vedic birth chart analysis, dasha periods, and cosmic timing for life's key decisions."
-                            href="/login?returnUrl=/vedic-jyotish&service=astrology"
-                            color="from-indigo-500/20 to-blue-500/20"
-                            glow="rgba(99,102,241,0.15)"
-                            badge="Early Access"
-                            delay={0.2}
-                        />
-                        <ServiceCard
-                            emoji="✨"
-                            title="Lightworkers"
-                            desc="A sacred community space for healers, seekers & guides to connect and co-create."
-                            href="/lightworkers"
-                            color="from-yellow-500/20 to-amber-500/20"
-                            glow="rgba(234,179,8,0.15)"
-                            delay={0.3}
-                        />
-                        <ServiceCard
-                            emoji="📿"
-                            title="Meditation"
-                            desc="Guided breathwork, pranayama, and mindfulness sessions led by AI wisdom keepers."
-                            href="/meditation"
-                            color="from-teal-500/20 to-cyan-500/20"
-                            glow="rgba(20,184,166,0.15)"
-                            delay={0.4}
-                        />
-                        <ServiceCard
-                            emoji="🌐"
-                            title="RRaaSi Feed"
-                            desc="A living stream of spiritual insights, community creations, and sacred content from around the world."
-                            href="/feed"
-                            color="from-rose-500/20 to-pink-500/20"
-                            glow="rgba(244,63,94,0.15)"
-                            delay={0.5}
-                        />
+                    {/* ── Original FeatureSection layout ── */}
+                    <div className="space-y-24">
+
+                        {/* Satsang */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-100px' }}
+                            transition={{ duration: 0.8 }}
+                            className="flex flex-col gap-12 py-8 lg:flex-row lg:items-center"
+                        >
+                            <div className="flex-1 flex justify-center">
+                                <div className="relative flex h-40 w-40 sm:h-64 sm:w-64 lg:h-80 lg:w-80 items-center justify-center hover:scale-105 transition-all duration-500">
+                                    <img src="/services/satsang-icon-fixed.png" alt="Satsang" className="w-full h-full object-contain drop-shadow-xl" />
+                                </div>
+                            </div>
+                            <div className="flex-1 text-center lg:text-left">
+                                <h3 className="text-lg font-bold uppercase tracking-wider text-primary mb-2">{t('rraasHome.satsangSubtitle')}</h3>
+                                <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('rraasHome.satsangTitle')}</h2>
+                                <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{t('rraasHome.satsangDesc')}</p>
+                                <ul className="mb-8 space-y-3 text-left w-fit mx-auto lg:mx-0">
+                                    {[t('rraasHome.satsangFeature1'), t('rraasHome.satsangFeature2'), t('rraasHome.satsangFeature3'), t('rraasHome.satsangFeature4')].map((f, i) => (
+                                        <li key={i} className="flex items-start gap-3 text-foreground/80">
+                                            <svg className="mt-1 h-5 w-5 flex-shrink-0 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                            <span>{f}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <Link href="/login?returnUrl=/satsang&service=guru" className="group inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-lg font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:scale-105 shadow-lg shadow-primary/20">
+                                    {t('rraasHome.satsangAction')}
+                                    <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </Link>
+                            </div>
+                        </motion.div>
+
+                        {/* Tarot */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-100px' }}
+                            transition={{ duration: 0.8, delay: 0.1 }}
+                            className="flex flex-col gap-12 py-8 lg:flex-row-reverse lg:items-center"
+                        >
+                            <div className="flex-1 flex justify-center">
+                                <div className="relative flex h-40 w-40 sm:h-64 sm:w-64 lg:h-80 lg:w-80 items-center justify-center hover:scale-105 transition-all duration-500">
+                                    <img src="/services/tarot-icon-fixed.png" alt="Mystic Tarot" className="w-full h-full object-contain drop-shadow-xl" />
+                                </div>
+                            </div>
+                            <div className="flex-1 text-center lg:text-left">
+                                <div className="flex items-center justify-center gap-3 lg:justify-start mb-2">
+                                    <h3 className="text-lg font-bold uppercase tracking-wider text-primary">{t('rraasHome.tarotSubtitle')}</h3>
+                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">Coming Soon — Early Access</span>
+                                </div>
+                                <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('rraasHome.tarotTitle')}</h2>
+                                <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{t('rraasHome.tarotDesc')}</p>
+                                <ul className="mb-8 space-y-3 text-left w-fit mx-auto lg:mx-0">
+                                    {[t('rraasHome.tarotFeature1'), t('rraasHome.tarotFeature2'), t('rraasHome.tarotFeature3'), t('rraasHome.tarotFeature4')].map((f, i) => (
+                                        <li key={i} className="flex items-start gap-3 text-foreground/80">
+                                            <svg className="mt-1 h-5 w-5 flex-shrink-0 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                            <span>{f}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <Link href="/login?returnUrl=/tarot&service=tarot" className="group inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-lg font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:scale-105 shadow-lg shadow-primary/20">
+                                    {t('rraasHome.tarotAction')}
+                                    <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </Link>
+                            </div>
+                        </motion.div>
+
+                        {/* Vedic Astrology */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-100px' }}
+                            transition={{ duration: 0.8, delay: 0.1 }}
+                            className="flex flex-col gap-12 py-8 lg:flex-row lg:items-center"
+                        >
+                            <div className="flex-1 flex justify-center">
+                                <div className="relative flex h-40 w-40 sm:h-64 sm:w-64 lg:h-80 lg:w-80 items-center justify-center hover:scale-105 transition-all duration-500">
+                                    <img src="/services/astrology-icon-fixed.png" alt="Vedic Astrology" className="w-full h-full object-contain drop-shadow-xl" />
+                                </div>
+                            </div>
+                            <div className="flex-1 text-center lg:text-left">
+                                <div className="flex items-center justify-center gap-3 lg:justify-start mb-2">
+                                    <h3 className="text-lg font-bold uppercase tracking-wider text-primary">{t('rraasHome.astrologySubtitle')}</h3>
+                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">Coming Soon — Early Access</span>
+                                </div>
+                                <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('rraasHome.astrologyTitle')}</h2>
+                                <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{t('rraasHome.astrologyDesc')}</p>
+                                <ul className="mb-8 space-y-3 text-left w-fit mx-auto lg:mx-0">
+                                    {[t('rraasHome.astrologyFeature1'), t('rraasHome.astrologyFeature2'), t('rraasHome.astrologyFeature3'), t('rraasHome.astrologyFeature4')].map((f, i) => (
+                                        <li key={i} className="flex items-start gap-3 text-foreground/80">
+                                            <svg className="mt-1 h-5 w-5 flex-shrink-0 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                            <span>{f}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <Link href="/login?returnUrl=/vedic-jyotish&service=astrology" className="group inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-lg font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:scale-105 shadow-lg shadow-primary/20">
+                                    {t('rraasHome.astrologyAction')}
+                                    <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </Link>
+                            </div>
+                        </motion.div>
+
                     </div>
                 </div>
             </section>
 
-            {/* ── PHILOSOPHY QUOTE ─────────────────────────────────── */}
-            <section className="relative px-4 py-24 overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-b from-amber-950/20 via-transparent to-transparent" />
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_80%_at_50%_50%,rgba(251,191,36,0.05),transparent)]" />
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.9 }}
-                    className="relative mx-auto max-w-3xl text-center"
-                >
-                    <div className="mb-6 text-4xl text-amber-400/60">❝</div>
-                    <p className="text-2xl font-light italic leading-relaxed text-white/80 sm:text-3xl">
-                        Music is the shortcut to the divine. When words fail, sound carries the soul home.
-                    </p>
-                    <p className="mt-6 text-sm font-semibold uppercase tracking-widest text-amber-400/60">— RRAASI</p>
-
+            {/* ── LIGHTWORKERS ─────────────────────────────────────── */}
+            <section className="relative px-4 py-20 bg-gradient-to-b from-background via-amber-500/5 to-background">
+                <div className="mx-auto max-w-7xl">
                     <motion.div
-                        initial={{ opacity: 0, y: 10 }}
+                        initial={{ opacity: 0, y: 40 }}
                         whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ delay: 0.3, duration: 0.6 }}
-                        className="mt-12"
+                        viewport={{ once: true, margin: '-100px' }}
+                        transition={{ duration: 0.8 }}
+                        className="flex flex-col gap-12 py-8 lg:flex-row-reverse lg:items-center"
                     >
-                        <Link
-                            href="/login?returnUrl=/rraasi-music&service=music"
-                            className="inline-flex items-center gap-3 rounded-full border border-amber-500/40 bg-amber-500/10 px-8 py-4 text-base font-bold text-amber-300 backdrop-blur-sm transition-all hover:bg-amber-500/20 hover:border-amber-400/60 hover:scale-105"
-                        >
-                            Begin Your Journey
-                            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                            </svg>
-                        </Link>
+                        <div className="flex-1 flex justify-center">
+                            <div className="relative flex h-40 w-40 sm:h-64 sm:w-64 lg:h-80 lg:w-80 items-center justify-center hover:scale-105 transition-all duration-500">
+                                <img src="/services/lightworkers-icon.png" alt="Lightworkers" className="w-full h-full object-contain drop-shadow-xl rounded-full" />
+                            </div>
+                        </div>
+                        <div className="flex-1 text-center lg:text-left">
+                            <h3 className="text-lg font-bold uppercase tracking-wider text-primary mb-2">{t('rraasHome.lightworkerSubtitle')}</h3>
+                            <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('rraasHome.lightworkerTitle')}</h2>
+                            <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{t('rraasHome.lightworkerDesc')}</p>
+                            <ul className="mb-8 space-y-3 text-left w-fit mx-auto lg:mx-0">
+                                {[t('rraasHome.lightworkerFeature1'), t('rraasHome.lightworkerFeature2'), t('rraasHome.lightworkerFeature3'), t('rraasHome.lightworkerFeature4')].map((f, i) => (
+                                    <li key={i} className="flex items-start gap-3 text-foreground/80">
+                                        <svg className="mt-1 h-5 w-5 flex-shrink-0 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                        <span>{f}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <Link href="/lightworkers" className="group inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-lg font-semibold text-primary-foreground transition-all hover:bg-primary/90 hover:scale-105 shadow-lg shadow-primary/20">
+                                {t('rraasHome.lightworkerAction')}
+                                <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                            </Link>
+                        </div>
                     </motion.div>
-                </motion.div>
+                </div>
             </section>
 
-            {/* ── GOOGLE OAUTH SECTION (required for verification) ──── */}
-            <section className="border-t border-white/5 px-4 py-12">
+            {/* ── ABOUT RRAASI ─────────────────────────────────────── */}
+            <section className="bg-muted/30 relative px-4 py-32">
+                <div className="mx-auto max-w-4xl text-center">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6 }}
+                    >
+                        <h2 className="mb-8 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">{t('rraasHome.aboutTitle')}</h2>
+                        <div className="space-y-6 text-xl leading-relaxed text-muted-foreground">
+                            <p>{t('rraasHome.aboutDesc1')}</p>
+                            <p>{t('rraasHome.aboutDesc2')}</p>
+                            <div className="pt-8">
+                                <p className="text-2xl font-semibold italic text-primary">"{t('rraasHome.aboutQuote')}"</p>
+                            </div>
+                        </div>
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ── COMING SOON ──────────────────────────────────────── */}
+            <section className="relative px-4 py-24">
+                <div className="mx-auto max-w-6xl">
+                    <div className="mb-16 text-center">
+                        <h2 className="mb-4 text-3xl font-bold text-foreground sm:text-4xl">{t('rraasHome.comingSoonTitle')}</h2>
+                        <p className="text-xl text-muted-foreground">{t('rraasHome.comingSoonDesc')}</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                        {[
+                            { icon: '📿', title: t('rraasHome.comingSoonMeditation'), desc: t('rraasHome.comingSoonMeditationDesc') },
+                            { icon: '💭', title: t('rraasHome.comingSoonDreams'), desc: t('rraasHome.comingSoonDreamsDesc') },
+                            { icon: '📖', title: t('rraasHome.comingSoonScripture'), desc: t('rraasHome.comingSoonScriptureDesc') },
+                        ].map((feature, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                whileInView={{ opacity: 1, scale: 1 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                                className="group relative overflow-hidden rounded-2xl border border-border bg-card p-8 text-center shadow-sm transition-all hover:shadow-md"
+                            >
+                                <div className="mb-6 text-5xl opacity-80 transition-transform group-hover:scale-110">{feature.icon}</div>
+                                <h3 className="mb-3 text-xl font-bold text-foreground">{feature.title}</h3>
+                                <p className="text-muted-foreground">{feature.desc}</p>
+                                <div className="absolute top-4 right-4 rounded-full bg-accent/20 px-3 py-1 text-xs font-medium text-accent-foreground">{t('rraasHome.comingSoonBadge')}</div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── GOOGLE OAUTH SECTION (required for verification) ── */}
+            <section className="bg-background px-4 py-16 border-t border-border">
                 <div className="mx-auto max-w-4xl text-left">
-                    <h2 className="text-2xl font-bold mb-4 text-white/80">Welcome to RRAASI</h2>
-                    <p className="mb-4 text-sm text-white/40 leading-relaxed">
-                        RRAASI is a comprehensive spiritual sanctuary offering virtual Satsang, AI Music Creation, Tarot, Vedic Astrology, and healing Music Distribution.
+                    <h2 className="text-3xl font-bold mb-6 text-foreground">Welcome to RRAASI</h2>
+                    <p className="mb-4 text-lg text-muted-foreground">
+                        RRAASI is a comprehensive spiritual sanctuary offering services such as virtual Satsang, intelligent Tarot, Vedic Astrology, and specialized Music Distribution.
                     </p>
-                    <p className="mb-4 text-sm text-white/40 leading-relaxed">
-                        <strong className="text-white/60">Purpose of Creator Studio:</strong> Our platform includes a Creator Studio where users generate AI-assisted spiritual healing tracks and mantras. We request the <code className="text-amber-400/70">youtube.upload</code> scope strictly to allow users to distribute their generated music tracks to their own YouTube channels. We only upload when explicitly triggered by the user and never modify or read other channel contents.
+                    <p className="mb-4 text-lg text-muted-foreground">
+                        <strong>Purpose of the App &amp; Creator Studio:</strong> Our platform includes a Creator Studio feature where users can generate AI-assisted spiritual healing tracks, mantras, and meditation music. We request the <code>youtube.upload</code> scope strictly to allow our users the convenience of instantly distributing these generated music tracks directly to their own YouTube channels. We only upload videos when explicitly triggered by the user in the app, and we never modify or read other channel contents.
                     </p>
-                    <p className="text-xs text-white/20 mt-6">
+                    <p className="text-sm mt-8 text-muted-foreground/70">
                         RRAASI is a property of Absolute Dimension Pvt Ltd.{' '}
-                        <Link href="/privacy" className="underline hover:text-white/40">Privacy Policy</Link>
+                        <Link href="/privacy" className="underline hover:text-primary">Privacy Policy</Link>
                     </p>
+                </div>
+            </section>
+
+            {/* ── BOTTOM CTA ───────────────────────────────────────── */}
+            <section className="relative overflow-hidden bg-primary px-4 py-24 text-primary-foreground">
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-10 mix-blend-soft-light" />
+                <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+                <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-white/10 blur-3xl" />
+                <div className="relative mx-auto max-w-4xl text-center">
+                    <h2 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">{t('rraasHome.ctaTitle')}</h2>
+                    <p className="mb-10 text-xl font-medium opacity-90">{t('rraasHome.ctaDesc')}</p>
+                    <Link
+                        href="/login?returnUrl=/rraasi-music&service=music"
+                        className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-xl font-bold text-foreground shadow-2xl transition-transform hover:scale-105"
+                    >
+                        Create Your Music
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                    </Link>
                 </div>
             </section>
         </div>
