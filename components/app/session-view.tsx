@@ -27,6 +27,9 @@ import { ScrollArea } from '../livekit/scroll-area/scroll-area';
 import { RecordingsModal } from './recordings-modal';
 import { Button } from '@/components/livekit/button';
 import { History } from 'lucide-react';
+import { useDataChannel } from '@livekit/components-react';
+import { useMusicPlayer } from '@/contexts/music-player-context';
+import BuyCoinsModal from '@/components/rraasi-music/buy-coins-modal';
 
 const MotionBottom = motion.create('div');
 
@@ -111,6 +114,45 @@ export const SessionView = ({
     camera: appConfig.supportsVideoInput,
     screenShare: appConfig.supportsVideoInput,
   };
+
+  const [showBuyCoins, setShowBuyCoins] = useState(false);
+
+  // Try to use music player — may not be available in all session contexts
+  let playTrack: ((track: any) => void) | null = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    const player = useMusicPlayer();
+    playTrack = player.playTrack;
+  } catch {
+    // MusicPlayerProvider not in tree — data channel playback disabled
+  }
+
+  // Listen for data messages from the music agent
+  useDataChannel((msg) => {
+    try {
+      const payload = JSON.parse(new TextDecoder().decode(msg.payload));
+
+      // Play a track when agent sends audio_url
+      if (payload.audio_url && playTrack) {
+        console.log('[SessionView] 🎵 Agent requested playback:', payload);
+        playTrack({
+          id: payload.audio_url,
+          title: payload.name || payload.title || 'RRAASI Music',
+          audioUrl: payload.audio_url,
+          artist: payload.artist || 'RRAASI AI',
+          imageUrl: payload.image_url,
+        });
+      }
+
+      // Show buy-coins modal when agent asks for it
+      if (payload.type === 'show_add_coins') {
+        console.log('[SessionView] 💰 Agent requested Add Coins UI');
+        setShowBuyCoins(true);
+      }
+    } catch {
+      // Not JSON — ignore
+    }
+  });
 
   useEffect(() => {
     const lastMessage = messages.at(-1);
@@ -206,6 +248,9 @@ export const SessionView = ({
 
         {/* Recordings Modal */}
         <RecordingsModal isOpen={showRecordings} onClose={() => setShowRecordings(false)} />
+
+        {/* Buy Coins Modal - triggered by agent when balance is low */}
+        <BuyCoinsModal isOpen={showBuyCoins} onClose={() => setShowBuyCoins(false)} />
 
         {/* Chat Transcript */}
         <div

@@ -115,6 +115,21 @@ class FirebaseDB:
         except Exception as e:
             logger.error(f"Failed to get tracks: {e}")
             return []
+
+    def get_user_coins(self, user_id: str) -> int:
+        """Get the current coin balance for a user from coinBalances collection."""
+        if not self.db or not user_id or user_id == "default_user":
+            return 0
+        try:
+            doc = self.db.collection("coinBalances").document(user_id).get()
+            if doc.exists:
+                data = doc.to_dict()
+                # totalCoins is the field used in rraasi-coin-service
+                return data.get("totalCoins", 0)
+            return 0
+        except Exception as e:
+            logger.error(f"Failed to get user coins for {user_id}: {e}")
+            return 0
     def get_satsang_plan(self, plan_id: str):
         """Get a pre-generated satsang plan."""
         if not self.db:

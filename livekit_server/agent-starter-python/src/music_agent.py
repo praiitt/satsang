@@ -170,6 +170,7 @@ generate_music(
         self._publish_data_fn = publish_data_fn
         self.suno_client = SunoClient()
         self.user_id = user_id or "default_user"
+        self.db_helper = FirebaseDB()
 
     @function_tool
     async def generate_music(
@@ -193,11 +194,27 @@ generate_music(
         """
         logger.info(f"Generating music: {title} ({style}) - Instrumental: {is_instrumental}")
         
-        # Check if user is logged in
-        # User restriction removed as per user request
-        # if self.user_id == "default_user" or not self.user_id:
-        #    return "To create music, you need to be logged in..."
-        
+        # 1. Coin Balance Check (CRITICAL)
+        try:
+            user_coins = self.db_helper.get_user_coins(self.user_id)
+            logger.info(f"User {self.user_id} has {user_coins} coins. Generation cost: 50.")
+            
+            if user_coins < 50:
+                logger.warning(f"Insufficient coins for user {self.user_id}: {user_coins} < 50")
+                # Notify the frontend to show the Add Coins modal
+                if self._publish_data_fn:
+                    try:
+                        await self._publish_data_fn(
+                            json.dumps({"type": "show_add_coins", "balance": user_coins}).encode("utf-8")
+                        )
+                    except Exception as e:
+                        logger.error(f"Failed to send show_add_coins event: {e}")
+                return f"I'm sorry, but you need at least 50 coins to generate a music track. Your current balance is {user_coins} coins. I've opened the Add Coins screen for you — please top up and come back to create your spiritual track! 🪙"
+        except Exception as e:
+            logger.error(f"Error checking user coins: {e}")
+            # Fail open for safety or closed? Let's fail open but log it.
+            pass
+
         try:
             # Use specific callback server for webhooks
             # Use specific callback server for webhooks
@@ -208,18 +225,73 @@ generate_music(
             logger.info(f"DEBUG CALLBACK: Using User ID: {self.user_id}")
             logger.info(f"DEBUG CALLBACK: Callback URL: {callback_url}")
             
-            # Call Suno API
-            result = await self.suno_client.generate_music(
-                prompt=lyrics,
-                is_instrumental=is_instrumental,
-                custom_mode=True,
-                style=style,
-                title=title,
-                model="V3_5",
-                callback_url=callback_url
-            )
+            # Hybrid Routing Logic
+            provider = "suno"
+            result = None
+            task_id = None
             
-            logger.info(f"Suno API Result: {result}")
+            # Base callback URLs
+            suno_callback_url = f"{callback_base}/suno/callback?userId={self.user_id}&category=rraasi_music"
+            fal_callback_url = f"{callback_base}/fal/callback?userId={self.user_id}&category=rraasi_music"
+            
+            if is_instrumental:
+                # 1. Route instrumental requests to fal.ai
+                provider = "fal"
+                logger.info(f"Instrumental requested. Routing to fal.ai.")
+                try:
+                    try:
+                        from .fal_client import FalClient
+                    except ImportError:
+                        from fal_client import FalClient
+                    
+                    fal_client = FalClient()
+                    model_id = "fal-ai/aiva" if "orchestral" in style.lower() else "fal-ai/stable-audio"
+                    
+                    result = await fal_client.generate_music(
+                        prompt=style,
+                        model_id=model_id,
+                        callback_url=fal_callback_url
+                    )
+                except Exception as e:
+                    logger.error(f"Fal.ai generation failed: {e}")
+                    raise
+            else:
+                # 2. Route vocal requests to Suno
+                provider = "suno"
+                try:
+                    result = await self.suno_client.generate_music(
+                        prompt=lyrics,
+                        is_instrumental=is_instrumental,
+                        custom_mode=True,
+                        style=style,
+                        title=title,
+                        model="V3_5",
+                        callback_url=suno_callback_url
+                    )
+                except Exception as e:
+                    # 3. Suno Fallback to fal.ai
+                    logger.error(f"Suno generation failed synchronously: {e}. Falling back to fal.ai.")
+                    provider = "fal_fallback"
+                    try:
+                        try:
+                            from .fal_client import FalClient
+                        except ImportError:
+                            from fal_client import FalClient
+                        
+                        fal_client = FalClient()
+                        model_id = "fal-ai/stable-audio"
+                        fal_prompt = f"{style}. {lyrics}" if lyrics else style
+                        
+                        result = await fal_client.generate_music(
+                            prompt=fal_prompt,
+                            model_id=model_id,
+                            callback_url=fal_callback_url
+                        )
+                    except Exception as fallback_e:
+                        logger.error(f"Fal.ai fallback also failed: {fallback_e}")
+                        raise
+            
+            logger.info(f"API Result ({provider}): {result}")
             
             # The result format is: {'code': 200, 'msg': 'success', 'data': {'taskId': '...'}}
             task_id = None
@@ -247,8 +319,6 @@ generate_music(
             
             try:
                 # Save pending record to Firebase (CRITICAL Step)
-                verify_db = FirebaseDB()
-                
                 # Determine category (use generated or system default)
                 # We save 'system_category' as 'rraasi_music' for internal routing,
                 # but 'musicCategory' contains the user-facing type (Meditation, Sleep, etc)
@@ -258,6 +328,7 @@ generate_music(
                     "title": title,
                     "status": "generating",
                     "taskId": task_id,
+                    "provider": provider,
                     "prompt": lyrics or style,
                     "style": style,
                     "description": healing_meta.get("description", f"A beautiful {style} track"),
@@ -273,7 +344,7 @@ generate_music(
                     "category": "rraasi_music"  # System category for routing/indexing
                 }
                 # Save using taskId as document ID so callback can merge
-                verify_db.save_music_track(self.user_id, track_data, track_id=task_id)
+                self.db_helper.save_music_track(self.user_id, track_data, track_id=task_id)
                 logger.info("✅ Saved pending track to Firestore")
             except Exception as db_error:
                 logger.error(f"Failed to save tracking record to DB: {db_error}")
@@ -617,7 +688,8 @@ If overall_score < 7.0, set is_valid to false.
                     if status == "COMPLETED" and audio_url:
                         logger.info(f"Found completed track: {title}")
                         # Play the track
-                        await self._play_audio_url(audio_url, title)
+                        image_url = track.get("imageUrl", "")
+                        await self._play_audio_url(audio_url, title, image_url)
                         return f"Great news! Your song '{title}' is ready and playing now!"
                     else:
                         return f"I found your song '{title}', but it's still being created. Please check 'My Music' in a few moments!"
@@ -634,7 +706,8 @@ If overall_score < 7.0, set is_valid to false.
                 audio_url = latest_track.get("audioUrl", "")
                 
                 logger.info(f"Playing latest track for user: {title}")
-                await self._play_audio_url(audio_url, title)
+                image_url = latest_track.get("imageUrl", "")
+                await self._play_audio_url(audio_url, title, image_url)
                 return f"I've found your latest track '{title}'. Playing it now for you!"
             else:
                 return "Your tracks are still in the process of creation. Please give it another minute and then ask me again!"
@@ -643,7 +716,7 @@ If overall_score < 7.0, set is_valid to false.
             logger.error(f"Failed to check song status: {e}")
             return "I'm having trouble checking your songs right now. Please try again in a moment."
                 
-    async def _play_audio_url(self, url: str, title: str):
+    async def _play_audio_url(self, url: str, title: str, image_url: str = ""):
         """Internal helper to publish play event to frontend."""
         if not self._publish_data_fn:
             logger.warning("No publish function available for playback")
@@ -652,11 +725,14 @@ If overall_score < 7.0, set is_valid to false.
         try:
             payload = {
                 "name": title,
+                "title": title,
                 "artist": "RRAASI AI",
                 "audio_url": url,
+                "image_url": image_url,
                 "message": f"Playing '{title}'..."
             }
             await self._publish_data_fn(json.dumps(payload).encode("utf-8"))
+            logger.info(f"[Playback] 🎵 Sent play event for: {title}")
         except Exception as e:
             logger.error(f"Error publishing playback data: {e}")
 

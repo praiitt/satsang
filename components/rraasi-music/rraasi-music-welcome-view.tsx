@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/language-context';
 import { musicTranslations } from '@/lib/translations/music';
 import { MusicCategoryTabs, type MusicCategory } from '@/components/rraasi-music/music-category-tabs';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
-import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw, Heart, Upload, Globe, Lock } from 'lucide-react';
+import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw, Heart, Upload, Globe, Lock, Coins } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getFirebaseAuth } from '@/lib/firebase-client';
 import Link from 'next/link';
@@ -19,6 +19,7 @@ import { SearchBar } from './search-bar';
 import { PlaylistQuickAccess } from './playlist-quick-access';
 import { RecordingsModal } from '@/components/app/recordings-modal';
 import { useFavorites } from '@/hooks/use-favorites';
+import BuyCoinsModal from '@/components/rraasi-music/buy-coins-modal';
 
 function MusicIcon() {
   return (
@@ -96,16 +97,25 @@ export const RRaaSiMusicWelcomeView = ({
   const [myTracksLoading, setMyTracksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
+  const [curatedPlaylists, setCuratedPlaylists] = useState<any[]>([]);
+  const [curatedLoading, setCuratedLoading] = useState(false);
+  const [visibleMyMusicCount, setVisibleMyMusicCount] = useState(6);
+  const [selectedCuratedPlaylist, setSelectedCuratedPlaylist] = useState<any | null>(null);
+  const [loadingPlaylistDetails, setLoadingPlaylistDetails] = useState(false);
 
   // Sync State
   const [syncingTrackId, setSyncingTrackId] = useState<string | null>(null);
 
   // Video State
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Recordings Modal State
   const [showRecordings, setShowRecordings] = useState(false);
+
+  // Coin Balance State
+  const [coinBalance, setCoinBalance] = useState<number | null>(null);
+  const [showBuyCoins, setShowBuyCoins] = useState(false);
 
   // Multiselect State
   const [selectionMode, setSelectionMode] = useState(false);
@@ -120,6 +130,24 @@ export const RRaaSiMusicWelcomeView = ({
 
   // Infinite Scroll Observer
   const observerTarget = useRef<HTMLDivElement>(null);
+
+  // Fetch coin balance
+  useEffect(() => {
+    if (!user?.uid) return;
+    const fetchBalance = async () => {
+      try {
+        const auth = getFirebaseAuth();
+        const token = await auth.currentUser?.getIdToken();
+        const res = await fetch(
+          'https://us-central1-rraasi-8a619.cloudfunctions.net/rraasi-coin-service/coins/balance',
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = await res.json();
+        if (data.success) setCoinBalance(data.balance?.totalCoins ?? 0);
+      } catch { /* silent */ }
+    };
+    fetchBalance();
+  }, [user?.uid]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -244,6 +272,22 @@ export const RRaaSiMusicWelcomeView = ({
       setMyTracksLoading(false);
     }
   }, [isAuthenticated, authLoading, searchQuery]);
+
+  useEffect(() => {
+    const loadCuratedPlaylists = async () => {
+      setCuratedLoading(true);
+      try {
+        const res = await fetch('/api/rraasi-music/playlists/curated');
+        const data = await res.json();
+        setCuratedPlaylists(data.playlists || []);
+      } catch (e) {
+        console.error('Failed to fetch curated playlists', e);
+      } finally {
+        setCuratedLoading(false);
+      }
+    };
+    loadCuratedPlaylists();
+  }, []);
 
   const fetchMyMusic = async (pageNum = 1, isNew = false) => {
     if (pageNum === 1) setMyTracksLoading(true);
@@ -394,50 +438,133 @@ export const RRaaSiMusicWelcomeView = ({
     }
   };
 
-  // Video Generation Handler
-  const handleGenerateVideo = async (sunoId: string, trackDocId?: string) => {
+  // Video Generation Handler — uses new AI pipeline (marketing-server)
+  // Fire-and-forget: sets state to 'generating' immediately and returns.
+  // User clicks "Check Status" to poll for completion.
+  const handleGenerateVideo = (trackId: string, trackDocId?: string) => {
     if (!user?.uid) return;
-    if (!trackDocId) {
-      console.error("Missing Track Document ID for video generation");
-      alert("Cannot generate video: Track ID missing");
+
+    const firestoreDocId = (trackDocId || trackId).split('?')[0];
+    if (!firestoreDocId) {
+      alert('Cannot generate video: Track ID missing');
       return;
     }
 
+    const track = myTracks.find(t => t.id === trackId || t.shareId === trackDocId);
+    if (!track?.audioUrl) {
+      alert('Cannot generate video: Audio URL missing');
+      return;
+    }
+
+    // Optimistic UI update — immediately show "Making Video..."
+    setMyTracks(prev => prev.map(t =>
+      (t.id === trackId || t.shareId === trackDocId) ? { ...t, videoStatus: 'generating' } : t
+    ));
+
+    const lyrics = track.lyrics || track.prompt || 'Spiritual divine music, peaceful, meditative';
+    const isLocal = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+    const marketingUrl = isLocal
+      ? 'http://localhost:4001/video-maker'
+      : 'https://satsang-marketing-server-6ougd45dya-el.a.run.app/video-maker';
+
+    // Fire and forget — don't block the UI
+    getFirebaseAuth().currentUser?.getIdToken().then(token => {
+      fetch(marketingUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ audioUrl: track.audioUrl, lyrics, userId: user.uid, trackId: firestoreDocId }),
+      })
+        .then(res => res.json())
+        .then(result => {
+          if (result.success && result.videoUrl) {
+            setMyTracks(prev => prev.map(t =>
+              (t.id === trackId || t.shareId === trackDocId)
+                ? { ...t, videoUrl: result.videoUrl, videoStatus: 'completed' }
+                : t
+            ));
+          }
+          // If it fails, the user can use "Check Status" or try again
+        })
+        .catch(e => console.error('Video generation error:', e));
+    });
+  };
+
+  // Delete Video Handler
+  const handleDeleteVideo = async (trackId: string, trackDocId?: string) => {
+    if (!user?.uid) return;
+    const firestoreDocId = (trackDocId || trackId).split('?')[0];
+    if (!confirm('Delete this video? The song will remain, only the video will be removed.')) return;
+
     // Optimistic update
     setMyTracks(prev => prev.map(t =>
-      t.id === sunoId ? { ...t, videoStatus: 'generating' } : t
+      (t.id === trackId || t.shareId === trackDocId) ? { ...t, videoUrl: undefined, videoStatus: null } : t
     ));
 
     try {
-      const response = await fetch('/api/suno/generate-video', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          trackId: trackDocId,
-          sunoId: sunoId
-        })
+      const auth = getFirebaseAuth();
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch(`/api/rraasi-music/video?trackId=${firestoreDocId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
       });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        // Success - status remains generating until callback or refresh
-        console.log("Video generation started:", result);
-      } else {
-        // Revert on failure
-        console.error("Video generation failed:", result.error);
-        alert(`Failed to start video generation: ${result.error}`);
-        setMyTracks(prev => prev.map(t =>
-          t.id === sunoId ? { ...t, videoStatus: null } : t
-        ));
+      if (!res.ok) {
+        const err = await res.json();
+        console.error('Delete video failed:', err);
+        // Revert if the API failed
+        await fetchMyMusic(1, true);
       }
     } catch (e) {
-      console.error("Video generation error:", e);
+      console.error('Delete video error:', e);
+    }
+  };
+
+  // Download Video Handler
+  const handleDownloadVideo = async (track: MusicTrack) => {
+    if (!track.videoUrl) return;
+    try {
+      const response = await fetch(track.videoUrl);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      const safeTitle = (track.title || 'video').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      a.download = `${safeTitle}.mp4`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (e) {
+      console.error('Video download failed:', e);
+      // Fallback: open in new tab
+      window.open(track.videoUrl, '_blank');
+    }
+  };
+
+  // Refresh a single track's video status — no full-collection reload
+  const handleRefreshSingleTrack = async (trackId: string, trackDocId?: string) => {
+    const firestoreDocId = (trackDocId || trackId).split('?')[0];
+    if (!firestoreDocId) return;
+    try {
+      const auth = getFirebaseAuth();
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch(`/api/rraasi-music/track/${firestoreDocId}`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      // Only update this one track in state
       setMyTracks(prev => prev.map(t =>
-        t.id === sunoId ? { ...t, videoStatus: null } : t
+        (t.id === trackId || t.shareId === trackDocId)
+          ? {
+              ...t,
+              videoUrl: data.videoUrl ?? t.videoUrl,
+              videoStatus: data.videoGenerating ? 'generating' : (data.videoUrl ? 'completed' : null),
+            }
+          : t
       ));
+    } catch (e) {
+      console.error('Single track refresh failed:', e);
     }
   };
 
@@ -848,106 +975,284 @@ export const RRaaSiMusicWelcomeView = ({
         </div>
       </section>
 
-      {/* My Music Section */}
-      < section className="max-w-7xl mx-auto px-4 mt-16 border-b border-gray-100 dark:border-gray-800 pb-16" >
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-2xl">
-              <Headphones className="w-8 h-8 text-amber-600" />
-            </div>
+      {/* Curated Playlists Section */}
+      {curatedPlaylists.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 mt-8 mb-12 animate-in fade-in slide-in-from-bottom-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                My Music
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 text-lg">
-                Your personal spiritual creations
-              </p>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Featured Playlists</h2>
+              <p className="text-gray-500">Divine collections for your spiritual journey</p>
             </div>
           </div>
+          
+          <div className="flex gap-6 overflow-x-auto pb-6 snap-x hide-scrollbar">
+            {curatedPlaylists.map((playlist, idx) => (
+              <div 
+                key={playlist.id}
+                onClick={async () => {
+                  if (selectedCuratedPlaylist?.id === playlist.id) {
+                    setSelectedCuratedPlaylist(null);
+                    return;
+                  }
+                  
+                  setLoadingPlaylistDetails(true);
+                  try {
+                    const res = await fetch(`/api/playlists/${playlist.id}`);
+                    if (res.ok) {
+                      const data = await res.json();
+                      const tracks = (data.tracks || []).map((t: any) => ({
+                        id: t.id || t.trackId,
+                        title: t.title || 'Untitled',
+                        audioUrl: t.audioUrl || t.audio_url,
+                        imageUrl: t.imageUrl || t.image_url || t.thumbnailUrl,
+                        category: t.category,
+                        status: t.status || (t.audioUrl || t.audio_url ? 'COMPLETED' : 'generating'),
+                        duration: t.duration,
+                      }));
+                      setSelectedCuratedPlaylist({ ...data, tracks });
+                    } else {
+                      toast.error('Failed to load playlist');
+                    }
+                  } catch(e) {
+                    console.error(e);
+                    toast.error('Failed to load playlist');
+                  } finally {
+                    setLoadingPlaylistDetails(false);
+                  }
+                }}
+                className={`snap-start shrink-0 w-48 md:w-56 rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all cursor-pointer group border ${selectedCuratedPlaylist?.id === playlist.id ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 ring-2 ring-amber-500 scale-105' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 hover:scale-105'}`}
+              >
+                <div className="aspect-square w-full relative bg-gray-200 dark:bg-gray-900">
+                  {playlist.imageUrl ? (
+                    <img src={playlist.imageUrl} alt={playlist.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <img 
+                      src={`https://image.pollinations.ai/prompt/${encodeURIComponent(playlist.name + " beautiful spiritual divine aesthetic high quality")}?width=400&height=400&nologo=true`} 
+                      alt={playlist.name} 
+                      className="w-full h-full object-cover" 
+                    />
+                  )}
+                  <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center ${selectedCuratedPlaylist?.id === playlist.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <div className="w-12 h-12 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-lg transform scale-90 group-hover:scale-100 transition-transform">
+                      {selectedCuratedPlaylist?.id === playlist.id ? <ChevronLeft className="w-6 h-6 rotate-90" /> : <ChevronLeft className="w-6 h-6 -rotate-90" />}
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 dark:text-white line-clamp-1">{playlist.name}</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1 h-8 leading-snug">{playlist.description}</p>
+                </div>
+              </div>
+            ))}
+          </div>
 
-          {/* Action Buttons (Section Header) */}
+          {/* Selected Playlist Details Area */}
+          {loadingPlaylistDetails ? (
+            <div className="flex items-center justify-center py-12 mt-4 bg-white/50 dark:bg-gray-800/50 rounded-3xl border border-gray-200 dark:border-gray-700">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+            </div>
+          ) : selectedCuratedPlaylist && (
+            <div className="mt-8 animate-in fade-in slide-in-from-top-4 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-6 md:p-8 rounded-3xl border border-amber-500/20 shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-3xl rounded-full -mr-20 -mt-20 pointer-events-none" />
+              
+              <div className="relative flex flex-col md:flex-row gap-8 mb-8 items-start">
+                <div className="w-32 h-32 md:w-48 md:h-48 shrink-0 rounded-2xl overflow-hidden shadow-xl border-4 border-white dark:border-gray-800">
+                  {selectedCuratedPlaylist.imageUrl ? (
+                    <img src={selectedCuratedPlaylist.imageUrl} alt={selectedCuratedPlaylist.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <img 
+                      src={`https://image.pollinations.ai/prompt/${encodeURIComponent(selectedCuratedPlaylist.name + " beautiful spiritual divine aesthetic high quality")}?width=400&height=400&nologo=true`} 
+                      alt={selectedCuratedPlaylist.name} 
+                      className="w-full h-full object-cover" 
+                    />
+                  )}
+                </div>
+                
+                <div className="flex-1 flex flex-col justify-center">
+                  <div className="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold rounded-full mb-3 uppercase tracking-wider w-max">
+                    Featured Playlist
+                  </div>
+                  <h3 className="text-3xl md:text-5xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">{selectedCuratedPlaylist.name}</h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-lg mb-6 leading-relaxed max-w-2xl">{selectedCuratedPlaylist.description}</p>
+                  
+                  <div className="flex gap-4">
+                    <Button 
+                      onClick={() => {
+                        if (selectedCuratedPlaylist.tracks?.length > 0) {
+                          playPlaylist(selectedCuratedPlaylist.tracks, 0);
+                        }
+                      }}
+                      className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 flex items-center"
+                    >
+                      <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2"><path d="M8 5v14l11-7z" /></svg>
+                      Play All
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setSelectedCuratedPlaylist(null)}
+                      className="rounded-full border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 bg-white/50 dark:bg-gray-800/50 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      Close
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="font-bold text-gray-900 dark:text-white text-xl mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+                  Tracks ({selectedCuratedPlaylist.tracks?.length || 0})
+                </h4>
+                
+                {selectedCuratedPlaylist.tracks?.length === 0 ? (
+                  <p className="text-gray-500 py-4 text-center">No tracks available in this playlist.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedCuratedPlaylist.tracks?.map((track: any, index: number) => (
+                      <MusicPlayerCard
+                        key={track.id}
+                        id={track.id}
+                        shareId={track.shareId}
+                        title={track.title || 'Untitled'}
+                        audioUrl={track.audioUrl}
+                        imageUrl={track.imageUrl || selectedCuratedPlaylist.imageUrl}
+                        category={track.category || 'other'}
+                        onPlay={() => playPlaylist(selectedCuratedPlaylist.tracks, index)}
+                        isFavorite={isFavorite(track.id)}
+                        onToggleFavorite={() => toggleFavorite(track.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* My Music Section */}
+      < section className="max-w-7xl mx-auto px-4 mt-16 border-b border-gray-100 dark:border-gray-800 pb-16" >
+        {/* Header: title + coin balance stack properly on mobile */}
+        <div className="flex flex-col gap-3 mb-8">
+          {/* Row 1: title + coins */}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-100 dark:bg-amber-900/30 rounded-2xl shrink-0">
+                <Headphones className="w-6 h-6 sm:w-8 sm:h-8 text-amber-600" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
+                  My Music
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-lg hidden sm:block">
+                  Your personal spiritual creations
+                </p>
+              </div>
+            </div>
+
+            {/* Coin Balance + Buy Coins — always visible on the right */}
+            {isAuthenticated && coinBalance !== null && (
+              <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20">
+                  <Coins className="w-4 h-4 text-amber-400" />
+                  <span className="text-amber-400 font-bold text-sm">{coinBalance.toLocaleString()}</span>
+                </div>
+                <button
+                  onClick={() => setShowBuyCoins(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-black font-bold text-xs uppercase tracking-wider transition-all"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Buy Coins</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Row 2: Action buttons — scrollable on mobile, wrap on desktop */}
           {isAuthenticated && (
-            <div className="flex gap-2 flex-wrap items-center">
+            <div className="flex gap-2 items-center overflow-x-auto pb-1 scrollbar-hide flex-nowrap sm:flex-wrap">
               {selectionMode && selectedTracks.size > 0 && (
                 <>
                   <Button
                     variant="primary"
                     onClick={() => handleBulkPublish(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white border-none shadow-md gap-1"
+                    className="bg-green-600 hover:bg-green-700 text-white border-none shadow-md gap-1 shrink-0"
                   >
                     <Globe className="w-4 h-4" /> <span className="hidden sm:inline">Make </span>Public ({selectedTracks.size})
                   </Button>
                   <Button
                     variant="primary"
                     onClick={() => handleBulkPublish(false)}
-                    className="bg-gray-600 hover:bg-gray-700 text-white border-none shadow-md gap-1"
+                    className="bg-gray-600 hover:bg-gray-700 text-white border-none shadow-md gap-1 shrink-0"
                   >
                     <Lock className="w-4 h-4" /> <span className="hidden sm:inline">Make </span>Private ({selectedTracks.size})
                   </Button>
                 </>
               )}
-              
+
+              {/* Select Tracks */}
               <Button
                 variant={selectionMode ? "primary" : "dotted"}
                 onClick={() => {
                   setSelectionMode(!selectionMode);
                   if (selectionMode) setSelectedTracks(new Set());
                 }}
-                className={selectionMode ? "bg-amber-500 hover:bg-amber-600 border-none text-white shadow-md" : "text-amber-500 border-amber-500/20 hover:bg-amber-500/10"}
+                className={`shrink-0 ${selectionMode ? "bg-amber-500 hover:bg-amber-600 border-none text-white shadow-md" : "text-amber-500 border-amber-500/20 hover:bg-amber-500/10"}`}
               >
-                {selectionMode ? "Cancel Selection" : "Select Tracks"}
+                {selectionMode ? "Cancel" : <><span className="sm:hidden">Select</span><span className="hidden sm:inline">Select Tracks</span></>}
               </Button>
 
+              {/* Distribute to YouTube */}
               {!selectionMode && (
                 <Button
                   variant="primary"
                   onClick={() => window.location.href = '/business/creators/music/distribution'}
-                  className="text-white bg-amber-600 hover:bg-amber-700 shadow-md border-none"
+                  className="text-white bg-amber-600 hover:bg-amber-700 shadow-md border-none shrink-0"
                 >
-                  <Upload className="w-4 h-4 mr-2" />
-                  <span className="hidden lg:inline">Distribute to YouTube</span>
-                  <span className="inline lg:hidden">Distribute</span>
+                  <Upload className="w-4 h-4" />
+                  <span className="ml-1.5 hidden sm:inline">Distribute</span>
+                  <span className="ml-1.5 hidden lg:inline"> to YouTube</span>
                 </Button>
               )}
 
-              {/* Refresh Button */}
+              {/* Refresh — icon only on mobile */}
               {!selectionMode && (
                 <Button
-                variant="dotted"
-                onClick={fetchMyMusic}
-                disabled={myTracksLoading}
-                className="text-amber-500 border-amber-500/20 hover:bg-amber-500/10"
-                title="Refresh My Music"
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${myTracksLoading ? 'animate-spin' : ''}`} />
-                <span className="hidden sm:inline">Refresh</span>
-              </Button>
+                  variant="dotted"
+                  onClick={fetchMyMusic}
+                  disabled={myTracksLoading}
+                  className="text-amber-500 border-amber-500/20 hover:bg-amber-500/10 shrink-0"
+                  title="Refresh My Music"
+                >
+                  <RefreshCw className={`w-4 h-4 ${myTracksLoading ? 'animate-spin' : ''}`} />
+                  <span className="hidden sm:inline ml-1.5">Refresh</span>
+                </Button>
               )}
 
-              {/* Session Recordings Button */}
+              {/* Session Recordings — icon only on mobile */}
               <Button
                 variant="dotted"
                 onClick={() => setShowRecordings(true)}
-                className="text-amber-500 border-amber-500/20 hover:bg-amber-500/10"
+                className="text-amber-500 border-amber-500/20 hover:bg-amber-500/10 shrink-0"
+                title="Session Recordings"
               >
-                <History className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Session Recordings</span>
+                <History className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1.5">Recordings</span>
               </Button>
 
-              {/* Daily Mix Button */}
+              {/* Shuffle All — hidden on small screens */}
               {myTracks.length > 5 && (
                 <Button
                   variant="dotted"
                   onClick={handleDailyMix}
                   disabled={isShuffling}
-                  className="hidden md:flex text-amber-500 border-amber-500/20 hover:bg-amber-500/10"
+                  className="hidden md:flex text-amber-500 border-amber-500/20 hover:bg-amber-500/10 shrink-0"
                 >
                   {isShuffling ? (
-                    <span className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-amber-500 border-t-transparent"></span>
+                    <span className="w-4 h-4 animate-spin rounded-full border-2 border-amber-500 border-t-transparent" />
                   ) : (
-                    <Shuffle className="w-4 h-4 mr-2" />
+                    <Shuffle className="w-4 h-4" />
                   )}
-                  Shuffle All
+                  <span className="ml-1.5">Shuffle All</span>
                 </Button>
               )}
             </div>
@@ -1020,6 +1325,8 @@ export const RRaaSiMusicWelcomeView = ({
                 const displayedTracks = myMusicFilter === 'favorites'
                   ? myTracks.filter(t => isFavorite(t.id))
                   : myTracks;
+                  
+                const paginatedTracks = displayedTracks.slice(0, visibleMyMusicCount);
 
                 if (displayedTracks.length === 0 && myMusicFilter === 'favorites') {
                   return (
@@ -1032,51 +1339,67 @@ export const RRaaSiMusicWelcomeView = ({
                 }
 
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {displayedTracks.map((track, index) => (
-                      <MusicPlayerCard
-                        key={track.id}
-                        id={track.id}
-                        shareId={track.shareId}
-                        title={track.title || 'Untitled'}
-                        audioUrl={track.audioUrl}
-                        imageUrl={track.imageUrl}
-                        category={track.category || 'other'}
-                        prompt={track.prompt}
-                        description={track.description}
-                        createdAt={track.createdAt}
-                        onPlay={() => playPlaylist(displayedTracks, index)}
-                        status={track.status}
-                        videoUrl={track.videoUrl}
-                        videoStatus={track.videoStatus}
-                        story={track.story}
-                        lyrics={track.lyrics}
-                        healingBenefits={track.healingBenefits}
-                        metadata={track.metadata}
-                        tags={track.tags}
-                        isPublic={track.isPublic}
-                        isOwner={true}
-                        selectionMode={selectionMode}
-                        isSelected={selectedTracks.has(track.shareId || track.id)}
-                        onToggleSelection={() => {
-                          const id = track.shareId || track.id;
-                          setSelectedTracks(prev => {
-                            const newSet = new Set(prev);
-                            if (newSet.has(id)) newSet.delete(id);
-                            else newSet.add(id);
-                            return newSet;
-                          });
-                        }}
-                        onPublishToggle={(newStatus) => handlePublishToggle(track.shareId || track.id, newStatus)}
-                        onGenerateVideo={() => handleGenerateVideo(track.id, track.shareId)}
-                        onSync={() => handleSync(track.id)}
-                        isSyncing={syncingTrackId === track.id}
-                        onDownload={() => handleDownload(track)}
-                        isFavorite={isFavorite(track.id)}
-                        onToggleFavorite={() => toggleFavorite(track.id)}
-                        source={track.source}
-                      />
-                    ))}
+                  <div className="flex flex-col gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {paginatedTracks.map((track, index) => (
+                        <MusicPlayerCard
+                          key={track.id}
+                          id={track.id}
+                          shareId={track.shareId}
+                          title={track.title || 'Untitled'}
+                          audioUrl={track.audioUrl}
+                          imageUrl={track.imageUrl}
+                          category={track.category || 'other'}
+                          prompt={track.prompt}
+                          description={track.description}
+                          createdAt={track.createdAt}
+                          onPlay={() => playPlaylist(paginatedTracks, index)}
+                          status={track.status}
+                          videoUrl={track.videoUrl}
+                          videoStatus={track.videoStatus}
+                          story={track.story}
+                          lyrics={track.lyrics}
+                          healingBenefits={track.healingBenefits}
+                          metadata={track.metadata}
+                          tags={track.tags}
+                          isPublic={track.isPublic}
+                          isOwner={true}
+                          selectionMode={selectionMode}
+                          isSelected={selectedTracks.has(track.shareId || track.id)}
+                          onToggleSelection={() => {
+                            const id = track.shareId || track.id;
+                            setSelectedTracks(prev => {
+                              const newSet = new Set(prev);
+                              if (newSet.has(id)) newSet.delete(id);
+                              else newSet.add(id);
+                              return newSet;
+                            });
+                          }}
+                          onPublishToggle={(newStatus) => handlePublishToggle(track.shareId || track.id, newStatus)}
+                          onGenerateVideo={() => handleGenerateVideo(track.id, track.shareId)}
+                          onDeleteVideo={() => handleDeleteVideo(track.id, track.shareId)}
+                          onDownloadVideo={track.videoUrl ? () => handleDownloadVideo(track) : undefined}
+                          onRefreshVideo={() => handleRefreshSingleTrack(track.id, track.shareId)}
+                          onSync={() => handleSync(track.id)}
+                          isSyncing={syncingTrackId === track.id}
+                          onDownload={() => handleDownload(track)}
+                          isFavorite={isFavorite(track.id)}
+                          onToggleFavorite={() => toggleFavorite(track.id)}
+                          source={track.source}
+                        />
+                      ))}
+                    </div>
+                    {displayedTracks.length > visibleMyMusicCount && (
+                      <div className="flex justify-center mt-4">
+                        <Button
+                          variant="outline"
+                          onClick={() => setVisibleMyMusicCount(prev => prev + 6)}
+                          className="border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10 px-8 py-2 rounded-full"
+                        >
+                          Load More My Music
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               })()}
@@ -1405,6 +1728,17 @@ export const RRaaSiMusicWelcomeView = ({
       <RecordingsModal
         isOpen={showRecordings}
         onClose={() => setShowRecordings(false)}
+      />
+
+      {/* Buy Coins Modal */}
+      <BuyCoinsModal
+        isOpen={showBuyCoins}
+        onClose={() => setShowBuyCoins(false)}
+        currentBalance={coinBalance ?? 0}
+        onCoinsAdded={(newBalance) => {
+          setCoinBalance(newBalance);
+          setShowBuyCoins(false);
+        }}
       />
 
       {/* Floating Create Button (Mobile) */}
