@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/language-context';
 import { musicTranslations } from '@/lib/translations/music';
 import { MusicCategoryTabs, type MusicCategory } from '@/components/rraasi-music/music-category-tabs';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
-import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw, Heart, Upload, Globe, Lock, Coins } from 'lucide-react';
+import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw, Heart, Upload, Globe, Lock, Coins, Share2 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getFirebaseAuth } from '@/lib/firebase-client';
 import Link from 'next/link';
