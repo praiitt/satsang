@@ -108,6 +108,82 @@ function ServiceCard({ emoji, title, desc, href, color, glow, badge, delay = 0 }
     );
 }
 
+// ─── Latest Community Tracks ─────────────────────────────────────────────────
+
+function LatestTracks() {
+    const [tracks, setTracks] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetch('/api/music/community-latest')
+            .then(r => r.json())
+            .then(data => { if (data.tracks) setTracks(data.tracks); })
+            .catch(() => { })
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading || tracks.length === 0) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="mt-16"
+        >
+            <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h3 className="text-xl font-bold text-white">Latest Community Creations</h3>
+                    <p className="text-sm text-white/40 mt-1">New spiritual tracks added daily by our community</p>
+                </div>
+                <Link
+                    href="/rraasi-music"
+                    className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
+                >
+                    See all 1000+
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                {tracks.map((track, i) => (
+                    <motion.div
+                        key={track.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: i * 0.07 }}
+                    >
+                        <Link href="/rraasi-music" className="group block rounded-2xl border border-white/10 bg-white/5 p-4 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all">
+                            {/* Category badge */}
+                            <span className="mb-3 inline-block rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-400">
+                                {track.musicCategory || 'Spiritual'}
+                            </span>
+                            {/* Title */}
+                            <p className="text-sm font-semibold text-white leading-snug line-clamp-2 mb-3 group-hover:text-amber-300 transition-colors">
+                                {track.title}
+                            </p>
+                            {/* Style snippet */}
+                            {track.style && (
+                                <p className="text-[11px] text-white/30 line-clamp-1 mb-3">{track.style}</p>
+                            )}
+                            {/* Play indicator */}
+                            <div className="flex items-center gap-2 text-white/40 group-hover:text-amber-400 transition-colors">
+                                <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
+                                    <path d="M8 5v14l11-7z" />
+                                </svg>
+                                <span className="text-[10px] font-semibold uppercase tracking-wider">Play</span>
+                            </div>
+                        </Link>
+                    </motion.div>
+                ))}
+            </div>
+        </motion.div>
+    );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
@@ -245,9 +321,9 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         <WaveformBars />
                         <div className="flex gap-8 text-center">
                             {[
-                                { n: '∞', label: 'Music Styles' },
+                                { n: '1000+', label: 'Tracks Created' },
                                 { n: '50+', label: 'Languages' },
-                                { n: 'AI', label: 'Powered' },
+                                { n: 'Daily', label: 'New Creations' },
                             ].map(s => (
                                 <div key={s.label}>
                                     <p className="text-2xl font-bold text-amber-400">{s.n}</p>
@@ -285,7 +361,6 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
 
             {/* ── MUSIC FEATURE SPOTLIGHT ──────────────────────────── */}
             <section className="relative px-4 py-24 overflow-hidden">
-                {/* Background glow */}
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(251,191,36,0.06),transparent)]" />
 
                 <div className="mx-auto max-w-6xl">
@@ -305,10 +380,27 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         <p className="mt-4 text-lg text-white/50 max-w-2xl mx-auto">
                             The world's first AI that creates personalized spiritual music — bhajans, mantras, healing frequencies — tuned to your soul.
                         </p>
+                        {/* Social proof stats */}
+                        <div className="mt-8 flex flex-wrap justify-center gap-6">
+                            {[
+                                { n: '1000+', label: 'Spiritual Tracks', icon: '🎵' },
+                                { n: 'Daily', label: 'New Creations', icon: '✨' },
+                                { n: 'YouTube', label: 'Ready to Publish', icon: '▶️' },
+                                { n: 'AI', label: 'Music Videos', icon: '🎬' },
+                            ].map(s => (
+                                <div key={s.label} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2">
+                                    <span className="text-lg">{s.icon}</span>
+                                    <div className="text-left">
+                                        <p className="text-sm font-bold text-amber-400">{s.n}</p>
+                                        <p className="text-[10px] text-white/40 uppercase tracking-wider">{s.label}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </motion.div>
 
                     {/* Feature grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                         {/* Left — big visual card */}
                         <motion.div
                             initial={{ opacity: 0, x: -30 }}
@@ -329,7 +421,8 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                                         '🎼 Bhajans, Mantras & Healing Frequencies',
                                         '🗣️ Vocals or Purely Instrumental',
                                         '🌐 Hindi, Sanskrit, English & 50+ Languages',
-                                        '🎬 AI Music Video Generation',
+                                        '🎬 AI Music Videos — ready for YouTube',
+                                        '📺 Publish directly to your YouTube channel',
                                     ].map(f => (
                                         <div key={f} className="flex items-center gap-3 text-white/70 text-sm">
                                             <div className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
@@ -354,8 +447,8 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             {[
                                 { icon: '🤖', title: 'AI Composer', desc: 'Voice-guided music creation in a natural conversation' },
                                 { icon: '📿', title: 'Sacred Sounds', desc: 'Solfeggio, 432Hz, binaural beats & Vedic scales' },
-                                { icon: '🎧', title: 'Instant Play', desc: 'Stream your curated spiritual playlist anytime' },
-                                { icon: '📱', title: 'Share & Distribute', desc: 'Share tracks and playlists with your community' },
+                                { icon: '▶️', title: 'YouTube Ready', desc: 'Publish your music & videos straight to your channel' },
+                                { icon: '🎬', title: 'AI Music Video', desc: 'Auto-generate a visual music video for your track' },
                             ].map((f, i) => (
                                 <motion.div
                                     key={f.title}
@@ -372,6 +465,9 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             ))}
                         </div>
                     </div>
+
+                    {/* Latest Community Creations */}
+                    <LatestTracks />
                 </div>
             </section>
 
