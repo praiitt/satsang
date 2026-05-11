@@ -122,6 +122,7 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
 function LatestTracks() {
     const [tracks, setTracks] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const { t } = useLanguage();
 
     useEffect(() => {
         fetch('/api/music/community-latest')
@@ -143,14 +144,14 @@ function LatestTracks() {
         >
             <div className="flex items-center justify-between mb-6">
                 <div>
-                    <h3 className="text-xl font-bold text-white">Latest Community Creations</h3>
-                    <p className="text-sm text-white/40 mt-0.5">समुदाय की नई रचनाएँ · New tracks added daily</p>
+                    <h3 className="text-xl font-bold text-white">{t('rraasHome.latestCreationsTitle')}</h3>
+                    <p className="text-sm text-white/40 mt-0.5">{t('rraasHome.latestCreationsSub')}</p>
                 </div>
                 <Link
                     href="/rraasi-music"
                     className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
                 >
-                    See all 1000+ →
+                    {t('rraasHome.latestCreationsSeeAll')}
                 </Link>
             </div>
 
@@ -283,7 +284,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-400 opacity-75" />
                             <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-500" />
                         </span>
-                        <span className="text-xs font-semibold uppercase tracking-widest text-amber-300">Your AI Spiritual Sanctuary</span>
+                        <span className="text-xs font-semibold uppercase tracking-widest text-amber-300">{t('rraasHome.heroLiveBadge')}</span>
                     </motion.div>
 
                     {/* Headline */}
@@ -293,9 +294,9 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         transition={{ delay: 0.5, duration: 0.8 }}
                         className="mb-4 text-5xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl"
                     >
-                        Healing Music,{' '}
+                        {t('rraasHome.heroHeadline1')}{' '}
                         <span className="bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400 bg-clip-text text-transparent">
-                            Made for Your Soul
+                            {t('rraasHome.heroHeadline2')}
                         </span>
                     </motion.h1>
 
@@ -305,8 +306,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         transition={{ delay: 0.65, duration: 0.8 }}
                         className="mb-10 max-w-2xl text-lg leading-relaxed text-white/60 sm:text-xl"
                     >
-                        Create personalised bhajans, healing frequencies & meditation music with AI — 
-                        then explore satsang, astrology and tarot on your journey inward.
+                        {t('rraasHome.heroSubtitle')}
                     </motion.p>
 
                     {/* Primary CTA — Music */}
@@ -323,7 +323,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
                                 <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                             </svg>
-                            Create Your Music
+                            {t('rraasHome.heroCta1')}
                             <span className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100 rounded-full" />
                         </Link>
 
@@ -334,7 +334,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-amber-400">
                                 <path d="M8 5v14l11-7z" />
                             </svg>
-                            Listen Free
+                            {t('rraasHome.heroCta2')}
                         </Link>
                     </motion.div>
 
@@ -348,9 +348,9 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         <WaveformBars />
                         <div className="flex gap-8 text-center">
                             {[
-                                { n: '1000+', label: 'Tracks Created' },
-                                { n: '50+', label: 'Languages' },
-                                { n: 'Daily', label: 'New Creations' },
+                                { n: '1000+', label: t('rraasHome.heroStat1') },
+                                { n: '50+',   label: t('rraasHome.heroStat2') },
+                                { n: t('rraasHome.heroStat3').split(' ')[0], label: t('rraasHome.heroStat3').split(' ').slice(1).join(' ') },
                             ].map(s => (
                                 <div key={s.label}>
                                     <p className="text-2xl font-bold text-amber-400">{s.n}</p>
@@ -399,22 +399,22 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         className="text-center mb-16"
                     >
                         <span className="mb-4 inline-block rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-amber-400">
-                            ✦ Featured · विशेष
+                            {t('rraasHome.musicSpotlightBadge')}
                         </span>
                         <h2 className="text-4xl font-extrabold text-white sm:text-5xl">
-                            RRAASI Music
+                            {t('rraasHome.musicSpotlightTitle')}
                         </h2>
-                        <p className="mt-1 text-base text-amber-400/60 font-medium">आपकी आत्मा के लिए संगीत</p>
+                        <p className="mt-1 text-base text-amber-400/60 font-medium">{t('rraasHome.musicSpotlightHindSub')}</p>
                         <p className="mt-4 text-lg text-white/50 max-w-2xl mx-auto">
-                            The world's first AI that creates personalized spiritual music — bhajans, mantras, trance &amp; healing frequencies — tuned to your soul.
+                            {t('rraasHome.musicSpotlightDesc')}
                         </p>
                         {/* Social proof stats */}
                         <div className="mt-8 flex flex-wrap justify-center gap-6">
                             {[
-                                { n: '1000+', label: 'Spiritual Tracks', icon: '🎵' },
-                                { n: 'Daily', label: 'New Creations', icon: '✨' },
-                                { n: 'YouTube', label: 'Ready to Publish', icon: '▶️' },
-                                { n: 'AI', label: 'Music Videos', icon: '🎬' },
+                                { n: t('rraasHome.musicSpotlightStat1N'), label: t('rraasHome.musicSpotlightStat1L'), icon: '🎵' },
+                                { n: t('rraasHome.musicSpotlightStat2N'), label: t('rraasHome.musicSpotlightStat2L'), icon: '✨' },
+                                { n: t('rraasHome.musicSpotlightStat3N'), label: t('rraasHome.musicSpotlightStat3L'), icon: '▶️' },
+                                { n: t('rraasHome.musicSpotlightStat4N'), label: t('rraasHome.musicSpotlightStat4L'), icon: '🎬' },
                             ].map(s => (
                                 <div key={s.label} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2">
                                     <span className="text-lg">{s.icon}</span>
@@ -440,17 +440,17 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.12),transparent)]" />
                             <div className="relative z-10">
                                 <div className="mb-6 text-6xl">🎵</div>
-                                <h3 className="mb-3 text-3xl font-bold text-white">Create in Seconds</h3>
+                                <h3 className="mb-3 text-3xl font-bold text-white">{t('rraasHome.musicCreateTitle')}</h3>
                                 <p className="mb-6 text-white/50 leading-relaxed">
-                                    Tell our AI what you feel — devotional, meditative, healing — and it crafts a sacred track just for you in under 2 minutes.
+                                    {t('rraasHome.musicCreateDesc')}
                                 </p>
                                 <div className="space-y-3 mb-8">
                                     {[
-                                        '🎼 Bhajans, Mantras & Healing Frequencies · भजन, मंत्र',
-                                        '🌀 Trance & Psychedelic Spiritual Music · ट्रांस संगीत',
-                                        '🗣️ Vocals or Purely Instrumental · गायन या वाद्य',
-                                        '🌐 Hindi, Sanskrit, English & 50+ Languages',
-                                        '🎬 AI Music Videos — publish to YouTube',
+                                        t('rraasHome.musicFeatureBhajan'),
+                                        t('rraasHome.musicFeatureTrance'),
+                                        t('rraasHome.musicFeatureVocals'),
+                                        t('rraasHome.musicFeatureLang'),
+                                        t('rraasHome.musicFeatureYT'),
                                     ].map(f => (
                                         <div key={f} className="flex items-center gap-3 text-white/70 text-sm">
                                             <div className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
@@ -462,7 +462,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                                     href="/login?returnUrl=/rraasi-music&service=music"
                                     className="inline-flex items-center gap-2 rounded-full bg-amber-500 hover:bg-amber-400 px-7 py-3 text-sm font-bold text-black transition-all hover:scale-105 shadow-[0_0_30px_rgba(251,191,36,0.4)]"
                                 >
-                                    Start Creating — Free
+                                    {t('rraasHome.musicCtaStart')}
                                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                                     </svg>
@@ -473,10 +473,10 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         {/* Right — feature tiles */}
                         <div className="grid grid-cols-2 gap-4">
                             {[
-                                { icon: '🤖', title: 'AI Composer · AI संगीतकार', desc: 'Voice-guided creation — just describe what you feel' },
-                                { icon: '🌀', title: 'Trance Music · ट्रांस', desc: 'Psychedelic trance & shamanic soundscapes for the soul' },
-                                { icon: '▶️', title: 'YouTube Ready', desc: 'Publish music & videos straight to your channel' },
-                                { icon: '🎬', title: 'AI Music Video', desc: 'Auto-generate a visual music video for every track' },
+                                { icon: '🤖', title: t('rraasHome.musicTile1Title'), desc: t('rraasHome.musicTile1Desc') },
+                                { icon: '🌀', title: t('rraasHome.musicTile2Title'), desc: t('rraasHome.musicTile2Desc') },
+                                { icon: '▶️', title: t('rraasHome.musicTile3Title'), desc: t('rraasHome.musicTile3Desc') },
+                                { icon: '🎬', title: t('rraasHome.musicTile4Title'), desc: t('rraasHome.musicTile4Desc') },
                             ].map((f, i) => (
                                 <motion.div
                                     key={f.title}
