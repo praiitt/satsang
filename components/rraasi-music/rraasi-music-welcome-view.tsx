@@ -444,6 +444,12 @@ export const RRaaSiMusicWelcomeView = ({
   const handleGenerateVideo = (trackId: string, trackDocId?: string) => {
     if (!user?.uid) return;
 
+    // Check coin balance (Fail-closed for 300 coins)
+    if (coinBalance !== null && coinBalance < 300) {
+      setShowBuyCoins(true);
+      return;
+    }
+
     const firestoreDocId = (trackDocId || trackId).split('?')[0];
     if (!firestoreDocId) {
       alert('Cannot generate video: Track ID missing');
