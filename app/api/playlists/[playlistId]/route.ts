@@ -1,25 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/auth-api';
 import { headers } from 'next/headers';
 import { getAdminDb } from '@/lib/firebase-admin';
+import { getCurrentUser } from '@/lib/auth-api';
 export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/playlists/[playlistId]
- * Get playlist details with all tracks populated
+ * Get playlist details with all tracks populated.
+ * Public curated playlists are accessible without auth.
  */
 export async function GET(
     request: NextRequest,
     { params }: { params: Promise<{ playlistId: string }> }
 ) {
     try {
-        const headerList = await headers();
-        const user = await getCurrentUser(headerList.get('cookie') || undefined);
-
-        if (!user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
         const db = getAdminDb();
         const { playlistId } = await params;
 
@@ -31,9 +25,19 @@ export async function GET(
 
         const playlistData = playlistDoc.data();
 
-        // Verify ownership
-        if (playlistData?.userId !== user.uid) {
-            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        // Public curated playlists are accessible to anyone (for share links)
+        const isPublicCurated = playlistData?.type === 'curated' && playlistData?.isPublic === true;
+
+        if (!isPublicCurated) {
+            // Private playlists require authentication
+            const headerList = await headers();
+            const user = await getCurrentUser(headerList.get('cookie') || undefined);
+            if (!user) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+            if (playlistData?.userId !== user.uid) {
+                return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+            }
         }
 
         // Fetch track details

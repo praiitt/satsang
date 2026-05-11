@@ -1104,6 +1104,18 @@ export const RRaaSiMusicWelcomeView = ({
                       <svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6 mr-2"><path d="M8 5v14l11-7z" /></svg>
                       Play All
                     </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const url = `${window.location.origin}/playlist/${selectedCuratedPlaylist.id}`;
+                        navigator.clipboard.writeText(url);
+                        toast.success('Playlist link copied to clipboard!');
+                      }}
+                      className="rounded-full border-amber-300 dark:border-amber-700/50 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 hover:bg-amber-100 dark:hover:bg-amber-900/40"
+                    >
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Share
+                    </Button>
                     <Button 
                       variant="outline" 
                       onClick={() => setSelectedCuratedPlaylist(null)}

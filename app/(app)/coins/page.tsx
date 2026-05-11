@@ -6,12 +6,14 @@ import { coinClient } from '@/lib/services/coinClient';
 import { Button } from '@/components/livekit/button';
 import { Coins, History, Sparkles, TrendingUp, Package } from 'lucide-react';
 import { UpgradeModal } from '@/components/ui/upgrade-modal';
+import BuyCoinsModal from '@/components/rraasi-music/buy-coins-modal';
 
 export default function CoinsPage() {
     const { balance, loading, refresh } = useCoinBalance();
     const [transactions, setTransactions] = useState<any[]>([]);
     const [features, setFeatures] = useState<any>(null);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [showBuyCoins, setShowBuyCoins] = useState(false);
     const [loadingTransactions, setLoadingTransactions] = useState(false);
     const [loadingFeatures, setLoadingFeatures] = useState(false);
 
@@ -65,7 +67,7 @@ export default function CoinsPage() {
                         </div>
                         <Button
                             variant="secondary"
-                            onClick={() => setShowUpgradeModal(true)}
+                            onClick={() => setShowBuyCoins(true)}
                             className="bg-white text-amber-600 hover:bg-amber-50"
                         >
                             <Sparkles className="h-4 w-4 mr-2" />
@@ -128,31 +130,43 @@ export default function CoinsPage() {
                             Recent Transactions
                         </h2>
                         <div className="space-y-3">
-                            {transactions.map((txn) => (
-                                <div
-                                    key={txn.id}
-                                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                                >
-                                    <div className="flex-1">
-                                        <p className="font-medium text-gray-900 dark:text-white">
-                                            {txn.description}
-                                        </p>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            {new Date(txn.timestamp).toLocaleDateString()} at{' '}
-                                            {new Date(txn.timestamp).toLocaleTimeString()}
-                                        </p>
-                                    </div>
+                            {transactions.map((txn) => {
+                                // Handle Firestore Timestamp objects serialization format ({ _seconds, _nanoseconds })
+                                let dateObj = new Date();
+                                if (txn.timestamp) {
+                                    if (txn.timestamp._seconds) {
+                                        dateObj = new Date(txn.timestamp._seconds * 1000);
+                                    } else {
+                                        dateObj = new Date(txn.timestamp);
+                                    }
+                                }
+                                
+                                return (
                                     <div
-                                        className={`text-lg font-semibold ${txn.type === 'spend'
-                                                ? 'text-red-600'
-                                                : 'text-green-600'
-                                            }`}
+                                        key={txn.id}
+                                        className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                                     >
-                                        {txn.type === 'spend' ? '-' : '+'}
-                                        {txn.amount}
+                                        <div className="flex-1">
+                                            <p className="font-medium text-gray-900 dark:text-white">
+                                                {txn.description}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {dateObj.toLocaleDateString()} at{' '}
+                                                {dateObj.toLocaleTimeString()}
+                                            </p>
+                                        </div>
+                                        <div
+                                            className={`text-lg font-semibold ${txn.type === 'spend'
+                                                    ? 'text-red-600'
+                                                    : 'text-green-600'
+                                                }`}
+                                        >
+                                            {txn.type === 'spend' ? '-' : '+'}
+                                            {txn.amount}
+                                        </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -203,10 +217,21 @@ export default function CoinsPage() {
                 )}
             </div>
 
-            {/* Upgrade Modal */}
+            {/* Upgrade Modal (subscription plans) */}
             <UpgradeModal
                 isOpen={showUpgradeModal}
                 onClose={() => setShowUpgradeModal(false)}
+            />
+
+            {/* Buy Coins Modal (one-time packs) */}
+            <BuyCoinsModal
+                isOpen={showBuyCoins}
+                onClose={() => setShowBuyCoins(false)}
+                currentBalance={balance?.totalCoins ?? 0}
+                onCoinsAdded={() => {
+                    setShowBuyCoins(false);
+                    refresh();
+                }}
             />
         </div>
     );

@@ -22,6 +22,7 @@ import {
 import { Button } from '@/components/livekit/button';
 import { LogoutButton } from '@/components/auth/logout-button';
 import { RecordingsModal } from '@/components/app/recordings-modal';
+import { coinClient } from '@/lib/services/coinClient';
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -31,6 +32,23 @@ export default function ProfilePage() {
     const [user, setUser] = useState<any>(null);
     const [copied, setCopied] = useState(false);
     const [showRecordings, setShowRecordings] = useState(false);
+    const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+    const [loadingTransactions, setLoadingTransactions] = useState(false);
+
+    useEffect(() => {
+        const loadTransactions = async () => {
+            setLoadingTransactions(true);
+            const result = await coinClient.getTransactions(5); // latest 5
+            if (result.success && result.transactions) {
+                setRecentTransactions(result.transactions);
+            }
+            setLoadingTransactions(false);
+        };
+        
+        if (user) {
+            loadTransactions();
+        }
+    }, [user]);
 
     useEffect(() => {
         const auth = getFirebaseAuth();
@@ -266,7 +284,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Account Statistics */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
                         <TrendingUp className="h-5 w-5 text-amber-600" />
                         {t('profile.accountStats')}
@@ -289,6 +307,56 @@ export default function ProfilePage() {
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{t('profile.lifetimeValue')}</p>
                         </div>
                     </div>
+                </div>
+
+                {/* Recent Coin Transactions */}
+                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Coins className="h-5 w-5 text-amber-600" />
+                            Recent Coin Transactions
+                        </h2>
+                        <Button variant="secondary" size="sm" onClick={() => router.push('/coins')}>
+                            View All
+                        </Button>
+                    </div>
+                    
+                    {loadingTransactions ? (
+                        <div className="text-center py-4 text-gray-500">Loading transactions...</div>
+                    ) : recentTransactions.length > 0 ? (
+                        <div className="space-y-3">
+                            {recentTransactions.map((txn) => {
+                                let dateObj = new Date();
+                                if (txn.timestamp) {
+                                    if (txn.timestamp._seconds) {
+                                        dateObj = new Date(txn.timestamp._seconds * 1000);
+                                    } else {
+                                        dateObj = new Date(txn.timestamp);
+                                    }
+                                }
+                                
+                                return (
+                                    <div key={txn.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                        <div className="flex-1">
+                                            <p className="font-medium text-gray-900 dark:text-white text-sm">
+                                                {txn.description}
+                                            </p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {dateObj.toLocaleDateString()} at {dateObj.toLocaleTimeString()}
+                                            </p>
+                                        </div>
+                                        <div className={`text-sm font-bold ${txn.type === 'spend' ? 'text-red-600' : 'text-green-600'}`}>
+                                            {txn.type === 'spend' ? '-' : '+'}{txn.amount}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="text-center py-4 text-gray-500 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                            No recent coin transactions.
+                        </div>
+                    )}
                 </div>
 
                 {/* Logout Section - Less Prominent */}
