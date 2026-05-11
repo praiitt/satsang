@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { type Transition, type Variants, motion } from 'motion/react';
 import type { AppConfig } from '@/app-config';
 import { AgentChatTranscript } from '@/components/agents-ui/agent-chat-transcript';
@@ -127,15 +127,30 @@ export const SessionView = ({
     // MusicPlayerProvider not in tree — data channel playback disabled
   }
 
+  // Use a ref to avoid stale closure in useDataChannel callback
+  const setShowBuyCoinsRef = useRef(setShowBuyCoins);
+  setShowBuyCoinsRef.current = setShowBuyCoins;
+  const playTrackRef = useRef(playTrack);
+  playTrackRef.current = playTrack;
+
+  // Also listen for window-level event as fallback (e.g. fired from other components)
+  useEffect(() => {
+    const handler = () => setShowBuyCoinsRef.current(true);
+    window.addEventListener('rraasi-show-add-coins', handler);
+    return () => window.removeEventListener('rraasi-show-add-coins', handler);
+  }, []);
+
   // Listen for data messages from the music agent
-  useDataChannel((msg) => {
+  // Use useCallback with no deps so the function identity is stable,
+  // but access latest state via refs.
+  const onDataMessage = useCallback((msg: any) => {
     try {
       const payload = JSON.parse(new TextDecoder().decode(msg.payload));
 
       // Play a track when agent sends audio_url
-      if (payload.audio_url && playTrack) {
+      if (payload.audio_url && playTrackRef.current) {
         console.log('[SessionView] 🎵 Agent requested playback:', payload);
-        playTrack({
+        playTrackRef.current({
           id: payload.audio_url,
           title: payload.name || payload.title || 'RRAASI Music',
           audioUrl: payload.audio_url,
@@ -146,13 +161,17 @@ export const SessionView = ({
 
       // Show buy-coins modal when agent asks for it
       if (payload.type === 'show_add_coins') {
-        console.log('[SessionView] 💰 Agent requested Add Coins UI');
-        setShowBuyCoins(true);
+        console.log('[SessionView] 💰 Agent requested Add Coins UI — showing modal');
+        setShowBuyCoinsRef.current(true);
+        // Also fire a window event so any other component can react
+        window.dispatchEvent(new CustomEvent('rraasi-show-add-coins'));
       }
     } catch {
       // Not JSON — ignore
     }
-  });
+  }, []);
+
+  useDataChannel(onDataMessage);
 
   useEffect(() => {
     const lastMessage = messages.at(-1);
