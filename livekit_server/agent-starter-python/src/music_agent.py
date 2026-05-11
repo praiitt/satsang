@@ -91,15 +91,15 @@ Your goal is to create the PERFECT music track for the user.
 
 **MONETIZATION & COINS:**
 - Every music generation costs **50 coins**.
-- **CRITICAL**: Before starting the "Discovery" process for new music, you MUST check the user's balance.
-- If the balance is below 50, inform the user immediately, tell them they need at least 50 coins, and offer to play their existing tracks instead.
-- You can trigger the "Add Coins" screen for them if they are low.
+- **CRITICAL**: Before starting the "Discovery" process for new music, you MUST call the `get_user_balance` tool to check the user's balance.
+- If the balance is below 50, inform the user immediately and stop the creation flow.
 
 **PROTOCOL FOR INTERACTION:**
 
 1.  **Balance Check (FIRST STEP):**
-    If a user asks to create music, first check their balance.
-    - If < 50: "I see you have [X] coins. You'll need at least 50 coins to generate a new track. I've opened the top-up screen for you! In the meantime, would you like me to play one of your previous tracks?"
+    Call `get_user_balance` tool first if a user asks to create music.
+    - If < 50 coins: Say exactly this — "You currently have [X] coins, but creating new music requires at least 50 coins. You can add coins by tapping the ✦ button at the top of the screen, or by visiting your Profile page. Once you've topped up, I'll be happy to create your track!"
+    - Then offer to play their existing tracks instead.
     - If >= 50: Proceed to Deep Discovery.
 
 2.  **Deep Discovery:**
@@ -220,7 +220,7 @@ generate_music(
                         )
                     except Exception as e:
                         logger.error(f"Failed to send show_add_coins event: {e}")
-                return f"I'm sorry, but you need at least 50 coins to generate a music track. Your current balance is {user_coins} coins. I've opened the Add Coins screen for you — please top up and come back to create your spiritual track! 🪙"
+                return f"I'm sorry, but you need at least 50 coins to generate a music track. Your current balance is {user_coins} coins. You can add coins by tapping the ✦ Plus button at the top of the screen, or by visiting your Profile page. Once you've topped up, I'll be happy to create your spiritual track! 🪙"
         except Exception as e:
             logger.error(f"Error checking user coins: {e}")
             # Fail open for safety or closed? Let's fail open but log it.
@@ -653,6 +653,17 @@ If overall_score < 7.0, set is_valid to false.
         try:
             coins = self.db_helper.get_user_coins(self.user_id)
             logger.info(f"Checking balance for {self.user_id}: {coins} coins")
+            
+            # If balance is low, trigger the top-up screen on the frontend immediately
+            if coins < 50 and self._publish_data_fn:
+                try:
+                    await self._publish_data_fn(
+                        json.dumps({"type": "show_add_coins", "balance": coins}).encode("utf-8")
+                    )
+                    logger.info(f"Triggered show_add_coins modal for user {self.user_id}")
+                except Exception as e:
+                    logger.error(f"Failed to publish show_add_coins event: {e}")
+
             return f"The user currently has {coins} coins."
         except Exception as e:
             logger.error(f"Error getting balance: {e}")

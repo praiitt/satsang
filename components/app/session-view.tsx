@@ -145,7 +145,10 @@ export const SessionView = ({
   // but access latest state via refs.
   const onDataMessage = useCallback((msg: any) => {
     try {
-      const payload = JSON.parse(new TextDecoder().decode(msg.payload));
+      const raw = new TextDecoder().decode(msg.payload);
+      console.log('[SessionView] 📡 Raw data channel message:', raw);
+      const payload = JSON.parse(raw);
+      console.log('[SessionView] 📡 Parsed payload:', payload);
 
       // Play a track when agent sends audio_url
       if (payload.audio_url && playTrackRef.current) {
@@ -161,7 +164,7 @@ export const SessionView = ({
 
       // Show buy-coins modal when agent asks for it
       if (payload.type === 'show_add_coins') {
-        console.log('[SessionView] 💰 Agent requested Add Coins UI — showing modal');
+        console.log('[SessionView] 💰 Agent requested Add Coins UI — showing modal NOW');
         setShowBuyCoinsRef.current(true);
         // Also fire a window event so any other component can react
         window.dispatchEvent(new CustomEvent('rraasi-show-add-coins'));
