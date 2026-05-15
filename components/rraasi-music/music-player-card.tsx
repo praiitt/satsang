@@ -323,6 +323,7 @@ export function MusicPlayerCard({
                             const lyricsContent = lyrics
                                 || (typeof metadata === 'object' && metadata?.lyrics)
                                 || (typeof metadata === 'object' && metadata?.prompt)
+                                || prompt  // top-level prompt often contains lyrics
                                 || null;
 
                             if (!lyricsContent || (typeof lyricsContent === 'string' && lyricsContent.trim() === '')) {
