@@ -319,7 +319,21 @@ export function MusicPlayerCard({
                         )}
                         {/* Language / Instrumental badge */}
                         {(() => {
-                            // Check all possible places where lyrics could be stored
+                            // private_satsang tracks always have lyrics — detect language from title
+                            if (source === 'private_satsang') {
+                                const hasDevanagariTitle = /[\u0900-\u097F]/.test(title || '');
+                                return hasDevanagariTitle ? (
+                                    <span className="rounded-full bg-orange-500/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm text-orange-100 flex items-center gap-1">
+                                        🇮🇳 Hindi
+                                    </span>
+                                ) : (
+                                    <span className="rounded-full bg-indigo-500/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm text-indigo-100 flex items-center gap-1">
+                                        🇬🇧 English
+                                    </span>
+                                );
+                            }
+
+                            // For all other tracks: check all possible places where lyrics could be stored
                             const lyricsContent = lyrics
                                 || (typeof metadata === 'object' && metadata?.lyrics)
                                 || (typeof metadata === 'object' && metadata?.prompt)
