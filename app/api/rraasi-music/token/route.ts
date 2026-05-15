@@ -9,6 +9,7 @@ type RRaaSiMusicTokenRequest = {
     userId?: string;
     language?: string;
     intention?: string;
+    resumeSessionId?: string;
 };
 
 type RRaaSiMusicTokenResponse = {
@@ -40,6 +41,7 @@ export async function POST(req: Request) {
         const agentName = (body.agentName || DEFAULT_AGENT_NAME).trim();
         const userId = body.userId || 'default_user';
         const intention = body.intention;
+        const resumeSessionId = body.resumeSessionId;
 
         // Check header first (more reliable for some proxies), then body, then default
         const language = req.headers.get('X-Language') || body.language || 'hi';
@@ -49,7 +51,7 @@ export async function POST(req: Request) {
         }
 
         console.log(
-            `[RRAASI Music Token] Generating token for ${participantName} (${role}, userId: ${userId}, language: ${language}, intention: ${intention}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
+            `[RRAASI Music Token] Generating token for ${participantName} (${role}, userId: ${userId}, language: ${language}, intention: ${intention}, resume: ${resumeSessionId}) to join room: ${RRAASI_MUSIC_ROOM_NAME} with agent "${agentName}"`
         );
 
         // Generate a unique room name for this session to ensure 1:1 interaction with the agent
@@ -67,7 +69,8 @@ export async function POST(req: Request) {
             agentName,
             userId,
             language,
-            intention
+            intention,
+            resumeSessionId
         );
 
         const data: RRaaSiMusicTokenResponse & { metadata: string } = {
@@ -76,7 +79,7 @@ export async function POST(req: Request) {
             participantToken,
             participantName,
             agentName,
-            metadata: JSON.stringify({ userId, language, intention }) // Echo metadata for debugging
+            metadata: JSON.stringify({ userId, language, intention, resumeSessionId }) // Echo metadata for debugging
         };
 
         console.log(
@@ -101,12 +104,16 @@ function createParticipantToken(
     agentName: string,
     userId: string,
     language: string,
-    intention?: string
+    intention?: string,
+    resumeSessionId?: string
 ): Promise<string> {
-    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}, language: ${language}, intention: ${intention}`);
+    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}, language: ${language}, intention: ${intention}, resume: ${resumeSessionId}`);
 
-    console.log(`[Token Creation] Metadata Object:`, { userId, language, intention });
-    const metadataStr = JSON.stringify({ userId, language, intention });
+    const metadataObj: Record<string, string | undefined> = { userId, language };
+    if (intention) metadataObj.intention = intention;
+    if (resumeSessionId) metadataObj.resumeSessionId = resumeSessionId;
+
+    const metadataStr = JSON.stringify(metadataObj);
     console.log(`[Token Creation] Metadata String:`, metadataStr);
 
     const at = new AccessToken(API_KEY!, API_SECRET!, {

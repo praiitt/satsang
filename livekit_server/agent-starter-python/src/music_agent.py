@@ -1003,6 +1003,31 @@ async def entrypoint(ctx: JobContext):
     
     # Now that we're connected, set the publish function
     assistant._publish_data_fn = ctx.room.local_participant.publish_data
+
+    # Send history to frontend chat box so user can see it
+    if resume_session_id and past_transcript:
+        history_text = "📜 **Previous Conversation Log:**\n\n"
+        for msg in past_transcript:
+            role_name = "You" if msg.get("role") == "user" else "Agent"
+            history_text += f"**{role_name}**: {msg.get('content')}\n\n"
+            
+        async def send_history_to_ui():
+            await asyncio.sleep(2)  # Wait for UI to subscribe to data channel
+            import uuid, time, json
+            payload = {
+                "id": str(uuid.uuid4()),
+                "message": history_text.strip(),
+                "timestamp": int(time.time() * 1000)
+            }
+            try:
+                await assistant._publish_data_fn(
+                    json.dumps(payload).encode("utf-8"),
+                    topic="lk-chat-topic"
+                )
+            except Exception as e:
+                logger.error(f"Failed to publish history to UI: {e}")
+                
+        asyncio.create_task(send_history_to_ui())
     
     # Handle chat messages from the frontend
     from livekit import rtc
