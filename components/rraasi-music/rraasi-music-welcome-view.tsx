@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/language-context';
 import { musicTranslations } from '@/lib/translations/music';
 import { MusicCategoryTabs, type MusicCategory } from '@/components/rraasi-music/music-category-tabs';
 import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
-import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw, Heart, Upload, Globe, Lock, Coins, Share2 } from 'lucide-react';
+import { Music, Plus, Headphones, Shuffle, Mic, Sparkles, ShieldCheck, ChevronLeft, History, RefreshCw, Heart, Upload, Globe, Lock, Coins, Share2, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getFirebaseAuth } from '@/lib/firebase-client';
 import Link from 'next/link';
@@ -18,8 +18,10 @@ import { PlaylistList } from './playlist-list';
 import { SearchBar } from './search-bar';
 import { PlaylistQuickAccess } from './playlist-quick-access';
 import { RecordingsModal } from '@/components/app/recordings-modal';
+import { RecentChatsModal } from '@/components/app/recent-chats-modal';
 import { useFavorites } from '@/hooks/use-favorites';
 import BuyCoinsModal from '@/components/rraasi-music/buy-coins-modal';
+import { PromptWizardModal } from './prompt-wizard-modal';
 
 function MusicIcon() {
   return (
@@ -112,6 +114,8 @@ export const RRaaSiMusicWelcomeView = ({
 
   // Recordings Modal State
   const [showRecordings, setShowRecordings] = useState(false);
+  const [showRecentChats, setShowRecentChats] = useState(false);
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
 
   // Coin Balance State
   const [coinBalance, setCoinBalance] = useState<number | null>(null);
@@ -855,6 +859,7 @@ export const RRaaSiMusicWelcomeView = ({
 
   return (
     <div ref={ref} className="w-full pb-24">
+      <PromptWizardModal isOpen={isWizardOpen} onClose={() => setIsWizardOpen(false)} onStartCall={onStartCall} />
       {/* Hero Section with Rraasi Video */}
       <section className="relative flex min-h-[85vh] flex-col items-center justify-end px-4 pt-24 pb-6 text-center overflow-hidden">
         {/* Rraasi Video Background */}
@@ -918,7 +923,7 @@ export const RRaaSiMusicWelcomeView = ({
             <Button
               variant="primary"
               size="lg"
-              onClick={() => onStartCall({ intention: intentionParam || 'create_music' })}
+              onClick={() => setIsWizardOpen(true)}
               disabled={authLoading}
               className="h-14 px-8 text-lg font-semibold shadow-xl hover:scale-105 transition-transform bg-gradient-to-r from-amber-500 to-amber-600 border-none"
             >
@@ -1293,6 +1298,17 @@ export const RRaaSiMusicWelcomeView = ({
                 <span className="hidden sm:inline ml-1.5">Recordings</span>
               </Button>
 
+              {/* Recent Chats */}
+              <Button
+                variant="dotted"
+                onClick={() => setShowRecentChats(true)}
+                className="text-amber-500 border-amber-500/20 hover:bg-amber-500/10 shrink-0"
+                title="Recent Chats"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span className="hidden sm:inline ml-1.5">Recent Chats</span>
+              </Button>
+
               {/* Shuffle All — hidden on small screens */}
               {myTracks.length > 5 && (
                 <Button
@@ -1370,7 +1386,7 @@ export const RRaaSiMusicWelcomeView = ({
             ) : myTracks.length === 0 ? (
               <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
                 <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">You haven't created any tracks yet. Let's make something beautiful together!</p>
-                <Button onClick={onStartCall} variant="outline" size="lg" className="border-amber-500 text-amber-600 hover:bg-amber-50">
+                <Button onClick={() => setIsWizardOpen(true)} variant="outline" size="lg" className="border-amber-500 text-amber-600 hover:bg-amber-50">
                   <Plus className="w-5 h-5 mr-2" />
                   Create Your First Spiritual Track
                 </Button>
@@ -1637,7 +1653,7 @@ export const RRaaSiMusicWelcomeView = ({
               <p className="text-gray-500 dark:text-gray-500 mb-6">
                 {mt('browse.createFirst')}
               </p>
-              <Button onClick={onStartCall} variant="primary" disabled={authLoading}>
+              <Button onClick={() => setIsWizardOpen(true)} variant="primary" disabled={authLoading}>
                 <Plus className="w-5 h-5 mr-2" />
                 {mt('startButton')}
               </Button>
@@ -1784,6 +1800,11 @@ export const RRaaSiMusicWelcomeView = ({
         onClose={() => setShowRecordings(false)}
       />
 
+      <RecentChatsModal
+        isOpen={showRecentChats}
+        onClose={() => setShowRecentChats(false)}
+      />
+
       {/* Buy Coins Modal */}
       <BuyCoinsModal
         isOpen={showBuyCoins}
@@ -1797,7 +1818,7 @@ export const RRaaSiMusicWelcomeView = ({
 
       {/* Floating Create Button (Mobile) */}
       <button
-        onClick={() => onStartCall({ intention: intentionParam || 'create_music' })}
+        onClick={() => setIsWizardOpen(true)}
         disabled={authLoading}
         className="fixed bottom-6 right-6 md:hidden w-14 h-14 bg-gradient-to-r from-amber-500 to-orange-600 rounded-full shadow-lg flex items-center justify-center text-white hover:shadow-xl transition-all duration-200 z-50 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Create music - 50 coins"

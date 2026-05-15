@@ -40,6 +40,47 @@ router.get('/history', async (req: Request, res: Response) => {
     }
 });
 
+// GET /chat/transcripts?userId=...&agentName=...&limit=20
+router.get('/transcripts', async (req: Request, res: Response) => {
+    try {
+        const { userId, agentName, limit = '20' } = (req.query || {}) as any;
+
+        if (!userId) {
+            res.status(400).json({ error: 'Missing userId' });
+            return;
+        }
+
+        const db = getDb();
+        let query = db.collection('session_transcripts')
+            .where('userId', '==', userId);
+
+        if (agentName) {
+            query = query.where('agentName', '==', agentName);
+        }
+
+        const snapshot = await query
+            .orderBy('createdAt', 'desc')
+            .limit(Number(limit))
+            .get();
+
+        const transcripts = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+                id: doc.id,
+                ...data,
+                // Ensure date format is serializable
+                createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : data.createdAt
+            };
+        });
+
+        res.json({ transcripts });
+    } catch (error) {
+        console.error('[Session Transcripts] Error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+
 // GET /chat/recordings?userId=...&limit=10
 router.get('/recordings', async (req: Request, res: Response) => {
     try {

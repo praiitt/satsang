@@ -260,3 +260,24 @@ class FirebaseDB:
             logger.error(f"❌ Failed to get last transcript: {e}")
             return []
 
+    def get_transcript_by_id(self, room_name: str) -> list:
+        """
+        Retrieve the transcript messages from a specific session by its room name.
+        """
+        if not self.db or not room_name:
+            return []
+        try:
+            doc_ref = self.db.collection("session_transcripts").document(room_name)
+            doc = doc_ref.get()
+            if doc.exists:
+                data = doc.to_dict()
+                raw = data.get("transcript", [])
+                return [
+                    {"role": m.get("role", "user"), "content": m.get("content", "")}
+                    for m in raw
+                    if m.get("content")
+                ]
+            return []
+        except Exception as e:
+            logger.error(f"❌ Failed to get transcript by id: {e}")
+            return []

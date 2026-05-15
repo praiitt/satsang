@@ -764,6 +764,7 @@ async def entrypoint(ctx: JobContext):
 
     # 2. Try Metadata Extraction (Independent Block)
     user_intention = None
+    resume_session_id = None
     
     if participant:
         try:
@@ -781,12 +782,14 @@ async def entrypoint(ctx: JobContext):
                 u_id = "default_user"
                 lang = "hi"
                 intention = None
+                resume_session_id = None
                 if metadata_str:
                     try:
                         data = json.loads(metadata_str)
                         # Try multiple keys for userId
                         u_id = data.get("userId") or data.get("uid") or data.get("user_id") or "default_user"
                         intention = data.get("intention")
+                        resume_session_id = data.get("resumeSessionId")
                         lang_raw = str(data.get("language", "")).strip().lower()
                         if lang_raw in ["hi", "hindi", "hin"]:
                             lang = "hi"
@@ -796,12 +799,12 @@ async def entrypoint(ctx: JobContext):
                             lang = lang_raw if lang_raw else "hi"
                     except Exception as e:
                         logger.error(f"Failed to parse metadata: {e}")
-                return u_id, lang, intention
+                return u_id, lang, intention, resume_session_id
 
             if participant.metadata:
                 logger.info(f"🔍 RAW METADATA RECEIVED: {participant.metadata}")
-                user_id, user_language, user_intention = extract_user_info(participant.metadata)
-                logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}, intention: {user_intention}")
+                user_id, user_language, user_intention, resume_session_id = extract_user_info(participant.metadata)
+                logger.info(f"📝 Detected participant metadata - userId: {user_id}, language: {user_language}, intention: {user_intention}, resumeSessionId: {resume_session_id}")
             else:
                 logger.warning("No metadata found for participant")
                 
@@ -965,6 +968,35 @@ async def entrypoint(ctx: JobContext):
     )
     
     session.agent = assistant
+    
+    if resume_session_id:
+        logger.info(f"🔄 Resuming session context from room: {resume_session_id}")
+        db_instance = FirebaseDB()
+        past_transcript = db_instance.get_transcript_by_id(resume_session_id)
+        if past_transcript and hasattr(session, 'history'):
+            logger.info(f"Adding {len(past_transcript)} past messages to session history")
+            for msg in past_transcript:
+                # Add context. We only append 'user' and 'assistant' roles from the past
+                if hasattr(session.history, 'append'):
+                    session.history.append(msg)
+                elif hasattr(session.history, 'items'):
+                    # It's a ChatContext
+                    role = msg.get("role", "user")
+                    content = msg.get("content", "")
+                    if content and role in ["user", "assistant", "system"]:
+                        session.history.append(role=role, text=content) if hasattr(session.history, 'append') else None
+                        # Using raw append if add_message is tricky with Enums.
+                        # Wait, ChatContext in livekit agents is just appended to items
+                        # or using append method? 
+                        if hasattr(session.history, 'append'):
+                            pass # handled above
+                        elif hasattr(session.history, 'messages'):
+                            # older versions
+                            from livekit.agents.llm import ChatMessage
+                            session.history.messages.append(ChatMessage(role=role, text=content))
+                        elif hasattr(session.history, 'add_message'):
+                            # newer version
+                            session.history.add_message(role=role, content=content)
     
     # Start the session (this connects to the room)
     await session.start(assistant, room=ctx.room)
