@@ -319,15 +319,22 @@ export function MusicPlayerCard({
                         )}
                         {/* Language / Instrumental badge */}
                         {(() => {
-                            if (!lyrics || lyrics.trim() === '') {
+                            // Check all possible places where lyrics could be stored
+                            const lyricsContent = lyrics
+                                || (typeof metadata === 'object' && metadata?.lyrics)
+                                || (typeof metadata === 'object' && metadata?.prompt)
+                                || null;
+
+                            if (!lyricsContent || (typeof lyricsContent === 'string' && lyricsContent.trim() === '')) {
                                 return (
                                     <span className="rounded-full bg-blue-500/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm text-blue-100 flex items-center gap-1">
                                         🎵 Instrumental
                                     </span>
                                 );
                             }
+                            const lyricsStr = String(lyricsContent);
                             // Detect Hindi by checking for Devanagari unicode range
-                            const hasDevanagari = /[\u0900-\u097F]/.test(lyrics);
+                            const hasDevanagari = /[\u0900-\u097F]/.test(lyricsStr);
                             if (hasDevanagari) {
                                 return (
                                     <span className="rounded-full bg-orange-500/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm text-orange-100 flex items-center gap-1">
