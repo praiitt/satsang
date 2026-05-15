@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Play, Pause, BarChart3, Download, Video, Info, Globe, Lock, Heart } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { Play, Pause, Download, Video, Trash2, ArrowDownToLine, RefreshCw, Maximize2, VolumeX, Volume2, Info, Globe, Lock, Heart } from 'lucide-react';
 import { VideoPlayerModal } from './video-player-modal';
 import { MusicInfoModal } from './music-info-modal';
 import { useMusicPlayer, MusicTrack } from '@/contexts/music-player-context';
@@ -24,6 +24,9 @@ interface MusicPlayerCardProps {
     status?: string; // New prop
     onSync?: () => void; // New prop
     onGenerateVideo?: () => void; // New prop
+    onDeleteVideo?: () => void; // Delete video prop
+    onDownloadVideo?: () => void; // Download video prop
+    onRefreshVideo?: () => void; // Check if video is ready
     isSyncing?: boolean; // New prop
     metadata?: any; // Track metadata including tags
     onDownload?: () => void; // New prop
@@ -80,12 +83,42 @@ export function MusicPlayerCard({
     isFavorite = false,
     onToggleFavorite,
     source,
+    onDeleteVideo,
+    onDownloadVideo,
+    onRefreshVideo,
 }: MusicPlayerCardProps) {
-    // ... existing hooks ...
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
     const { profile } = useUserProfile();
     const [showVideoModal, setShowVideoModal] = useState(false);
     const [showInfoModal, setShowInfoModal] = useState(false);
+    const [videoMuted, setVideoMuted] = useState(true);
+    const inlineVideoRef = useRef<HTMLVideoElement>(null);
+
+    const handleCardMouseEnter = () => {
+        if (videoUrl && !isPending && !selectionMode && inlineVideoRef.current) {
+            inlineVideoRef.current.currentTime = 0;
+            inlineVideoRef.current.muted = true;
+            inlineVideoRef.current.play().catch(() => {});
+        }
+    };
+
+    const handleCardMouseLeave = () => {
+        if (inlineVideoRef.current) {
+            inlineVideoRef.current.pause();
+            inlineVideoRef.current.currentTime = 0;
+            inlineVideoRef.current.muted = true;
+            setVideoMuted(true);
+        }
+    };
+
+    const toggleInlineVideoMute = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (inlineVideoRef.current) {
+            const newMuted = !videoMuted;
+            inlineVideoRef.current.muted = newMuted;
+            setVideoMuted(newMuted);
+        }
+    };
 
     // ... existing logic ...
 
@@ -189,29 +222,41 @@ export function MusicPlayerCard({
                 </div>
             )}
 
-            {/* Background Image with Overlay - Isolate overflow here */}
+            {/* Background: static image + inline video on hover */}
             <div className="absolute inset-0 z-0 h-full w-full overflow-hidden rounded-2xl">
+                {/* Inline Video — auto-plays muted when videoUrl exists */}
+                {videoUrl && (
+                    <video
+                        ref={inlineVideoRef}
+                        src={videoUrl}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="auto"
+                        className="absolute inset-0 z-[2] h-full w-full object-cover"
+                    />
+                )}
+
                 {imageUrl ? (
                     <img
                         src={imageUrl}
                         alt={displayTitle}
                         className={cn(
-                            "h-full w-full object-cover transition-transform duration-700 group-hover:scale-110",
+                            "h-full w-full object-cover transition-all duration-700",
+                            // Hide static image when video is playing
+                            videoUrl ? "opacity-0" : "group-hover:scale-110",
                             isPending && "grayscale blur-sm opacity-50"
                         )}
-                        onError={(e) => {
-                            // Hide broken image and show gradient fallback
-                            e.currentTarget.style.display = 'none';
-                        }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
                     />
                 ) : null}
 
-                {/* Bold Vibrant Gradient Fallback - always present but hidden if image loads */}
+                {/* Gradient fallback */}
                 <div
                     className={cn(
                         "absolute inset-0 h-full w-full",
-                        imageUrl && "opacity-0 group-hover:opacity-100 transition-opacity",
-                        // Random bold gradients based on title hash
+                        imageUrl && "opacity-0 group-hover:opacity-0 transition-opacity",
                         (() => {
                             const gradients = [
                                 "bg-gradient-to-br from-purple-600 via-pink-600 to-red-600",
@@ -229,7 +274,7 @@ export function MusicPlayerCard({
                     )}
                 />
 
-                {/* Gradient Overlay for Text Readability */}
+                {/* Gradient overlay for text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
             </div>
 
@@ -272,6 +317,30 @@ export function MusicPlayerCard({
                                 🕉️ Satsang
                             </span>
                         )}
+                        {/* Language / Instrumental badge */}
+                        {(() => {
+                            if (!lyrics || lyrics.trim() === '') {
+                                return (
+                                    <span className="rounded-full bg-blue-500/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm text-blue-100 flex items-center gap-1">
+                                        🎵 Instrumental
+                                    </span>
+                                );
+                            }
+                            // Detect Hindi by checking for Devanagari unicode range
+                            const hasDevanagari = /[\u0900-\u097F]/.test(lyrics);
+                            if (hasDevanagari) {
+                                return (
+                                    <span className="rounded-full bg-orange-500/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm text-orange-100 flex items-center gap-1">
+                                        🇮🇳 Hindi
+                                    </span>
+                                );
+                            }
+                            return (
+                                <span className="rounded-full bg-indigo-500/40 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm text-indigo-100 flex items-center gap-1">
+                                    🇬🇧 English
+                                </span>
+                            );
+                        })()}
                     </div>
                     {isActuallyPlaying && (
                         <div className="flex gap-0.5 items-end h-4 absolute left-1/2 -translate-x-1/2 bottom-1">
@@ -425,19 +494,47 @@ export function MusicPlayerCard({
                 description={description}
             />
 
-            {/* Video Action Button (Overlay helper) */}
+            {/* Video controls: always visible when videoUrl exists */}
             {videoUrl && !isPending && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 animate-in fade-in zoom-in duration-300">
+                <div className="absolute top-3 right-3 z-40 flex items-center gap-1.5">
+                    {/* Mute/unmute */}
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            setShowVideoModal(true);
-                        }}
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white border border-white/20 transition-all hover:scale-105 shadow-xl group/vid"
+                        onClick={toggleInlineVideoMute}
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white border border-white/20 transition-all hover:scale-105"
+                        title={videoMuted ? 'Unmute' : 'Mute'}
                     >
-                        <Video className="w-4 h-4 text-amber-400 group-hover/vid:text-amber-300" />
-                        <span className="text-[11px] font-bold tracking-wide uppercase">Watch Video</span>
+                        {videoMuted
+                            ? <VolumeX className="w-3.5 h-3.5" />
+                            : <Volume2 className="w-3.5 h-3.5 text-amber-400" />}
                     </button>
+                    {/* Expand to fullscreen */}
+                    <button
+                        onClick={(e) => { e.stopPropagation(); setShowVideoModal(true); }}
+                        className="flex items-center justify-center w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md text-white border border-white/20 transition-all hover:scale-105"
+                        title="Watch full video"
+                    >
+                        <Maximize2 className="w-3.5 h-3.5" />
+                    </button>
+                    {/* Download */}
+                    {onDownloadVideo && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDownloadVideo(); }}
+                            className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500/60 hover:bg-blue-500/90 backdrop-blur-md text-white border border-blue-400/30 transition-all hover:scale-105"
+                            title="Download video"
+                        >
+                            <ArrowDownToLine className="w-3.5 h-3.5" />
+                        </button>
+                    )}
+                    {/* Delete */}
+                    {onDeleteVideo && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onDeleteVideo(); }}
+                            className="flex items-center justify-center w-8 h-8 rounded-full bg-red-500/60 hover:bg-red-500/90 backdrop-blur-md text-white border border-red-400/30 transition-all hover:scale-105"
+                            title="Delete video"
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -458,15 +555,34 @@ export function MusicPlayerCard({
                 </div>
             )}
 
-            {/* Video Generating Indicator */}
-            {videoStatus === 'generating' && !isPending && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 animate-pulse">
-                    <div className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md text-amber-200 border border-amber-500/30 shadow-xl">
-                        <div className="w-2 h-2 rounded-full bg-amber-400 animate-bounce" />
-                        <span className="text-[11px] font-bold uppercase">Making Video...</span>
+            {/* Video Generating — full-card overlay with prominent refresh CTA */}
+            {videoStatus === 'generating' && !videoUrl && !isPending && (
+                <div className="absolute inset-0 z-30 rounded-2xl flex flex-col items-center justify-center bg-black/70 backdrop-blur-sm">
+                    {/* Pulsing ring animation */}
+                    <div className="relative mb-4">
+                        <div className="w-14 h-14 rounded-full border-4 border-amber-400/30 absolute inset-0 animate-ping" />
+                        <div className="w-14 h-14 rounded-full border-4 border-amber-400 flex items-center justify-center">
+                            <Video className="w-6 h-6 text-amber-400 animate-pulse" />
+                        </div>
                     </div>
+
+                    {/* Message */}
+                    <p className="text-amber-300 font-bold text-sm tracking-wide mb-1">Creating your video...</p>
+                    <p className="text-white/50 text-[10px] text-center px-4 mb-4">This takes 2–3 minutes. Come back anytime.</p>
+
+                    {/* Prominent Refresh Button */}
+                    {onRefreshVideo && (
+                        <button
+                            onClick={(e) => { e.stopPropagation(); onRefreshVideo(); }}
+                            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-black font-bold text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-amber-500/30"
+                        >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            Tap to Check if Ready
+                        </button>
+                    )}
                 </div>
             )}
+
         </div>
     );
 }
