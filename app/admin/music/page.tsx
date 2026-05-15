@@ -3,8 +3,9 @@
 import { useAuth } from '@/components/auth/auth-provider';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Music, Search, Share2, MessageCircle, Copy, Check, Play, Users, Calendar, Globe, Lock, X, ChevronLeft, ChevronRight, ExternalLink, RefreshCw } from 'lucide-react';
-import { getAuth } from 'firebase/auth';
+import { Music, Search, Share2, MessageCircle, Copy, Check, Play, Users, Calendar, Globe, Lock, X, ChevronLeft, ChevronRight, ExternalLink, RefreshCw, ListMusic, Video, Loader2, Trash2 } from 'lucide-react';
+import { getFirebaseAuth } from '@/lib/firebase-client';
+import { toast } from 'sonner';
 
 interface AdminTrack {
     id: string;
@@ -17,6 +18,8 @@ interface AdminTrack {
     imageUrl?: string;
     category?: string;
     isPublic?: boolean;
+    videoUrl?: string;
+    lyrics?: string;
     createdAt: any;
     shareId?: string;
     status?: string;
@@ -42,6 +45,7 @@ export default function AdminMusicDashboard() {
     const [audioEl, setAudioEl] = useState<HTMLAudioElement | null>(null);
     const [playingId, setPlayingId] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<string | null>(null);
+    const [generatingVideoId, setGeneratingVideoId] = useState<string | null>(null);
     const shareModalRef = useRef<HTMLDivElement>(null);
 
     const isAdmin = true; // Temporarily allow any logged-in user to view the admin page just like facebook-leads
@@ -57,7 +61,7 @@ export default function AdminMusicDashboard() {
         try {
             const params = new URLSearchParams({ page: String(page), limit: '20' });
             if (search) params.set('search', search);
-            const res = await fetch(`/api/admin/music/tracks?${params}`);
+            const res = await fetch(`/api/next-admin/music/tracks?${params}`);
             const data = await res.json();
             setTracks(data.tracks || []);
             setTotal(data.total || 0);
@@ -69,11 +73,11 @@ export default function AdminMusicDashboard() {
     }
 
     async function toggleVisibility(track: AdminTrack) {
-        if (!confirm(`Are you sure you want to make this track ${track.isPublic ? 'Private' : 'Public'}?`)) return;
         setActionLoading(`toggle-${track.id}`);
         try {
-            const token = await getAuth().currentUser?.getIdToken();
-            const res = await fetch(`/api/admin/music/tracks/${track.id}`, {
+            const auth = getFirebaseAuth();
+            const token = await auth.currentUser?.getIdToken();
+            const res = await fetch(`/api/next-admin/music/tracks/${track.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -87,13 +91,95 @@ export default function AdminMusicDashboard() {
             setTracks(prev => prev.map(t => 
                 t.id === track.id ? { ...t, isPublic: !t.isPublic } : t
             ));
+            toast.success(`Track is now ${!track.isPublic ? 'Public' : 'Private'}`);
         } catch (e) {
             console.error(e);
-            alert('Failed to update track visibility');
+            toast.error('Failed to update track visibility');
         } finally {
             setActionLoading(null);
         }
     }
+
+    async function generateVideo(track: AdminTrack) {
+        setGeneratingVideoId(track.id);
+        toast.info('Generating video... this may take up to 3 minutes', { duration: 10000 });
+        try {
+            const auth = getFirebaseAuth();
+            const token = await auth.currentUser?.getIdToken();
+            const lyrics = (track as any).lyrics || track.metadata?.prompt || 'Spiritual divine music playing, highly cinematic, peaceful, 8k resolution, divine lighting';
+            const isLocal = window.location.hostname === 'localhost';
+            const marketingUrl = isLocal 
+                ? 'http://localhost:4001/video-maker' 
+                : 'https://satsang-marketing-server-6ougd45dya-el.a.run.app/video-maker';
+            
+            const actualAudioUrl = track.audioUrl || 
+                (track as any).audio_url || 
+                (track as any).streamAudioUrl || 
+                (track as any).stream_audio_url || 
+                (track as any).tracks?.[0]?.audioUrl || 
+                (track as any).tracks?.[0]?.audio_url;
+            
+            if (!actualAudioUrl) {
+                throw new Error('This track does not have a valid audio URL attached to it.');
+            }
+
+            const res = await fetch(marketingUrl, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: JSON.stringify({
+                    audioUrl: actualAudioUrl,
+                    trackId: track.id,
+                    title: track.title,
+                    prompt: track.metadata?.prompt || track.metadata?.gpt_description_prompt
+                })
+            });
+            
+            const data = await res.json();
+            if (!res.ok || !data.success) throw new Error(data.error || 'Failed to generate video');
+            
+            // Update local state so the button changes to "Play Video" immediately
+            setTracks(prev => prev.map(t => 
+                t.id === track.id ? { ...t, videoUrl: data.videoUrl } : t
+            ));
+            
+            toast.success('Video generated successfully!');
+        } catch (e: any) {
+            console.error(e);
+            toast.error(e.message || 'Failed to generate video');
+        } finally {
+            setGeneratingVideoId(null);
+        }
+    }
+    async function deleteVideo(track: AdminTrack) {
+        if (!confirm('Delete this video? The track will remain but the video will be removed and you can generate a new one.')) return;
+        setActionLoading(`delvideo-${track.id}`);
+        try {
+            const auth = getFirebaseAuth();
+            const token = await auth.currentUser?.getIdToken();
+            const res = await fetch(`/api/next-admin/music/tracks/${track.id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token && { 'Authorization': `Bearer ${token}` })
+                },
+                body: JSON.stringify({ videoUrl: null })
+            });
+            if (!res.ok) throw new Error('Failed to delete video');
+            setTracks(prev => prev.map(t =>
+                t.id === track.id ? { ...t, videoUrl: undefined } : t
+            ));
+            toast.success('Video deleted. You can now generate a new one!');
+        } catch (e: any) {
+            toast.error(e.message || 'Failed to delete video');
+        } finally {
+            setActionLoading(null);
+        }
+    }
+
 
     function getShareUrl(track: AdminTrack) {
         return `${APP_URL}/track/${track.shareId || track.id}`;
@@ -137,7 +223,17 @@ export default function AdminMusicDashboard() {
             return;
         }
         audioEl?.pause();
-        const audio = new Audio(track.audioUrl);
+        const actualAudioUrl = track.audioUrl || 
+                (track as any).audio_url || 
+                (track as any).streamAudioUrl || 
+                (track as any).stream_audio_url || 
+                (track as any).tracks?.[0]?.audioUrl || 
+                (track as any).tracks?.[0]?.audio_url;
+        if (!actualAudioUrl) {
+            toast.error("No audio file found for this track.");
+            return;
+        }
+        const audio = new Audio(actualAudioUrl);
         audio.play();
         audio.onended = () => setPlayingId(null);
         setAudioEl(audio);
@@ -183,20 +279,29 @@ export default function AdminMusicDashboard() {
                             <p className="text-xs text-zinc-400">{total} total tracks across all users</p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-2 bg-zinc-800 rounded-xl px-3 py-2 flex-1 max-w-sm">
-                        <Search className="w-4 h-4 text-zinc-400 shrink-0" />
-                        <input
-                            type="text"
-                            placeholder="Search tracks, users..."
-                            value={search}
-                            onChange={e => { setSearch(e.target.value); setPage(1); }}
-                            className="bg-transparent text-sm text-white placeholder-zinc-500 outline-none w-full"
-                        />
-                        {search && (
-                            <button onClick={() => { setSearch(''); setPage(1); }}>
-                                <X className="w-4 h-4 text-zinc-400" />
-                            </button>
-                        )}
+                    <div className="flex items-center gap-4 flex-1 justify-end max-w-xl">
+                        <button
+                            onClick={() => router.push('/admin/playlists')}
+                            className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 font-medium rounded-xl transition-colors border border-purple-500/20 whitespace-nowrap shadow-sm"
+                        >
+                            <ListMusic className="w-4 h-4" />
+                            Manage Playlists
+                        </button>
+                        <div className="flex items-center gap-2 bg-zinc-800 rounded-xl px-3 py-2 flex-1 max-w-sm">
+                            <Search className="w-4 h-4 text-zinc-400 shrink-0" />
+                            <input
+                                type="text"
+                                placeholder="Search tracks, users..."
+                                value={search}
+                                onChange={e => { setSearch(e.target.value); setPage(1); }}
+                                className="bg-transparent text-sm text-white placeholder-zinc-500 outline-none w-full"
+                            />
+                            {search && (
+                                <button onClick={() => { setSearch(''); setPage(1); }}>
+                                    <X className="w-4 h-4 text-zinc-400" />
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -323,7 +428,47 @@ export default function AdminMusicDashboard() {
                                             )}
                                             {track.isPublic ? 'Public' : 'Private'}
                                         </button>
-                                        {(track.userPhone || track.userEmail) && (
+                                        {/* Generate Video / View Video + Delete */}
+                                        {track.videoUrl ? (
+                                            <div className="flex-1 flex gap-1.5">
+                                                <a
+                                                    href={track.videoUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-semibold transition-all border border-purple-500/20"
+                                                >
+                                                    <Video className="w-3.5 h-3.5" />
+                                                    View Video
+                                                </a>
+                                                <button
+                                                    onClick={() => deleteVideo(track)}
+                                                    disabled={actionLoading === `delvideo-${track.id}`}
+                                                    title="Delete video and regenerate"
+                                                    className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all border border-red-500/20 disabled:opacity-50"
+                                                >
+                                                    {actionLoading === `delvideo-${track.id}` ? (
+                                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    ) : (
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <button
+                                                onClick={() => generateVideo(track)}
+                                                disabled={generatingVideoId === track.id}
+                                                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-semibold transition-all border border-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            >
+                                                {generatingVideoId === track.id ? (
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                ) : (
+                                                    <Video className="w-3.5 h-3.5" />
+                                                )}
+                                                {generatingVideoId === track.id ? 'Generating...' : 'Make Video'}
+                                            </button>
+                                        )}
+
+                                        {track.source !== 'private_satsang' && (
                                             <button
                                                 onClick={() => {
                                                     openShareModal(track);

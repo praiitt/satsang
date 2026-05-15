@@ -7,12 +7,18 @@ const router = Router();
 /**
  * POST /video-maker
  *
- * Generates a music video from an audio URL and lyrics
- * Body: { audioUrl: string, lyrics: string }
+ * Generates a music video from an audio URL.
+ * Lyrics are no longer required — scenes are generated from title/prompt context.
+ * Body: { audioUrl: string, trackId?: string, title?: string, prompt?: string }
  */
 router.post('/', requireAuth, async (req: AuthedRequest, res) => {
   try {
-    const { audioUrl, lyrics, trackId } = req.body as { audioUrl?: string, lyrics?: string, trackId?: string };
+    const { audioUrl, trackId, title, prompt } = req.body as {
+      audioUrl?: string;
+      trackId?: string;
+      title?: string;
+      prompt?: string;
+    };
     console.log("req.body:", req.body);
     const userId = req.user?.uid;
     const internalToken = process.env.INTERNAL_SERVICE_TOKEN || '';
@@ -20,10 +26,6 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
 
     if (!audioUrl || typeof audioUrl !== 'string') {
       return res.status(400).json({ error: 'audioUrl is required and must be a string' });
-    }
-
-    if (!lyrics || typeof lyrics !== 'string') {
-      return res.status(400).json({ error: 'lyrics is required and must be a string' });
     }
 
     // 1. Coin Balance Check (Fail-closed)
@@ -51,21 +53,19 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
       console.log(`[video-maker-route] ✅ Coin check passed (Balance: ${checkResult.access.availableCoins})`);
     } catch (coinError) {
       console.error('[video-maker-route] Coin check failed (error):', coinError);
-      // If the coin service is down, should we allow or block?
-      // For expensive video gen, we should probably block or fail closed.
       return res.status(500).json({ error: 'Service temporarily unavailable (coin check failed)' });
     }
 
-    // Set a long timeout since this is a slow background task (can take 1-3 minutes)
-    // In Express we can set the socket timeout
-    req.setTimeout(300000); // 5 minutes
-    res.setTimeout(300000); // 5 minutes
+    // Set a long timeout since this is a slow background task (can take 5-10 minutes)
+    req.setTimeout(900000); // 15 minutes
+    res.setTimeout(900000); // 15 minutes
 
     const result = await createMusicVideo({
       audioUrl,
-      lyrics,
       userId,
-      trackId
+      trackId,
+      title,
+      prompt
     });
 
     if (!result.success) {
