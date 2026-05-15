@@ -19,6 +19,7 @@ import { SearchBar } from './search-bar';
 import { PlaylistQuickAccess } from './playlist-quick-access';
 import { RecordingsModal } from '@/components/app/recordings-modal';
 import { RecentChatsModal } from '@/components/app/recent-chats-modal';
+import { RecentChatsSection } from '@/components/app/recent-chats-section';
 import { useFavorites } from '@/hooks/use-favorites';
 import BuyCoinsModal from '@/components/rraasi-music/buy-coins-modal';
 import { PromptWizardModal } from './prompt-wizard-modal';
@@ -322,7 +323,7 @@ export const RRaaSiMusicWelcomeView = ({
               createdAt: t.createdAt || t.created_at,
               status: t.status,
               videoUrl: t.videoUrl,
-              videoStatus: t.videoStatus,
+              videoStatus: t.videoUrl ? 'completed' : (t.videoGenerating ? 'generating' : (t.videoStatus || null)),
               story: sub.story || t.story,
               lyrics: sub.lyrics || t.lyrics,
               healingBenefits: sub.healingBenefits || t.healingBenefits,
@@ -344,7 +345,7 @@ export const RRaaSiMusicWelcomeView = ({
             createdAt: t.createdAt || t.created_at,
             status: t.status,
             videoUrl: t.videoUrl,
-            videoStatus: t.videoStatus,
+            videoStatus: t.videoUrl ? 'completed' : (t.videoGenerating ? 'generating' : null),
             story: t.story,
             lyrics: t.lyrics,
             healingBenefits: t.healingBenefits,
@@ -570,7 +571,7 @@ export const RRaaSiMusicWelcomeView = ({
           ? {
               ...t,
               videoUrl: data.videoUrl ?? t.videoUrl,
-              videoStatus: data.videoGenerating ? 'generating' : (data.videoUrl ? 'completed' : null),
+              videoStatus: t.videoUrl ? 'completed' : (t.videoGenerating ? 'generating' : null),
             }
           : t
       ));
@@ -1187,6 +1188,11 @@ export const RRaaSiMusicWelcomeView = ({
           )}
         </section>
       )}
+
+      {/* Recent Chats Section */}
+      <section className="max-w-7xl mx-auto px-4 mt-8">
+        <RecentChatsSection />
+      </section>
 
       {/* My Music Section */}
       < section className="max-w-7xl mx-auto px-4 mt-16 border-b border-gray-100 dark:border-gray-800 pb-16" >
