@@ -1006,24 +1006,41 @@ async def entrypoint(ctx: JobContext):
 
     # Send history to frontend chat box so user can see it
     if resume_session_id and past_transcript:
-        history_text = "📜 **Previous Conversation Log:**\n\n"
-        for msg in past_transcript:
-            role_name = "You" if msg.get("role") == "user" else "Agent"
-            history_text += f"**{role_name}**: {msg.get('content')}\n\n"
-            
         async def send_history_to_ui():
             await asyncio.sleep(2)  # Wait for UI to subscribe to data channel
             import uuid, time, json
-            payload = {
-                "id": str(uuid.uuid4()),
-                "message": history_text.strip(),
-                "timestamp": int(time.time() * 1000)
-            }
+            
             try:
+                # Send a header message
+                header_payload = {
+                    "id": str(uuid.uuid4()),
+                    "message": "📜 **Previous Conversation Log:**",
+                    "timestamp": int(time.time() * 1000)
+                }
                 await assistant._publish_data_fn(
-                    json.dumps(payload).encode("utf-8"),
+                    json.dumps(header_payload).encode("utf-8"),
                     topic="lk-chat-topic"
                 )
+                await asyncio.sleep(0.2)
+
+                # Send each message individually to prevent LiveKit data channel truncation
+                for i, msg in enumerate(past_transcript):
+                    role_name = "You" if msg.get("role") == "user" else "Agent"
+                    content = msg.get('content', '').strip()
+                    if not content:
+                        continue
+                        
+                    formatted_msg = f"**{role_name}**: {content}"
+                    payload = {
+                        "id": f"hist_{i}_{str(uuid.uuid4())[:8]}",
+                        "message": formatted_msg,
+                        "timestamp": int(time.time() * 1000) + i + 1
+                    }
+                    await assistant._publish_data_fn(
+                        json.dumps(payload).encode("utf-8"),
+                        topic="lk-chat-topic"
+                    )
+                    await asyncio.sleep(0.1) # Small delay to preserve order in the UI
             except Exception as e:
                 logger.error(f"Failed to publish history to UI: {e}")
                 
