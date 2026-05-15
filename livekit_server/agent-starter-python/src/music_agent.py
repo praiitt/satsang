@@ -1097,30 +1097,36 @@ async def entrypoint(ctx: JobContext):
     
     # Send language-appropriate welcome message
     # Send language-appropriate welcome message
-    if user_language == "hi":
-        if user_intention == "bhajan":
-            welcome_msg = "नमस्ते। मैं आपके लिए एक सुंदर भजन बनाने के लिए तैयार हूँ। आप किस देवता या भाव के लिए भजन बनाना चाहेंगे?"
-        elif user_intention == "healing":
-            welcome_msg = "नमस्ते। संगीत एक माध्यम है जो हमें परम शांति से जोड़ सकता है। मैं आपके लिए हीलिंग फ्रीक्वेंसी बना सकता हूँ। आप कैसा अनुभव करना चाहते हैं?"
-        elif user_intention == "compose_lyrics":
-            welcome_msg = "नमस्ते। मैं आपके शब्दों को संगीत देने के लिए तैयार हूँ। कृपया अपनी कविता या गीत साझा करें, और बताएं कि आप इसमें कौन सा भाव या राग चाहते हैं।"
+    if resume_session_id:
+        if user_language == "hi":
+            welcome_msg = "नमस्ते। आइए उसी रचना को आगे बढ़ाएं जिस पर हम काम कर रहे थे। आप इसमें क्या बदलाव या नई पंक्तियाँ जोड़ना चाहेंगे?"
         else:
-            welcome_msg = (
-                "नमस्ते। संगीत वह साधन है जो, यदि सही ढंग से उपयोग किया जाए, तो हमें परम सत्य से जोड़ सकता है। "
-                "मैं आपके लिए भजन, मंत्र, ध्यान संगीत, या हीलिंग फ्रीक्वेंसी बना सकता हूँ। आज आप क्या रचना करके वर्तमान क्षण का हिस्सा बनना चाहेंगे?"
-            )
+            welcome_msg = "Namaste. Let's continue building the track we were working on. What changes or new lyrics would you like to add?"
     else:
-        if user_intention == "bhajan":
-            welcome_msg = "Namaste. I am ready to create a beautiful Bhajan for you. Which deity or sentiment would you like to dedicate this to?"
-        elif user_intention == "healing":
-            welcome_msg = "Namaste. Music is a tool that can connect us to ultimate peace. I can create Healing Frequencies for you. What kind of healing experience are you seeking?"
-        elif user_intention == "compose_lyrics":
-            welcome_msg = "Namaste. I am ready to give voice to your words. Please share your lyrics, poem or ghazal, and tell me the emotion you wish to convey."
+        if user_language == "hi":
+            if user_intention == "bhajan":
+                welcome_msg = "नमस्ते। मैं आपके लिए एक सुंदर भजन बनाने के लिए तैयार हूँ। आप किस देवता या भाव के लिए भजन बनाना चाहेंगे?"
+            elif user_intention == "healing":
+                welcome_msg = "नमस्ते। संगीत एक माध्यम है जो हमें परम शांति से जोड़ सकता है। मैं आपके लिए हीलिंग फ्रीक्वेंसी बना सकता हूँ। आप कैसा अनुभव करना चाहते हैं?"
+            elif user_intention == "compose_lyrics":
+                welcome_msg = "नमस्ते। मैं आपके शब्दों को संगीत देने के लिए तैयार हूँ। कृपया अपनी कविता या गीत साझा करें, और बताएं कि आप इसमें कौन सा भाव या राग चाहते हैं।"
+            else:
+                welcome_msg = (
+                    "नमस्ते। संगीत वह साधन है जो, यदि सही ढंग से उपयोग किया जाए, तो हमें परम सत्य से जोड़ सकता है। "
+                    "मैं आपके लिए भजन, मंत्र, ध्यान संगीत, या हीलिंग फ्रीक्वेंसी बना सकता हूँ। आज आप क्या रचना करके वर्तमान क्षण का हिस्सा बनना चाहेंगे?"
+                )
         else:
-            welcome_msg = (
-                "Namaste. Music is a tool which, if used correctly, can be a path to connect to the ultimate. "
-                "I can create Bhajans, Mantras, Meditation music, or Healing Frequencies. What would you like to create today to be part of the present moment?"
-            )
+            if user_intention == "bhajan":
+                welcome_msg = "Namaste. I am ready to create a beautiful Bhajan for you. Which deity or sentiment would you like to dedicate this to?"
+            elif user_intention == "healing":
+                welcome_msg = "Namaste. Music is a tool that can connect us to ultimate peace. I can create Healing Frequencies for you. What kind of healing experience are you seeking?"
+            elif user_intention == "compose_lyrics":
+                welcome_msg = "Namaste. I am ready to give voice to your words. Please share your lyrics, poem or ghazal, and tell me the emotion you wish to convey."
+            else:
+                welcome_msg = (
+                    "Namaste. Music is a tool which, if used correctly, can be a path to connect to the ultimate. "
+                    "I can create Bhajans, Mantras, Meditation music, or Healing Frequencies. What would you like to create today to be part of the present moment?"
+                )
     
     await session.say(welcome_msg)
 

@@ -50,15 +50,19 @@ export async function POST(req: Request) {
 
     const roomName = `${roomPrefix}_${Math.floor(Math.random() * 10_000)}`;
 
-    // Get guruId and userId from request body (if available)
+    // Get guruId, userId, intention, and resumeSessionId from request body (if available)
     const guruId: string | undefined = body?.guruId;
     const userId: string | undefined = body?.userId;
+    const intention: string | undefined = body?.intention;
+    const resumeSessionId: string | undefined = body?.resumeSessionId;
 
     console.log('🔍 Connection details request:', {
       agentName,
       languagePreference,
       guruId,
       userId,
+      intention,
+      resumeSessionId,
       bodyKeys: Object.keys(body || {}),
     });
 
@@ -68,7 +72,9 @@ export async function POST(req: Request) {
       agentName,
       languagePreference,
       guruId,
-      userId
+      userId,
+      intention,
+      resumeSessionId
     );
 
     // Return connection details
@@ -96,24 +102,25 @@ function createParticipantToken(
   agentName?: string,
   language?: string,
   guruId?: string,
-  userId?: string
+  userId?: string,
+  intention?: string,
+  resumeSessionId?: string
 ): Promise<string> {
-  const at = new AccessToken(API_KEY, API_SECRET, {
-    ...userInfo,
-    ttl: '15m',
-    metadata: JSON.stringify({
-      language: language || 'hi',
-      guruId: guruId,
-      userId: userId,
-    }), // Store language, guruId, and userId in token metadata
-  });
-
-  console.log('🔍 Creating token with metadata:', {
+  const metadataObj: Record<string, string | undefined> = {
     language: language || 'hi',
     guruId: guruId,
     userId: userId,
-    metadataString: JSON.stringify({ language: language || 'hi', guruId: guruId, userId: userId }),
+  };
+  if (intention) metadataObj.intention = intention;
+  if (resumeSessionId) metadataObj.resumeSessionId = resumeSessionId;
+
+  const at = new AccessToken(API_KEY, API_SECRET, {
+    ...userInfo,
+    ttl: '15m',
+    metadata: JSON.stringify(metadataObj), // Store all metadata fields
   });
+
+  console.log('🔍 Creating token with metadata:', metadataObj);
   const grant: VideoGrant = {
     room: roomName,
     roomJoin: true,
