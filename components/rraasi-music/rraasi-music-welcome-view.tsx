@@ -96,7 +96,7 @@ export const RRaaSiMusicWelcomeView = ({
   const [hasMore, setHasMore] = useState(true);
   const [favoriteTracks, setFavoriteTracks] = useState<MusicTrack[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
-  const [myMusicFilter, setMyMusicFilter] = useState<'all' | 'favorites'>('all');
+  const [myMusicFilter, setMyMusicFilter] = useState<'all' | 'favorites' | 'satsang'>('all');
   const [myTracksLoading, setMyTracksLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentlyPlaying, setCurrentlyPlaying] = useState<string | null>(null);
@@ -1339,9 +1339,9 @@ export const RRaaSiMusicWelcomeView = ({
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Main tracks grid */}
           <div className="flex-1">
-            {/* My Music sub-filter: All / Favorites */}
+            {/* My Music sub-filter: All / Favorites / Satsang */}
             {isAuthenticated && !authLoading && !myTracksLoading && (
-              <div className="flex gap-2 mb-5">
+              <div className="flex gap-2 mb-5 flex-wrap">
                 <button
                   onClick={() => setMyMusicFilter('all')}
                   className={cn(
@@ -1351,7 +1351,7 @@ export const RRaaSiMusicWelcomeView = ({
                       : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
                   )}
                 >
-                  🎵 All My Tracks
+                  🎵 My Creations
                 </button>
                 <button
                   onClick={() => setMyMusicFilter('favorites')}
@@ -1372,6 +1372,25 @@ export const RRaaSiMusicWelcomeView = ({
                     </span>
                   )}
                 </button>
+                {myTracks.some(t => t.source === 'private_satsang') && (
+                  <button
+                    onClick={() => setMyMusicFilter('satsang')}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
+                      myMusicFilter === 'satsang'
+                        ? "bg-orange-500 text-white shadow-md"
+                        : "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-800/40"
+                    )}
+                  >
+                    🕉️ Satsang Music
+                    <span className={cn(
+                      "text-xs font-bold px-1.5 py-0.5 rounded-full",
+                      myMusicFilter === 'satsang' ? "bg-white/30 text-white" : "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
+                    )}>
+                      {myTracks.filter(t => t.source === 'private_satsang').length}
+                    </span>
+                  </button>
+                )}
               </div>
             )}
             {authLoading || myTracksLoading ? (
@@ -1400,7 +1419,9 @@ export const RRaaSiMusicWelcomeView = ({
             ) : (() => {
                 const displayedTracks = myMusicFilter === 'favorites'
                   ? myTracks.filter(t => isFavorite(t.id))
-                  : myTracks;
+                  : myMusicFilter === 'satsang'
+                  ? myTracks.filter(t => t.source === 'private_satsang')
+                  : myTracks.filter(t => t.source !== 'private_satsang');
                   
                 const paginatedTracks = displayedTracks.slice(0, visibleMyMusicCount);
 
@@ -1410,6 +1431,15 @@ export const RRaaSiMusicWelcomeView = ({
                       <Heart className="w-12 h-12 text-rose-300 mx-auto mb-3" />
                       <p className="text-gray-500 dark:text-gray-400 mb-1 font-medium">No favorites in My Music yet</p>
                       <p className="text-gray-400 dark:text-gray-500 text-sm">Tap the ❤️ on any of your tracks to add it here.</p>
+                    </div>
+                  );
+                }
+                if (displayedTracks.length === 0 && myMusicFilter === 'satsang') {
+                  return (
+                    <div className="text-center py-16 bg-orange-50 dark:bg-orange-900/10 rounded-2xl border border-orange-100 dark:border-orange-900/20">
+                      <p className="text-4xl mb-3">🕉️</p>
+                      <p className="text-gray-500 dark:text-gray-400 mb-1 font-medium">No Satsang music yet</p>
+                      <p className="text-gray-400 dark:text-gray-500 text-sm">Music generated during your Satsang sessions will appear here.</p>
                     </div>
                   );
                 }

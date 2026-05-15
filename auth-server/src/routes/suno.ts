@@ -59,6 +59,7 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
                 const firstTrack = data.tracks[0];
                 return {
                     id: doc.id,
+                    shareId: data.shareId || doc.id,
                     title: data.title,
                     prompt: data.prompt,
                     category: data.category,
@@ -70,6 +71,11 @@ router.get('/my-tracks', requireAuth, async (req: AuthedRequest, res: Response) 
                     lyrics: data.lyrics,
                     healingBenefits: data.healingBenefits,
                     tags: data.tags,
+                    source: data.source || null,
+                    // Video fields — critical for showing/hiding Create Video button
+                    videoUrl: data.videoUrl || null,
+                    videoStatus: data.videoStatus || null,
+                    generatedVideoImages: data.generatedVideoImages || [],
                     // Primary track data from array
                     audioUrl: firstTrack.audioUrl,
                     imageUrl: firstTrack.imageUrl,
@@ -286,48 +292,36 @@ async function downloadAndStoreVideo(videoUrl: string, trackId: string): Promise
 const COIN_SERVICE_URL = process.env.COIN_SERVICE_URL || 'https://us-central1-rraasi-8a619.cloudfunctions.net/rraasi-coin-service';
 
 /**
- * Deduct coins for music generation
+ * Deduct coins for music generation via coin service internal endpoint.
+ * Called after audioUrl is successfully written to Firestore.
  */
 async function deductMusicCoins(userId: string, trackId: string, trackTitle: string) {
     try {
-        console.log(`[Coin Deduction] Deducting 50 coins for user: ${userId}, track: ${trackId}`);
+        console.log(`[Coin Deduction] Deducting music_generation coins for user: ${userId}, track: ${trackId}`);
 
-        // Get user's ID token for auth
-        const userDoc = await getDb().collection('users').doc(userId).get();
-        if (!userDoc.exists) {
-            console.warn(`[Coin Deduction] User ${userId} not found, skipping deduction`);
-            return;
-        }
-
-        // Call coin service to deduct coins
-        const response = await fetch(`${COIN_SERVICE_URL}/coins/deduct`, {
+        const response = await fetch(`${COIN_SERVICE_URL}/internal/deduct`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                // Note: In production, you'd need proper auth token here
-                // For now, the service might bypass auth for server-to-server calls
+                'X-Internal-Token': process.env.INTERNAL_SERVICE_TOKEN || ''
             },
             body: JSON.stringify({
-                userId: userId,
+                userId,
                 featureId: 'music_generation',
-                metadata: {
-                    trackId,
-                    trackTitle,
-                    source: 'suno_callback'
-                }
+                metadata: { trackId, trackTitle, source: 'suno_callback' }
             })
         });
 
         const result = await response.json() as any;
-
         if (result.success) {
-            console.log(`[Coin Deduction] ✅ Successfully deducted coins. New balance: ${result.newBalance}`);
+            console.log(`[Coin Deduction] ✅ Music coins deducted. New balance: ${result.newBalance}`);
         } else {
-            console.error(`[Coin Deduction] ❌ Failed to deduct coins:`, result.error);
+            // Not enough coins is not a critical error — don't block the callback
+            console.warn(`[Coin Deduction] ⚠️ Could not deduct music coins: ${result.error}`);
         }
     } catch (error) {
-        console.error(`[Coin Deduction] ❌ Error deducting coins:`, error);
-        // Don't throw - we don't want coin deduction failures to break the callback
+        console.error(`[Coin Deduction] ❌ Error calling coin service:`, error);
+        // Don't throw — coin deduction failure must never break the music callback
     }
 }
 
@@ -572,7 +566,27 @@ router.post('/callback', async (req: Request, res: Response) => {
                     console.log(`[Suno Callback] Coins already deducted for task ${taskId}, skipping.`);
                 }
             } else {
-                console.log(`[Suno Callback] Skipping - Code: ${officialPayload.code}, Type: ${officialPayload.data?.callbackType}`);
+                console.log(`[Suno Callback] Failed/Error Callback - Code: ${officialPayload.code}, Type: ${officialPayload.data?.callbackType}`);
+                
+                // If the generation failed on Suno's side, update the track status to FAILED
+                const taskId = officialPayload.data?.task_id;
+                if (taskId) {
+                    try {
+                        const db = getDb();
+                        const docRef = db.collection('music_tracks').doc(taskId);
+                        const doc = await docRef.get();
+                        if (doc.exists) {
+                            await docRef.update({
+                                status: 'FAILED',
+                                error: officialPayload.msg || 'Suno generation failed',
+                                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+                            });
+                            console.log(`[Suno Callback] ❌ Marked track ${taskId} as FAILED in database`);
+                        }
+                    } catch (err) {
+                        console.error(`[Suno Callback] Error updating failed status for task ${taskId}:`, err);
+                    }
+                }
             }
         } else {
             // Legacy format (backwards compatibility)
