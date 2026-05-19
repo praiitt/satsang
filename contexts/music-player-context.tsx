@@ -33,6 +33,9 @@ interface MusicPlayerContextType {
     isExpanded: boolean; // For mobile full-screen view
     volume: number;
     repeatMode: RepeatMode;
+    playbackRate: number; // Speed control
+    sleepTimerMinutes: number | null; // null means no timer
+    sleepTimerRemaining: number | null; // seconds remaining
 
     // Actions
     playTrack: (track: MusicTrack) => void;
@@ -48,6 +51,8 @@ interface MusicPlayerContextType {
     clearQueue: () => void;
     closePlayer: () => void;
     cycleRepeatMode: () => void;
+    setPlaybackRate: (rate: number) => void;
+    setSleepTimer: (minutes: number | null) => void;
 }
 
 const MusicPlayerContext = createContext<MusicPlayerContextType | undefined>(undefined);
@@ -62,6 +67,9 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     const [isExpanded, setIsExpanded] = useState(false);
     const [volume, setVolumeState] = useState(1);
     const [repeatMode, setRepeatMode] = useState<RepeatMode>('off');
+    const [playbackRate, setPlaybackRateState] = useState(1);
+    const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
+    const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number | null>(null);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     // Keep mutable refs so event handlers always see latest values without re-binding
@@ -72,6 +80,34 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
     useEffect(() => { queueRef.current = queue; }, [queue]);
     useEffect(() => { currentTrackRef.current = currentTrack; }, [currentTrack]);
     useEffect(() => { repeatModeRef.current = repeatMode; }, [repeatMode]);
+
+    // Sleep Timer Logic
+    useEffect(() => {
+        if (sleepTimerMinutes === null) {
+            setSleepTimerRemaining(null);
+            return;
+        }
+
+        let secondsRemaining = sleepTimerMinutes * 60;
+        setSleepTimerRemaining(secondsRemaining);
+
+        const interval = setInterval(() => {
+            secondsRemaining -= 1;
+            setSleepTimerRemaining(secondsRemaining);
+
+            if (secondsRemaining <= 0) {
+                clearInterval(interval);
+                setSleepTimerMinutes(null);
+                setSleepTimerRemaining(null);
+                if (audioRef.current && !audioRef.current.paused) {
+                    audioRef.current.pause();
+                    setIsPlaying(false);
+                }
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [sleepTimerMinutes]);
 
     // Initialize audio element
     useEffect(() => {
@@ -155,12 +191,13 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
         };
     }, []); // Bind only once — use refs for latest values
 
-    // Sync volume
+    // Sync volume and playback rate
     useEffect(() => {
         if (audioRef.current) {
             audioRef.current.volume = volume;
+            audioRef.current.playbackRate = playbackRate;
         }
-    }, [volume]);
+    }, [volume, playbackRate]);
 
     // Main Play Logic
     const playTrack = useCallback((track: MusicTrack) => {
@@ -309,6 +346,23 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
         });
     }, []);
 
+    const setPlaybackRate = useCallback((rate: number) => {
+        setPlaybackRateState(rate);
+        if (audioRef.current) {
+            audioRef.current.playbackRate = rate;
+        }
+    }, []);
+
+    // Setup Media Session API handlers
+    useEffect(() => {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', togglePlayPause);
+            navigator.mediaSession.setActionHandler('pause', togglePlayPause);
+            navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
+            navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
+        }
+    }, [togglePlayPause, prevTrack, nextTrack]);
+
     return (
         <MusicPlayerContext.Provider
             value={{
@@ -334,6 +388,10 @@ export function MusicPlayerProvider({ children }: { children: React.ReactNode })
                 clearQueue,
                 closePlayer,
                 cycleRepeatMode,
+                setPlaybackRate,
+                sleepTimerMinutes,
+                sleepTimerRemaining,
+                setSleepTimer: setSleepTimerMinutes,
             }}
         >
             {children}

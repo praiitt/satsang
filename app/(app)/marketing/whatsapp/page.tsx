@@ -69,7 +69,7 @@ export default function WhatsAppDashboard() {
   const fetchUsers = useCallback(async () => {
     setLoadingUsers(true);
     try {
-      const res = await fetch('/api/admin/users');
+      const res = await fetch('/api/next-admin/users');
       const data = await res.json();
       setUsers(data.users || []);
     } catch {

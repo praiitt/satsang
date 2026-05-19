@@ -1,4 +1,4 @@
-import expressWs from 'express-ws';
+// expressWs import removed — WS is registered on main app via registerVobizStream
 import { Router } from 'express';
 import WebSocket from 'ws';
 import { getDb } from '../firebase.js';
@@ -6,10 +6,11 @@ import { generateSunoTrack } from '../services/suno.js';
 import twilio from 'twilio';
 import axios from 'axios';
 
-// Use the original working pattern - expressWs wraps the router and returns an app
-// that properly handles WebSocket upgrades for this router's routes.
-const wsInstance = expressWs(Router() as any);
-const router = wsInstance.app as any;
+// HTTP-only router (no WebSocket here — WS must be on the main app)
+const router = Router();
+
+// The WS handler function — called from registerVobizStream(app) in index.ts
+let _wsHandler: ((ws: WebSocket, req: any) => void) | null = null;
 
 const SYSTEM_MESSAGE = `You are Rashi — a warm, wise, and soulful AI Spiritual Companion from rraasi.com.
 
@@ -120,20 +121,72 @@ Greet them warmly. Introduce yourself as Rashi from RRAASI Music. Tell them RRAA
 
 /**
  * POST /twilio-bot/twiml
- * Vobiz hits this endpoint when the call is answered. We respond with Vobiz XML.
+ * Vobiz hits this endpoint when the call is answered (answer_url).
+ * We respond with Vobiz-compatible Voice XML.
+ *
+ * IMPORTANT: Vobiz uses <Speak> (NOT Twilio's <Say>), and <Stream> is a
+ * direct child of <Response> — not wrapped in <Connect>.
+ * See: https://docs.vobiz.ai/xml/stream/initiate
  */
 router.post('/twiml', (req: any, res: any) => {
+    // Log full request for debugging Vobiz connectivity
+    const event = req.body.Event || req.body.event || '';
+    console.log(`[twilio-bot] /twiml POST received — Event=${event}, body:`, JSON.stringify(req.body));
+
+    // Vobiz sends multiple event types to the answer_url:
+    // - "CallInitiated" or empty → this is the answer request, return XML
+    // - "Hangup" → call ended, just acknowledge
+    // - Other events → just acknowledge
+    if (event === 'Hangup' || event === 'StopStream' || event === 'PlayedStream') {
+        console.log(`[twilio-bot] Received ${event} callback — acknowledging with 200 OK`);
+        return res.status(200).json({ ok: true, event });
+    }
+
+    // Determine if it's an outbound call (leadId via query) or inbound (From via body)
     const leadId = req.query.leadId || '';
+    const callerPhone = req.body.From || req.query.From || '';
     
     // Always use the public MARKETING_SERVER_URL - NOT req.headers.host (which is localhost)
     let publicHost = process.env.MARKETING_SERVER_URL?.replace(/^https?:\/\//, '');
     if (!publicHost) publicHost = req.headers['x-forwarded-host'] as string || req.headers.host;
     
-    const wsUrl = `wss://${publicHost}/twilio-bot/stream?leadId=${leadId}`;
-    console.log(`[twilio-bot] /twiml called - wsUrl: ${wsUrl}`);
+    let queryParams = '';
+    if (leadId) {
+        queryParams = `leadId=${leadId}`;
+    } else if (callerPhone) {
+        // Strip out '+' and spaces (form-urlencoded '+' becomes space)
+        const cleanPhone = callerPhone.replace(/[\+\s]/g, '');
+        queryParams = `phone=${cleanPhone}`;
+    }
+    
+    const wsUrl = `wss://${publicHost}/twilio-bot/stream?${queryParams}`;
+    console.log(`[twilio-bot] /twiml returning Stream XML — wsUrl: ${wsUrl}`);
 
-    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?><Response><Stream bidirectional="true" keepCallAlive="true" contentType="audio/x-mulaw;rate=8000">wss://${publicHost}/twilio-bot/stream?leadId=${leadId}</Stream></Response>`;
+    // Vobiz XML — uses <Speak> not <Say>, audioTrack="inbound" for bidirectional
+    // See: https://docs.vobiz.ai/xml/stream/initiate#xml-setup
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Speak>Connecting to Rashi.</Speak>
+    <Stream bidirectional="true" audioTrack="inbound" keepCallAlive="true" contentType="audio/x-mulaw;rate=8000">${wsUrl}</Stream>
+</Response>`;
 
+    console.log(`[twilio-bot] Sending XML response:\n${xmlResponse}`);
+    res.type('text/xml');
+    res.send(xmlResponse);
+});
+
+/**
+ * GET /twilio-bot/twiml/test
+ * Manual test endpoint — hit this URL in a browser to see the XML we return.
+ */
+router.get('/twiml/test', (req: any, res: any) => {
+    let publicHost = process.env.MARKETING_SERVER_URL?.replace(/^https?:\/\//, '') || req.headers.host;
+    const wsUrl = `wss://${publicHost}/twilio-bot/stream?phone=test`;
+    const xmlResponse = `<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Speak>Connecting to Rashi.</Speak>
+    <Stream bidirectional="true" audioTrack="inbound" keepCallAlive="true" contentType="audio/x-mulaw;rate=8000">${wsUrl}</Stream>
+</Response>`;
     res.type('text/xml');
     res.send(xmlResponse);
 });
@@ -142,15 +195,16 @@ router.post('/twiml', (req: any, res: any) => {
  * WS /twilio-bot/stream
  * Handles the WebSocket audio stream from Vobiz and bridges to OpenAI Realtime API.
  */
-router.ws('/stream', (ws: WebSocket, req: any) => {
+// Store the WS handler so registerVobizStream can attach it to the main app
+_wsHandler = (ws: WebSocket, req: any) => {
     const leadId = req.query.leadId as string;
-    console.log(`[twilio-bot] WS /stream connected for leadId=${leadId}`);
+    const phoneQuery = req.query.phone as string;
+    console.log(`[twilio-bot] WS /stream connected for leadId=${leadId}, phone=${phoneQuery}`);
 
-    // Connect to OpenAI Realtime (always use latest stable alias, not dated snapshots)
+    // Connect to OpenAI Realtime GA API (Beta header removed — API graduated to GA)
     const openAiWs = new WebSocket('wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview', {
         headers: {
             'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-            'OpenAI-Beta': 'realtime=v1'
         }
     });
 
@@ -161,6 +215,8 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
     let mediaEventCount = 0;    // Track incoming audio from caller
     let firebaseUid = '';       // Captured for tool calling
     let callerPhone = '';       // Captured for WhatsApp messaging
+    let isDeaf = true;          // Prevent VAD from triggering during connection/greeting static
+    let isTwilio = false;       // Distinguish between Vobiz (inbound) and Twilio (outbound)
 
     // Send periodic ping to Vobiz to prevent code-1006 TCP drops (Vobiz drops after ~11s without ping)
     const vobizPing = setInterval(() => {
@@ -175,11 +231,12 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
         console.log('[twilio-bot] Connected to OpenAI Realtime API');
 
         // 1. Fetch lead data
-        let leadName = 'the caller';
+        let leadName = 'seeker'; // Default for unknown inbound caller
         let leadCategory = 'general';
+        const db = getDb();
+        
         if (leadId) {
             try {
-                const db = getDb();
                 let leadData: any = null;
                 const leadDoc = await db.collection('facebook_leads').doc(leadId).get();
                 if (leadDoc.exists) leadData = leadDoc.data();
@@ -188,13 +245,47 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                     if (fbDoc.exists) leadData = fbDoc.data();
                 }
                 if (leadData) {
-                    leadName = leadData.name || 'the caller';
+                    leadName = leadData.name || 'seeker';
                     leadCategory = (leadData.category || 'general').toLowerCase();
                     firebaseUid = leadData.firebaseUid || '';
                     callerPhone = leadData.phone || leadData.phoneNumber || '';
                 }
             } catch (e) {
-                console.error('[twilio-bot] Failed to fetch lead data:', e);
+                console.error('[twilio-bot] Failed to fetch lead data by leadId:', e);
+            }
+        } else if (phoneQuery) {
+            try {
+                callerPhone = phoneQuery;
+                let userData: any = null;
+                
+                // Search users collection first
+                const usersSnapshot = await db.collection('users').where('phoneNumber', '==', phoneQuery).limit(1).get();
+                if (!usersSnapshot.empty) {
+                    userData = usersSnapshot.docs[0].data();
+                    firebaseUid = usersSnapshot.docs[0].id;
+                } else {
+                    // Try without '+' just in case
+                    const noPlus = phoneQuery.replace('+', '');
+                    const usersSnapshot2 = await db.collection('users').where('phoneNumber', '==', noPlus).limit(1).get();
+                    if (!usersSnapshot2.empty) {
+                        userData = usersSnapshot2.docs[0].data();
+                        firebaseUid = usersSnapshot2.docs[0].id;
+                    }
+                }
+                
+                if (userData) {
+                    leadName = userData.displayName || userData.name || 'seeker';
+                } else {
+                    // Search leads collection as fallback
+                    const leadsSnapshot = await db.collection('leads').where('phone', '==', phoneQuery).limit(1).get();
+                    if (!leadsSnapshot.empty) {
+                        const leadData = leadsSnapshot.docs[0].data();
+                        leadName = leadData.name || 'seeker';
+                    }
+                }
+                console.log(`[twilio-bot] Inbound caller identified as: ${leadName}`);
+            } catch (e) {
+                console.error('[twilio-bot] Failed to fetch user by phone:', e);
             }
         }
 
@@ -202,7 +293,7 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
         // Supported: 'alloy', 'ash', 'ballad', 'coral', 'echo', 'sage', 'shimmer', 'verse', 'marin', 'cedar'
         // 'coral' = warm, expressive female voice — best approximation for an Indian-sounding accent
         const isMusic = leadCategory === 'music';
-        const voice = isMusic ? 'coral' : 'coral'; // coral for both — warmest, most melodic voice
+        const voice = "coral"; // coral for both — warmest, most melodic voice
         const basePrompt = isMusic ? MUSIC_SYSTEM_MESSAGE : SYSTEM_MESSAGE;
         const dynamicContext = `\n\nCRITICAL CONTEXT: The person you are talking to is named ${leadName}. Greet them by first name naturally!`;
 
@@ -210,14 +301,25 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
         openAiWs.send(JSON.stringify({
             type: 'session.update',
             session: {
-                turn_detection: { type: 'server_vad' },
-                input_audio_format: 'g711_ulaw',
-                output_audio_format: 'g711_ulaw',
-                input_audio_transcription: { model: 'whisper-1' },
-                voice,
+                type: 'realtime',
+                audio: {
+                    input: {
+                        format: { type: 'audio/pcmu' },
+                        transcription: { model: 'whisper-1' },
+                        turn_detection: { 
+                            type: 'server_vad',
+                            threshold: 0.99, // Maximize threshold to ignore telecom static
+                            prefix_padding_ms: 300,
+                            silence_duration_ms: 500
+                        }
+                    },
+                    output: {
+                        format: { type: 'audio/pcmu' },
+                        voice
+                    }
+                },
                 instructions: basePrompt + dynamicContext,
-                modalities: ['text', 'audio'],
-                temperature: 0.7,
+                output_modalities: ['audio'],
                 tools: [{
                     type: 'function', name: 'end_call',
                     description: 'End the phone call gracefully. Use this ONLY when: (1) the user says goodbye/bye/alvida/ok bye/thank you goodbye etc, (2) the user explicitly asks to end the call, or (3) the conversation has reached a natural conclusion and you have said your farewell.',
@@ -261,45 +363,48 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
                 console.log(`[twilio-bot] AI greeting triggered (persona: ${isMusic ? 'music' : 'satsang'})`);
             }
         }, 500);
+
+        // Deaf period: ignore incoming audio for the first 4 seconds so the AI can finish its greeting uninterrupted
+        setTimeout(() => {
+            isDeaf = false;
+            console.log('[twilio-bot] Deaf period ended, AI is now listening to user audio');
+        }, 4000);
     });
 
-    openAiWs.on('message', (data: WebSocket.Data) => {
+    openAiWs.on('message', async (data: WebSocket.Data) => {
         try {
             const event = JSON.parse(data.toString());
 
-            // AI audio chunk → send to Vobiz
-            if (event.type === 'response.audio.delta' && event.delta) {
+            // AI audio chunk → send to Vobiz/Twilio
+            if (event.type === 'response.output_audio.delta' && event.delta) {
                 if (!firstAudioSent) {
                     firstAudioSent = true;
-                    console.log('[twilio-bot] ⭐ First audio chunk sent to Vobiz — AI is speaking');
+                    console.log('[twilio-bot] ⭐ First audio chunk sent to client — AI is speaking');
                 }
-                if (ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({
-                        event: 'playAudio',
-                        media: {
-                            payload: event.delta,
-                            contentType: 'audio/x-mulaw',
-                            sampleRate: 8000
-                        }
-                    }));
+                if (ws.readyState === WebSocket.OPEN && vobizStreamSid) {
+                    if (isTwilio) {
+                        ws.send(JSON.stringify({
+                            event: 'media',
+                            streamSid: vobizStreamSid,
+                            media: { payload: event.delta }
+                        }));
+                    } else {
+                        ws.send(JSON.stringify({
+                            event: 'playAudio',
+                            media: {
+                                payload: event.delta,
+                                contentType: 'audio/x-mulaw',
+                                sampleRate: 8000
+                            }
+                        }));
+                    }
                 }
             }
 
-            // User started speaking → interrupt the AI immediately (true barge-in)
+            // User started speaking → stop Vobiz buffer playback (OpenAI VAD halts itself)
             if (event.type === 'input_audio_buffer.speech_started') {
-                console.log('[twilio-bot] User interrupted — cancelling AI response');
-                // Cancel the AI’s current response
-                if (openAiWs.readyState === WebSocket.OPEN) {
-                    openAiWs.send(JSON.stringify({ type: 'response.cancel' }));
-                }
-                // Tell Vobiz to immediately stop playing the AI’s audio
-                if (ws.readyState === WebSocket.OPEN) {
-                    if (vobizStreamSid) {
-                        // Send standard Twilio clear, but also include streamId just in case Vobiz expects it
-                        ws.send(JSON.stringify({ event: 'clear', streamSid: vobizStreamSid, streamId: vobizStreamSid })); 
-                    }
-                    ws.send(JSON.stringify({ event: 'clearAudio' })); // Vobiz custom fallback just in case
-                }
+                console.log('[twilio-bot] User interrupted — VAD triggered, AI paused');
+                // Removed the Vobiz 'clear' event because Vobiz rejects it with 'incorrectPayload'
             }
 
             // Handle end_call tool invocation from the AI
@@ -462,12 +567,13 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
             if (data.event === 'start') {
                 vobizCallId = data.start?.callId || '';
                 // Twilio uses streamSid, Vobiz uses streamId
+                isTwilio = !!data.start?.streamSid;
                 vobizStreamSid = data.streamSid || data.start?.streamSid || data.start?.streamId || data.streamId || '';
-                console.log(`[twilio-bot] Vobiz stream started, callId=${vobizCallId}, streamSid=${vobizStreamSid}`);
+                console.log(`[twilio-bot] Stream started. Provider: ${isTwilio ? 'Twilio' : 'Vobiz'}, callId=${vobizCallId}, streamSid=${vobizStreamSid}`);
             }
 
             // Always forward user audio to OpenAI — server_vad handles turn detection
-            if (data.event === 'media' && openAiWs.readyState === WebSocket.OPEN) {
+            if (data.event === 'media' && openAiWs.readyState === WebSocket.OPEN && !isDeaf) {
                 mediaEventCount++;
                 if (mediaEventCount % 100 === 0) {
                     console.log(`[twilio-bot] 🎙️ Received ${mediaEventCount} media events from Vobiz (caller audio flowing)`);
@@ -526,9 +632,17 @@ router.ws('/stream', (ws: WebSocket, req: any) => {
     ws.on('error', (e) => {
         console.error('[twilio-bot] Vobiz WS error:', e.message);
     });
-});
+};
 
-// No-op export - registerVobizStream no longer needed
-export function registerVobizStream(_app: any) { /* noop - ws is on the router */ }
+// Register WebSocket route on the MAIN app (not sub-router) so Cloud Run
+// correctly intercepts the HTTP Upgrade request at the server level.
+export function registerVobizStream(app: any) {
+    if (_wsHandler) {
+        app.ws('/twilio-bot/stream', _wsHandler);
+        console.log('[twilio-bot] WebSocket /twilio-bot/stream registered on main app');
+    } else {
+        console.error('[twilio-bot] registerVobizStream called before _wsHandler was set!');
+    }
+}
 
 export default router;

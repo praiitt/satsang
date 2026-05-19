@@ -40,6 +40,8 @@ META_PAGE_TOKEN=$(load_env_var META_PAGE_ACCESS_TOKEN)
 META_PAGE=$(load_env_var META_PAGE_ID)
 META_CATEGORY=$(load_env_var META_LEAD_CATEGORY)
 SUNO_KEY=$(load_env_var SUNO_API_KEY)
+HEYGEN_KEY=$(load_env_var HEYGEN_API_KEY)
+GEMINI_KEY=$(load_env_var GEMINI_API_KEY)
 
 if [ -z "$OPENAI_KEY" ]; then echo "❌ OPENAI_API_KEY not found in ../.env"; exit 1; fi
 if [ -z "$SENDGRID_KEY" ]; then echo "❌ SENDGRID_API_KEY not found in ../.env"; exit 1; fi
@@ -55,10 +57,11 @@ $GCLOUD run deploy $SERVICE \
   --allow-unauthenticated \
   --port 4001 \
   --timeout 3600 \
-  --cpu 1 \
-  --memory 512Mi \
-  --concurrency 80 \
+  --cpu 2 \
+  --memory 2Gi \
+  --concurrency 4 \
   --min-instances 1 \
+  --no-cpu-throttling \
   --session-affinity \
   --set-env-vars "\
 NODE_ENV=production,\
@@ -80,6 +83,8 @@ META_PAGE_ACCESS_TOKEN=${META_PAGE_TOKEN},\
 META_PAGE_ID=${META_PAGE},\
 META_LEAD_CATEGORY=${META_CATEGORY:-general},\
 SUNO_API_KEY=${SUNO_KEY},\
+HEYGEN_API_KEY=${HEYGEN_KEY},\
+GEMINI_API_KEY=${GEMINI_KEY},\
 OPENAI_API_KEY=${OPENAI_KEY}"
 
 echo ""

@@ -160,41 +160,39 @@ ${planData.pravachan_points?.join('\\n')}
                         const AUTH_SERVER_URL = 'https://satsang-auth-server-6ougd45dya-el.a.run.app';
                         const callBackUrl = `${AUTH_SERVER_URL}/suno/callback?userId=${userId}`;
                         
-                        const sunoResponse = await fetch('https://api.sunoapi.org/api/v1/generate', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${process.env.SUNO_API_KEY}`
-                            },
-                            body: JSON.stringify({
-                                prompt: lyricsData.lyrics,
-                                tags: lyricsData.style_tags,
-                                title: `Satsang Meditation: ${translatedTopic}`,
-                                instrumental: false,
-                                model: 'V3_5',
-                                customMode: true,
-                                callBackUrl: callBackUrl
-                            })
-                        });
-                        
-                        const sunoResult = await sunoResponse.json();
+                        let sunoResult;
                         let sunoTaskId: string | null = null;
+                        let isFalFallback = false;
 
-                        // Log the full Suno API response for debugging
-                        console.log(`[Satsang Generate] Suno API HTTP status: ${sunoResponse.status}`);
-                        console.log(`[Satsang Generate] Suno API response: ${JSON.stringify(sunoResult)}`);
+                        try {
+                            const sunoResponse = await fetch('https://api.sunoapi.org/api/v1/generate', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${process.env.SUNO_API_KEY}`
+                                },
+                                body: JSON.stringify({
+                                    prompt: lyricsData.lyrics,
+                                    tags: lyricsData.style_tags,
+                                    title: `Satsang Meditation: ${translatedTopic}`,
+                                    instrumental: false,
+                                    model: 'V3_5',
+                                    customMode: true,
+                                    callBackUrl: callBackUrl
+                                })
+                            });
+                            
+                            sunoResult = await sunoResponse.json();
 
-                        if (!sunoResponse.ok) {
-                            console.error(`[Satsang Generate] Suno API HTTP error: ${sunoResponse.status}`, sunoResult);
-                        } else {
-                            // Grab task ID from various possible Suno API response formats
-                            // Format 1: { code: 200, data: { task_id: "..." } }  (current sunoapi.org)
-                            // Format 2: { data: { taskId: "..." } }
-                            // Format 3: { data: "task_id_string" }
-                            // Format 4: { data: [{ id: "..." }] }
-                            // Format 5: { task_id: "..." } (top-level)
-                            // Format 6: { taskId: "..." } (top-level)
-                            // Format 7: { data: { id: "..." } }
+                            // Log the full Suno API response for debugging
+                            console.log(`[Satsang Generate] Suno API HTTP status: ${sunoResponse.status}`);
+                            console.log(`[Satsang Generate] Suno API response: ${JSON.stringify(sunoResult)}`);
+
+                            if (!sunoResponse.ok) {
+                                console.error(`[Satsang Generate] Suno API HTTP error: ${sunoResponse.status}`, sunoResult);
+                                throw new Error("Suno returned non-200 status");
+                            }
+
                             sunoTaskId =
                                 sunoResult?.data?.task_id ||
                                 sunoResult?.data?.taskId ||
@@ -206,6 +204,30 @@ ${planData.pravachan_points?.join('\\n')}
                                     ? (sunoResult.data[0]?.id || sunoResult.data[0]?.task_id || null)
                                     : null) ||
                                 null;
+
+                        } catch (sunoErr) {
+                            console.error('[Satsang Generate] Suno request failed. Triggering fal.ai fallback...', sunoErr);
+                            isFalFallback = true;
+                            
+                            try {
+                                const falResponse = await fetch('https://queue.fal.run/fal-ai/stable-audio', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Key ${process.env.FAL_KEY}`
+                                    },
+                                    body: JSON.stringify({
+                                        prompt: `${lyricsData.style_tags}. ${lyricsData.lyrics}`,
+                                        webhook_url: callBackUrl.replace('/suno/', '/fal/')
+                                    })
+                                });
+                                
+                                const falResult = await falResponse.json();
+                                sunoTaskId = falResult.request_id;
+                                console.log(`[Satsang Generate] Used fal.ai fallback successfully. Task ID: ${sunoTaskId}`);
+                            } catch (falErr) {
+                                console.error('[Satsang Generate] Fal fallback completely failed:', falErr);
+                            }
                         }
 
                         console.log(`[Satsang Generate] Extracted Suno task ID: ${sunoTaskId}`);
@@ -220,6 +242,7 @@ ${planData.pravachan_points?.join('\\n')}
                             await db.collection('music_tracks').doc(sunoTaskId).set({
                                 id: sunoTaskId,
                                 userId: userId,
+                                provider: isFalFallback ? 'fal_fallback' : 'suno',
                                 title: `Satsang Meditation: ${translatedTopic}`,
                                 lyrics: lyricsData.lyrics || '',
                                 tags: lyricsData.style_tags || '',

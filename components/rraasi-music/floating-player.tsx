@@ -15,7 +15,10 @@ import {
     ListMusic,
     Music,
     Repeat,
-    Repeat1
+    Repeat1,
+    Timer,
+    Moon,
+    Gauge
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -37,6 +40,11 @@ export function FloatingPlayer() {
         closePlayer,
         repeatMode,
         cycleRepeatMode,
+        playbackRate,
+        setPlaybackRate,
+        sleepTimerMinutes,
+        sleepTimerRemaining,
+        setSleepTimer,
     } = useMusicPlayer();
 
     const [isHovered, setIsHovered] = useState(false);
@@ -72,7 +80,7 @@ export function FloatingPlayer() {
                 title={label}
                 className={cn(
                     btnSize,
-                    'transition-all duration-200 rounded-full relative',
+                    'transition-all duration-200 rounded-full relative flex items-center justify-center',
                     repeatMode === 'off'
                         ? 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
                         : 'text-amber-500 hover:text-amber-600'
@@ -86,6 +94,44 @@ export function FloatingPlayer() {
                 {repeatMode !== 'off' && (
                     <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-amber-500" />
                 )}
+            </button>
+        );
+    };
+
+    const SpeedButton = () => {
+        const cycleSpeed = () => {
+            const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+            const nextIndex = (speeds.indexOf(playbackRate) + 1) % speeds.length;
+            setPlaybackRate(speeds[nextIndex]);
+        };
+        
+        return (
+            <button onClick={cycleSpeed} className="flex flex-col items-center justify-center p-2 text-gray-400 hover:text-amber-500 transition-colors" title="Playback Speed">
+                <Gauge className="w-5 h-5 mb-1" />
+                <span className="text-[10px] font-bold">{playbackRate}x</span>
+            </button>
+        );
+    };
+
+    const SleepTimerButton = () => {
+        const cycleTimer = () => {
+            const timers = [null, 15, 30, 60];
+            const nextIndex = (timers.indexOf(sleepTimerMinutes) + 1) % timers.length;
+            setSleepTimer(timers[nextIndex]);
+        };
+
+        const formatRemaining = (seconds: number) => {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        };
+
+        return (
+            <button onClick={cycleTimer} className={cn("flex flex-col items-center justify-center p-2 transition-colors", sleepTimerMinutes ? "text-amber-500" : "text-gray-400 hover:text-amber-500")} title="Sleep/Meditation Timer">
+                {sleepTimerMinutes ? <Moon className="w-5 h-5 mb-1 fill-current" /> : <Timer className="w-5 h-5 mb-1" />}
+                <span className="text-[10px] font-bold">
+                    {sleepTimerMinutes ? formatRemaining(sleepTimerRemaining || 0) : 'Timer'}
+                </span>
             </button>
         );
     };
@@ -164,8 +210,10 @@ export function FloatingPlayer() {
                         <SkipForward className="w-8 h-8" />
                     </button>
 
-                    {/* Spacer to balance the layout */}
-                    <div className="w-14" />
+                    <div className="flex gap-2">
+                        <SpeedButton />
+                        <SleepTimerButton />
+                    </div>
                 </div>
 
                 {/* Repeat label */}

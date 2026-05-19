@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import {
   Upload, RefreshCw, MessageCircle, Mail, UserPlus,
   CheckCircle, AlertCircle, Clock, Users, Zap, Pause,
@@ -88,6 +88,7 @@ function StatusBadge({ lead }: { lead: FbLead }) {
 
 export default function FacebookLeadsPage() {
   const [leads, setLeads] = useState<FbLead[]>([]);
+  const [totalLeads, setTotalLeads] = useState(0);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -116,21 +117,34 @@ export default function FacebookLeadsPage() {
   const PAGE_SIZE = 50;
   const abortRef = useRef<AbortController | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Fetch leads ────────────────────────────────────────────────────────────
-  const fetchLeads = useCallback(async () => {
+  // ── Build API URL with current filters ─────────────────────────────────────
+  const buildApiUrl = useCallback((search: string, category: string) => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set('search', search.trim());
+    if (category && category !== 'all') params.set('category', category);
+    params.set('limit', '2000'); // fetch up to 2000, paginate locally
+    const qs = params.toString();
+    return `/api/facebook-leads${qs ? '?' + qs : ''}`;
+  }, []);
+
+  // ── Fetch leads (server-side search + category) ────────────────────────────
+  const fetchLeads = useCallback(async (search = '', category = 'all') => {
     setLoading(true);
     try {
-      const res = await fetch('/api/facebook-leads');
+      const url = buildApiUrl(search, category);
+      const res = await fetch(url);
       const data = await res.json();
       setLeads(data.items || []);
+      setTotalLeads(data.total ?? (data.items || []).length);
     } catch (e) {
       console.error('Failed to fetch facebook leads:', e);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [buildApiUrl]);
 
   const fetchWaStatus = useCallback(async () => {
     try {
@@ -144,33 +158,39 @@ export default function FacebookLeadsPage() {
     }
   }, []);
 
+  // Keep search/category in refs so the polling interval can read latest values
+  const searchRef = useRef(searchQuery);
+  const tabRef = useRef(activeTab);
+  useEffect(() => { searchRef.current = searchQuery; }, [searchQuery]);
+  useEffect(() => { tabRef.current = activeTab; }, [activeTab]);
+
   useEffect(() => { 
-    fetchLeads();
+    fetchLeads(searchQuery, activeTab);
     fetchWaStatus();
     const interval = setInterval(() => {
       fetchWaStatus();
       // Only poll for leads if we are not actively loading or performing an action
-      // to prevent UI jitter
       if (!loading && !actionLoading) {
-        // Silently fetch leads to update the list without showing the loading spinner
-        fetch('/api/facebook-leads')
+        const url = buildApiUrl(searchRef.current, tabRef.current);
+        fetch(url)
           .then(res => res.json())
           .then(data => {
             if (data.items) {
               setLeads(prevLeads => {
-                // Only update if there's a difference to avoid unnecessary re-renders
                 if (JSON.stringify(prevLeads) !== JSON.stringify(data.items)) {
                   return data.items;
                 }
                 return prevLeads;
               });
+              setTotalLeads(data.total ?? data.items.length);
             }
           })
           .catch(e => console.error('Silent fetch failed:', e));
       }
-    }, 5000);
+    }, 10000);
     return () => clearInterval(interval);
-  }, [fetchLeads, fetchWaStatus, loading, actionLoading]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchLeads, fetchWaStatus, buildApiUrl]);
 
   // ── CSV Import ─────────────────────────────────────────────────────────────
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -453,27 +473,16 @@ export default function FacebookLeadsPage() {
     setProgress(p => ({ ...p, running: false, paused: true }));
   };
 
-  // ── Filtered Leads ─────────────────────────────────────────────────────────
-  const filteredLeads = leads.filter(l => {
-    // Category tab filter
-    if (activeTab !== 'all') {
-      const leadCat = (l.category || 'general').toLowerCase();
-      if (leadCat !== activeTab) return false;
-    }
-    // Search filter
-    return !searchQuery ||
-      l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (l.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (l.phone || '').includes(searchQuery);
-  });
+  // ── Server already filtered — just paginate ────────────────────────────────
+  // leads[] is the result of server-side search + category filter
+  const filteredLeads = leads; // server handles search & category
 
   const totalPages = Math.max(1, Math.ceil(filteredLeads.length / PAGE_SIZE));
-  // Reset to page 1 whenever search changes
   const safePage = Math.min(currentPage, totalPages);
   const paginatedLeads = filteredLeads.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const stats = {
-    total: leads.length,
+    total: totalLeads, // use server-reported total (all records, no filter)
     new: leads.filter(l => l.status === 'new').length,
     registered: leads.filter(l => l.registeredInAuth).length,
     wasSent: leads.filter(l => l.waSent).length,
@@ -686,12 +695,12 @@ export default function FacebookLeadsPage() {
           { key: 'music',   label: '🎵 Music',     color: 'bg-pink-600 text-white' },
           { key: 'general', label: '📋 General',   color: 'bg-gray-600 text-white' },
         ] as const).map(({ key, label, color }) => {
-          const count = key === 'all' ? leads.length : leads.filter(l => (l.category || 'general') === key).length;
+          const count = key === 'all' ? totalLeads : leads.filter(l => (l.category || 'general') === key).length;
           const isActive = activeTab === key;
           return (
             <button
               key={key}
-              onClick={() => { setActiveTab(key); setCurrentPage(1); }}
+              onClick={() => { setActiveTab(key); setCurrentPage(1); fetchLeads(searchQuery, key); }}
               className={cn(
                 'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 shadow-sm',
                 isActive ? color : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -712,12 +721,22 @@ export default function FacebookLeadsPage() {
         <span className="text-gray-400">🔍</span>
         <input
           type="text"
-          placeholder="Search by name, email, or phone..."
+          placeholder="Search whole database by name, email, or phone..."
           value={searchQuery}
-          onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+          onChange={e => {
+            const q = e.target.value;
+            setSearchQuery(q);
+            setCurrentPage(1);
+            // Debounce server fetch so we don't fire on every keystroke
+            if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+            searchDebounceRef.current = setTimeout(() => {
+              fetchLeads(q, activeTab);
+            }, 400);
+          }}
           className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 placeholder:text-gray-400"
         />
-        <span className="text-xs text-gray-400">{filteredLeads.length} leads · {stats.withPhone} have phone · {stats.withEmail} have email</span>
+        {loading && <span className="text-xs text-indigo-500 animate-pulse">Searching...</span>}
+        <span className="text-xs text-gray-400">{filteredLeads.length} shown · {totalLeads} total · {stats.withPhone} have phone · {stats.withEmail} have email</span>
       </div>
 
       {/* ── Leads Table ── */}

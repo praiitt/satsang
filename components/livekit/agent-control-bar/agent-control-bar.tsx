@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable prettier/prettier */
-import { type HTMLAttributes, useCallback, useState } from 'react';
+import { type HTMLAttributes, useCallback, useState, useEffect } from 'react';
 import { Track } from 'livekit-client';
 import { useChat, useRemoteParticipants } from '@livekit/components-react';
 import { ChatTextIcon, Moon, PhoneDisconnectIcon, SpeakerHigh, SpeakerSlash, Sun } from '@phosphor-icons/react/dist/ssr';
@@ -50,9 +50,15 @@ export function AgentControlBar({
   const [chatOpen, setChatOpen] = useState(false);
   const [agentMuted, setAgentMuted] = useState(false);
   const publishPermissions = usePublishPermissions();
-  const { isSessionActive, endSession } = useSession();
+  const { isSessionActive, endSession, currentIntention } = useSession();
   const { sleep, wake, agentIsSleeping } = useAgentControl();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (currentIntention) {
+      setChatOpen(true);
+    }
+  }, [currentIntention]);
 
   const {
     micTrackRef,
@@ -236,6 +242,7 @@ export function AgentControlBar({
           chatOpen={chatOpen}
           isAgentAvailable={isAgentAvailable}
           onSend={handleSendMessage}
+          initialMessage={currentIntention}
         />
       </div>
     </div>

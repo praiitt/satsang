@@ -9,6 +9,7 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { Logo } from '@/components/ui/logo';
 import { ServiceNav } from '@/components/app/service-nav';
 import { ThemeToggle } from '@/components/app/theme-toggle';
+import { CoinBalanceBadge } from '@/components/ui/coin-balance-badge';
 
 export function SiteHeader() {
   const { t } = useLanguage();
@@ -33,14 +34,19 @@ export function SiteHeader() {
         <nav className="flex items-center gap-2 sm:gap-4 shrink-0">
 
           {isAuthenticated && (
-            <Link
-              href="/profile"
-              className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-              title="Profile"
-            >
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline text-sm">Profile</span>
-            </Link>
+            <>
+              {/* Coin balance — click to top up */}
+              <CoinBalanceBadge />
+
+              <Link
+                href="/profile"
+                className="text-muted-foreground hover:text-foreground flex items-center gap-1"
+                title="Profile"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline text-sm">Profile</span>
+              </Link>
+            </>
           )}
           <ThemeToggle className="w-auto" />
           <LanguageSelector />

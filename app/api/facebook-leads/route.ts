@@ -17,7 +17,11 @@ async function proxy(res: Response) {
 
 export async function GET(req: NextRequest) {
     try {
-        const res = await fetch(`${MKT()}/facebook-leads`, { headers: fwd(req), cache: 'no-store' });
+        // Forward any query params (search, category, limit, offset) to the backend
+        const { searchParams } = new URL(req.url);
+        const qs = searchParams.toString();
+        const url = `${MKT()}/facebook-leads${qs ? '?' + qs : ''}`;
+        const res = await fetch(url, { headers: fwd(req), cache: 'no-store' });
         return proxy(res);
     } catch (e: any) {
         return NextResponse.json({ error: 'Proxy failed', details: e.message }, { status: 502 });

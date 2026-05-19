@@ -32,6 +32,8 @@ interface MusicPlayerCardProps {
     onDownload?: () => void; // New prop
     videoUrl?: string; // New prop
     videoStatus?: 'generating' | 'completed' | 'failed' | null; // New prop
+    videoGeneratingStartedAt?: number | null; // epoch ms
+    onRetryVideo?: () => void;
     enableDownload?: boolean; // New prop for server component usage
     shareId?: string; // New prop for overriding share link ID
     story?: string;
@@ -86,6 +88,8 @@ export function MusicPlayerCard({
     onDeleteVideo,
     onDownloadVideo,
     onRefreshVideo,
+    onRetryVideo,
+    videoGeneratingStartedAt,
 }: MusicPlayerCardProps) {
     const { currentTrack, isPlaying, playTrack, togglePlayPause } = useMusicPlayer();
     const { profile } = useUserProfile();
@@ -156,6 +160,9 @@ export function MusicPlayerCard({
 
     // Check if track is pending/generating
     const isPending = status === 'generating' || status === 'submitted' || !audioUrl;
+    
+    // Check if video lock is stale (older than 5 minutes)
+    const isVideoStale = videoStatus === 'generating' && videoGeneratingStartedAt && (Date.now() - videoGeneratingStartedAt > 5 * 60 * 1000);
 
     const handlePlayClick = () => {
         if (isPending) return; // Cannot play pending tracks
@@ -590,18 +597,33 @@ export function MusicPlayerCard({
 
                     {/* Message */}
                     <p className="text-amber-300 font-bold text-sm tracking-wide mb-1">Creating your video...</p>
-                    <p className="text-white/50 text-[10px] text-center px-4 mb-4">This takes 2–3 minutes. Come back anytime.</p>
+                    <p className="text-white/50 text-[10px] text-center px-4 mb-4">
+                        {isVideoStale ? "This is taking longer than expected." : "This takes 2–3 minutes. Come back anytime."}
+                    </p>
 
-                    {/* Prominent Refresh Button */}
-                    {onRefreshVideo && (
-                        <button
-                            onClick={(e) => { e.stopPropagation(); onRefreshVideo(); }}
-                            className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-black font-bold text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-amber-500/30"
-                        >
-                            <RefreshCw className="w-3.5 h-3.5" />
-                            Tap to Check if Ready
-                        </button>
-                    )}
+                    <div className="flex flex-col gap-2 w-full px-8">
+                        {/* Prominent Refresh Button */}
+                        {onRefreshVideo && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onRefreshVideo(); }}
+                                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 active:scale-95 text-black font-bold text-[11px] uppercase tracking-widest transition-all shadow-lg shadow-amber-500/30 w-full"
+                            >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                Tap to Check if Ready
+                            </button>
+                        )}
+                        
+                        {/* Retry Button (Only if stale) */}
+                        {isVideoStale && onRetryVideo && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); onRetryVideo(); }}
+                                className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 active:scale-95 text-white font-bold text-[11px] uppercase tracking-widest transition-all w-full"
+                            >
+                                <Video className="w-3.5 h-3.5" />
+                                Retry Video Generation
+                            </button>
+                        )}
+                    </div>
                 </div>
             )}
 

@@ -15,6 +15,9 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Install FFmpeg for video rendering
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+
 # Only production deps
 COPY package*.json ./
 RUN npm ci --omit=dev

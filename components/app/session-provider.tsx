@@ -10,11 +10,13 @@ const SessionContext = createContext<{
   isSessionActive: boolean;
   startSession: (options?: { intention?: string; resumeSessionId?: string }) => void;
   endSession: () => void;
+  currentIntention?: string;
 }>({
   appConfig: APP_CONFIG_DEFAULTS,
   isSessionActive: false,
   startSession: () => { },
   endSession: () => { },
+  currentIntention: undefined,
 });
 
 interface SessionProviderProps {
@@ -23,10 +25,10 @@ interface SessionProviderProps {
 }
 
 export const SessionProvider = ({ appConfig, children }: SessionProviderProps) => {
-  const { room, isSessionActive, startSession, endSession } = useRoom(appConfig);
+  const { room, isSessionActive, startSession, endSession, currentIntention } = useRoom(appConfig);
   const contextValue = useMemo(
-    () => ({ appConfig, isSessionActive, startSession, endSession }),
-    [appConfig, isSessionActive, startSession, endSession]
+    () => ({ appConfig, isSessionActive, startSession, endSession, currentIntention }),
+    [appConfig, isSessionActive, startSession, endSession, currentIntention]
   );
 
   return (

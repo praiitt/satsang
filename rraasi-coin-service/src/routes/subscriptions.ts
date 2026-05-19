@@ -23,6 +23,115 @@ router.get('/plans', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /subscriptions/coin-packs
+ * Get all available one-time coin packs
+ */
+router.get('/coin-packs', async (req: Request, res: Response) => {
+    try {
+        const packs = razorpayService.getAllCoinPacks();
+        res.json({ success: true, packs });
+    } catch (error: any) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /subscriptions/coin-packs/create-order
+ * Create Razorpay order for a coin pack
+ */
+router.post('/coin-packs/create-order', async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.uid;
+        const userEmail = (req as any).user.email || '';
+        const { packId } = req.body;
+
+        if (!packId) {
+            res.status(400).json({ success: false, error: 'packId is required' });
+            return;
+        }
+
+        const result = await razorpayService.createCoinPackOrder(packId, userId, userEmail);
+        res.status(result.success ? 200 : 400).json(result);
+    } catch (error: any) {
+        console.error('[Coin Packs] Create order error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
+ * POST /subscriptions/coin-packs/verify
+ * Verify Razorpay payment and credit coins to user balance
+ */
+router.post('/coin-packs/verify', async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.uid;
+        const { orderId, paymentId, signature, packId } = req.body;
+
+        if (!orderId || !paymentId || !signature || !packId) {
+            res.status(400).json({
+                success: false,
+                error: 'orderId, paymentId, signature, and packId are required'
+            });
+            return;
+        }
+
+        // Verify signature
+        const isValid = razorpayService.verifyPaymentSignature(orderId, paymentId, signature);
+        if (!isValid) {
+            res.status(400).json({ success: false, error: 'Invalid payment signature' });
+            return;
+        }
+
+        const pack = razorpayService.getCoinPack(packId);
+        if (!pack) {
+            res.status(400).json({ success: false, error: 'Invalid coin pack' });
+            return;
+        }
+
+        // Idempotency: check if this order was already processed
+        const db = firestoreService.getDb();
+        const existing = await db.collection('coinPackPurchases')
+            .where('razorpayOrderId', '==', orderId).limit(1).get();
+        if (!existing.empty) {
+            res.json({ success: true, alreadyProcessed: true, coinsAdded: pack.coins });
+            return;
+        }
+
+        // Record the purchase
+        await db.collection('coinPackPurchases').add({
+            userId,
+            packId: pack.id,
+            packName: pack.name,
+            coins: pack.coins,
+            amountPaid: pack.price,
+            currency: pack.currency,
+            razorpayOrderId: orderId,
+            razorpayPaymentId: paymentId,
+            createdAt: new Date()
+        });
+
+        // Credit coins to user
+        const addResult = await coinService.addBonusCoins(
+            userId,
+            pack.coins,
+            `Coin Pack: ${pack.name} (${pack.coins} coins)`
+        );
+
+        console.log(`[Coin Packs] ✅ Credited ${pack.coins} coins to user ${userId}`);
+
+        res.json({
+            success: true,
+            coinsAdded: pack.coins,
+            newBalance: addResult.newBalance,
+            pack: { id: pack.id, name: pack.name, coins: pack.coins }
+        });
+    } catch (error: any) {
+        console.error('[Coin Packs] Verify error:', error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+/**
  * POST /subscriptions/create-order
  * Create Razorpay order for subscription purchase
  */

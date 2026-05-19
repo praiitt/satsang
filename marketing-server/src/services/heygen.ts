@@ -1,15 +1,7 @@
 import https from 'node:https';
 
-const HEYGEN_API_KEY = process.env.HEYGEN_API_KEY;
-// Detect v2 API key (starts with sk_V2_) and use appropriate base URL
-const HEYGEN_BASE_URL = process.env.HEYGEN_BASE_URL || 'https://api.heygen.com';
-
-if (!HEYGEN_API_KEY) {
-  // eslint-disable-next-line no-console
-  console.warn(
-    '[heygen] HEYGEN_API_KEY is not set. HeyGen integration will not work until configured.'
-  );
-}
+const getHeygenApiKey = () => process.env.HEYGEN_API_KEY;
+const getHeygenBaseUrl = () => process.env.HEYGEN_BASE_URL || 'https://api.heygen.com';
 
 interface HttpRequestOptions {
   method: 'GET' | 'POST';
@@ -49,18 +41,20 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
     // If path already starts with /v2/, use base URL as-is
     // Otherwise, check if we need to prepend /v2/ based on API key version
     let fullPath = options.path;
-    const isV2Key = HEYGEN_API_KEY?.startsWith('sk_V2_');
+    const apiKey = getHeygenApiKey();
+    const baseUrl = getHeygenBaseUrl();
+    const isV2Key = apiKey?.startsWith('sk_V2_');
 
     // If using v2 API key and path doesn't start with /v2/, prepend it
     if (isV2Key && !fullPath.startsWith('/v2/') && !fullPath.startsWith('/v1/')) {
       fullPath = '/v2' + fullPath;
     }
 
-    const url = new URL(HEYGEN_BASE_URL);
+    const url = new URL(baseUrl);
     const bodyString = options.body !== undefined ? JSON.stringify(options.body) : undefined;
 
     // eslint-disable-next-line no-console
-    console.log(`[heygen] Request: ${options.method} ${fullPath} (Base: ${HEYGEN_BASE_URL})`);
+    console.log(`[heygen] Request: ${options.method} ${fullPath} (Base: ${baseUrl})`);
 
     const reqOptions = {
       hostname: url.hostname,
@@ -71,7 +65,7 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'User-Agent': 'Node.js/marketing-server',
-        'X-Api-Key': HEYGEN_API_KEY || '',
+        'X-Api-Key': apiKey || '',
         'Content-Length': bodyString ? Buffer.byteLength(bodyString) : 0,
       },
     };
@@ -163,7 +157,8 @@ function httpRequestJson<T>(options: HttpRequestOptions): Promise<T> {
 export async function createAvatarClip(
   params: CreateAvatarClipParams
 ): Promise<HeyGenCreateVideoResponse> {
-  if (!HEYGEN_API_KEY) {
+  const apiKey = getHeygenApiKey();
+  if (!apiKey) {
     // eslint-disable-next-line no-console
     console.error('[heygen] HEYGEN_API_KEY is not set. Cannot create avatar clip.');
     return {
@@ -422,17 +417,19 @@ export async function healthCheck(): Promise<{
   error?: string;
   rawResponse?: any;
 }> {
+  const apiKey = getHeygenApiKey();
+  const baseUrl = getHeygenBaseUrl();
   const result = {
     success: false,
-    apiKeySet: !!HEYGEN_API_KEY,
-    apiKeyPrefix: HEYGEN_API_KEY ? HEYGEN_API_KEY.substring(0, 10) + '...' : undefined,
-    baseUrl: HEYGEN_BASE_URL,
+    apiKeySet: !!apiKey,
+    apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : undefined,
+    baseUrl: baseUrl,
     avatars: undefined as Array<{ id: string; name?: string; type?: string }> | undefined,
     error: undefined as string | undefined,
     rawResponse: undefined as any,
   };
 
-  if (!HEYGEN_API_KEY) {
+  if (!apiKey) {
     result.error = 'HEYGEN_API_KEY environment variable is not set';
     return result;
   }

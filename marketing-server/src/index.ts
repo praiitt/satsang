@@ -19,6 +19,7 @@ import twilioBotRoutes, { registerVobizStream } from './routes/twilio-bot.js';
 import facebookLeadsRoutes from './routes/facebook-leads.js';
 import usersRoutes from './routes/users.js';
 import twilioWhatsappRoutes from './routes/twilio-whatsapp.js';
+import videoMakerRoutes from './routes/video-maker.js';
 
 // Setup Express with WebSocket support
 const { app, getWss } = expressWs(express());
@@ -36,14 +37,9 @@ app.use(
     })
 );
 
-// Google Cloud Functions already parses the body. We only need express.json() for local dev.
-if (!process.env.FUNCTION_TARGET) {
-    app.use(express.json());
-    app.use(express.urlencoded({ extended: true }));
-} else {
-    // GCF parses json, but might need help with urlencoded if not handled by GCP natively
-    app.use(express.urlencoded({ extended: true }));
-}
+// Ensure JSON body parsing is applied
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.use(cookieParser());
 
@@ -62,6 +58,7 @@ app.use('/twilio-bot', twilioBotRoutes);
 app.use('/facebook-leads', facebookLeadsRoutes);
 app.use('/users', usersRoutes);
 app.use('/twilio-whatsapp', twilioWhatsappRoutes);
+app.use('/video-maker', videoMakerRoutes);
 
 // Register the Vobiz WebSocket stream directly on the app-level expressWs instance
 // so that WebSocket upgrades are correctly intercept by the http.Server
@@ -77,6 +74,11 @@ if (!process.env.FUNCTION_TARGET) {
     const server = app.listen(PORT, () => {
         // eslint-disable-next-line no-console
         console.log(`[marketing-server] listening on http://localhost:${PORT}`);
+    });
+
+    // Debug: log every HTTP upgrade request to see if Vobiz WS handshakes reach us
+    server.on('upgrade', (req) => {
+        console.log(`[marketing-server] HTTP Upgrade request received: ${req.url} from ${req.headers.host}`);
     });
 
     server.on('error', (err: NodeJS.ErrnoException) => {

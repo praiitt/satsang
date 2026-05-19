@@ -14,6 +14,7 @@ const SESSION_COOKIE_NAME = '__session';
 
 export async function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) {
   try {
+    // 1. Internal service token (server-to-server)
     const internalToken = req.headers['x-internal-token'];
     if (internalToken && internalToken === process.env.INTERNAL_SERVICE_TOKEN) {
       req.user = {
@@ -23,19 +24,34 @@ export async function requireAuth(req: AuthedRequest, res: Response, next: NextF
       return next();
     }
 
-    const sessionCookie = req.cookies?.[SESSION_COOKIE_NAME];
-    if (!sessionCookie) {
-      return res.status(401).json({ error: 'Not authenticated' });
+    // 2. Bearer token (Firebase ID token — from rraasi-music or any cross-origin client)
+    const authHeader = req.headers['authorization'];
+    if (authHeader?.startsWith('Bearer ')) {
+      const idToken = authHeader.split('Bearer ')[1];
+      const decoded = await getAuth().verifyIdToken(idToken);
+      req.user = {
+        uid: decoded.uid,
+        email: decoded.email,
+        phone_number: decoded.phone_number,
+        claims: decoded,
+      };
+      return next();
     }
 
-    const decoded = await getAuth().verifySessionCookie(sessionCookie, true);
-    req.user = {
-      uid: decoded.uid,
-      email: decoded.email,
-      phone_number: decoded.phone_number,
-      claims: decoded,
-    };
-    next();
+    // 3. Session cookie (same-origin / admin dashboard)
+    const sessionCookie = req.cookies?.[SESSION_COOKIE_NAME];
+    if (sessionCookie) {
+      const decoded = await getAuth().verifySessionCookie(sessionCookie, true);
+      req.user = {
+        uid: decoded.uid,
+        email: decoded.email,
+        phone_number: decoded.phone_number,
+        claims: decoded,
+      };
+      return next();
+    }
+
+    return res.status(401).json({ error: 'Not authenticated' });
   } catch (err) {
     return res.status(401).json({ error: 'Invalid session' });
   }

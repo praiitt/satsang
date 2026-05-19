@@ -60,6 +60,7 @@ interface MusicTrack {
   shareId?: string;
   videoUrl?: string; 
   videoStatus?: 'generating' | 'completed' | 'failed' | null;
+  videoGeneratingStartedAt?: number | null; // epoch ms — used to detect stale locks
   story?: string;
   lyrics?: string;
   healingBenefits?: string[];
@@ -324,6 +325,9 @@ export const RRaaSiMusicWelcomeView = ({
               status: t.status,
               videoUrl: t.videoUrl,
               videoStatus: t.videoUrl ? 'completed' : (t.videoGenerating ? 'generating' : (t.videoStatus || null)),
+              videoGeneratingStartedAt: t.videoGeneratingStartedAt?._seconds
+                ? t.videoGeneratingStartedAt._seconds * 1000
+                : (t.videoGeneratingStartedAt ?? null),
               story: sub.story || t.story,
               lyrics: sub.lyrics || t.lyrics,
               healingBenefits: sub.healingBenefits || t.healingBenefits,
@@ -346,6 +350,9 @@ export const RRaaSiMusicWelcomeView = ({
             status: t.status,
             videoUrl: t.videoUrl,
             videoStatus: t.videoUrl ? 'completed' : (t.videoGenerating ? 'generating' : null),
+            videoGeneratingStartedAt: t.videoGeneratingStartedAt?._seconds
+              ? t.videoGeneratingStartedAt._seconds * 1000
+              : (t.videoGeneratingStartedAt ?? null),
             story: t.story,
             lyrics: t.lyrics,
             healingBenefits: t.healingBenefits,
@@ -499,6 +506,36 @@ export const RRaaSiMusicWelcomeView = ({
         })
         .catch(e => console.error('Video generation error:', e));
     });
+  };
+
+  // Retry Video Handler — clears stale lock so user can try again
+  const handleRetryVideo = async (trackId: string, trackDocId?: string) => {
+    const firestoreDocId = (trackDocId || trackId).split('?')[0];
+    if (!firestoreDocId) return;
+    try {
+      const token = await getFirebaseAuth().currentUser?.getIdToken();
+      const res = await fetch(`/api/rraasi-music/video?trackId=${firestoreDocId}`, {
+        method: 'PATCH',
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      const result = await res.json();
+      if (res.status === 409) {
+        alert('This video is still generating — please wait a few more minutes.');
+        return;
+      }
+      if (!res.ok) {
+        console.error('Retry failed:', result);
+        return;
+      }
+      // Clear the lock in local state so the card resets to "Create Video"
+      setMyTracks(prev => prev.map(t =>
+        (t.id === trackId || t.shareId === trackDocId)
+          ? { ...t, videoStatus: null, videoGenerating: false, videoGeneratingStartedAt: null }
+          : t
+      ));
+    } catch (e) {
+      console.error('Retry error:', e);
+    }
   };
 
   // Delete Video Handler
@@ -1486,6 +1523,8 @@ export const RRaaSiMusicWelcomeView = ({
                           onDeleteVideo={() => handleDeleteVideo(track.id, track.shareId)}
                           onDownloadVideo={track.videoUrl ? () => handleDownloadVideo(track) : undefined}
                           onRefreshVideo={() => handleRefreshSingleTrack(track.id, track.shareId)}
+                          onRetryVideo={() => handleRetryVideo(track.id, track.shareId)}
+                          videoGeneratingStartedAt={track.videoGeneratingStartedAt}
                           onSync={() => handleSync(track.id)}
                           isSyncing={syncingTrackId === track.id}
                           onDownload={() => handleDownload(track)}

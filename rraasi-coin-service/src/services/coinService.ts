@@ -213,16 +213,6 @@ export class CoinService {
                 return await this.initializeCoinBalance(userId);
             }
 
-            // Calculate total from subscriptions
-            const subscriptionCoins = await this.calculateSubscriptionCoins(userId);
-
-            // Update balance if subscription coins changed
-            if (balanceDoc.earnedCoins !== subscriptionCoins) {
-                await this.updateEarnedCoins(userId, subscriptionCoins);
-                balanceDoc.earnedCoins = subscriptionCoins;
-                balanceDoc.totalCoins = balanceDoc.earnedCoins + balanceDoc.bonusCoins - balanceDoc.spentCoins;
-            }
-
             console.log(`Balance retrieved: ${balanceDoc.totalCoins} coins`);
 
             return {

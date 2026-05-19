@@ -205,13 +205,45 @@ router.post('/import-csv', requireAuth, upload.single('file'), (req: AuthedReque
 
 /**
  * GET /facebook-leads
+ * Supports query params:
+ *   ?search=<name|email|phone>  — server-side search across all records
+ *   ?category=<satsang|music|general|all>  — filter by category
+ *   ?limit=<n>  — max records to return (default 500, max 2000)
+ *   ?offset=<n>  — pagination offset
  */
-router.get('/', requireAuth, async (_req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
     const db = getDb();
-    const snap = await db.collection(COLLECTION).orderBy('discoveredAt', 'desc').limit(200).get();
-    const items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    return res.json({ items, total: items.length });
+    const search = ((req.query.search as string) || '').trim().toLowerCase();
+    const category = ((req.query.category as string) || '').trim().toLowerCase();
+    const limitParam = Math.min(parseInt(req.query.limit as string) || 500, 2000);
+    const offsetParam = parseInt(req.query.offset as string) || 0;
+
+    let query: FirebaseFirestore.Query = db.collection(COLLECTION).orderBy('discoveredAt', 'desc');
+
+    // Category filter at DB level (exact match)
+    if (category && category !== 'all') {
+      query = query.where('category', '==', category);
+    }
+
+    // Fetch all matching category docs (Firestore doesn't support full-text search)
+    // We apply search filter in-memory after fetching
+    const snap = await query.get();
+    let items = snap.docs.map(d => ({ id: d.id, ...d.data() as any }));
+
+    // Server-side search filter
+    if (search) {
+      items = items.filter(lead => {
+        const name = (lead.name || '').toLowerCase();
+        const email = (lead.email || '').toLowerCase();
+        const phone = (lead.phone || '');
+        return name.includes(search) || email.includes(search) || phone.includes(search);
+      });
+    }
+
+    const total = items.length;
+    const paginated = items.slice(offsetParam, offsetParam + limitParam);
+    return res.json({ items: paginated, total, returned: paginated.length });
   } catch (e: any) {
     return res.status(500).json({ error: 'Failed to list leads', details: e.message });
   }

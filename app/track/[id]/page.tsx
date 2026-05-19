@@ -17,9 +17,38 @@ async function getTrack(id: string, searchParams?: any) {
         const db = getAdminDb();
         const doc = await db.collection('music_tracks').doc(id).get();
 
-        if (!doc.exists) return null;
+        let data: any = null;
+        let trackId = id;
+        let v = searchParams?.v;
 
-        const data = doc.data();
+        if (!doc.exists) {
+            // Fallback: It might be a sub-track ID (sunoId) passed directly
+            // Search across recent tracks to find the parent document
+            const snapshot = await db.collection('music_tracks')
+                .orderBy('createdAt', 'desc')
+                .limit(1000)
+                .get();
+
+            let found = false;
+            for (const d of snapshot.docs) {
+                const docData = d.data();
+                if (docData?.tracks && Array.isArray(docData.tracks)) {
+                    const match = docData.tracks.find((t: any) => t.id === id || t.sunoId === id);
+                    if (match) {
+                        data = docData;
+                        trackId = d.id; // The parent document ID
+                        v = match.sunoId || match.id; // Force the specific version
+                        found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!found) return null;
+        } else {
+            data = doc.data();
+        }
+
         let trackAudioUrl = data?.audioUrl || data?.audio_url;
         let trackImageUrl = data?.imageUrl || data?.image_url;
         let story = data?.story;
@@ -29,8 +58,6 @@ async function getTrack(id: string, searchParams?: any) {
         let category = data?.category || "Music";
         let title = data?.title || 'Spiritual Music by RRAASI';
         let description = data?.description || data?.prompt;
-        
-        const v = searchParams?.v;
 
         // If a specific version is requested and we have tracks
         if (data?.tracks && Array.isArray(data.tracks) && data.tracks.length > 0) {
@@ -72,7 +99,7 @@ async function getTrack(id: string, searchParams?: any) {
         const displayTitle = title ? title.replace(/^Satsang Medita*tion:\s*/i, '').trim() : 'Spiritual Music by RRAASI';
 
         return {
-            id: doc.id,
+            id: trackId,
             ...data,
             title: displayTitle,
             description: description,

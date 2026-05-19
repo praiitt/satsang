@@ -19,20 +19,45 @@ export async function PATCH(
             return NextResponse.json({ error: 'Track ID required' }, { status: 400 });
         }
 
-        const { isPublic } = body;
-        if (typeof isPublic !== 'boolean') {
-            return NextResponse.json({ error: 'isPublic boolean required' }, { status: 400 });
+        const { isPublic, videoUrl } = body;
+
+        // Build update payload - support both isPublic toggle and videoUrl clear
+        const updates: Record<string, any> = {};
+
+        if (typeof isPublic === 'boolean') {
+            updates.isPublic = isPublic;
         }
 
-        // Verify Auth Token to protect the API
-        const authHeader = request.headers.get('authorization');
-        if (!authHeader?.startsWith('Bearer ')) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // Allow explicitly setting videoUrl to null (to delete/reset a video)
+        if ('videoUrl' in body) {
+            updates.videoUrl = videoUrl ?? null;
         }
-        const token = authHeader.split('Bearer ')[1];
+
+        if (Object.keys(updates).length === 0) {
+            return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 });
+        }
+
+        // Verify Auth: Try Bearer Token first, then fallback to __session cookie
+        const authHeader = request.headers.get('authorization');
+        let isAuthenticated = false;
+        
         try {
-            await getAuth().verifyIdToken(token);
+            if (authHeader?.startsWith('Bearer ')) {
+                const token = authHeader.split('Bearer ')[1];
+                await getAuth().verifyIdToken(token);
+                isAuthenticated = true;
+            } else {
+                const sessionCookie = request.cookies.get('__session')?.value;
+                if (sessionCookie) {
+                    await getAuth().verifySessionCookie(sessionCookie);
+                    isAuthenticated = true;
+                }
+            }
         } catch (e) {
+            console.error('API Auth Error:', e);
+        }
+
+        if (!isAuthenticated) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
@@ -41,13 +66,11 @@ export async function PATCH(
             return NextResponse.json({ error: 'Track not found' }, { status: 404 });
         }
 
-        await db.collection('music_tracks').doc(trackId).update({
-            isPublic
-        });
+        await db.collection('music_tracks').doc(trackId).update(updates);
 
         return NextResponse.json({
             success: true,
-            message: `Track marked as ${isPublic ? 'Public' : 'Private'}`
+            message: 'Track updated successfully'
         });
 
     } catch (error) {

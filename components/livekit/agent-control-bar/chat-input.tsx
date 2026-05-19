@@ -31,16 +31,24 @@ interface ChatInputProps {
   chatOpen: boolean;
   isAgentAvailable?: boolean;
   onSend?: (message: string) => void;
+  initialMessage?: string;
 }
 
 export function ChatInput({
   chatOpen,
   isAgentAvailable = false,
   onSend = async () => { },
+  initialMessage = '',
 }: ChatInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [message, setMessage] = useState<string>(initialMessage);
   const [isSending, setIsSending] = useState(false);
-  const [message, setMessage] = useState<string>('');
+
+  useEffect(() => {
+    if (initialMessage && !message) {
+      setMessage(initialMessage);
+    }
+  }, [initialMessage]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

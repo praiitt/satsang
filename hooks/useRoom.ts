@@ -44,6 +44,7 @@ export function useRoom(appConfig: AppConfig) {
 
   // State to hold session-specific options (like intention)
   const sessionOptionsRef = useRef<{ intention?: string; resumeSessionId?: string }>({});
+  const [currentIntention, setCurrentIntention] = useState<string | undefined>(undefined);
 
   const fetchConnectionDetails = useCallback(async () => {
     const endpoint = appConfig.tokenEndpoint ?? process.env.NEXT_PUBLIC_CONN_DETAILS_ENDPOINT ?? '/api/connection-details';
@@ -137,6 +138,7 @@ export function useRoom(appConfig: AppConfig) {
     // Update Ref immediately
     if (options) {
       sessionOptionsRef.current = options;
+      setCurrentIntention(options.intention);
     } else {
       // Check URL for resumeSessionId if not explicitly passed
       if (typeof window !== 'undefined') {
@@ -233,6 +235,7 @@ export function useRoom(appConfig: AppConfig) {
   const endSession = useCallback(() => {
     setIsSessionActive(false);
     sessionOptionsRef.current = {}; // Reset options
+    setCurrentIntention(undefined);
     // Stop any active egress for this room
     const roomName = room.name;
     const ids = [...egressIdsRef.current];
@@ -246,5 +249,5 @@ export function useRoom(appConfig: AppConfig) {
     }
   }, []);
 
-  return { room, isSessionActive, startSession, endSession };
+  return { room, isSessionActive, startSession, endSession, currentIntention };
 }

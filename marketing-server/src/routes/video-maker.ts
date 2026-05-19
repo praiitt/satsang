@@ -13,11 +13,12 @@ const router = Router();
  */
 router.post('/', requireAuth, async (req: AuthedRequest, res) => {
   try {
-    const { audioUrl, trackId, title, prompt } = req.body as {
+    const { audioUrl, trackId, title, prompt, lyrics } = req.body as {
       audioUrl?: string;
       trackId?: string;
       title?: string;
       prompt?: string;
+      lyrics?: string;
     };
     console.log("req.body:", req.body);
     const userId = req.user?.uid;
@@ -56,16 +57,17 @@ router.post('/', requireAuth, async (req: AuthedRequest, res) => {
       return res.status(500).json({ error: 'Service temporarily unavailable (coin check failed)' });
     }
 
-    // Set a long timeout since this is a slow background task (can take 5-10 minutes)
-    req.setTimeout(900000); // 15 minutes
-    res.setTimeout(900000); // 15 minutes
+    // Set a long timeout since this is a slow background task (can take up to 30 minutes for long songs)
+    req.setTimeout(1800000); // 30 minutes
+    res.setTimeout(1800000); // 30 minutes
 
     const result = await createMusicVideo({
       audioUrl,
       userId,
       trackId,
       title,
-      prompt
+      prompt,
+      lyrics
     });
 
     if (!result.success) {

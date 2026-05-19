@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
-import { getAuth } from 'firebase/auth';
+import { getFirebaseAuth } from '@/lib/firebase-client';
 import {
   RefreshCw, MessageCircle, PhoneCall, CheckCircle, 
   Trash2, QrCode
@@ -46,8 +46,9 @@ export default function UsersAdminPage() {
     setLoading(true);
     try {
       // Get the current user's ID token to authenticate with the API
-      const token = await getAuth().currentUser?.getIdToken();
-      const res = await fetch(`/api/admin/users?page=${currentPage}&limit=50`, {
+      const auth = getFirebaseAuth();
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch(`/api/next-admin/users?page=${currentPage}&limit=50`, {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       if (res.status === 401) {

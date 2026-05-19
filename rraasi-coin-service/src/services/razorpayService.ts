@@ -24,7 +24,7 @@ export class RazorpayService {
     }
 
     /**
-     * Subscription plans configuration
+     * Subscription plans configuration (time-based)
      */
     private SUBSCRIPTION_PLANS = {
         seeker_7: {
@@ -52,6 +52,98 @@ export class RazorpayService {
             currency: 'INR'
         }
     };
+
+    /**
+     * Coin packs — one-time purchase, no expiry, directly added to balance
+     */
+    public COIN_PACKS = {
+        starter_600: {
+            id: 'starter_600',
+            name: 'Starter Pack',
+            coins: 600,
+            price: 29900,       // ₹299 in paise
+            priceDisplay: '₹299',
+            currency: 'INR',
+            description: '2 videos or 12 music tracks',
+            badge: null as string | null,
+            icon: '🌱'
+        },
+        creator_1500: {
+            id: 'creator_1500',
+            name: 'Creator Pack',
+            coins: 1500,
+            price: 59900,       // ₹599 in paise
+            priceDisplay: '₹599',
+            currency: 'INR',
+            description: '5 videos or 30 music tracks',
+            badge: 'Most Popular',
+            icon: '🎬'
+        },
+        studio_3000: {
+            id: 'studio_3000',
+            name: 'Studio Pack',
+            coins: 3000,
+            price: 99900,       // ₹999 in paise
+            priceDisplay: '₹999',
+            currency: 'INR',
+            description: '10 videos or 60 music tracks',
+            badge: 'Best Value',
+            icon: '🏆'
+        }
+    };
+
+    /** Get all coin packs */
+    getAllCoinPacks() {
+        return Object.values(this.COIN_PACKS);
+    }
+
+    /** Get single coin pack */
+    getCoinPack(packId: string) {
+        return this.COIN_PACKS[packId as keyof typeof this.COIN_PACKS] || null;
+    }
+
+    /**
+     * Create Razorpay order for a coin pack purchase
+     */
+    async createCoinPackOrder(packId: string, userId: string, userEmail: string) {
+        try {
+            const pack = this.getCoinPack(packId);
+            if (!pack) {
+                return { success: false, error: 'Invalid coin pack' };
+            }
+
+            const order = await this.razorpay.orders.create({
+                amount: pack.price,
+                currency: pack.currency,
+                receipt: `cp_${packId}_${Date.now()}`.substring(0, 40),
+                notes: {
+                    type: 'coin_pack',
+                    packId: pack.id,
+                    userId,
+                    userEmail,
+                    coins: pack.coins.toString()
+                }
+            });
+
+            console.log(`[Razorpay] Coin pack order created: ${order.id} for ${pack.coins} coins`);
+
+            return {
+                success: true,
+                order: {
+                    id: order.id,
+                    amount: order.amount,
+                    currency: order.currency,
+                    packId: pack.id,
+                    packName: pack.name,
+                    coins: pack.coins,
+                    keyId: this.keyId   // Send public key to frontend
+                }
+            };
+        } catch (error: any) {
+            console.error('[Razorpay] Error creating coin pack order:', error);
+            return { success: false, error: error.message || 'Failed to create order' };
+        }
+    }
 
     /**
      * Get subscription plan details
@@ -139,6 +231,11 @@ export class RazorpayService {
      */
     getAllPlans() {
         return Object.values(this.SUBSCRIPTION_PLANS);
+    }
+
+    /** Expose public key for frontend */
+    getPublicKey() {
+        return this.keyId;
     }
 }
 

@@ -53,6 +53,7 @@ export interface VideoMakerParams {
   trackId?: string;
   title?: string;   // optional track title for scene context
   prompt?: string;  // optional track prompt/description for scene context
+  lyrics?: string;  // optional lyrics to generate meaningful scenes
 }
 
 export interface VideoMakerResult {
@@ -108,24 +109,25 @@ async function uploadToFirebase(localPath: string, destination: string, contentT
   return `https://storage.googleapis.com/${bucket.name}/${destination}`;
 }
 
-// ─── SCENE GENERATION (no lyrics required) ─────────────────────────────────
+// ─── SCENE GENERATION ────────────────────────────────────────────────────────
 
 /**
  * Generate N spiritual/devotional scene prompts using GPT-4o.
- * Uses track title and prompt as context if available; falls back to
- * generic spiritual imagery otherwise.
+ * Uses track title, prompt, and lyrics as context if available.
  */
 async function generateScenePrompts(
   numScenes: number,
   title?: string,
-  trackPrompt?: string
+  trackPrompt?: string,
+  lyrics?: string
 ): Promise<string[]> {
   console.log(`[video-maker] 🔍 Generating ${numScenes} spiritual scene prompts...`);
 
   const contextHint = [
     title ? `Song title: "${title}"` : null,
     trackPrompt ? `Song description/theme: "${trackPrompt}"` : null,
-  ].filter(Boolean).join('\n') || 'A deeply spiritual devotional Indian music track.';
+    lyrics ? `Song lyrics:\n"${lyrics}"\n\nAnalyze these lyrics and generate deep, meaningful imagery that matches the lyrical content, characters, and emotion of the song.` : null,
+  ].filter(Boolean).join('\n\n') || 'A deeply spiritual devotional Indian music track.';
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
@@ -186,7 +188,7 @@ CRITICAL RULES:
 // ─── Main Pipeline ──────────────────────────────────────────────────────────
 
 export async function createMusicVideo(params: VideoMakerParams): Promise<VideoMakerResult> {
-  const { audioUrl, userId = 'anonymous', trackId, title, prompt } = params;
+  const { audioUrl, userId = 'anonymous', trackId, title, prompt, lyrics } = params;
 
   const timestamp = Date.now();
   const workDir = path.join(process.cwd(), 'temp', `videomaker_${timestamp}`);
@@ -203,11 +205,23 @@ export async function createMusicVideo(params: VideoMakerParams): Promise<VideoM
       return { success: true, videoUrl: data.videoUrl };
     }
     if (data?.videoGenerating === true) {
-      console.log(`[video-maker] ⚡ Track ${trackId} is already being generated — skipping duplicate.`);
-      return { success: false, error: 'Video generation already in progress for this track' };
+      const startedAt = data.videoGeneratingStartedAt?.toMillis ? data.videoGeneratingStartedAt.toMillis() : 0;
+      const now = Date.now();
+      const lockAgeMinutes = (now - startedAt) / 60000;
+
+      if (startedAt && lockAgeMinutes < 15) {
+        console.log(`[video-maker] ⚡ Track ${trackId} is already being generated (started ${lockAgeMinutes.toFixed(1)} mins ago) — skipping duplicate.`);
+        return { success: false, error: 'Video generation already in progress for this track' };
+      } else {
+        console.log(`[video-maker] 🔓 Clearing stale lock for track ${trackId} (was stuck for ${lockAgeMinutes.toFixed(1)} mins)`);
+      }
     }
     // Set lock
-    await trackRef.update({ videoGenerating: true, updatedAt: FieldValue.serverTimestamp() });
+    await trackRef.update({ 
+      videoGenerating: true, 
+      videoGeneratingStartedAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp() 
+    });
   }
   // ────────────────────────────────────────────────────────────────────────
 
@@ -227,10 +241,10 @@ export async function createMusicVideo(params: VideoMakerParams): Promise<VideoM
     }
     console.log(`[video-maker] Audio duration: ${totalDuration}s`);
 
-    // 3. Generate Scene Prompts (no lyrics — uses title/prompt for context)
+    // 3. Generate Scene Prompts (uses title/prompt/lyrics for context)
     // 1 image per ~20 seconds, min 4, max 12
     const targetImages = Math.min(12, Math.max(4, Math.floor(totalDuration / 20)));
-    const prompts = await generateScenePrompts(targetImages, title, prompt);
+    const prompts = await generateScenePrompts(targetImages, title, prompt, lyrics);
 
     const durationPerImage = totalDuration / prompts.length;
     console.log(`[video-maker] Generated ${prompts.length} scene prompts. Duration per image: ${durationPerImage.toFixed(2)}s`);
@@ -310,38 +324,38 @@ export async function createMusicVideo(params: VideoMakerParams): Promise<VideoM
       console.log(`[video-maker] Created slide ${i + 1}/${localImagePaths.length}`);
     }
 
-    // 6. Stitch Slides with Crossfade (xfade) Transitions
-    console.log(`[video-maker] Stitching slides with crossfade transitions...`);
-    const stitchedVideoPath = path.join(workDir, 'stitched_no_audio.mp4');
+    // 6. Stitch Slides and Add Audio
+    console.log(`[video-maker] Stitching slides and merging audio...`);
+    const finalVideoPath = path.join(workDir, 'final_video.mp4');
+
+    const inputs = slidePaths.map(p => `-i "${p}"`).join(' ');
+    const audioInputIdx = slidePaths.length;
 
     if (slidePaths.length === 1) {
-      await fs.copyFile(slidePaths[0], stitchedVideoPath);
+      await execAsync(
+        `ffmpeg -y ${inputs} -i "${localAudioPath}" -map 0:v -map ${audioInputIdx}:a -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -r 25 -c:a aac -shortest "${finalVideoPath}"`
+      );
     } else {
-      const inputs = slidePaths.map(p => `-i "${p}"`).join(' ');
       const filters: string[] = [];
 
       for (let i = 1; i < slidePaths.length; i++) {
-        const prevLabel = i === 1 ? '[0]' : `[xf${i - 1}]`;
-        const currLabel = `[${i}]`;
-        const offset = i * durationPerImage;
-        const outLabel = i === slidePaths.length - 1 ? '[out]' : `[xf${i}]`;
+        const prevLabel = i === 1 ? '[0:v]' : `[xf${i - 1}]`;
+        const currLabel = `[${i}:v]`;
+        // The length of the previous stream is reduced by the crossfade duration for each previous crossfade
+        const offset = i * durationPerImage - (i * crossfadeDuration);
+        const outLabel = `[xf${i}]`;
         filters.push(
           `${prevLabel}${currLabel}xfade=transition=fade:duration=${crossfadeDuration}:offset=${offset.toFixed(3)},format=yuv420p${outLabel}`
         );
       }
-
+      
+      const lastXfadeLabel = `[xf${slidePaths.length - 1}]`;
       const filterComplex = filters.join('; ');
+      
       await execAsync(
-        `ffmpeg -y ${inputs} -filter_complex "${filterComplex}" -map "[out]" -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -r 25 "${stitchedVideoPath}"`
+        `ffmpeg -y ${inputs} -i "${localAudioPath}" -filter_complex "${filterComplex}" -map "${lastXfadeLabel}" -map ${audioInputIdx}:a -c:v libx264 -preset fast -crf 23 -pix_fmt yuv420p -r 25 -c:a aac -shortest "${finalVideoPath}"`
       );
     }
-
-    // 7. Merge Audio (no subtitles)
-    console.log(`[video-maker] Merging audio...`);
-    const finalVideoPath = path.join(workDir, 'final_video.mp4');
-    await execAsync(
-      `ffmpeg -y -i "${stitchedVideoPath}" -i "${localAudioPath}" -c:v copy -c:a aac -shortest "${finalVideoPath}"`
-    );
 
     // 8. Upload Final Video to Firebase
     console.log(`[video-maker] Uploading final video to Firebase...`);

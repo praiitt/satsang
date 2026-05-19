@@ -9,16 +9,28 @@ export async function GET(request: NextRequest) {
     initAdmin();
     const db = getAdminDb();
 
-    // Verify Auth
+    // Verify Auth: Try Bearer Token first, then fallback to __session cookie
     const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const token = authHeader.split('Bearer ')[1];
+    let isAuthenticated = false;
+    
     try {
-      await admin.auth().verifyIdToken(token);
+        if (authHeader?.startsWith('Bearer ')) {
+            const token = authHeader.split('Bearer ')[1];
+            await admin.auth().verifyIdToken(token);
+            isAuthenticated = true;
+        } else {
+            const sessionCookie = request.cookies.get('__session')?.value;
+            if (sessionCookie) {
+                await admin.auth().verifySessionCookie(sessionCookie);
+                isAuthenticated = true;
+            }
+        }
     } catch (e) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        console.error('API Auth Error:', e);
+    }
+
+    if (!isAuthenticated) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     // 1. Fetch all Firestore user profiles

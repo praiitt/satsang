@@ -43,6 +43,7 @@ echo ""
 echo "🔑 Loading runtime env vars from .env..."
 
 # AI & Music APIs  ← add new keys here when you add them to .env
+add_env FIREBASE_SERVICE_ACCOUNT_JSON
 add_env OPENAI_API_KEY
 add_env GEMINI_API_KEY
 add_env SUNO_API_KEY

@@ -1,5 +1,3 @@
-import { FloatingPlayer } from '@/components/rraasi-music/floating-player';
-
 export default function SunoLayout({
     children,
 }: {
@@ -8,7 +6,6 @@ export default function SunoLayout({
     return (
         <>
             {children}
-            <FloatingPlayer />
         </>
     );
 }
