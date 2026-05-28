@@ -66,3 +66,14 @@ export const AscendantIcon = ({ className = "w-6 h-6" }: { className?: string })
     <path d="M12 2l4 4-4 4-4-4z" fill="currentColor" />
   </svg>
 );
+
+export const CosmicEnergyIcon = ({ className = "w-6 h-6" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    {/* Main 4-pointed hollow star */}
+    <path d="M11.5 3.5C11.5 8 8 11.5 3.5 11.5 8 11.5 11.5 15 11.5 19.5 11.5 15 15 11.5 19.5 11.5 15 11.5 11.5 8 11.5 3.5z" />
+    {/* Small solid star top right */}
+    <path d="M19 4l1 3 3 1-3 1-1 3-1-3-3-1 3-1z" fill="currentColor" stroke="none" />
+    {/* Solid dot bottom left */}
+    <circle cx="6" cy="18" r="1.5" fill="currentColor" stroke="none" />
+  </svg>
+);

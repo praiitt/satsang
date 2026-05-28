@@ -24,7 +24,8 @@ import {
     PitraDoshaIcon,
     NumerologyIcon,
     NakshatraIcon,
-    AscendantIcon
+    AscendantIcon,
+    CosmicEnergyIcon
 } from '@/components/icons/astrology-icons';
 import { useLanguage } from '@/contexts/language-context';
 import { useEffect, useState } from 'react';
@@ -122,7 +123,7 @@ export function VedicAstrologyWelcomeView({ onStartCall }: VedicAstrologyWelcome
                 {/* Header Section */}
                 <div className="flex flex-col items-center gap-4">
                     <div className="relative mb-2 flex h-24 w-24 items-center justify-center rounded-3xl bg-gradient-to-br from-orange-500/20 to-amber-500/20 border border-orange-500/30 backdrop-blur-xl shadow-[0_0_40px_rgba(249,115,22,0.3)]">
-                        <Sparkles className="h-12 w-12 text-orange-400 animate-pulse" />
+                        <CosmicEnergyIcon className="h-12 w-12 text-orange-400 animate-pulse" />
                         <div className="absolute inset-0 rounded-3xl bg-orange-400/20 blur-xl mix-blend-overlay" />
                     </div>
                     
