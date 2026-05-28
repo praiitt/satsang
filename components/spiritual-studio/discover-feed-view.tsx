@@ -88,6 +88,7 @@ export const DiscoverFeedView = ({
   ref,
 }: React.ComponentProps<'div'> & DiscoverFeedViewProps) => {
   const { language } = useLanguage();
+  const isHi = language === 'hi';
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { currentTrack, isPlaying, playTrack, playPlaylist, togglePlayPause } = useMusicPlayer();
   const { isFavorite, toggleFavorite, fetchFavoriteTracks, favoriteIds } = useFavorites();
