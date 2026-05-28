@@ -109,110 +109,6 @@ function ServiceCard({ emoji, title, desc, href, color, glow, badge, delay = 0 }
     );
 }
 
-// ─── Latest Community Tracks (Image Cards) ───────────────────────────────────
-
-const CATEGORY_GRADIENTS: Record<string, string> = {
-    Devotional: 'from-orange-900/80 to-amber-900/60',
-    Meditation: 'from-indigo-900/80 to-purple-900/60',
-    Healing: 'from-teal-900/80 to-cyan-900/60',
-    Trance: 'from-violet-900/80 to-fuchsia-900/60',
-    Mantra: 'from-rose-900/80 to-pink-900/60',
-    Spiritual: 'from-zinc-900/80 to-slate-900/60',
-};
-
-function LatestTracks() {
-    const [tracks, setTracks] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const { t } = useLanguage();
-
-    useEffect(() => {
-        fetch('/api/music/community-latest')
-            .then(r => r.json())
-            .then(data => { if (data.tracks) setTracks(data.tracks); })
-            .catch(() => { })
-            .finally(() => setLoading(false));
-    }, []);
-
-    if (loading || tracks.length === 0) return null;
-
-    return (
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="mt-16"
-        >
-            <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h3 className="text-xl font-bold text-white">{t('rraasHome.latestCreationsTitle')}</h3>
-                    <p className="text-sm text-white/40 mt-0.5">{t('rraasHome.latestCreationsSub')}</p>
-                </div>
-                <Link
-                    href="/spiritual-studio"
-                    className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
-                >
-                    {t('rraasHome.latestCreationsSeeAll')}
-                </Link>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-                {tracks.map((track, i) => {
-                    const cat = track.musicCategory || 'Spiritual';
-                    const grad = CATEGORY_GRADIENTS[cat] || CATEGORY_GRADIENTS.Spiritual;
-                    return (
-                        <motion.div
-                            key={track.id}
-                            initial={{ opacity: 0, y: 15 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.4, delay: i * 0.07 }}
-                        >
-                            <Link href="/spiritual-studio" className="group block overflow-hidden rounded-2xl border border-white/10 hover:border-amber-500/40 transition-all hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(251,191,36,0.15)]">
-                                {/* Image / gradient cover */}
-                                <div className="relative aspect-square w-full overflow-hidden">
-                                    {track.imageUrl ? (
-                                        <img
-                                            src={track.imageUrl}
-                                            alt={track.title}
-                                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
-                                    ) : (
-                                        <div className={`h-full w-full bg-gradient-to-br ${grad} flex items-center justify-center`}>
-                                            <span className="text-5xl opacity-60">{cat === 'Trance' ? '🌀' : cat === 'Healing' ? '✨' : cat === 'Meditation' ? '📿' : '🎵'}</span>
-                                        </div>
-                                    )}
-                                    {/* Overlay on hover */}
-                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-500 shadow-lg">
-                                            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-black ml-0.5">
-                                                <path d="M8 5v14l11-7z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    {/* Category pill */}
-                                    <span className="absolute top-2 left-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-300 backdrop-blur-sm">
-                                        {cat}
-                                    </span>
-                                </div>
-                                {/* Info */}
-                                <div className="p-3 bg-white/5">
-                                    <p className="text-sm font-semibold text-white leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors">
-                                        {track.title}
-                                    </p>
-                                    {track.style && (
-                                        <p className="mt-1 text-[10px] text-white/30 line-clamp-1">{track.style}</p>
-                                    )}
-                                </div>
-                            </Link>
-                        </motion.div>
-                    );
-                })}
-            </div>
-        </motion.div>
-    );
-}
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
@@ -321,7 +217,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         </p>
                     </motion.div>
 
-                    {/* Primary CTA — Music */}
+                    {/* Primary CTA — Main Navigation */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -329,24 +225,24 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         className="flex flex-col items-center gap-4 sm:flex-row"
                     >
                         <Link
-                            href="/login?returnUrl=/spiritual-studio&service=music"
+                            href="/login?returnUrl=/satsang&service=guru"
                             className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-lg font-bold text-white shadow-[0_0_40px_rgba(251,191,36,0.4)] transition-all hover:shadow-[0_0_60px_rgba(251,191,36,0.6)] hover:scale-105"
                         >
                             <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
                                 <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
                             </svg>
-                            {t('rraasHome.heroCta1')}
+                            {t('rraasHome.ctaStartSatsang')}
                             <span className="absolute inset-0 bg-white/10 opacity-0 transition-opacity group-hover:opacity-100 rounded-full" />
                         </Link>
 
                         <Link
-                            href="/spiritual-studio"
+                            href="/vedic-jyotish"
                             className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-8 py-4 text-lg font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/40"
                         >
                             <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-amber-400">
                                 <path d="M8 5v14l11-7z" />
                             </svg>
-                            {t('rraasHome.heroCta2')}
+                            Explore Vedic Jyotish
                         </Link>
                     </motion.div>
 
@@ -398,118 +294,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                 </motion.div>
             </section>
 
-            {/* ── MUSIC FEATURE SPOTLIGHT ──────────────────────────── */}
-            <section className="relative px-4 py-24 overflow-hidden">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(251,191,36,0.06),transparent)]" />
 
-                <div className="mx-auto max-w-6xl">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.7 }}
-                        className="text-center mb-16"
-                    >
-                        <span className="mb-4 inline-block rounded-full border border-amber-500/30 bg-amber-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-amber-400">
-                            {t('rraasHome.musicSpotlightBadge')}
-                        </span>
-                        <h2 className="text-4xl font-extrabold text-white sm:text-5xl">
-                            {t('rraasHome.musicSpotlightTitle')}
-                        </h2>
-                        <p className="mt-1 text-base text-amber-400/60 font-medium">{t('rraasHome.musicSpotlightHindSub')}</p>
-                        <p className="mt-4 text-lg text-white/50 max-w-2xl mx-auto">
-                            {t('rraasHome.musicSpotlightDesc')}
-                        </p>
-                        {/* Social proof stats */}
-                        <div className="mt-8 flex flex-wrap justify-center gap-6">
-                            {[
-                                { n: t('rraasHome.musicSpotlightStat1N'), label: t('rraasHome.musicSpotlightStat1L'), icon: '🎵' },
-                                { n: t('rraasHome.musicSpotlightStat2N'), label: t('rraasHome.musicSpotlightStat2L'), icon: '✨' },
-                                { n: t('rraasHome.musicSpotlightStat3N'), label: t('rraasHome.musicSpotlightStat3L'), icon: '▶️' },
-                                { n: t('rraasHome.musicSpotlightStat4N'), label: t('rraasHome.musicSpotlightStat4L'), icon: '🎬' },
-                            ].map(s => (
-                                <div key={s.label} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2">
-                                    <span className="text-lg">{s.icon}</span>
-                                    <div className="text-left">
-                                        <p className="text-sm font-bold text-amber-400">{s.n}</p>
-                                        <p className="text-[10px] text-white/40 uppercase tracking-wider">{s.label}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </motion.div>
-
-                    {/* Feature grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                        {/* Left — big visual card */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -30 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8 }}
-                            className="relative rounded-3xl overflow-hidden border border-amber-500/20 bg-gradient-to-br from-amber-950/40 to-orange-950/20 p-8"
-                        >
-                            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.12),transparent)]" />
-                            <div className="relative z-10">
-                                <div className="mb-6 text-6xl">🎵</div>
-                                <h3 className="mb-3 text-3xl font-bold text-white">{t('rraasHome.musicCreateTitle')}</h3>
-                                <p className="mb-6 text-white/50 leading-relaxed">
-                                    {t('rraasHome.musicCreateDesc')}
-                                </p>
-                                <div className="space-y-3 mb-8">
-                                    {[
-                                        t('rraasHome.musicFeatureBhajan'),
-                                        t('rraasHome.musicFeatureTrance'),
-                                        t('rraasHome.musicFeatureVocals'),
-                                        t('rraasHome.musicFeatureLang'),
-                                        t('rraasHome.musicFeatureYT'),
-                                    ].map(f => (
-                                        <div key={f} className="flex items-center gap-3 text-white/70 text-sm">
-                                            <div className="h-1.5 w-1.5 rounded-full bg-amber-400 flex-shrink-0" />
-                                            {f}
-                                        </div>
-                                    ))}
-                                </div>
-                                <Link
-                                    href="/login?returnUrl=/spiritual-studio&service=music"
-                                    className="inline-flex items-center gap-2 rounded-full bg-amber-500 hover:bg-amber-400 px-7 py-3 text-sm font-bold text-black transition-all hover:scale-105 shadow-[0_0_30px_rgba(251,191,36,0.4)]"
-                                >
-                                    {t('rraasHome.musicCtaStart')}
-                                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                    </svg>
-                                </Link>
-                            </div>
-                        </motion.div>
-
-                        {/* Right — feature tiles */}
-                        <div className="grid grid-cols-2 gap-4">
-                            {[
-                                { icon: '🤖', title: t('rraasHome.musicTile1Title'), desc: t('rraasHome.musicTile1Desc') },
-                                { icon: '🌀', title: t('rraasHome.musicTile2Title'), desc: t('rraasHome.musicTile2Desc') },
-                                { icon: '▶️', title: t('rraasHome.musicTile3Title'), desc: t('rraasHome.musicTile3Desc') },
-                                { icon: '🎬', title: t('rraasHome.musicTile4Title'), desc: t('rraasHome.musicTile4Desc') },
-                            ].map((f, i) => (
-                                <motion.div
-                                    key={f.title}
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    whileInView={{ opacity: 1, scale: 1 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.5, delay: i * 0.1 }}
-                                    className="rounded-2xl border border-white/10 bg-white/5 p-5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all"
-                                >
-                                    <div className="mb-3 text-3xl">{f.icon}</div>
-                                    <h4 className="mb-1 font-bold text-white text-sm">{f.title}</h4>
-                                    <p className="text-xs text-white/40 leading-relaxed">{f.desc}</p>
-                                </motion.div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Latest Community Creations */}
-                    <LatestTracks />
-                </div>
-            </section>
 
             {/* ── THE ECOSYSTEM ──────────────────────────────────────── */}
             <EcosystemFlow />
