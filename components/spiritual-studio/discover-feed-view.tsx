@@ -1051,10 +1051,13 @@ export const DiscoverFeedView = ({
                 )}
                 <Button 
                   onClick={() => {
-                    const intention = spiritualState.activeRemedy === 'Music' ? 'generate_music' : 
-                                      spiritualState.activeRemedy === 'Reel' ? 'generate_reel' : 'generate_art';
-                    
-                    onStartCall({ intention });
+                    if (spiritualState.activeRemedy === 'Music') {
+                      setIsWizardOpen(true);
+                    } else if (spiritualState.activeRemedy === 'Reel') {
+                      setIsReelsStudioOpen(true);
+                    } else if (spiritualState.activeRemedy === 'Art') {
+                      setIsArtStudioOpen(true);
+                    }
                   }}
                   className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-2 rounded-full border-none shadow-lg shadow-amber-500/20"
                 >
