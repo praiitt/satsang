@@ -3,14 +3,37 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, ScanLine } from 'lucide-react';
-import { cosmicTransmissions } from '@/lib/cosmic-transmissions';
+import { getFirebaseApp } from '@/lib/firebase-client';
+import { getFirestore, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 
 export function CosmicTransmissions() {
+  const [transmissions, setTransmissions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(true);
 
-  const currentTransmission = cosmicTransmissions[currentIndex];
+  // Fetch Transmissions from Firestore
+  useEffect(() => {
+    const db = getFirestore(getFirebaseApp());
+    const q = query(
+      collection(db, 'cosmic_transmissions'),
+      orderBy('createdAt', 'desc')
+    );
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setTransmissions(data);
+      // Reset index when data changes
+      setCurrentIndex(0);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const currentTransmission = transmissions[currentIndex];
 
   // Typewriter effect
   useEffect(() => {
@@ -42,20 +65,20 @@ export function CosmicTransmissions() {
         window.clearTimeout(j);
       }
     };
-  }, [currentIndex]);
+  }, [currentIndex, currentTransmission]);
 
   // Cycle transmissions every 15 seconds after typing finishes
   useEffect(() => {
-    if (isTyping || cosmicTransmissions.length <= 1) return;
+    if (isTyping || transmissions.length <= 1) return;
 
     const timer = setTimeout(() => {
-      setCurrentIndex((prev) => (prev + 1) % cosmicTransmissions.length);
+      setCurrentIndex((prev) => (prev + 1) % transmissions.length);
     }, 10000); // Wait 10 seconds before next message
 
     return () => clearTimeout(timer);
-  }, [isTyping, currentIndex]);
+  }, [isTyping, currentIndex, transmissions.length]);
 
-  if (!currentTransmission) return null;
+  if (!currentTransmission) return null; // Don't render anything if no transmissions
 
   return (
     <div className="w-full max-w-4xl mx-auto px-4 my-16">
