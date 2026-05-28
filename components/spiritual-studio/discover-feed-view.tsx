@@ -1022,7 +1022,7 @@ export const DiscoverFeedView = ({
       <section id="the-forge" className="max-w-7xl mx-auto px-4 mt-8 mb-12 relative z-10">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-5xl font-extrabold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-            {isHi ? 'क्या सही कंपन नहीं मिल रहा? इसे प्रकट करें।' : 'Can\'t find the perfect vibration? Manifest it.'}
+            {isHi ? 'क्या आपको उपयुक्त आध्यात्मिक स्पंदन नहीं मिल रहा? इसे स्वयं प्रकट करें।' : 'Can\'t find the perfect vibration? Manifest it.'}
           </h2>
           <p className="text-gray-400 mt-4 text-lg max-w-2xl mx-auto">Take control of the AI Director to generate exactly what your soul needs right now.</p>
         </div>
