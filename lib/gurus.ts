@@ -82,13 +82,6 @@ export const ALL_GURUS: Guru[] = [
     category: "hinduism",
   },
   {
-    id: "etAgent",
-    name: "ET Agent",
-    tradition: "Cosmic Consciousness",
-    era: "Future",
-    category: "universal",
-  },
-  {
     id: "osho",
     name: "Osho",
     tradition: "Zen, Meditation",

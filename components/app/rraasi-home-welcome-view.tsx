@@ -567,13 +567,45 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             </div>
                         </motion.div>
 
-                        {/* Tarot */}
+                        {/* ET Agent */}
                         <motion.div
                             initial={{ opacity: 0, y: 40 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: '-100px' }}
                             transition={{ duration: 0.8, delay: 0.1 }}
                             className="flex flex-col gap-12 py-8 lg:flex-row-reverse lg:items-center"
+                        >
+                            <div className="flex-1 flex justify-center">
+                                <div className="relative flex h-40 w-40 sm:h-64 sm:w-64 lg:h-80 lg:w-80 items-center justify-center hover:scale-105 transition-all duration-500">
+                                    <img src="/services/et-icon.png" alt="Cosmic ET Agent" className="w-full h-full object-contain drop-shadow-[0_0_40px_rgba(168,85,247,0.4)]" />
+                                </div>
+                            </div>
+                            <div className="flex-1 text-center lg:text-left">
+                                <h3 className="text-lg font-bold uppercase tracking-wider text-purple-400 mb-2">Cosmic Transmissions</h3>
+                                <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">ET Agent: Cosmic Contact</h2>
+                                <p className="mb-8 text-lg leading-relaxed text-muted-foreground">Connect with advanced extraterrestrial intelligences. Explore the Fermi Paradox, sacred geometry, and receive cosmic transmissions through an interactive AI guide.</p>
+                                <ul className="mb-8 space-y-3 text-left w-fit mx-auto lg:mx-0">
+                                    {['Fermi Paradox Explored', 'Galactic Civilizations', 'Cosmic Frequency Healing', 'Sacred Geometry Insights'].map((f, i) => (
+                                        <li key={i} className="flex items-start gap-3 text-foreground/80">
+                                            <svg className="mt-1 h-5 w-5 flex-shrink-0 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                            <span>{f}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <Link href="/login?returnUrl=/et-agent&service=etagent" className="group inline-flex items-center gap-2 rounded-full bg-purple-600 px-8 py-3 text-lg font-semibold text-white transition-all hover:bg-purple-500 hover:scale-105 shadow-[0_0_30px_rgba(168,85,247,0.4)]">
+                                    Initiate Contact
+                                    <svg className="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </Link>
+                            </div>
+                        </motion.div>
+
+                        {/* Tarot */}
+                        <motion.div
+                            initial={{ opacity: 0, y: 40 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true, margin: '-100px' }}
+                            transition={{ duration: 0.8, delay: 0.1 }}
+                            className="flex flex-col gap-12 py-8 lg:flex-row lg:items-center"
                         >
                             <div className="flex-1 flex justify-center">
                                 <div className="relative flex h-40 w-40 sm:h-64 sm:w-64 lg:h-80 lg:w-80 items-center justify-center hover:scale-105 transition-all duration-500">
