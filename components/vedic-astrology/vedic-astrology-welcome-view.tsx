@@ -137,8 +137,8 @@ export function VedicAstrologyWelcomeView({ onStartCall }: VedicAstrologyWelcome
                     </h2>
                     <p className="max-w-2xl text-lg text-slate-400 font-light mt-2">
                         {isHi 
-                            ? 'प्राचीन ज्ञान द्वारा संचालित अति-व्यक्तिगत ज्योतिषीय अंतर्दृष्टि का अनुभव करें। अपने AI ज्योतिषी से बात करें या विस्तृत प्रीमियम रिपोर्ट प्राप्त करें।'
-                            : 'Experience hyper-personalized astrological insights powered by ancient wisdom. Talk to your AI Jyotishi or generate in-depth premium reports.'}
+                            ? 'आपकी ऊर्जा को मैप करने में मदद करने वाला एक शक्तिशाली उपकरण। प्राचीन ज्ञान द्वारा संचालित अति-व्यक्तिगत ज्योतिषीय अंतर्दृष्टि का अनुभव करें।'
+                            : 'A powerful tool to help map your cosmic energy. Experience hyper-personalized astrological insights powered by ancient wisdom.'}
                     </p>
                 </div>
 
