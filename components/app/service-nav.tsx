@@ -47,6 +47,12 @@ const services: ServiceItem[] = [
         color: 'border-pink-500 shadow-pink-500/50',
     },
     {
+        name: 'ET Agent',
+        href: '/et-agent',
+        iconPath: '/services/et-icon.png',
+        color: 'border-purple-600 shadow-purple-600/50',
+    },
+    {
         name: 'Art Shop',
         href: '/gallery',
         icon: Palette,
@@ -73,6 +79,7 @@ export function ServiceNav({ className, variant = 'header' }: ServiceNavProps) {
             case 'Music': return 'संगीत';
             case 'Tarot': return 'टैरो';
             case 'Astrology': return 'ज्योतिष';
+            case 'ET Agent': return 'ईटी एजेंट';
             case 'Art Shop': return 'कला की दुकान';
             default: return name;
         }
