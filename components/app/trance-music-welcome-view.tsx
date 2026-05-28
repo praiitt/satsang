@@ -68,7 +68,6 @@ export const TranceMusicWelcomeView = ({
                         {buttonText}
                     </Button>
                 </div>
-                <p className="text-muted-foreground mt-3 text-sm">{t('psychedelicGuru.freeTrial')}</p>
             </section>
 
 

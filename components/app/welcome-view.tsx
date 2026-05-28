@@ -106,10 +106,6 @@ export const WelcomeView = ({
                   />
                 </div>
               </div>
-
-              <p className="text-muted-foreground mt-6 text-sm font-medium">
-                {t('welcome.freeTrial')}
-              </p>
             </div>
 
             {/* Right Column: Video Player */}

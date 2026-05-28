@@ -242,17 +242,6 @@ export const SessionView = React.forwardRef<HTMLElement, React.ComponentProps<'s
           </div>
         )}
 
-        {/* Free Trial Timer Indicator - Only show if user is not authenticated */}
-        {!isAuthenticated && !isTrialExpired && (
-          <div className="bg-muted/80 text-muted-foreground fixed top-20 right-4 z-50 rounded-lg border px-3 py-2 text-sm shadow-lg md:top-4">
-            <div className="font-semibold">{t('common.freeTrial')}</div>
-            <div className="text-xs">
-              {minutesRemaining}:{secondsRemaining.toString().padStart(2, '0')}{' '}
-              {t('common.remaining')}
-            </div>
-          </div>
-        )}
-
         {/* Recordings Toggle */}
         {isAuthenticated && (
           <div className="fixed top-4 right-4 z-50 md:right-12">

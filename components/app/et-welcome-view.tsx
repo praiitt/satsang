@@ -97,9 +97,7 @@ export const ETWelcomeView = ({
               <span className="relative z-10">{buttonText}</span>
               <ChevronRight className="relative z-10 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <p className="sm:hidden text-center text-sm text-slate-400 mt-2">{t('etAgent.freeTrial')}</p>
           </div>
-          <p className="hidden sm:block text-sm text-slate-400 mt-4 ml-4">{t('etAgent.freeTrial')}</p>
         </motion.div>
 
         {/* Right: Video Player */}

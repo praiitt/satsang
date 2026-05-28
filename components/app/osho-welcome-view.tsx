@@ -82,7 +82,6 @@ export const OshoWelcomeView = ({
             {buttonText}
           </Button>
         </div>
-        <p className="text-muted-foreground mt-3 text-sm">{t('oshoAgent.freeTrial')}</p>
       </section>
 
       {/* Key Features Section */}
