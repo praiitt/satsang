@@ -188,9 +188,13 @@ export function HeroVideoPlayer({
     return () => window.removeEventListener('keydown', onKey);
   }, [togglePlay, toggleMute, handleSeek, currentTime, duration, toggleFullscreen]);
 
-  // Auto-init volume on mount
+  // Auto-init volume on mount without unmuting
   useEffect(() => {
-    setPlayerVolume(volume);
+    const v = videoRef.current;
+    if (v) {
+      v.volume = volume / 100;
+      // Do not call setPlayerVolume to avoid the side effect of unmuting
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

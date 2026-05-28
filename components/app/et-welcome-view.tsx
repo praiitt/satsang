@@ -111,7 +111,7 @@ export const ETWelcomeView = ({
         >
           {/* Decorative glowing border rings */}
           <div className="absolute -inset-1 bg-gradient-to-tr from-purple-600 via-transparent to-cyan-500 rounded-3xl blur-xl opacity-30 animate-pulse" />
-          <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/50 shadow-2xl backdrop-blur-sm">
+          <div className="relative rounded-3xl overflow-hidden border border-white/10 bg-black/50 shadow-2xl backdrop-blur-sm mx-auto max-w-sm lg:max-w-[360px]">
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10 pointer-events-none" />
             <HeroVideoPlayer
               src="https://storage.googleapis.com/rraasi-public-assets/ETAgent_Intro.mp4"
@@ -119,7 +119,7 @@ export const ETWelcomeView = ({
               autoPlay
               loop
               muted // Important for autoplay policy
-              className="w-full aspect-video object-cover"
+              className="w-full aspect-[9/16] object-cover"
             />
             {/* Optional video caption overlay */}
             <div className="absolute bottom-6 left-6 right-6 z-20">
