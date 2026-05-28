@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
 import { ChevronRight, ChevronLeft, Home, Palette } from 'lucide-react';
+import { useLanguage } from '@/contexts/language-context';
 
 interface ServiceItem {
     name: string;
@@ -60,7 +61,22 @@ interface ServiceNavProps {
 
 export function ServiceNav({ className, variant = 'header' }: ServiceNavProps) {
     const pathname = usePathname();
+    const { language } = useLanguage();
+    const isHi = language === 'hi';
     const [expanded, setExpanded] = useState(false);
+
+    const getTranslatedName = (name: string) => {
+        if (!isHi) return name;
+        switch (name) {
+            case 'Main Menu': return 'मुख्य मेनू';
+            case 'Satsang': return 'सत्संग';
+            case 'Music': return 'संगीत';
+            case 'Tarot': return 'टैरो';
+            case 'Astrology': return 'ज्योतिष';
+            case 'Art Shop': return 'कला की दुकान';
+            default: return name;
+        }
+    };
 
     // HEADER VARIANT (Static Horizontal)
     if (variant === 'header') {
@@ -72,7 +88,7 @@ export function ServiceNav({ className, variant = 'header' }: ServiceNavProps) {
                         <Link
                             key={service.name}
                             href={service.href}
-                            title={service.name}
+                            title={getTranslatedName(service.name)}
                             className="relative group block"
                         >
                             <div className={cn(
@@ -135,7 +151,7 @@ export function ServiceNav({ className, variant = 'header' }: ServiceNavProps) {
                         <Link
                             key={service.name}
                             href={service.href}
-                            title={service.name}
+                            title={getTranslatedName(service.name)}
                             className={cn(
                                 "relative group transition-all duration-300",
                                 "hover:scale-110"
@@ -164,7 +180,7 @@ export function ServiceNav({ className, variant = 'header' }: ServiceNavProps) {
                             {/* Hover Label (Only visible when expanded) */}
                             {expanded && (
                                 <span className="absolute left-full ml-4 top-1/2 -translate-y-1/2 px-2 py-1 bg-black/90 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 border border-white/10">
-                                    {service.name}
+                                    {getTranslatedName(service.name)}
                                 </span>
                             )}
                         </Link>

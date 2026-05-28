@@ -12,7 +12,8 @@ import { ThemeToggle } from '@/components/app/theme-toggle';
 import { CoinBalanceBadge } from '@/components/ui/coin-balance-badge';
 
 export function SiteHeader() {
-  const { t } = useLanguage();
+  const { language } = useLanguage();
+  const isHi = language === 'hi';
   const { isAuthenticated } = useAuth();
 
   return (
@@ -41,10 +42,10 @@ export function SiteHeader() {
               <Link
                 href="/profile"
                 className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                title="Profile"
+                title={isHi ? 'प्रोफ़ाइल' : 'Profile'}
               >
                 <User className="h-4 w-4" />
-                <span className="hidden sm:inline text-sm">Profile</span>
+                <span className="hidden sm:inline text-sm">{isHi ? 'प्रोफ़ाइल' : 'Profile'}</span>
               </Link>
             </>
           )}

@@ -1021,7 +1021,7 @@ export const DiscoverFeedView = ({
       <section id="the-forge" className="max-w-7xl mx-auto px-4 mt-8 mb-12 relative z-10">
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-5xl font-extrabold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">
-            Can't find the perfect vibration? Manifest it.
+            {isHi ? 'क्या सही कंपन नहीं मिल रहा? इसे प्रकट करें।' : 'Can\'t find the perfect vibration? Manifest it.'}
           </h2>
           <p className="text-gray-400 mt-4 text-lg max-w-2xl mx-auto">Take control of the AI Director to generate exactly what your soul needs right now.</p>
         </div>
@@ -1076,8 +1076,8 @@ export const DiscoverFeedView = ({
             <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-6 group-hover:bg-amber-500/20 transition-colors shadow-inner">
               <Music className="w-10 h-10 text-amber-500" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-2">Music Director</h3>
-            <p className="text-gray-400 mb-4">Generate devotional tracks, mantras, and healing frequencies.</p>
+            <h3 className="text-2xl font-bold text-white mb-2">{isHi ? 'संगीत निर्देशक' : 'Music Director'}</h3>
+            <p className="text-gray-400 mb-4">{isHi ? 'भक्ति ट्रैक, मंत्र और हीलिंग फ्रीक्वेंसी बनाएँ।' : 'Generate devotional tracks, mantras, and healing frequencies.'}</p>
             <span className="text-amber-500 font-bold bg-amber-500/10 px-4 py-1.5 rounded-full text-sm mt-auto">50 🪙</span>
           </div>
           
@@ -1088,8 +1088,8 @@ export const DiscoverFeedView = ({
             <div className="w-20 h-20 rounded-full bg-orange-500/10 flex items-center justify-center mb-6 group-hover:bg-orange-500/20 transition-colors shadow-inner">
               <Video className="w-10 h-10 text-orange-500" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-2">Reels Director</h3>
-            <p className="text-gray-400 mb-4">Generate short spiritual affirmations and social media videos.</p>
+            <h3 className="text-2xl font-bold text-white mb-2">{isHi ? 'रील्स निर्देशक' : 'Reels Director'}</h3>
+            <p className="text-gray-400 mb-4">{isHi ? 'लघु आध्यात्मिक पुष्टि और सोशल मीडिया वीडियो बनाएँ।' : 'Generate short spiritual affirmations and social media videos.'}</p>
             <span className="text-orange-500 font-bold bg-orange-500/10 px-4 py-1.5 rounded-full text-sm mt-auto">50 🪙</span>
           </div>
           
@@ -1100,8 +1100,8 @@ export const DiscoverFeedView = ({
             <div className="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:bg-cyan-500/20 transition-colors shadow-inner">
               <ImageIcon className="w-10 h-10 text-cyan-500" />
             </div>
-            <h3 className="text-2xl font-bold text-white mb-2">Art Director</h3>
-            <p className="text-gray-400 mb-4">Generate divine imagery, deity art, and sacred geometry.</p>
+            <h3 className="text-2xl font-bold text-white mb-2">{isHi ? 'कला निर्देशक' : 'Art Director'}</h3>
+            <p className="text-gray-400 mb-4">{isHi ? 'दिव्य चित्र, देवता कला और पवित्र ज्यामिति बनाएँ।' : 'Generate divine imagery, deity art, and sacred geometry.'}</p>
             <span className="text-cyan-500 font-bold bg-cyan-500/10 px-4 py-1.5 rounded-full text-sm mt-auto">30 🪙</span>
           </div>
         </div>
@@ -1112,8 +1112,8 @@ export const DiscoverFeedView = ({
         <section id="premium-gallery" className="max-w-7xl mx-auto px-4 mt-8 mb-12 animate-in fade-in slide-in-from-bottom-4">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">Featured Playlists</h2>
-              <p className="text-gray-500">Divine collections for your spiritual journey</p>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">{isHi ? 'विशेष प्लेलिस्ट' : 'Featured Playlists'}</h2>
+              <p className="text-gray-500">{isHi ? 'आपकी आध्यात्मिक यात्रा के लिए दिव्य संग्रह' : 'Divine collections for your spiritual journey'}</p>
             </div>
           </div>
           
@@ -1279,7 +1279,7 @@ export const DiscoverFeedView = ({
 
               <div className="space-y-3">
                 <h4 className="font-bold text-gray-900 dark:text-white text-xl mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
-                  Tracks ({selectedCuratedPlaylist.tracks?.length || 0})
+                  {isHi ? 'ट्रैक्स' : 'Tracks'} ({selectedCuratedPlaylist.tracks?.length || 0})
                 </h4>
                 
                 {selectedCuratedPlaylist.tracks?.length === 0 ? (
@@ -1324,7 +1324,7 @@ export const DiscoverFeedView = ({
               <div className="p-2 bg-amber-500/20 rounded-full">
                 <Headphones className="w-5 h-5 text-amber-500" />
               </div>
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">My Creations</h2>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-500 bg-clip-text text-transparent">{isHi ? 'मेरी रचनाएं' : 'My Creations'}</h2>
             </div>
             <button 
               className="p-2 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"
@@ -1357,7 +1357,7 @@ export const DiscoverFeedView = ({
               </div>
               <div>
                 <h2 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                  My Studio
+                  {isHi ? 'मेरा स्टूडियो' : 'My Studio'}
                 </h2>
                 <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-lg hidden sm:block">
                   Your personal spiritual creations
@@ -1927,7 +1927,7 @@ export const DiscoverFeedView = ({
       <section className="max-w-7xl mx-auto px-4 mt-16 mb-16">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
-            Explore More from RRAASI
+            {isHi ? 'RRAASI से और अन्वेषण करें' : 'Explore More from RRAASI'}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 text-lg max-w-2xl mx-auto">
             Discover our complete suite of AI-powered spiritual and creative tools, each designed to elevate different aspects of your journey.
@@ -1946,7 +1946,7 @@ export const DiscoverFeedView = ({
               </svg>
             </div>
             <h3 className="text-gray-900 dark:text-white text-xl font-bold mb-2 group-hover:text-amber-600 transition-colors">
-              AI Satsang
+              {isHi ? 'AI सत्संग' : 'AI Satsang'}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-3">
               Connect with AI-powered spiritual gurus for personalized guidance. Experience authentic dialogue with masters from various traditions.
@@ -1971,7 +1971,7 @@ export const DiscoverFeedView = ({
               </svg>
             </div>
             <h3 className="text-gray-900 dark:text-white text-xl font-bold mb-2 group-hover:text-amber-600 transition-colors">
-              Mystic Tarot
+              {isHi ? 'रहस्यमय टैरो' : 'Mystic Tarot'}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-3">
               Receive personalized tarot readings with AI-guided interpretations. Gain clarity on your path through ancient wisdom.
@@ -1996,7 +1996,7 @@ export const DiscoverFeedView = ({
               </svg>
             </div>
             <h3 className="text-gray-900 dark:text-white text-xl font-bold mb-2 group-hover:text-amber-600 transition-colors">
-              Vedic Astrology
+              {isHi ? 'वैदिक ज्योतिष' : 'Vedic Astrology'}
             </h3>
             <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed mb-3">
               Explore your birth chart with authentic Jyotish readings. Discover planetary influences and life patterns through Vedic wisdom.
