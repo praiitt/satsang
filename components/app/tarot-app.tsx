@@ -8,6 +8,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import { coinClient } from '@/lib/services/coinClient';
 import { userService } from '@/lib/services/userService';
+import { updateSpiritualState } from '@/lib/services/spiritual-state';
 
 /* ─── Types ─────────────────────────────────────────────────── */
 type Topic = 'love' | 'career' | 'finance' | 'general';
@@ -112,12 +113,42 @@ export function TarotApp() {
       const topicObj = TOPICS.find(t => t.id === topic)!;
       setReading({ topic: isHi ? topicObj.labelHi : topicObj.labelEn, cards, type: 'spread' });
 
-      // Award Karma Points (Energy)
+      // Award Karma Points & Update Spiritual State
       if (user?.uid) {
          try {
              await userService.awardKarmaPoints(user.uid, 30, featureId);
+             
+             // Select the most prominent card (usually the first or last)
+             const prominentCard = cards[0];
+             
+             // Map topic to an imbalance and remedy type for the Spiritual Studio cross-pollination
+             let remedyType: 'Music' | 'Reel' | 'Art' = 'Music';
+             let imbalanceStr = '';
+             
+             if (topic === 'love') {
+               remedyType = 'Music';
+               imbalanceStr = 'Emotional stagnation in Heart Chakra';
+             } else if (topic === 'career') {
+               remedyType = 'Reel';
+               imbalanceStr = 'Root Chakra instability causing career fear';
+             } else if (topic === 'finance') {
+               remedyType = 'Art';
+               imbalanceStr = 'Sacral Chakra block affecting abundance';
+             } else {
+               remedyType = 'Music';
+               imbalanceStr = 'General energetic misalignment';
+             }
+             
+             // Push the diagnosis to the user's global spiritual state
+             await updateSpiritualState(user.uid, {
+               currentImbalance: imbalanceStr,
+               diagnosingTool: 'Tarot',
+               activeRemedy: remedyType,
+               satsangSummary: `The ${prominentCard.name} card indicates significant shifting energy. ${prominentCard.meaning.slice(0, 120)}...`
+             });
+             
          } catch (e) {
-             console.warn('Failed to award karma points:', e);
+             console.warn('Failed to update karma or spiritual state:', e);
          }
       }
     } catch (e: unknown) {
