@@ -10,7 +10,6 @@ const INTERNAL_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'internal-rraasi-to
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY
 });
-const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 /**
  * POST /internal/reels/generate-affirmation
@@ -101,17 +100,16 @@ async function generateAffirmationReel(reelId: string, userId: string, intention
         
         console.log(`[Reels] Using image prompt: ${imagePrompt}`);
         
-        const genImageRes = await genAI.models.generateImages({
-            model: 'imagen-4.0-generate-001',
+        // Generate Image using DALL-E 3
+        const genImageRes = await openai.images.generate({
+            model: "dall-e-3",
             prompt: imagePrompt,
-            config: {
-                numberOfImages: 1,
-                aspectRatio: '9:16',
-                outputMimeType: 'image/jpeg'
-            }
+            n: 1,
+            size: "1024x1792",
+            response_format: "b64_json"
         });
         
-        const imageBase64 = genImageRes.generatedImages?.[0]?.image?.imageBytes;
+        const imageBase64 = genImageRes.data[0].b64_json;
         if (!imageBase64) throw new Error("Failed to generate image");
         
         // Use a bucket that actually exists
