@@ -194,17 +194,21 @@ export const DiscoverFeedView = ({
         
         if (vaultCategory === 'art' && myArt.length === 0) {
           setLoadingArt(true);
-          const q = query(collection(db, 'spiritual_art'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(20));
+          const q = query(collection(db, 'spiritual_art'), where('userId', '==', user.uid));
           const snap = await getDocs(q);
-          setMyArt(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          const results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          results.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setMyArt(results.slice(0, 50));
           setLoadingArt(false);
         }
         
         if (vaultCategory === 'reels' && myReels.length === 0) {
           setLoadingReels(true);
-          const q = query(collection(db, 'spiritual_reels'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(20));
+          const q = query(collection(db, 'spiritual_reels'), where('userId', '==', user.uid));
           const snap = await getDocs(q);
-          setMyReels(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          const results = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          results.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setMyReels(results.slice(0, 50));
           setLoadingReels(false);
         }
       } catch (e) {
@@ -1564,6 +1568,17 @@ export const DiscoverFeedView = ({
                   🎵 Music
                 </button>
                 <button
+                  onClick={() => setVaultCategory('music-videos')}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
+                    vaultCategory === 'music-videos'
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  📹 Music Videos
+                </button>
+                <button
                   onClick={() => setVaultCategory('art')}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
@@ -1586,15 +1601,15 @@ export const DiscoverFeedView = ({
                   🎬 Reels
                 </button>
                 <button
-                  onClick={() => setVaultCategory('video')}
+                  onClick={() => setVaultCategory('recordings')}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
-                    vaultCategory === 'video'
+                    vaultCategory === 'recordings'
                       ? "bg-amber-500 text-white shadow-md"
                       : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
                   )}
                 >
-                  📹 Video (Sessions)
+                  🎙️ Live Sessions
                 </button>
               </div>
             )}
@@ -1863,8 +1878,40 @@ export const DiscoverFeedView = ({
               </div>
             )}
 
-            {/* VIDEO SESSIONS VAULT */}
-            {vaultCategory === 'video' && (
+            {/* MUSIC VIDEOS VAULT (From MP3) */}
+            {vaultCategory === 'music-videos' as any && (
+              <div className="animate-in fade-in zoom-in duration-300">
+                {myTracksLoading ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="aspect-[9/16] bg-gray-100 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
+                    ))}
+                  </div>
+                ) : myTracks.filter(t => t.videoUrl).length === 0 ? (
+                  <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">You haven't generated any Music Videos yet.</p>
+                    <p className="text-gray-500 dark:text-gray-500 text-sm mb-6">Go to 'Music', select a track, and click 'Generate Video'.</p>
+                    <Button onClick={() => setVaultCategory('music')} variant="outline" size="lg" className="border-amber-500 text-amber-600 hover:bg-amber-50">
+                      Go to Music
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {myTracks.filter(t => t.videoUrl).map(track => (
+                      <div key={track.id} className="relative aspect-[9/16] rounded-2xl overflow-hidden group border border-gray-200 dark:border-zinc-800 bg-zinc-900 shadow-sm">
+                        <video src={track.videoUrl} className="w-full h-full object-cover" controls preload="metadata" />
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
+                          <p className="text-white text-sm font-semibold drop-shadow-lg line-clamp-2 leading-snug">{track.title || 'Music Video'}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* LIVE SESSIONS VAULT */}
+            {vaultCategory === 'recordings' as any && (
               <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-gray-200 dark:border-zinc-800 overflow-hidden shadow-sm p-4 min-h-[500px] animate-in fade-in duration-300">
                 <RecordingsModal onClose={() => setVaultCategory('music')} inline={true} />
               </div>
