@@ -1054,11 +1054,7 @@ export const DiscoverFeedView = ({
                     const intention = spiritualState.activeRemedy === 'Music' ? 'generate_music' : 
                                       spiritualState.activeRemedy === 'Reel' ? 'generate_reel' : 'generate_art';
                     
-                    if (intention === 'generate_music') {
-                      setIsWizardOpen(true);
-                    } else {
-                      alert("This AI Director is meditating... Coming soon!");
-                    }
+                    onStartCall({ intention });
                   }}
                   className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-2 rounded-full border-none shadow-lg shadow-amber-500/20"
                 >
