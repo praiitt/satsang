@@ -400,7 +400,6 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             <div className="flex-1 text-center lg:text-left">
                                 <div className="flex items-center justify-center gap-3 lg:justify-start mb-2">
                                     <h3 className="text-lg font-bold uppercase tracking-wider text-primary">{t('rraasHome.tarotSubtitle')}</h3>
-                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">Coming Soon — Early Access</span>
                                 </div>
                                 <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('rraasHome.tarotTitle')}</h2>
                                 <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{t('rraasHome.tarotDesc')}</p>
@@ -435,7 +434,6 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                             <div className="flex-1 text-center lg:text-left">
                                 <div className="flex items-center justify-center gap-3 lg:justify-start mb-2">
                                     <h3 className="text-lg font-bold uppercase tracking-wider text-primary">{t('rraasHome.astrologySubtitle')}</h3>
-                                    <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">Coming Soon — Early Access</span>
                                 </div>
                                 <h2 className="mb-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">{t('rraasHome.astrologyTitle')}</h2>
                                 <p className="mb-8 text-lg leading-relaxed text-muted-foreground">{t('rraasHome.astrologyDesc')}</p>
