@@ -15,6 +15,7 @@ import {
   Moon,
   ChevronRight
 } from 'lucide-react';
+import { CosmicTransmissions } from '@/components/app/cosmic-transmissions';
 
 interface ETWelcomeViewProps {
   startButtonText?: string;
@@ -129,6 +130,11 @@ export const ETWelcomeView = ({
           </div>
         </motion.div>
 
+      </section>
+
+      {/* Daily Channeled Messages */}
+      <section className="relative z-10 w-full">
+        <CosmicTransmissions />
       </section>
 
       {/* Features Grid */}
