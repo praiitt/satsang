@@ -29,6 +29,7 @@ export default function CosmicTransmissionsAdmin() {
   const [message, setMessage] = useState('');
   const [color, setColor] = useState('text-cyan-400');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [embedCode, setEmbedCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch Transmissions
@@ -52,13 +53,17 @@ export default function CosmicTransmissionsAdmin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim() || !civilization.trim()) return;
+    if ((!message.trim() && !embedCode.trim()) || !civilization.trim()) {
+      alert('Please provide either a message or an embed code.');
+      return;
+    }
     
     setIsSubmitting(true);
     try {
       await addDoc(collection(db, 'cosmic_transmissions'), {
         civilization: civilization.toUpperCase(),
         message,
+        embedCode,
         color,
         date,
         createdAt: serverTimestamp()
@@ -66,6 +71,7 @@ export default function CosmicTransmissionsAdmin() {
       
       // Reset form
       setMessage('');
+      setEmbedCode('');
       alert('Transmission successfully sent to the cosmos!');
     } catch (error) {
       console.error('Error adding document: ', error);
@@ -154,18 +160,28 @@ export default function CosmicTransmissionsAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-400 mb-1">Message</label>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Message Text (Optional if adding Embed)</label>
                   <textarea 
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     className="w-full h-32 bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500 resize-none"
                     placeholder="Enter the channeled message here..."
-                    required
                   />
                 </div>
 
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">Rich Embed Code (Optional)</label>
+                  <textarea 
+                    value={embedCode}
+                    onChange={(e) => setEmbedCode(e.target.value)}
+                    className="w-full h-24 bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-cyan-500 resize-none"
+                    placeholder='e.g., <iframe src="..."></iframe>'
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Paste Facebook Reels, YouTube, or Instagram embed codes here.</p>
+                </div>
+
                 <Button 
-                  type="submit" 
+                  type="submit"  
                   disabled={isSubmitting}
                   className="w-full bg-cyan-600 hover:bg-cyan-500 text-white border-none py-6 mt-4"
                 >
@@ -199,9 +215,14 @@ export default function CosmicTransmissionsAdmin() {
                           <span className={`text-xs font-bold tracking-widest ${t.color}`}>[{t.civilization}]</span>
                           <span className="text-xs text-slate-600">{t.date}</span>
                         </div>
-                        <p className="text-sm text-slate-300 font-mono leading-relaxed">
+                        <p className="text-sm text-slate-300 font-mono leading-relaxed mt-2">
                           {t.message}
                         </p>
+                        {t.embedCode && (
+                          <div className="mt-4 p-2 bg-slate-900 rounded border border-slate-700 text-xs text-slate-400 overflow-hidden text-ellipsis whitespace-nowrap">
+                            [Contains Rich Embed Code]
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-start">
                         <button 

@@ -67,16 +67,20 @@ export function CosmicTransmissions() {
     };
   }, [currentIndex, currentTransmission]);
 
-  // Cycle transmissions every 15 seconds after typing finishes
+  // Cycle transmissions after typing finishes
   useEffect(() => {
     if (isTyping || transmissions.length <= 1) return;
 
+    // If there is an embed code (video), wait much longer (90 seconds) so the user can watch it.
+    // Otherwise, wait 15 seconds for reading text.
+    const waitTime = currentTransmission?.embedCode ? 90000 : 15000;
+
     const timer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % transmissions.length);
-    }, 10000); // Wait 10 seconds before next message
+    }, waitTime);
 
     return () => clearTimeout(timer);
-  }, [isTyping, currentIndex, transmissions.length]);
+  }, [isTyping, currentIndex, transmissions.length, currentTransmission]);
 
   if (!currentTransmission) return null; // Don't render anything if no transmissions
 
@@ -130,9 +134,20 @@ export function CosmicTransmissions() {
                 </span>
               </div>
 
-              <div className="text-slate-300 text-sm md:text-base leading-relaxed tracking-wide h-full">
+              <div className="text-slate-300 text-sm md:text-base leading-relaxed tracking-wide h-full w-full">
                 {displayedText}
-                <span className="inline-block w-2 h-4 ml-1 bg-purple-400 animate-[ping_1s_infinite]" />
+                <span className={`inline-block w-2 h-4 ml-1 bg-purple-400 ${isTyping ? 'animate-[ping_1s_infinite]' : 'opacity-50'}`} />
+                
+                {/* Render Rich Embeds (e.g. Facebook Reels, YouTube) */}
+                {!isTyping && currentTransmission.embedCode && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8 }}
+                    className="mt-6 flex justify-center w-full max-w-full overflow-hidden rounded-xl border border-white/5 bg-black/20"
+                    dangerouslySetInnerHTML={{ __html: currentTransmission.embedCode }}
+                  />
+                )}
               </div>
             </motion.div>
           </AnimatePresence>
