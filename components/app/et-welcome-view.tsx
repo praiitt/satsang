@@ -120,10 +120,10 @@ export const ETWelcomeView = ({
               className="w-full aspect-[9/16] object-cover"
             />
             {/* Optional video caption overlay */}
-            <div className="absolute bottom-6 left-6 right-6 z-20">
-               <h3 className="text-xl font-semibold text-white mb-2">{t('etAgent.videoTitle') || 'Discover the ET Agent Experience'}</h3>
+            <div className="absolute top-6 left-6 right-6 z-20 pointer-events-none">
+               <h3 className="text-xl font-semibold text-white mb-2 drop-shadow-md">{t('etAgent.videoTitle') || 'Discover the ET Agent Experience'}</h3>
                {t('etAgent.videoDescription') && (
-                 <p className="text-sm text-white/70 line-clamp-2">{t('etAgent.videoDescription')}</p>
+                 <p className="text-sm text-white/90 line-clamp-2 drop-shadow-md">{t('etAgent.videoDescription')}</p>
                )}
             </div>
           </div>
