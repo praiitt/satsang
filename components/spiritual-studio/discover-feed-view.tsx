@@ -116,7 +116,14 @@ export const DiscoverFeedView = ({
   const [visibleMyMusicCount, setVisibleMyMusicCount] = useState(6);
   const [selectedCuratedPlaylist, setSelectedCuratedPlaylist] = useState<any | null>(null);
   const [loadingPlaylistDetails, setLoadingPlaylistDetails] = useState(false);
-  const [showMyVault, setShowMyVault] = useState(false);
+  const [showMyVault, setShowMyVault] = useState(true);
+
+  // Vault Categories State
+  const [vaultCategory, setVaultCategory] = useState<'music' | 'art' | 'reels' | 'video'>('music');
+  const [myArt, setMyArt] = useState<any[]>([]);
+  const [myReels, setMyReels] = useState<any[]>([]);
+  const [loadingArt, setLoadingArt] = useState(false);
+  const [loadingReels, setLoadingReels] = useState(false);
 
   // Global Spiritual State (Energy Passport)
   const { spiritualState } = useSpiritualState();
@@ -175,6 +182,40 @@ export const DiscoverFeedView = ({
     };
     fetchBalance();
   }, [user?.uid]);
+
+  // Fetch Art and Reels for Vault
+  useEffect(() => {
+    if (!isAuthenticated || !user?.uid) return;
+    
+    const fetchVaultData = async () => {
+      try {
+        const { collection, query, where, getDocs, orderBy, limit } = await import('firebase/firestore');
+        const db = getFirebaseFirestore();
+        
+        if (vaultCategory === 'art' && myArt.length === 0) {
+          setLoadingArt(true);
+          const q = query(collection(db, 'spiritual_art'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(20));
+          const snap = await getDocs(q);
+          setMyArt(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          setLoadingArt(false);
+        }
+        
+        if (vaultCategory === 'reels' && myReels.length === 0) {
+          setLoadingReels(true);
+          const q = query(collection(db, 'spiritual_reels'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'), limit(20));
+          const snap = await getDocs(q);
+          setMyReels(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+          setLoadingReels(false);
+        }
+      } catch (e) {
+        console.error("Error fetching vault data:", e);
+        setLoadingArt(false);
+        setLoadingReels(false);
+      }
+    };
+    
+    fetchVaultData();
+  }, [vaultCategory, isAuthenticated, user?.uid]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -1506,36 +1547,86 @@ export const DiscoverFeedView = ({
 
         {/* Two-column layout: Tracks + Playlist Sidebar */}
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Main tracks grid */}
+          {/* Main vault content */}
           <div className="flex-1">
+            {/* Vault Categories: Music, Art, Video, Reels */}
+            {isAuthenticated && (
+              <div className="flex gap-2 mb-5 flex-wrap">
+                <button
+                  onClick={() => setVaultCategory('music')}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
+                    vaultCategory === 'music'
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  🎵 Music
+                </button>
+                <button
+                  onClick={() => setVaultCategory('art')}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
+                    vaultCategory === 'art'
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  🎨 Art
+                </button>
+                <button
+                  onClick={() => setVaultCategory('reels')}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
+                    vaultCategory === 'reels'
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  🎬 Reels
+                </button>
+                <button
+                  onClick={() => setVaultCategory('video')}
+                  className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
+                    vaultCategory === 'video'
+                      ? "bg-amber-500 text-white shadow-md"
+                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                  )}
+                >
+                  📹 Video (Sessions)
+                </button>
+              </div>
+            )}
+
             {/* My Music sub-filter: All / Favorites / Satsang */}
-            {isAuthenticated && !authLoading && !myTracksLoading && (
+            {isAuthenticated && !authLoading && vaultCategory === 'music' && !myTracksLoading && (
               <div className="flex gap-2 mb-5 flex-wrap">
                 <button
                   onClick={() => setMyMusicFilter('all')}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
                     myMusicFilter === 'all'
-                      ? "bg-amber-500 text-white shadow-md"
-                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                      ? "bg-amber-500/20 text-amber-700 dark:text-amber-300"
+                      : "bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 border border-gray-200 dark:border-zinc-700"
                   )}
                 >
-                  🎵 My Creations
+                  All Music
                 </button>
                 <button
                   onClick={() => setMyMusicFilter('favorites')}
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
                     myMusicFilter === 'favorites'
-                      ? "bg-rose-500 text-white shadow-md"
-                      : "bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700"
+                      ? "bg-rose-500/20 text-rose-700 dark:text-rose-300"
+                      : "bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 border border-gray-200 dark:border-zinc-700"
                   )}
                 >
                   ❤️ Favorites
                   {favoriteIds.size > 0 && (
                     <span className={cn(
                       "text-xs font-bold px-1.5 py-0.5 rounded-full",
-                      myMusicFilter === 'favorites' ? "bg-white/30 text-white" : "bg-rose-100 dark:bg-rose-900/40 text-rose-600"
+                      myMusicFilter === 'favorites' ? "bg-rose-500/30 text-rose-800 dark:text-rose-200" : "bg-rose-100 dark:bg-rose-900/40 text-rose-600"
                     )}>
                       {Array.from(favoriteIds).filter(id => myTracks.some(t => t.id === id)).length}
                     </span>
@@ -1547,14 +1638,14 @@ export const DiscoverFeedView = ({
                     className={cn(
                       "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all",
                       myMusicFilter === 'satsang'
-                        ? "bg-orange-500 text-white shadow-md"
-                        : "bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/40 border border-orange-200 dark:border-orange-800/40"
+                        ? "bg-orange-500/20 text-orange-700 dark:text-orange-300"
+                        : "bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 border border-gray-200 dark:border-zinc-700"
                     )}
                   >
-                    🕉️ Satsang Music
+                    🕉️ Satsang
                     <span className={cn(
                       "text-xs font-bold px-1.5 py-0.5 rounded-full",
-                      myMusicFilter === 'satsang' ? "bg-white/30 text-white" : "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
+                      myMusicFilter === 'satsang' ? "bg-orange-500/30 text-orange-800 dark:text-orange-200" : "bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
                     )}>
                       {myTracks.filter(t => t.source === 'private_satsang').length}
                     </span>
@@ -1562,6 +1653,10 @@ export const DiscoverFeedView = ({
                 )}
               </div>
             )}
+            
+            {/* Vault Content Rendering */}
+            {vaultCategory === 'music' && (
+              <>
             {authLoading || myTracksLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[1, 2, 3].map((i) => (
@@ -1683,6 +1778,98 @@ export const DiscoverFeedView = ({
                   </div>
                 );
               })()}
+              </>
+            )}
+
+            {/* ART VAULT */}
+            {vaultCategory === 'art' && (
+              <div className="animate-in fade-in zoom-in duration-300">
+                {loadingArt ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="aspect-square bg-gray-100 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
+                    ))}
+                  </div>
+                ) : myArt.length === 0 ? (
+                  <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">You haven't created any art yet.</p>
+                    <Button onClick={() => setIsArtStudioOpen(true)} variant="outline" size="lg" className="border-amber-500 text-amber-600 hover:bg-amber-50">
+                      <Plus className="w-5 h-5 mr-2" /> Create Spiritual Art
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {myArt.map(art => (
+                      <div key={art.id} className="relative aspect-square rounded-2xl overflow-hidden group border border-gray-200 dark:border-zinc-800">
+                        <img src={art.imageDataUrl} alt={art.intention} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 p-4 flex flex-col justify-end">
+                          <p className="text-white text-sm font-medium line-clamp-3 leading-tight">{art.intention}</p>
+                          <div className="mt-2 flex gap-2">
+                             <span className="text-[10px] bg-black/50 text-white px-2 py-1 rounded backdrop-blur-md border border-white/20 uppercase tracking-wider">{new Date(art.createdAt).toLocaleDateString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* REELS VAULT */}
+            {vaultCategory === 'reels' && (
+              <div className="animate-in fade-in zoom-in duration-300">
+                {loadingReels ? (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="aspect-[9/16] bg-gray-100 dark:bg-gray-800/50 rounded-2xl animate-pulse" />
+                    ))}
+                  </div>
+                ) : myReels.length === 0 ? (
+                  <div className="text-center py-12 bg-white dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-600 dark:text-gray-400 mb-6 text-lg">You haven't created any reels yet.</p>
+                    <Button onClick={() => setIsReelsStudioOpen(true)} variant="outline" size="lg" className="border-amber-500 text-amber-600 hover:bg-amber-50">
+                      <Plus className="w-5 h-5 mr-2" /> Create Spiritual Reel
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {myReels.map(reel => (
+                      <div key={reel.id} className="relative aspect-[9/16] rounded-2xl overflow-hidden group border border-gray-200 dark:border-zinc-800 bg-zinc-900 shadow-sm">
+                        {reel.videoUrl ? (
+                          <video src={reel.videoUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" controls preload="metadata" />
+                        ) : reel.imageUrl ? (
+                          <img src={reel.imageUrl} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={reel.intention} />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-amber-500/50">
+                            {reel.status === 'failed' ? 'Failed' : 'Processing...'}
+                          </div>
+                        )}
+                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-4 pointer-events-none">
+                          <p className="text-white text-sm font-semibold drop-shadow-lg line-clamp-2 leading-snug">{reel.intention}</p>
+                          <div className="flex gap-2 mt-2">
+                             <span className={cn("text-[10px] px-2 py-1 rounded backdrop-blur-md border uppercase tracking-wider font-bold",
+                               reel.status === 'completed' ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" :
+                               reel.status === 'failed' ? "bg-rose-500/20 text-rose-300 border-rose-500/30" :
+                               "bg-amber-500/20 text-amber-300 border-amber-500/30"
+                             )}>
+                               {reel.status}
+                             </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* VIDEO SESSIONS VAULT */}
+            {vaultCategory === 'video' && (
+              <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-gray-200 dark:border-zinc-800 overflow-hidden shadow-sm p-4 min-h-[500px] animate-in fade-in duration-300">
+                <RecordingsModal onClose={() => setVaultCategory('music')} inline={true} />
+              </div>
+            )}
+
           </div>
 
           {/* Playlist Quick Access Sidebar */}
