@@ -105,16 +105,18 @@ async function generateAffirmationReel(reelId: string, userId: string, intention
             model: "dall-e-3",
             prompt: imagePrompt,
             n: 1,
-            size: "1024x1792",
-            response_format: "b64_json"
+            size: "1024x1792"
         });
         
-        const imageBase64 = genImageRes.data[0].b64_json;
-        if (!imageBase64) throw new Error("Failed to generate image");
+        const imageUrlFromOpenAI = genImageRes.data[0].url;
+        if (!imageUrlFromOpenAI) throw new Error("Failed to generate image URL from OpenAI");
+        
+        // Fetch the image buffer from the URL
+        const imageRes = await fetch(imageUrlFromOpenAI);
+        const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
         
         // Use a bucket that actually exists
         const bucket = getStorage().bucket('rraasi-public-assets');
-        const imageBuffer = Buffer.from(imageBase64, 'base64');
         const imageFile = bucket.file(`reels/${reelId}/image.jpg`);
         await imageFile.save(imageBuffer, { contentType: 'image/jpeg' });
         await imageFile.makePublic();
