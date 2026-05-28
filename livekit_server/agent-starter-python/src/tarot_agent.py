@@ -57,7 +57,8 @@ if not _ENV_LOADED:
     logger.error("⚠️  .env.local not found!")
 
 class TarotAgent(Agent):
-    def __init__(self, is_group_conversation: bool = False, publish_data_fn=None) -> None:
+    def __init__(self, user_id: str = "default_user", is_group_conversation: bool = False, publish_data_fn=None) -> None:
+        self.user_id = user_id
         super().__init__(
             instructions="""You are a mystical and empathetic Tarot Reader. You connect with the user's energy to reveal hidden truths through the cards.
             
@@ -75,6 +76,11 @@ class TarotAgent(Agent):
             - **General Predictions**: 3-card spread (Past, Present, Future) for Love/Career/Finance
             - **Yes/No Questions**: Single card answer to specific questions
             
+            REMEDIES:
+            - If you identify an energetic block, anxiety, or issue during the reading, you MUST prescribe a spiritual remedy using the 'prescribe_spiritual_remedy' tool.
+            - Remedies can be "Music" (for healing frequencies), "Art" (for visual manifestation), or "Reel" (for guided meditation).
+            - After using the tool, tell the user to visit their Spiritual Studio Dashboard to manifest their custom remedy.
+            
             TONE:
             - Mystical, calm, wise, and supportive
             - Use metaphors of energy, stars, and destiny
@@ -86,6 +92,49 @@ class TarotAgent(Agent):
             """,
         )
         self._publish_data_fn = publish_data_fn
+
+    @function_tool
+    async def prescribe_spiritual_remedy(
+        self, 
+        context: RunContext, 
+        current_imbalance: str, 
+        active_remedy: str, 
+        satsang_summary: str
+    ) -> str:
+        """
+        Prescribe a spiritual remedy to the user (Music, Reel, or Art) after diagnosing an issue with the cards.
+        Call this when you find an energetic block, anxiety, or issue that needs healing.
+        
+        Args:
+            current_imbalance: A short phrase describing the diagnosis (e.g. "Anxiety block in Heart Chakra", "Financial instability fear")
+            active_remedy: The type of remedy prescribed. MUST BE exactly one of: "Music", "Reel", "Art"
+            satsang_summary: A 1-2 sentence summary of what the cards revealed and why this remedy helps.
+        """
+        try:
+            try:
+                from .firebase_db import FirebaseDB
+            except ImportError:
+                from firebase_db import FirebaseDB
+                
+            db = FirebaseDB()
+            
+            # Map remedy types to exactly what the frontend expects
+            valid_remedies = {"Music": "Music", "Reel": "Reel", "Art": "Art"}
+            remedy = valid_remedies.get(active_remedy.capitalize(), "Music")
+            
+            state_update = {
+                "currentImbalance": current_imbalance,
+                "diagnosingTool": "Tarot",
+                "activeRemedy": remedy,
+                "satsangSummary": satsang_summary,
+            }
+            
+            db.update_spiritual_state(self.user_id, state_update)
+            logger.info(f"Updated spiritual state for {self.user_id} with remedy {remedy}")
+            return f"Successfully prescribed {remedy} remedy for {current_imbalance}. Tell the user to check their dashboard to manifest it."
+        except Exception as e:
+            logger.error(f"Failed to prescribe remedy: {e}")
+            return "Failed to save the remedy prescription."
 
     @function_tool
     async def draw_tarot_cards(self, context: RunContext, topic: str) -> str:
@@ -392,7 +441,7 @@ async def entrypoint(ctx: JobContext):
     except Exception as e:
         logger.warning(f"Could not extract userId: {e}")
 
-    agent = TarotAgent(publish_data_fn=_publish_data)
+    agent = TarotAgent(user_id=user_id, publish_data_fn=_publish_data)
     
     session = AgentSession(
         stt=stt,

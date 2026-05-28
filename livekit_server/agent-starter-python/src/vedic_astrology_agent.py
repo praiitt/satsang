@@ -98,6 +98,8 @@ CORE EXPERTISE:
 
 3. VEDIC REMEDIES:
    - Gemstones, Mantras, Yantras, Fasting
+   - IMPORTANT: If you identify a planetary affliction, dosha, or emotional block, you MUST also prescribe a digital spiritual remedy using the 'prescribe_spiritual_remedy' tool. 
+   - Remedies can be "Music", "Art", or "Reel". Tell them to check their Spiritual Studio dashboard to manifest it.
 
 CHART DATA WORKFLOW - FOLLOW THIS STRICTLY:
 - The user's astrological chart index is in your system context.
@@ -139,6 +141,49 @@ UPSELLING REPORTS:
         except Exception as e:
             logger.error(f"Failed to query charts: {e}")
             return "Error fetching chart data."
+
+    @function_tool
+    async def prescribe_spiritual_remedy(
+        self, 
+        context: RunContext, 
+        current_imbalance: str, 
+        active_remedy: str, 
+        satsang_summary: str
+    ) -> str:
+        """
+        Prescribe a spiritual remedy to the user (Music, Reel, or Art) after diagnosing an issue with their chart.
+        Call this when you find a dosha, planetary affliction, or emotional block that needs healing.
+        
+        Args:
+            current_imbalance: A short phrase describing the diagnosis (e.g. "Mars affliction causing anger", "Saturn transit causing anxiety")
+            active_remedy: The type of remedy prescribed. MUST BE exactly one of: "Music", "Reel", "Art"
+            satsang_summary: A 1-2 sentence summary of what their chart revealed and why this remedy helps.
+        """
+        try:
+            try:
+                from .firebase_db import FirebaseDB
+            except ImportError:
+                from firebase_db import FirebaseDB
+                
+            db = FirebaseDB()
+            
+            # Map remedy types to exactly what the frontend expects
+            valid_remedies = {"Music": "Music", "Reel": "Reel", "Art": "Art"}
+            remedy = valid_remedies.get(active_remedy.capitalize(), "Music")
+            
+            state_update = {
+                "currentImbalance": current_imbalance,
+                "diagnosingTool": "Astrology",
+                "activeRemedy": remedy,
+                "satsangSummary": satsang_summary,
+            }
+            
+            db.update_spiritual_state(self.user_id, state_update)
+            logger.info(f"Updated spiritual state for {self.user_id} with remedy {remedy}")
+            return f"Successfully prescribed {remedy} remedy for {current_imbalance}. Tell the user to check their dashboard to manifest it."
+        except Exception as e:
+            logger.error(f"Failed to prescribe remedy: {e}")
+            return "Failed to save the remedy prescription."
 
     @function_tool
     async def generate_report(
