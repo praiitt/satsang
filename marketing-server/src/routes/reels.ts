@@ -100,16 +100,32 @@ async function generateAffirmationReel(reelId: string, userId: string, intention
         
         console.log(`[Reels] Using image prompt: ${imagePrompt}`);
         
-        // Generate Image using Pollinations AI (Free, Keyless, High Quality)
-        const encodedPrompt = encodeURIComponent(imagePrompt + ", highly detailed, masterpiece, beautiful, serene, spiritual, 8k resolution, vertical wallpaper");
-        const imageUrlFromAPI = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1792&nologo=true&enhance=true`;
+        // Generate Image using Gemini Imagen 3 via REST API
+        console.log(`[Reels] Generating image with Gemini Imagen 3...`);
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+        if (!geminiApiKey) throw new Error("GEMINI_API_KEY is not set");
+
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-001:predict?key=${geminiApiKey}`;
+        const genImageRes = await fetch(geminiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                instances: [{ prompt: imagePrompt + ", highly detailed, masterpiece, beautiful, serene, spiritual, 8k resolution, vertical wallpaper" }],
+                parameters: { sampleCount: 1, aspectRatio: "9:16" }
+            })
+        });
+
+        const genImageData = await genImageRes.json();
         
-        console.log(`[Reels] Fetching image from Pollinations: ${imageUrlFromAPI}`);
-        
-        // Fetch the image buffer from the URL
-        const imageRes = await fetch(imageUrlFromAPI);
-        if (!imageRes.ok) throw new Error(`Failed to download image from Pollinations: ${imageRes.statusText}`);
-        const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
+        if (genImageData.error) {
+            throw new Error(`Gemini API Error: ${genImageData.error.message}`);
+        }
+
+        const imageBase64 = genImageData.predictions?.[0]?.bytesBase64Encoded;
+        if (!imageBase64) throw new Error("Failed to extract image from Gemini response");
+
+        const imageBuffer = Buffer.from(imageBase64, 'base64');
+
         
         // Use a bucket that actually exists
         const bucket = getStorage().bucket('rraasi-public-assets');
