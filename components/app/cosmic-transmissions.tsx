@@ -72,8 +72,11 @@ export function CosmicTransmissions() {
     if (isTyping || transmissions.length <= 1) return;
 
     // If there is an embed code (video), wait much longer (90 seconds) so the user can watch it.
+    // If there is a URL button, wait 30 seconds.
     // Otherwise, wait 15 seconds for reading text.
-    const waitTime = currentTransmission?.embedCode ? 90000 : 15000;
+    let waitTime = 15000;
+    if (currentTransmission?.embedCode) waitTime = 90000;
+    else if (currentTransmission?.url) waitTime = 30000;
 
     const timer = setTimeout(() => {
       setCurrentIndex((prev) => (prev + 1) % transmissions.length);
@@ -147,6 +150,28 @@ export function CosmicTransmissions() {
                     className="mt-6 flex justify-center w-full max-w-full overflow-hidden rounded-xl border border-white/5 bg-black/20"
                     dangerouslySetInnerHTML={{ __html: currentTransmission.embedCode }}
                   />
+                )}
+
+                {/* Render External Link Button */}
+                {!isTyping && currentTransmission.url && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                    className="mt-6 flex justify-center"
+                  >
+                    <a 
+                      href={currentTransmission.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold rounded-full overflow-hidden transition-all duration-300 border border-white/10 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.3)]"
+                    >
+                      <span className="relative z-10">Access Source Transmission</span>
+                      <svg className="relative z-10 w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </motion.div>
                 )}
               </div>
             </motion.div>

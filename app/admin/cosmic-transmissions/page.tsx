@@ -30,6 +30,7 @@ export default function CosmicTransmissionsAdmin() {
   const [color, setColor] = useState('text-cyan-400');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [embedCode, setEmbedCode] = useState('');
+  const [url, setUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch Transmissions
@@ -53,8 +54,8 @@ export default function CosmicTransmissionsAdmin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!message.trim() && !embedCode.trim()) || !civilization.trim()) {
-      alert('Please provide either a message or an embed code.');
+    if ((!message.trim() && !embedCode.trim() && !url.trim()) || !civilization.trim()) {
+      alert('Please provide either a message, an embed code, or a URL.');
       return;
     }
     
@@ -64,6 +65,7 @@ export default function CosmicTransmissionsAdmin() {
         civilization: civilization.toUpperCase(),
         message,
         embedCode,
+        url,
         color,
         date,
         createdAt: serverTimestamp()
@@ -72,6 +74,7 @@ export default function CosmicTransmissionsAdmin() {
       // Reset form
       setMessage('');
       setEmbedCode('');
+      setUrl('');
       alert('Transmission successfully sent to the cosmos!');
     } catch (error) {
       console.error('Error adding document: ', error);
@@ -177,10 +180,22 @@ export default function CosmicTransmissionsAdmin() {
                     className="w-full h-24 bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-cyan-500 resize-none"
                     placeholder='e.g., <iframe src="..."></iframe>'
                   />
-                  <p className="text-xs text-slate-500 mt-1">Paste Facebook Reels, YouTube, or Instagram embed codes here.</p>
+                  <p className="text-xs text-slate-500 mt-1">Paste Facebook Reels, YouTube, or Instagram embed codes here to play them directly on the page.</p>
                 </div>
 
-                <Button 
+                <div>
+                  <label className="block text-sm font-medium text-slate-400 mb-1">External Link URL (Optional)</label>
+                  <input 
+                    type="url" 
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-cyan-500"
+                    placeholder="https://www.facebook.com/share/v/..."
+                  />
+                  <p className="text-xs text-slate-500 mt-1">If you provide a URL, a button will appear below the message for users to click.</p>
+                </div>
+
+                <Button  
                   type="submit"  
                   disabled={isSubmitting}
                   className="w-full bg-cyan-600 hover:bg-cyan-500 text-white border-none py-6 mt-4"
@@ -221,6 +236,11 @@ export default function CosmicTransmissionsAdmin() {
                         {t.embedCode && (
                           <div className="mt-4 p-2 bg-slate-900 rounded border border-slate-700 text-xs text-slate-400 overflow-hidden text-ellipsis whitespace-nowrap">
                             [Contains Rich Embed Code]
+                          </div>
+                        )}
+                        {t.url && (
+                          <div className="mt-2 text-xs text-cyan-400 font-sans truncate max-w-xs">
+                            🔗 {t.url}
                           </div>
                         )}
                       </div>
