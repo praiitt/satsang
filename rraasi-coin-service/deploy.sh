@@ -11,6 +11,7 @@ npm run build
 # Deploy to Cloud Functions
 echo "☁️  Deploying to Cloud Functions..."
 gcloud functions deploy rraasi-coin-service \
+  --project=rraasi-8a619 \
   --gen2 \
   --runtime=nodejs20 \
   --region=us-central1 \

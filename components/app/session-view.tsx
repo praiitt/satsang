@@ -29,7 +29,7 @@ import { Button } from '@/components/livekit/button';
 import { History } from 'lucide-react';
 import { useDataChannel } from '@livekit/components-react';
 import { useMusicPlayer } from '@/contexts/music-player-context';
-import BuyCoinsModal from '@/components/rraasi-music/buy-coins-modal';
+import BuyCoinsModal from '@/components/spiritual-studio/buy-coins-modal';
 
 const MotionBottom = motion.create('div');
 
@@ -81,10 +81,10 @@ interface SessionViewProps {
   appConfig: AppConfig;
 }
 
-export const SessionView = ({
+export const SessionView = React.forwardRef<HTMLElement, React.ComponentProps<'section'> & SessionViewProps>(({
   appConfig,
   ...props
-}: React.ComponentProps<'section'> & SessionViewProps) => {
+}, ref) => {
   useConnectionTimeout(200_000);
   useDebugMode({ enabled: IN_DEVELOPMENT });
   useWakeLock(true);
@@ -228,7 +228,7 @@ export const SessionView = ({
 
   return (
     <SessionAuthGuard isSessionActive={isSessionActive}>
-      <section className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
+      <section ref={ref} className="bg-background relative z-10 h-full w-full overflow-hidden" {...props}>
         {/* Agent Sleep Indicator - Blinking dot in top corner */}
         {agentIsSleeping && (
           <div className="fixed top-4 left-4 z-50 flex items-center gap-2 rounded-full border border-amber-400/50 bg-amber-500/20 px-3 py-1.5 shadow-lg backdrop-blur-sm">
@@ -315,7 +315,8 @@ export const SessionView = ({
             <AgentControlBar controls={controls} onChatOpenChange={setChatOpen} />
           </div>
         </MotionBottom>
-      </section >
-    </SessionAuthGuard >
+      </section>
+    </SessionAuthGuard>
   );
-};
+});
+SessionView.displayName = 'SessionView';

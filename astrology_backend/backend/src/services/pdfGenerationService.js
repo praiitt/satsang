@@ -1,20 +1,19 @@
 import axios from 'axios';
 import { logger } from '../utils/logger.js';
+import admin from 'firebase-admin';
+
 
 class PDFGenerationService {
   constructor() {
     this.baseURL = 'https://pdf.astrologyapi.com/v1';
     
     // Use environment variables for credentials
-    const userId = process.env.ASTROLOGY_USER_ID || '646865';//PDF generation Key
-    const apiKey = process.env.ASTROLOGY_API_KEY || '1d0d5829d81103f18125f16692af4af35b4fcac3';
+    const userId = process.env.ASTROLOGY_USER_ID || '646865';
+    const apiKey = process.env.ASTROLOGY_API_KEY || '';
     
-    // Create Basic Auth header
-    const credentials = Buffer.from(`${userId}:${apiKey}`).toString('base64');
-    this.auth = `Basic ${credentials}`;
-    
+    // pdf.astrologyapi.com uses x-astrologyapi-key header (NOT Basic Auth)
     this.headers = {
-      'Authorization': this.auth,
+      'x-astrologyapi-key': apiKey,
       'Content-Type': 'application/json'
     };
     
@@ -33,8 +32,9 @@ class PDFGenerationService {
     
     logger.info('PDF Generation Service initialized', { 
       userId, 
-      apiKey: apiKey.substring(0, 10) + '...',
-      baseURL: this.baseURL 
+      apiKey: apiKey.substring(0, 12) + '...',
+      baseURL: this.baseURL,
+      authMethod: 'x-astrologyapi-key'
     });
   }
 
@@ -93,8 +93,59 @@ class PDFGenerationService {
     };
   }
 
+  // Download PDF, upload to Firebase Storage, save permanent URL to Firestore
+  async savePDFRecord(userId, pdfType, apiPdfUrl, birthDataName) {
+    if (!userId) return apiPdfUrl;
+    let permanentUrl = apiPdfUrl;
+
+    try {
+      // 1. Download PDF bytes from astrologyapi.com
+      const pdfResp = await axios.get(apiPdfUrl, { responseType: 'arraybuffer', timeout: 60000 });
+      const pdfBuffer = Buffer.from(pdfResp.data);
+
+      // 2. Upload to Firebase Storage
+      const bucket = admin.storage().bucket('rraasi-8a619.firebasestorage.app');
+      const timestamp = Date.now();
+      const filePath = `pdfs/${userId}/${pdfType}_${timestamp}.pdf`;
+      const file = bucket.file(filePath);
+
+      await file.save(pdfBuffer, {
+        metadata: { contentType: 'application/pdf', cacheControl: 'public, max-age=31536000' }
+      });
+
+      // 3. Get a signed URL valid for 10 years
+      const [signedUrl] = await file.getSignedUrl({
+        action: 'read',
+        expires: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000)
+      });
+      permanentUrl = signedUrl;
+      logger.info('PDF uploaded to Firebase Storage', { userId, pdfType, filePath });
+    } catch (uploadErr) {
+      logger.warn('Firebase Storage upload failed, falling back to API URL', { err: uploadErr.message });
+    }
+
+    // 4. Save URL to Firestore (permanent or fallback)
+    try {
+      const db = admin.firestore();
+      await db.collection('users').doc(userId)
+        .collection('reportCache').doc(`pdf_${pdfType}`)
+        .set({
+          pdfUrl: permanentUrl,
+          pdfType,
+          generatedFor: birthDataName || 'User',
+          generatedAt: new Date().toISOString(),
+          storedInBucket: permanentUrl !== apiPdfUrl
+        });
+      logger.info('PDF record saved to Firestore', { userId, pdfType });
+    } catch (dbErr) {
+      logger.warn('Failed to save PDF record to Firestore', { err: dbErr.message });
+    }
+
+    return permanentUrl;
+  }
+
   // Generate Mini Horoscope PDF (9 pages)
-  async generateMiniHoroscopePDF(birthData, customization = {}) {
+  async generateMiniHoroscopePDF(birthData, customization = {}, userId = null) {
     try {
       const formattedData = this.formatBirthDataForPDF(birthData, customization);
       
@@ -122,15 +173,9 @@ class PDFGenerationService {
       );
 
       if (response.status === 200 && response.data.status) {
-        logger.info('Mini Horoscope PDF generated successfully', { 
-          pdfUrl: response.data.pdf_url 
-        });
-        return { 
-          success: true, 
-          pdfUrl: response.data.pdf_url,
-          type: 'mini_horoscope',
-          pages: 9
-        };
+        logger.info('Mini Horoscope PDF generated successfully', { pdfUrl: response.data.pdf_url });
+        const pdfUrl = await this.savePDFRecord(userId, 'mini_horoscope', response.data.pdf_url, formattedData.name);
+        return { success: true, pdfUrl, type: 'mini_horoscope', pages: 9 };
       } else {
         logger.error('Mini Horoscope PDF generation failed', { 
           status: response.status, 
@@ -148,7 +193,7 @@ class PDFGenerationService {
   }
 
   // Generate Basic Horoscope PDF (25 pages)
-  async generateBasicHoroscopePDF(birthData, customization = {}) {
+  async generateBasicHoroscopePDF(birthData, customization = {}, userId = null) {
     try {
       const formattedData = this.formatBirthDataForPDF(birthData, customization);
       
@@ -175,15 +220,9 @@ class PDFGenerationService {
       );
 
       if (response.status === 200 && response.data.status) {
-        logger.info('Basic Horoscope PDF generated successfully', { 
-          pdfUrl: response.data.pdf_url 
-        });
-        return { 
-          success: true, 
-          pdfUrl: response.data.pdf_url,
-          type: 'basic_horoscope',
-          pages: 25
-        };
+        logger.info('Basic Horoscope PDF generated successfully', { pdfUrl: response.data.pdf_url });
+        const pdfUrl = await this.savePDFRecord(userId, 'basic_horoscope', response.data.pdf_url, formattedData.name);
+        return { success: true, pdfUrl, type: 'basic_horoscope', pages: 25 };
       } else {
         logger.error('Basic Horoscope PDF generation failed', { 
           status: response.status, 
@@ -201,7 +240,7 @@ class PDFGenerationService {
   }
 
   // Generate Professional Horoscope PDF (68 pages)
-  async generateProfessionalHoroscopePDF(birthData, customization = {}) {
+  async generateProfessionalHoroscopePDF(birthData, customization = {}, userId = null) {
     try {
       const formattedData = this.formatBirthDataForPDF(birthData, customization);
       
@@ -228,15 +267,9 @@ class PDFGenerationService {
       );
 
       if (response.status === 200 && response.data.status) {
-        logger.info('Professional Horoscope PDF generated successfully', { 
-          pdfUrl: response.data.pdf_url 
-        });
-        return { 
-          success: true, 
-          pdfUrl: response.data.pdf_url,
-          type: 'professional_horoscope',
-          pages: 68
-        };
+        logger.info('Professional Horoscope PDF generated successfully', { pdfUrl: response.data.pdf_url });
+        const pdfUrl = await this.savePDFRecord(userId, 'professional_horoscope', response.data.pdf_url, formattedData.name);
+        return { success: true, pdfUrl, type: 'professional_horoscope', pages: 68 };
       } else {
         logger.error('Professional Horoscope PDF generation failed', { 
           status: response.status, 
@@ -254,7 +287,7 @@ class PDFGenerationService {
   }
 
   // Generate Match Making PDF (24 pages)
-  async generateMatchMakingPDF(maleData, femaleData, customization = {}) {
+  async generateMatchMakingPDF(maleData, femaleData, customization = {}, userId = null) {
     try {
       const formattedMaleData = this.formatBirthDataForPDF({...maleData, gender: 'male'}, customization);
       const formattedFemaleData = this.formatBirthDataForPDF({...femaleData, gender: 'female'}, customization);
@@ -313,15 +346,9 @@ class PDFGenerationService {
       );
 
       if (response.status === 200 && response.data.status) {
-        logger.info('Match Making PDF generated successfully', { 
-          pdfUrl: response.data.pdf_url 
-        });
-        return { 
-          success: true, 
-          pdfUrl: response.data.pdf_url,
-          type: 'match_making',
-          pages: 24
-        };
+        logger.info('Match Making PDF generated successfully', { pdfUrl: response.data.pdf_url });
+        const pdfUrl = await this.savePDFRecord(userId, 'match_making', response.data.pdf_url, formattedMaleData.name);
+        return { success: true, pdfUrl, type: 'match_making', pages: 24 };
       } else {
         logger.error('Match Making PDF generation failed', { 
           status: response.status, 
@@ -339,30 +366,27 @@ class PDFGenerationService {
   }
 
   // Generate PDF based on type
-  async generatePDF(type, birthData, additionalData = {}, customization = {}) {
+  async generatePDF(type, birthData, additionalData = {}, customization = {}, userId = null) {
     switch (type.toLowerCase()) {
       case 'mini':
       case 'mini_horoscope':
-        return await this.generateMiniHoroscopePDF(birthData, customization);
+        return await this.generateMiniHoroscopePDF(birthData, customization, userId);
         
       case 'basic':
       case 'basic_horoscope':
-        return await this.generateBasicHoroscopePDF(birthData, customization);
+        return await this.generateBasicHoroscopePDF(birthData, customization, userId);
         
       case 'professional':
       case 'pro':
       case 'pro_horoscope':
-        return await this.generateProfessionalHoroscopePDF(birthData, customization);
+        return await this.generateProfessionalHoroscopePDF(birthData, customization, userId);
         
       case 'matchmaking':
       case 'match_making':
         if (!additionalData.femaleData) {
-          return { 
-            success: false, 
-            error: 'Female birth data required for match making PDF' 
-          };
+          return { success: false, error: 'Female birth data required for match making PDF' };
         }
-        return await this.generateMatchMakingPDF(birthData, additionalData.femaleData, customization);
+        return await this.generateMatchMakingPDF(birthData, additionalData.femaleData, customization, userId);
         
       default:
         return { 

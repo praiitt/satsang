@@ -77,6 +77,11 @@ const nextConfig: NextConfig = {
         destination: '/business/signup',
         permanent: true,
       },
+      {
+        source: '/rraasi-music',
+        destination: '/spiritual-studio',
+        permanent: true,
+      },
     ];
   },
   async rewrites() {
@@ -85,10 +90,12 @@ const nextConfig: NextConfig = {
       : (process.env.AUTH_SERVER_URL || process.env.AUTH_SERVICE_URL || 'https://satsang-auth-server-6ougd45dya-el.a.run.app');
     const MARKETING_SERVER_URL = process.env.MARKETING_SERVER_URL || (process.env.NODE_ENV === 'development' ? 'http://localhost:4001' : 'https://asia-south1-rraasi-8a619.cloudfunctions.net/satsang-marketing-server');
     const BACKEND_URL = process.env.BACKEND_SERVICE_URL || 'http://localhost:3003';
+    const ASTROLOGY_BACKEND_URL = process.env.NEXT_PUBLIC_ASTROLOGY_BACKEND_URL || 'http://127.0.0.1:3002';
 
     console.log('[Next.Config] AUTH_URL:', AUTH_URL);
     console.log('[Next.Config] MARKETING_SERVER_URL:', MARKETING_SERVER_URL);
     console.log('[Next.Config] BACKEND_URL:', BACKEND_URL);
+    console.log('[Next.Config] ASTROLOGY_BACKEND_URL:', ASTROLOGY_BACKEND_URL);
     console.log('[Next.Config] Suno Rewrite Dst:', `${AUTH_URL}/suno/:path*`);
 
     return [
@@ -131,6 +138,11 @@ const nextConfig: NextConfig = {
       {
         source: '/api/auth/:path*',
         destination: `${AUTH_URL}/auth/:path*`,
+      },
+      // Astrology Backend Proxy
+      {
+        source: '/api/astrology/:path*',
+        destination: `${ASTROLOGY_BACKEND_URL}/api/:path*`,
       },
       {
         source: '/api/auth-chat/:path*',

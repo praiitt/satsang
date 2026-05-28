@@ -51,16 +51,23 @@ async function testAstrologyAPI() {
             tzone: 5.5
         };
 
-        const response = await axios.post(`${baseURL}/${testEndpoint}`, testData, {
-            auth: {
-                username: userId,
-                password: apiKey
-            },
+        const reqConfig = {
             timeout: 10000,
             headers: {
                 'Content-Type': 'application/json'
             }
-        });
+        };
+
+        if (apiKey.startsWith('ak-')) {
+            reqConfig.headers['Authorization'] = `Bearer ${apiKey}`;
+        } else {
+            reqConfig.auth = {
+                username: userId,
+                password: apiKey
+            };
+        }
+
+        const response = await axios.post(`${baseURL}/${testEndpoint}`, testData, reqConfig);
 
         console.log('✅ **API Test Successful!**');
         console.log('==========================');
@@ -86,16 +93,23 @@ async function testAstrologyAPI() {
         console.log('Birth Data:', JSON.stringify(birthData, null, 2));
         console.log('');
 
-        const chartResponse = await axios.post(`${baseURL}/birth_details`, birthData, {
-            auth: {
-                username: userId,
-                password: apiKey
-            },
+        const chartReqConfig = {
             timeout: 30000,
             headers: {
                 'Content-Type': 'application/json'
             }
-        });
+        };
+
+        if (apiKey.startsWith('ak-')) {
+            chartReqConfig.headers['Authorization'] = `Bearer ${apiKey}`;
+        } else {
+            chartReqConfig.auth = {
+                username: userId,
+                password: apiKey
+            };
+        }
+
+        const chartResponse = await axios.post(`${baseURL}/birth_details`, birthData, chartReqConfig);
 
         console.log('✅ **Birth Chart Test Successful!**');
         console.log('==================================');

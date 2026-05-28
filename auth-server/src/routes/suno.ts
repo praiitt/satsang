@@ -823,6 +823,182 @@ router.get('/community-tracks', async (req: Request, res: Response) => {
 });
 
 /**
+ * GET /api/suno/public-art
+ * Get public AI-generated art (images and videos) from community tracks
+ */
+router.get('/public-art', async (req: Request, res: Response) => {
+    try {
+        const query = req.query || {};
+        const page = parseInt(String(query.page || '1'));
+        let limitStr = query.limit;
+        if (Array.isArray(limitStr)) limitStr = limitStr[0];
+        const limit = parseInt(String(limitStr || '50'));
+        const type = query.type as string; // 'all', 'image', 'video'
+        const search = query.search as string;
+        const offset = (page - 1) * limit;
+
+        const db = getDb();
+        
+        let tracksQuery = db.collection('music_tracks')
+            .where('status', '==', 'COMPLETED')
+            .where('isPublic', '==', true);
+
+        if (search) {
+            const searchTerms = search.toLowerCase().split(/[\s,.\-!?"'()\[\]{}|\\/;:_]+/).filter(w => w.length >= 3).slice(0, 10);
+            if (searchTerms.length > 0) {
+                tracksQuery = tracksQuery.where('search_terms', 'array-contains-any', searchTerms);
+            }
+        }
+
+        tracksQuery = tracksQuery.orderBy('createdAt', 'desc')
+            .offset(offset)
+            .limit(limit);
+
+        const snapshot = await tracksQuery.get();
+
+        const artItems: any[] = [];
+
+        snapshot.docs.forEach(doc => {
+            const track = doc.data();
+            const trackId = doc.id;
+            
+            if (type !== 'image' && track.videoUrl) {
+                artItems.push({
+                    id: `${trackId}_video`,
+                    type: 'video',
+                    url: track.videoUrl,
+                    trackId,
+                    trackTitle: track.title || 'Untitled',
+                    prompt: track.prompt || track.description || '',
+                    ownerId: track.userId,
+                    createdAt: track.createdAt
+                });
+            }
+
+            if (type !== 'video' && track.generatedVideoImages && Array.isArray(track.generatedVideoImages)) {
+                track.generatedVideoImages.forEach((imgUrl: string, idx: number) => {
+                    artItems.push({
+                        id: `${trackId}_img_${idx}`,
+                        type: 'image',
+                        url: imgUrl,
+                        trackId,
+                        trackTitle: track.title || 'Untitled',
+                        prompt: track.prompt || track.description || '',
+                        ownerId: track.userId,
+                        createdAt: track.createdAt
+                    });
+                });
+            }
+        });
+
+        res.json({
+            artItems,
+            page,
+            hasMore: snapshot.docs.length === limit
+        });
+    } catch (error) {
+        console.error('[Suno Public Art] Error fetching art:', error);
+        res.status(500).json({
+            error: 'Failed to fetch public art',
+            details: error instanceof Error ? error.message : String(error)
+        });
+    }
+});
+
+/**
+ * POST /api/suno/buy-track
+ * Purchase exclusive rights to a public community track.
+ */
+router.post('/buy-track', requireAuth, async (req: AuthedRequest, res: Response) => {
+    try {
+        const { trackId } = req.body;
+        const buyerId = req.user!.uid;
+
+        if (!trackId) {
+            return res.status(400).json({ error: 'trackId is required' });
+        }
+
+        const db = getDb();
+        const trackRef = db.collection('music_tracks').doc(trackId);
+        const trackSnap = await trackRef.get();
+
+        if (!trackSnap.exists) {
+            return res.status(404).json({ error: 'Track not found' });
+        }
+
+        const trackData = trackSnap.data()!;
+        if (!trackData.isPublic) {
+            return res.status(400).json({ error: 'This track is no longer available for purchase' });
+        }
+
+        const creatorId = trackData.userId;
+        if (buyerId === creatorId) {
+            return res.status(400).json({ error: 'You already own this track' });
+        }
+
+        const COIN_SERVICE_URL = process.env.COIN_SERVICE_URL || 'http://localhost:4002';
+        const INTERNAL_TOKEN = process.env.INTERNAL_SERVICE_TOKEN || 'internal-rraasi-token-42'; // Match token from coin service
+
+        // Step 1: Deduct 25 coins from buyer
+        const deductRes = await fetch(`${COIN_SERVICE_URL}/internal/deduct`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-internal-token': INTERNAL_TOKEN
+            },
+            body: JSON.stringify({
+                userId: buyerId,
+                featureId: 'buy_exclusive_track',
+                metadata: { trackId, creatorId }
+            })
+        });
+
+        if (!deductRes.ok) {
+            if (deductRes.status === 402) {
+                return res.status(402).json({ error: 'Not enough coins' });
+            }
+            throw new Error(`Coin deduction failed: ${deductRes.statusText}`);
+        }
+
+        // Step 2: Add 15 coins to creator's payout balance
+        const payoutRes = await fetch(`${COIN_SERVICE_URL}/internal/add-payout`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-internal-token': INTERNAL_TOKEN
+            },
+            body: JSON.stringify({
+                userId: creatorId,
+                amount: 15
+            })
+        });
+
+        if (!payoutRes.ok) {
+            console.error('[Buy Track] Failed to add payout to creator:', creatorId);
+            // Non-fatal, but we should log it heavily. We still transfer ownership since buyer paid.
+        }
+
+        // Step 3: Transfer ownership in Firestore
+        await trackRef.update({
+            userId: buyerId,
+            isPublic: false,
+            originalCreatorId: creatorId,
+            purchasedAt: new Date(),
+            search_terms: require('firebase-admin').firestore.FieldValue.delete() // Optional: clear search terms
+        });
+
+        res.json({ success: true, message: 'Track successfully purchased' });
+
+    } catch (error) {
+        console.error('[Buy Track] Error:', error);
+        res.status(500).json({
+            error: 'Failed to process purchase',
+            details: error instanceof Error ? error.message : String(error)
+        });
+    }
+});
+
+/**
  * POST /api/suno/publish
  * Toggle the public visibility of a music track
  */

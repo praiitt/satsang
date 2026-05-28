@@ -1,21 +1,10 @@
-import { headers } from 'next/headers';
-import { APP_CONFIG_DEFAULTS, type AppConfig } from '@/app-config';
 import { TarotApp } from '@/components/app/tarot-app';
 
 export const metadata = {
-    title: 'Mystic Tarot Reader',
-    description: 'Connect with a mystical tarot reader for insights on Love, Career, and Finance.',
+    title: 'Mystic Tarot Reader | Rraasi',
+    description: 'Get personalized Tarot readings for Love, Career, and Life decisions.',
 };
 
-export default async function TarotPage() {
-    await headers();
-
-    const appConfig: AppConfig = {
-        ...APP_CONFIG_DEFAULTS,
-        agentName: 'tarot-agent',
-        pageTitle: 'Mystic Tarot Reader',
-        pageDescription: 'Connect with a mystical tarot reader for insights on Love, Career, and Finance.',
-    };
-
-    return <TarotApp appConfig={appConfig} />;
+export default function TarotPage() {
+    return <TarotApp />;
 }

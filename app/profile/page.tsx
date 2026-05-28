@@ -17,11 +17,17 @@ import {
     TrendingUp,
     Copy,
     CheckCircle2,
-    Music
+    Music,
+    Sparkles,
+    MapPin,
+    Clock
 } from 'lucide-react';
 import { Button } from '@/components/livekit/button';
 import { LogoutButton } from '@/components/auth/logout-button';
 import { RecordingsModal } from '@/components/app/recordings-modal';
+import { EnergyPassportCard } from '@/components/app/energy-passport-card';
+import { BiorhythmRings } from '@/components/app/biorhythm-rings';
+import { DailyCosmicInsight } from '@/components/app/daily-cosmic-insight';
 import { coinClient } from '@/lib/services/coinClient';
 
 export default function ProfilePage() {
@@ -34,6 +40,12 @@ export default function ProfilePage() {
     const [showRecordings, setShowRecordings] = useState(false);
     const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
     const [loadingTransactions, setLoadingTransactions] = useState(false);
+    
+    // Daily Insights State
+    const [biorhythmData, setBiorhythmData] = useState<any>(null);
+    const [nakshatraData, setNakshatraData] = useState<any>(null);
+    const [panchangData, setPanchangData] = useState<any>(null);
+    const [dailyInsightsLoading, setDailyInsightsLoading] = useState(false);
 
     useEffect(() => {
         const loadTransactions = async () => {
@@ -49,6 +61,47 @@ export default function ProfilePage() {
             loadTransactions();
         }
     }, [user]);
+
+    // Fetch daily insights
+    useEffect(() => {
+        const fetchDailyInsights = async () => {
+            if (!profile || !(profile as any).birthData || !user?.uid) return;
+            
+            setDailyInsightsLoading(true);
+            try {
+                const payloadBirthData = {
+                    ...(profile as any).birthData,
+                    name: (profile as any).birthData.name || (profile as any).name || user.displayName || 'User'
+                };
+                
+                const res = await fetch('/api/astrology/daily-insights', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: user.uid,
+                        birthData: payloadBirthData
+                    })
+                });
+                
+                if (res.ok) {
+                    const json = await res.json();
+                    if (json.success && json.data) {
+                        setBiorhythmData(json.data.biorhythm);
+                        setNakshatraData(json.data.nakshatraPrediction);
+                        setPanchangData(json.data.panchang);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to fetch daily insights:', error);
+            } finally {
+                setDailyInsightsLoading(false);
+            }
+        };
+
+        if (user && profile && (profile as any).birthData) {
+            fetchDailyInsights();
+        }
+    }, [user, profile]);
 
     useEffect(() => {
         const auth = getFirebaseAuth();
@@ -112,28 +165,16 @@ export default function ProfilePage() {
     return (
         <div className="min-h-screen bg-gradient-to-b from-amber-50 to-white dark:from-gray-900 dark:to-gray-800 py-12 px-4">
             <div className="max-w-4xl mx-auto">
-                {/* Header */}
-                <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 mb-6">
-                    <div className="flex items-center gap-6">
-                        <div className="h-24 w-24 rounded-full bg-gradient-to-br from-amber-400 to-orange-600 flex items-center justify-center text-white text-4xl font-bold">
-                            {profile.name ? profile.name.charAt(0).toUpperCase() : 'U'}
-                        </div>
-                        <div className="flex-1">
-                            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                                {profile.name || 'User'}
-                            </h1>
-                            <p className="text-gray-600 dark:text-gray-400">
-                                {t('profile.memberSince')} {formatDate(profile.createdAt)}
-                            </p>
-                        </div>
-                        {isSubscriptionActive && (
-                            <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-full flex items-center gap-2">
-                                <Crown className="h-5 w-5" />
-                                <span className="font-semibold">{t('profile.premium')}</span>
-                            </div>
-                        )}
+                {/* Energy Passport Header */}
+                <EnergyPassportCard userProfile={profile as any} />
+
+                {/* Daily Cosmic Insights Row */}
+                {(profile as any).birthData && (
+                    <div className="grid md:grid-cols-[1fr_2fr] gap-6 mb-6">
+                        <BiorhythmRings data={biorhythmData} loading={dailyInsightsLoading} />
+                        <DailyCosmicInsight nakshatraData={nakshatraData} panchangData={panchangData} loading={dailyInsightsLoading} />
                     </div>
-                </div>
+                )}
 
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                     {/* Contact Info */}
@@ -249,6 +290,56 @@ export default function ProfilePage() {
                         </div>
                     )}
                 </div>
+
+                {/* Vedic Astrology Status */}
+                {(profile as any).birthData && (
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-indigo-500" />
+                            Vedic Astrology Profile
+                        </h2>
+                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-2 border-indigo-200 dark:border-indigo-800 rounded-xl p-6">
+                            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">Astrology Status</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                        <div className={`h-2.5 w-2.5 rounded-full ${(profile as any).chartsGenerated ? 'bg-green-500' : 'bg-amber-500 animate-pulse'}`}></div>
+                                        <p className="text-lg font-bold text-gray-900 dark:text-white">
+                                            {(profile as any).chartsGenerated ? 'Charts Activated & Ready' : 'Generating Charts...'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <Button
+                                    onClick={() => router.push('/vedic-jyotish')}
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white shadow-md w-full md:w-auto"
+                                >
+                                    Access Jyotish AI
+                                </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-indigo-100 dark:border-indigo-800/50 pt-4">
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"><Calendar className="h-3 w-3"/> Date of Birth</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white mt-1">
+                                        {(profile as any).birthData.birthDate}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"><Clock className="h-3 w-3"/> Time of Birth</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white mt-1">
+                                        {(profile as any).birthData.birthTime}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1"><MapPin className="h-3 w-3"/> Place of Birth</p>
+                                    <p className="font-semibold text-gray-900 dark:text-white mt-1 line-clamp-1">
+                                        {(profile as any).birthData.placeOfBirth || `${(profile as any).birthData.latitude.toFixed(2)}, ${(profile as any).birthData.longitude.toFixed(2)}`}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Referral Code */}
                 <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">

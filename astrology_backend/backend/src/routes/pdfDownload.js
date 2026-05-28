@@ -3,6 +3,37 @@ import { pdfGenerationService } from '../services/pdfGenerationService.js';
 import { authenticateToken } from '../middleware/authMiddleware.js';
 import { requireCoins } from '../middleware/coinMiddleware.js';
 import { logger } from '../utils/logger.js';
+import admin from 'firebase-admin';
+
+// Helper: get cached PDF for a user
+async function getCachedPDF(userId, pdfType) {
+  try {
+    const db = admin.firestore();
+    const snap = await db.collection('users').doc(userId)
+      .collection('reportCache').doc(`pdf_${pdfType}`).get();
+    if (snap.exists) return snap.data();
+  } catch {}
+  return null;
+}
+
+// Middleware: serve from Firestore cache BEFORE coins are deducted
+function checkPDFCache(pdfType) {
+  return async (req, res, next) => {
+    const { forceRefresh = false } = req.body;
+    if (forceRefresh) return next(); // skip cache
+    const userId = req.user?.userId;
+    if (!userId) return next();
+    const cached = await getCachedPDF(userId, pdfType);
+    if (cached?.pdfUrl) {
+      logger.info(`Serving ${pdfType} PDF from cache — no coins charged`, { userId });
+      return res.json({
+        success: true,
+        data: { pdfUrl: cached.pdfUrl, downloadLink: cached.pdfUrl, fromCache: true, generatedAt: cached.generatedAt }
+      });
+    }
+    next();
+  };
+}
 
 const router = express.Router();
 
@@ -46,221 +77,94 @@ router.get('/types', async (req, res) => {
 
 // Generate Mini Horoscope PDF (9 pages)
 router.post('/mini-horoscope', 
-  authenticateToken, 
+  authenticateToken,
+  checkPDFCache('mini_horoscope'),          // ← cache hit? return early, no coins
   requireCoins('pdf_mini_horoscope', PDF_COSTS.mini_horoscope), 
   async (req, res) => {
     try {
       const { birthData, customization = {} } = req.body;
-      
-      if (!birthData) {
-        return res.status(400).json({
-          success: false,
-          error: 'Birth data is required'
-        });
-      }
-      
-      logger.info('Generating Mini Horoscope PDF', { 
-        userId: req.user.uid,
-        name: birthData.name 
-      });
-      
-      const result = await pdfGenerationService.generateMiniHoroscopePDF(birthData, customization);
-      
+      const userId = req.user?.userId;
+      if (!birthData) return res.status(400).json({ success: false, error: 'Birth data is required' });
+      logger.info('Generating Mini Horoscope PDF', { userId, name: birthData.name });
+      const result = await pdfGenerationService.generateMiniHoroscopePDF(birthData, customization, userId);
       if (result.success) {
-        res.json({
-          success: true,
-          data: {
-            pdfUrl: result.pdfUrl,
-            type: result.type,
-            pages: result.pages,
-            downloadLink: result.pdfUrl,
-            generatedAt: new Date().toISOString(),
-            coinUsage: {
-              coinsDeducted: PDF_COSTS.mini_horoscope,
-              newBalance: req.coinBalance - PDF_COSTS.mini_horoscope,
-              transactionId: req.coinTransactionId
-            }
-          }
-        });
+        res.json({ success: true, data: { pdfUrl: result.pdfUrl, type: result.type, pages: result.pages, downloadLink: result.pdfUrl, generatedAt: new Date().toISOString(), fromCache: false, coinUsage: { coinsDeducted: PDF_COSTS.mini_horoscope } } });
       } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          errorType: result.errorType
-        });
+        res.status(400).json({ success: false, error: result.error, errorType: result.errorType });
       }
     } catch (error) {
       logger.error('Error generating Mini Horoscope PDF:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to generate PDF'
-      });
+      res.status(500).json({ success: false, error: 'Failed to generate PDF' });
     }
   }
 );
 
 // Generate Basic Horoscope PDF (25 pages)
 router.post('/basic-horoscope', 
-  authenticateToken, 
+  authenticateToken,
+  checkPDFCache('basic_horoscope'),
   requireCoins('pdf_basic_horoscope', PDF_COSTS.basic_horoscope), 
   async (req, res) => {
     try {
       const { birthData, customization = {} } = req.body;
-      
-      if (!birthData) {
-        return res.status(400).json({
-          success: false,
-          error: 'Birth data is required'
-        });
-      }
-      
-      logger.info('Generating Basic Horoscope PDF', { 
-        userId: req.user.uid,
-        name: birthData.name 
-      });
-      
-      const result = await pdfGenerationService.generateBasicHoroscopePDF(birthData, customization);
-      
+      const userId = req.user?.userId;
+      if (!birthData) return res.status(400).json({ success: false, error: 'Birth data is required' });
+      logger.info('Generating Basic Horoscope PDF', { userId, name: birthData.name });
+      const result = await pdfGenerationService.generateBasicHoroscopePDF(birthData, customization, userId);
       if (result.success) {
-        res.json({
-          success: true,
-          data: {
-            pdfUrl: result.pdfUrl,
-            type: result.type,
-            pages: result.pages,
-            downloadLink: result.pdfUrl,
-            generatedAt: new Date().toISOString(),
-            coinUsage: {
-              coinsDeducted: PDF_COSTS.basic_horoscope,
-              newBalance: req.coinBalance - PDF_COSTS.basic_horoscope,
-              transactionId: req.coinTransactionId
-            }
-          }
-        });
+        res.json({ success: true, data: { pdfUrl: result.pdfUrl, type: result.type, pages: result.pages, downloadLink: result.pdfUrl, generatedAt: new Date().toISOString(), fromCache: false, coinUsage: { coinsDeducted: PDF_COSTS.basic_horoscope } } });
       } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          errorType: result.errorType
-        });
+        res.status(400).json({ success: false, error: result.error, errorType: result.errorType });
       }
     } catch (error) {
       logger.error('Error generating Basic Horoscope PDF:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to generate PDF'
-      });
+      res.status(500).json({ success: false, error: 'Failed to generate PDF' });
     }
   }
 );
 
-// Generate Professional Horoscope PDF (68 pages)
 router.post('/professional-horoscope', 
-  authenticateToken, 
+  authenticateToken,
+  checkPDFCache('professional_horoscope'),
   requireCoins('pdf_professional_horoscope', PDF_COSTS.professional_horoscope), 
   async (req, res) => {
     try {
       const { birthData, customization = {} } = req.body;
-      
-      if (!birthData) {
-        return res.status(400).json({
-          success: false,
-          error: 'Birth data is required'
-        });
-      }
-      
-      logger.info('Generating Professional Horoscope PDF', { 
-        userId: req.user.uid,
-        name: birthData.name 
-      });
-      
-      const result = await pdfGenerationService.generateProfessionalHoroscopePDF(birthData, customization);
-      
+      const userId = req.user?.userId;
+      if (!birthData) return res.status(400).json({ success: false, error: 'Birth data is required' });
+      logger.info('Generating Professional Horoscope PDF', { userId, name: birthData.name });
+      const result = await pdfGenerationService.generateProfessionalHoroscopePDF(birthData, customization, userId);
       if (result.success) {
-        res.json({
-          success: true,
-          data: {
-            pdfUrl: result.pdfUrl,
-            type: result.type,
-            pages: result.pages,
-            downloadLink: result.pdfUrl,
-            generatedAt: new Date().toISOString(),
-            coinUsage: {
-              coinsDeducted: PDF_COSTS.professional_horoscope,
-              newBalance: req.coinBalance - PDF_COSTS.professional_horoscope,
-              transactionId: req.coinTransactionId
-            }
-          }
-        });
+        res.json({ success: true, data: { pdfUrl: result.pdfUrl, type: result.type, pages: result.pages, downloadLink: result.pdfUrl, generatedAt: new Date().toISOString(), fromCache: false, coinUsage: { coinsDeducted: PDF_COSTS.professional_horoscope } } });
       } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          errorType: result.errorType
-        });
+        res.status(400).json({ success: false, error: result.error, errorType: result.errorType });
       }
     } catch (error) {
       logger.error('Error generating Professional Horoscope PDF:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to generate PDF'
-      });
+      res.status(500).json({ success: false, error: 'Failed to generate PDF' });
     }
   }
 );
 
-// Generate Match Making PDF (24 pages)
 router.post('/match-making', 
-  authenticateToken, 
+  authenticateToken,
+  checkPDFCache('match_making'),
   requireCoins('pdf_match_making', PDF_COSTS.match_making), 
   async (req, res) => {
     try {
       const { maleData, femaleData, customization = {} } = req.body;
-      
-      if (!maleData || !femaleData) {
-        return res.status(400).json({
-          success: false,
-          error: 'Both male and female birth data are required'
-        });
-      }
-      
-      logger.info('Generating Match Making PDF', { 
-        userId: req.user.uid,
-        maleName: maleData.name,
-        femaleName: femaleData.name 
-      });
-      
-      const result = await pdfGenerationService.generateMatchMakingPDF(maleData, femaleData, customization);
-      
+      const userId = req.user?.userId;
+      if (!maleData || !femaleData) return res.status(400).json({ success: false, error: 'Both male and female birth data are required' });
+      logger.info('Generating Match Making PDF', { userId });
+      const result = await pdfGenerationService.generateMatchMakingPDF(maleData, femaleData, customization, userId);
       if (result.success) {
-        res.json({
-          success: true,
-          data: {
-            pdfUrl: result.pdfUrl,
-            type: result.type,
-            pages: result.pages,
-            downloadLink: result.pdfUrl,
-            generatedAt: new Date().toISOString(),
-            coinUsage: {
-              coinsDeducted: PDF_COSTS.match_making,
-              newBalance: req.coinBalance - PDF_COSTS.match_making,
-              transactionId: req.coinTransactionId
-            }
-          }
-        });
+        res.json({ success: true, data: { pdfUrl: result.pdfUrl, type: result.type, pages: result.pages, downloadLink: result.pdfUrl, generatedAt: new Date().toISOString(), fromCache: false, coinUsage: { coinsDeducted: PDF_COSTS.match_making } } });
       } else {
-        res.status(400).json({
-          success: false,
-          error: result.error,
-          errorType: result.errorType
-        });
+        res.status(400).json({ success: false, error: result.error, errorType: result.errorType });
       }
     } catch (error) {
       logger.error('Error generating Match Making PDF:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Failed to generate PDF'
-      });
+      res.status(500).json({ success: false, error: 'Failed to generate PDF' });
     }
   }
 );

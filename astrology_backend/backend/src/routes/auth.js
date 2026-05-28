@@ -14,6 +14,7 @@ const signUpSchema = Joi.object({
   password: Joi.string().min(6).required(),
   name: Joi.string().min(2).max(50).required(),
   birthData: Joi.object({
+    name: Joi.string().optional(),
     birthDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
     birthTime: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
     latitude: Joi.number().min(-90).max(90).required(),
@@ -31,6 +32,7 @@ const signInSchema = Joi.object({
 const updateProfileSchema = Joi.object({
   name: Joi.string().min(2).max(50).optional(),
   birthData: Joi.object({
+    name: Joi.string().optional(),
     birthDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).optional(),
     birthTime: Joi.string().pattern(/^\d{2}:\d{2}$/).optional(),
     latitude: Joi.number().min(-90).max(90).optional(),
@@ -100,6 +102,7 @@ router.post('/generate-charts', async (req, res) => {
     const { error, value } = Joi.object({
       userId: Joi.string().required(),
       birthData: Joi.object({
+        name: Joi.string().optional(),
         birthDate: Joi.string().pattern(/^\d{4}-\d{2}-\d{2}$/).required(),
         birthTime: Joi.string().pattern(/^\d{2}:\d{2}$/).required(),
         latitude: Joi.number().min(-90).max(90).required(),

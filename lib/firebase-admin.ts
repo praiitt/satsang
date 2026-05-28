@@ -57,6 +57,7 @@ export function initAdmin() {
   try {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'rraasi-8a619.appspot.com',
     });
     initialized = true;
   } catch (error: unknown) {
@@ -74,4 +75,16 @@ export function initAdmin() {
 export function getAdminDb() {
   initAdmin();
   return admin.firestore();
+}
+
+// Export getAdminAuth for server-side Firebase ID token verification
+export function getAdminAuth() {
+  initAdmin();
+  return admin.auth();
+}
+
+// Export getAdminStorage for uploading media
+export function getAdminStorage() {
+  initAdmin();
+  return admin.storage();
 }

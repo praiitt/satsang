@@ -20,6 +20,7 @@ import facebookLeadsRoutes from './routes/facebook-leads.js';
 import usersRoutes from './routes/users.js';
 import twilioWhatsappRoutes from './routes/twilio-whatsapp.js';
 import videoMakerRoutes from './routes/video-maker.js';
+import reelsRoutes from './routes/reels.js';
 
 // Setup Express with WebSocket support
 const { app, getWss } = expressWs(express());
@@ -59,6 +60,7 @@ app.use('/facebook-leads', facebookLeadsRoutes);
 app.use('/users', usersRoutes);
 app.use('/twilio-whatsapp', twilioWhatsappRoutes);
 app.use('/video-maker', videoMakerRoutes);
+app.use('/internal/reels', reelsRoutes);
 
 // Register the Vobiz WebSocket stream directly on the app-level expressWs instance
 // so that WebSocket upgrades are correctly intercept by the http.Server

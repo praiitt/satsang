@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/language-context';
+import { EcosystemFlow } from '@/components/ui/ecosystem-flow';
 
 // ─── Floating Particle Background ────────────────────────────────────────────
 
@@ -148,7 +149,7 @@ function LatestTracks() {
                     <p className="text-sm text-white/40 mt-0.5">{t('rraasHome.latestCreationsSub')}</p>
                 </div>
                 <Link
-                    href="/rraasi-music"
+                    href="/spiritual-studio"
                     className="text-xs font-semibold text-amber-400 hover:text-amber-300 transition-colors flex items-center gap-1"
                 >
                     {t('rraasHome.latestCreationsSeeAll')}
@@ -167,7 +168,7 @@ function LatestTracks() {
                             viewport={{ once: true }}
                             transition={{ duration: 0.4, delay: i * 0.07 }}
                         >
-                            <Link href="/rraasi-music" className="group block overflow-hidden rounded-2xl border border-white/10 hover:border-amber-500/40 transition-all hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(251,191,36,0.15)]">
+                            <Link href="/spiritual-studio" className="group block overflow-hidden rounded-2xl border border-white/10 hover:border-amber-500/40 transition-all hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(251,191,36,0.15)]">
                                 {/* Image / gradient cover */}
                                 <div className="relative aspect-square w-full overflow-hidden">
                                     {track.imageUrl ? (
@@ -304,10 +305,21 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.65, duration: 0.8 }}
-                        className="mb-10 max-w-2xl text-lg leading-relaxed text-white/60 sm:text-xl"
+                        className="mb-6 max-w-3xl text-lg leading-relaxed text-white/80 sm:text-xl font-medium"
                     >
                         {t('rraasHome.heroSubtitle')}
                     </motion.p>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.75, duration: 0.8 }}
+                        className="mb-10 max-w-4xl rounded-2xl bg-black/40 border border-white/10 p-6 backdrop-blur-md"
+                    >
+                        <p className="text-sm sm:text-base leading-relaxed text-white/70 italic">
+                            {t('rraasHome.heroProblemStatement')}
+                        </p>
+                    </motion.div>
 
                     {/* Primary CTA — Music */}
                     <motion.div
@@ -317,7 +329,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         className="flex flex-col items-center gap-4 sm:flex-row"
                     >
                         <Link
-                            href="/login?returnUrl=/rraasi-music&service=music"
+                            href="/login?returnUrl=/spiritual-studio&service=music"
                             className="group relative inline-flex items-center gap-3 overflow-hidden rounded-full bg-gradient-to-r from-amber-500 to-orange-500 px-8 py-4 text-lg font-bold text-white shadow-[0_0_40px_rgba(251,191,36,0.4)] transition-all hover:shadow-[0_0_60px_rgba(251,191,36,0.6)] hover:scale-105"
                         >
                             <svg viewBox="0 0 24 24" fill="currentColor" className="h-6 w-6">
@@ -328,7 +340,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                         </Link>
 
                         <Link
-                            href="/rraasi-music"
+                            href="/spiritual-studio"
                             className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-8 py-4 text-lg font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10 hover:border-white/40"
                         >
                             <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5 text-amber-400">
@@ -459,7 +471,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                                     ))}
                                 </div>
                                 <Link
-                                    href="/login?returnUrl=/rraasi-music&service=music"
+                                    href="/login?returnUrl=/spiritual-studio&service=music"
                                     className="inline-flex items-center gap-2 rounded-full bg-amber-500 hover:bg-amber-400 px-7 py-3 text-sm font-bold text-black transition-all hover:scale-105 shadow-[0_0_30px_rgba(251,191,36,0.4)]"
                                 >
                                     {t('rraasHome.musicCtaStart')}
@@ -498,6 +510,9 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                     <LatestTracks />
                 </div>
             </section>
+
+            {/* ── THE ECOSYSTEM ──────────────────────────────────────── */}
+            <EcosystemFlow />
 
             {/* ── SPIRITUAL SERVICES ───────────────────────────────── */}
             <section id="services" className="px-4 py-24">
@@ -697,7 +712,7 @@ export const RRaaSiHomeWelcomeView = ({ ref }: React.ComponentProps<'div'>) => {
                     <h2 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">{t('rraasHome.ctaTitle')}</h2>
                     <p className="mb-10 text-xl font-medium opacity-90">{t('rraasHome.ctaDesc')}</p>
                     <Link
-                        href="/login?returnUrl=/rraasi-music&service=music"
+                        href="/login?returnUrl=/spiritual-studio&service=music"
                         className="inline-flex items-center gap-2 rounded-full bg-background px-10 py-5 text-xl font-bold text-foreground shadow-2xl transition-transform hover:scale-105"
                     >
                         Create Your Music

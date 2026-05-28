@@ -56,7 +56,7 @@ export const MessageContent = ({
     className={cn(
       "is-user:dark flex w-fit min-w-0 max-w-full flex-col gap-2 overflow-hidden text-sm",
       "group-[.is-user]:ml-auto group-[.is-user]:rounded-lg group-[.is-user]:bg-secondary group-[.is-user]:px-4 group-[.is-user]:py-3 group-[.is-user]:text-foreground",
-      "group-[.is-assistant]:text-foreground",
+      "group-[.is-assistant]:text-foreground group-[.is-assistant]:w-full",
       className
     )}
     {...props}
@@ -328,6 +328,21 @@ export const MessageResponse = memo(
     <Streamdown
       className={cn(
         "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        // Headings
+        "[&_h1]:text-base [&_h1]:font-semibold [&_h1]:mb-3 [&_h1]:text-primary",
+        "[&_h2]:text-sm [&_h2]:font-semibold [&_h2]:mb-2 [&_h2]:mt-4 [&_h2]:text-primary/90",
+        "[&_h3]:text-sm [&_h3]:font-medium [&_h3]:mb-1.5 [&_h3]:mt-3",
+        // Ordered & unordered lists — proper indentation and spacing
+        "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-2 [&_ol]:my-2",
+        "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1.5 [&_ul]:my-2",
+        "[&_li]:leading-relaxed [&_li]:text-sm",
+        // Bold & italic
+        "[&_strong]:font-semibold [&_strong]:text-foreground",
+        "[&_em]:italic [&_em]:text-muted-foreground",
+        // Separators
+        "[&_hr]:my-3 [&_hr]:border-border",
+        // Paragraphs
+        "[&_p]:leading-relaxed [&_p]:mb-2",
         className
       )}
       plugins={streamdownPlugins}

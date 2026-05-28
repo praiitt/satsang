@@ -234,6 +234,7 @@ export function useRoom(appConfig: AppConfig) {
 
   const endSession = useCallback(() => {
     setIsSessionActive(false);
+    room.disconnect();
     sessionOptionsRef.current = {}; // Reset options
     setCurrentIntention(undefined);
     // Stop any active egress for this room

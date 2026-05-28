@@ -72,8 +72,8 @@ class AuthService {
 
       // Store user profile in Firestore (with fallback)
       try {
-        await adminDb.collection('users').doc(user.uid).set(userProfile);
-        logger.info('User profile created in Firestore', { uid: user.uid });
+        await adminDb.collection('users').doc(user.uid).set(userProfile, { merge: true });
+        logger.info('User profile created/merged in Firestore', { uid: user.uid });
       } catch (firestoreError) {
         logger.warn('Firestore not available, using local storage only', { 
           uid: user.uid, 

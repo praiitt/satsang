@@ -16,6 +16,7 @@ export function initFirebaseAdmin() {
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: privateKey,
       }),
+      storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'rraasi-8a619.appspot.com',
     });
     initialized = true;
     console.log('[marketing-server] ✅ Initialized Firebase Admin from environment variables');
@@ -32,6 +33,7 @@ export function initFirebaseAdmin() {
       const serviceAccount = JSON.parse(fs.readFileSync(explicitPath, 'utf8'));
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
+        storageBucket: process.env.FIREBASE_STORAGE_BUCKET || 'rraasi-8a619.appspot.com',
       });
       initialized = true;
       console.log(`[marketing-server] ✅ Initialized Firebase Admin from file: ${explicitPath}`);
@@ -54,4 +56,9 @@ export function getAuth() {
 export function getDb() {
   if (!initialized) initFirebaseAdmin();
   return admin.firestore();
+}
+
+export function getStorage() {
+  if (!initialized) initFirebaseAdmin();
+  return admin.storage();
 }

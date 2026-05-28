@@ -4,9 +4,9 @@ import { RoomConfiguration } from '@livekit/protocol';
 
 type VedicJyotishTokenRequest = {
     participantName: string;
-    role?: 'host' | 'participant';
     agentName?: string;
     userId?: string;
+    intention?: string;
 };
 
 type VedicJyotishTokenResponse = {
@@ -37,6 +37,16 @@ export async function POST(req: Request) {
         const role = body.role || 'participant';
         const agentName = (body.agentName || DEFAULT_AGENT_NAME).trim();
         const userId = body.userId || 'default_user';
+        const intention = body.intention;
+        
+        // Extract language from headers
+        const acceptLanguage = req.headers.get('accept-language') || req.headers.get('language') || '';
+        let language = 'hi'; // default to Hindi
+        if (acceptLanguage.toLowerCase().includes('en')) {
+            language = 'en';
+        } else if (acceptLanguage.toLowerCase().includes('hi')) {
+            language = 'hi';
+        }
 
         if (!agentName) {
             throw new Error('Agent name is required for Vedic Jyotish');
@@ -54,7 +64,9 @@ export async function POST(req: Request) {
             roomName,
             role,
             agentName,
-            userId
+            userId,
+            language,
+            intention
         );
 
         const data: VedicJyotishTokenResponse = {
@@ -85,14 +97,16 @@ function createParticipantToken(
     roomName: string,
     role: 'host' | 'participant',
     agentName: string,
-    userId: string
+    userId: string,
+    language: string,
+    intention?: string
 ): Promise<string> {
-    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}`);
+    console.log(`[Token Creation] Creating token for room: "${roomName}", userId: ${userId}, language: ${language}`);
 
     const at = new AccessToken(API_KEY!, API_SECRET!, {
         ...userInfo,
         ttl: '2h',
-        metadata: JSON.stringify({ userId }), // Include userId in metadata
+        metadata: JSON.stringify({ userId, language, intention }), // Include userId, language, and intention in metadata
     });
 
     const grant: VideoGrant = {

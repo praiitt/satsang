@@ -14,6 +14,7 @@ interface CoinBalance {
     earnedCoins: number;
     spentCoins: number;
     bonusCoins: number;
+    payoutBalance?: number;
     lastUpdated: Date;
     createdAt: Date;
 }
@@ -112,6 +113,41 @@ export class CoinService {
             category: 'music',
             freeTierAvailable: false,
             subscriptionUnlimited: false // Always costs coins — video gen is expensive
+        },
+        art_image_download: {
+            cost: 5,
+            name: 'Download AI Art Image',
+            category: 'music',
+            freeTierAvailable: false,
+            subscriptionUnlimited: false // Always costs coins — digital content purchase
+        },
+        art_video_download: {
+            cost: 25,
+            name: 'Download AI Music Video',
+            category: 'music',
+            freeTierAvailable: false,
+            subscriptionUnlimited: false
+        },
+        art_pack_download: {
+            cost: 40,
+            name: 'Download Full Art Pack',
+            category: 'music',
+            freeTierAvailable: false,
+            subscriptionUnlimited: false
+        },
+        buy_exclusive_track: {
+            cost: 25,
+            name: 'Buy Exclusive Track Rights',
+            category: 'music',
+            freeTierAvailable: false,
+            subscriptionUnlimited: false
+        },
+        spiritual_reel_affirmation: {
+            cost: 120,
+            name: 'Generate Spiritual Reel (Affirmation)',
+            category: 'video',
+            freeTierAvailable: false,
+            subscriptionUnlimited: false
         },
 
         // Divination & Insights
@@ -222,6 +258,55 @@ export class CoinService {
 
         } catch (error: any) {
             console.error('Error getting coin balance:', error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * Add coins to a user's payout balance
+     */
+    async addPayoutCoins(userId: string, amount: number) {
+        try {
+            console.log(`Adding ${amount} payout coins to user: ${userId}`);
+            
+            const balanceDoc = await this.getCoinBalanceDocument(userId);
+            
+            if (!balanceDoc) {
+                // Initialize if they don't have a balance yet
+                await this.initializeCoinBalance(userId);
+            }
+
+            const currentPayout = balanceDoc?.payoutBalance || 0;
+            const newPayout = currentPayout + amount;
+
+            await firestoreService.getDb().collection('coin_balances').doc(userId).update({
+                payoutBalance: newPayout,
+                lastUpdated: new Date()
+            });
+
+            // Log the payout transaction
+            await firestoreService.getDb().collection('coin_transactions').add({
+                userId,
+                type: 'payout_earned',
+                amount,
+                previousBalance: currentPayout,
+                newBalance: newPayout,
+                balanceType: 'payout',
+                metadata: {
+                    reason: 'Track buyout sale'
+                },
+                timestamp: new Date()
+            });
+
+            return {
+                success: true,
+                newPayoutBalance: newPayout
+            };
+        } catch (error: any) {
+            console.error('Error adding payout coins:', error);
             return {
                 success: false,
                 error: error.message

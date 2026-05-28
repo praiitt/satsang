@@ -81,6 +81,28 @@ app.post('/internal/deduct', async (req: Request, res: Response) => {
     }
 });
 
+app.post('/internal/add-payout', async (req: Request, res: Response) => {
+    const token = req.headers['x-internal-token'];
+    if (!INTERNAL_SERVICE_TOKEN || token !== INTERNAL_SERVICE_TOKEN) {
+        res.status(403).json({ success: false, error: 'Forbidden' });
+        return;
+    }
+
+    const { userId, amount } = req.body;
+    if (!userId || typeof amount !== 'number') {
+        res.status(400).json({ success: false, error: 'userId and amount (number) are required' });
+        return;
+    }
+
+    try {
+        const result = await coinService.addPayoutCoins(userId, amount);
+        res.status(result.success ? 200 : 500).json(result);
+    } catch (err: any) {
+        console.error('[Internal Add Payout] Error:', err);
+        res.status(500).json({ success: false, error: err.message });
+    }
+});
+
 // Protected routes (require user Firebase auth)
 app.use('/coins', authMiddleware, coinRoutes);
 app.use('/subscriptions', authMiddleware, subscriptionRoutes);

@@ -20,6 +20,7 @@ import corporateRoutes from './routes/corporate.js';
 import livekitWebhookRoutes from './routes/livekit-webhook.js';
 import meditationRoutes from './meditation/meditation.controller.js';
 import adminRoutes from './routes/admin.js';
+import reelsRoutes from './routes/reels.js';
 
 // ... imports
 
@@ -132,6 +133,7 @@ mainRouter.use('/livekit-webhook', livekitWebhookRoutes);
 mainRouter.use('/meditation', meditationRoutes);
 mainRouter.use('/chat', (await import('./routes/chat.js')).default);
 mainRouter.use('/admin', adminRoutes);
+mainRouter.use('/reels', reelsRoutes);
 
 mainRouter.get('/test-coins', (req, res) => res.json({ status: 'ok', message: 'Auth Server is running' }));
 mainRouter.get('/', (_req, res) => res.json({ name: 'satsang-auth-server', ok: true }));

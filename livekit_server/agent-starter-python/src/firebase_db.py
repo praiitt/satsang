@@ -281,3 +281,28 @@ class FirebaseDB:
         except Exception as e:
             logger.error(f"❌ Failed to get transcript by id: {e}")
             return []
+
+    def update_spiritual_state(self, user_id: str, state_update: dict):
+        """
+        Updates the user's spiritual state in the 'user_spiritual_states' collection.
+        This state is shared across the ecosystem (e.g. used by Spiritual Studio).
+        """
+        if not self.db or not user_id or user_id == "default_user":
+            return
+            
+        try:
+            doc_ref = self.db.collection("user_spiritual_states").document(user_id)
+            
+            # Merge with existing data, updating timestamp
+            update_data = {
+                **state_update,
+                "updatedAt": datetime.utcnow(),
+                "lastAgentInteraction": "vedic-astrology-agent"
+            }
+            
+            # Add createdAt if it doesn't exist (handled via set with merge)
+            doc_ref.set(update_data, merge=True)
+            logger.info(f"✅ Updated spiritual state for user {user_id}")
+        except Exception as e:
+            logger.error(f"❌ Failed to update spiritual state: {e}")
+

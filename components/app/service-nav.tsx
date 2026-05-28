@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useState } from 'react';
-import { ChevronRight, ChevronLeft, Home } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Home, Palette } from 'lucide-react';
 
 interface ServiceItem {
     name: string;
@@ -44,6 +44,12 @@ const services: ServiceItem[] = [
         href: '/vedic-jyotish',
         iconPath: '/services/astrology-icon-fixed.png',
         color: 'border-pink-500 shadow-pink-500/50',
+    },
+    {
+        name: 'Art Shop',
+        href: '/gallery',
+        icon: Palette,
+        color: 'border-indigo-400 shadow-indigo-400/50',
     },
 ];
 

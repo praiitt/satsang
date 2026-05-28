@@ -9,7 +9,7 @@ import { SiteFooter } from '@/components/app/site-footer';
 import { SiteHeader } from '@/components/app/site-header';
 import { ApplyThemeScript, ThemeToggle } from '@/components/app/theme-toggle';
 import { OnboardingProvider } from '@/components/providers/onboarding-provider';
-import { FloatingPlayer } from '@/components/rraasi-music/floating-player';
+import { FloatingPlayer } from '@/components/spiritual-studio/floating-player';
 import { cn, getAppConfig, getStyles } from '@/lib/utils';
 import '@/styles/globals.css';
 

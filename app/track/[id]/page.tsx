@@ -1,7 +1,7 @@
 
 import { Metadata } from 'next';
 import { getAdminDb } from '@/lib/firebase-admin';
-import { MusicPlayerCard } from '@/components/rraasi-music/music-player-card';
+import { MusicPlayerCard } from '@/components/spiritual-studio/music-player-card';
 import { Button } from '@/components/livekit/button';
 import Link from 'next/link';
 import { ChevronLeft, Sparkles, Moon, Atom } from 'lucide-react';

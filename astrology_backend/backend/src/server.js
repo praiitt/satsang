@@ -23,20 +23,16 @@ import enhancedChatRoutes from './routes/enhancedChat.js';
 import userProfileRoutes from './routes/userProfile.js';
 import ragRoutes from './routes/rag.js';
 import hybridRagRoutes from './routes/hybridRag.js';
-// PineconeSearch routes - load optionally (may not exist in all deployments)
-let pineconeSearchRoutesPromise = null;
-try {
-  pineconeSearchRoutesPromise = import('./routes/pineconeSearch.js').catch(() => null);
-} catch {
-  pineconeSearchRoutesPromise = Promise.resolve(null);
-}
+import pineconeSearchRoutes from './routes/pineconeSearch.js';
 import authRoutes from './routes/auth.js';
 import paymentsRoutes from './routes/payments.js';
 import waitlistRoutes from './routes/waitlist.js';
 import adminRoutes from './routes/admin.js';
 import coinRoutes from './routes/coins.js';
 import pdfDownloadRoutes from './routes/pdfDownload.js';
+import astrologyReportsRoutes from './routes/astrologyReports.js';
 import geocodingRoutes from './routes/geocoding.js';
+import tarotRoutes from './routes/tarot.js';
 // Import services
 import { langChainService } from './services/langchainService.js';
 import { scheduledTasksService } from './services/scheduledTasksService.js';
@@ -146,23 +142,18 @@ app.use('/api/user-profile', userProfileRoutes);
 app.use('/api/rag', ragRoutes);
 app.use('/api/hybrid-rag', hybridRagRoutes);
 
-// Register PineconeSearch routes when they're loaded (non-blocking, optional)
-if (pineconeSearchRoutesPromise) {
-  pineconeSearchRoutesPromise.then(pineconeModule => {
-    if (pineconeModule?.default) {
-      app.use('/api/pinecone', pineconeModule.default);
-      logger.info('PineconeSearch routes loaded and registered successfully');
-    }
-  }).catch(() => {
-    logger.warn('PineconeSearch routes not available, continuing without them');
-  });
-}
+// Register PineconeSearch routes
+app.use('/api/pinecone', pineconeSearchRoutes);
+logger.info('PineconeSearch routes registered successfully');
 
 app.use('/api/payments', paymentsRoutes);
 app.use('/api/waitlist', waitlistRoutes);
 app.use('/api/coins', coinRoutes);
 app.use('/api/pdf', pdfDownloadRoutes);
+app.use('/api/reports', astrologyReportsRoutes);
 app.use('/api/geocoding', geocodingRoutes);
+app.use('/api/tarot', tarotRoutes);
+logger.info('Tarot routes registered');
 
 // Register LiveKit routes
 app.use('/api/livekit', livekitRoutes);
@@ -202,9 +193,9 @@ app.use('*', (req, res) => {
   });
 });
 
-// Start server - bind to 0.0.0.0 to listen on all interfaces (required for Cloud Run)
+// Start server - default binds to all interfaces (IPv6 and IPv4)
 try {
-  server.listen(PORT, '0.0.0.0', () => {
+  server.listen(PORT, () => {
     logger.info(`🚀 Rraasi Backend Server running on port ${PORT}`);
     logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
     logger.info(`🔗 Health check: http://localhost:${PORT}/health`);

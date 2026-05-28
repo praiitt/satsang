@@ -7,7 +7,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
 const BuyCoinsModal = dynamic(
-    () => import('@/components/rraasi-music/buy-coins-modal'),
+    () => import('@/components/spiritual-studio/buy-coins-modal'),
     { ssr: false }
 );
 

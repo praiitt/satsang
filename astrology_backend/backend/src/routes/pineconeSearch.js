@@ -64,7 +64,7 @@ router.post('/pinecone-search', authenticateToken, async (req, res) => {
       score: result.score || 0,
       metadata: {
         chartType: result.metadata?.chartType || 'unknown',
-        content: result.metadata?.content || result.content || '',
+        content: result.metadata?.content || result.pageContent || result.content || '',
         userId: result.metadata?.userId || userId,
         chartId: result.metadata?.chartId || 'unknown'
       }

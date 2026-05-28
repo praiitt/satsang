@@ -3,6 +3,7 @@ import { langChainService } from '../services/langchainService.js';
 import { firestoreRAGService } from '../services/firestoreRAGService.js';
 import { astrologyAPIService } from '../services/astrologyAPIService.js';
 import { logger } from '../utils/logger.js';
+import { adminDb } from '../config/firebase.js';
 import Joi from 'joi';
 
 const router = express.Router();
@@ -10,16 +11,19 @@ const router = express.Router();
 // Validation schemas
 const birthDataSchema = Joi.object({
   name: Joi.string().required(),
-  day: Joi.number().integer().min(1).max(31).required(),
-  month: Joi.number().integer().min(1).max(12).required(),
-  year: Joi.number().integer().min(1900).max(2100).required(),
+  day: Joi.number().integer().min(1).max(31).optional(),
+  month: Joi.number().integer().min(1).max(12).optional(),
+  year: Joi.number().integer().min(1900).max(2100).optional(),
+  birthDate: Joi.string().optional(),
+  birthTime: Joi.string().optional(),
   hour: Joi.number().integer().min(0).max(23).optional(),
   minute: Joi.number().integer().min(0).max(59).optional(),
   latitude: Joi.number().optional(),
   longitude: Joi.number().optional(),
   place_of_birth: Joi.string().allow('').optional(),
+  placeOfBirth: Joi.string().allow('').optional(),
   timezone: Joi.number().optional()
-});
+}).or('day', 'birthDate');
 
 const comprehensiveAnalysisSchema = Joi.object({
   userId: Joi.string().required(),
@@ -604,6 +608,112 @@ router.post('/house-analysis', async (req, res) => {
       success: false,
       error: 'Internal server error',
       message: 'Failed to analyze houses'
+    });
+  }
+});
+
+// Get daily dynamic insights (Biorhythm, Nakshatra, Panchang)
+router.post('/daily-insights', async (req, res) => {
+  try {
+    const { error, value } = Joi.object({
+      userId: Joi.string().required(),
+      birthData: birthDataSchema.required()
+    }).validate(req.body);
+
+    if (error) {
+      logger.warn('Joi validation failed for daily-insights:', { details: error.details[0].message, body: req.body });
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request data',
+        details: error.details[0].message
+      });
+    }
+
+    const { userId, birthData } = value;
+
+    logger.info('Fetching daily dynamic insights', {
+      userId,
+      name: birthData.name
+    });
+
+    const astrologyService = astrologyAPIService;
+
+    // Generate caching key: YYYY-MM-DD
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    const cacheDocId = `${userId}_${dateStr}`;
+    
+    // Check if we already have it in cache
+    let cachedData = null;
+    try {
+      if (adminDb) {
+        const cacheRef = adminDb.collection('daily_insights_cache').doc(cacheDocId);
+        const cacheDoc = await cacheRef.get();
+        if (cacheDoc.exists) {
+          cachedData = cacheDoc.data();
+          logger.info('Returned daily insights from cache', { userId, dateStr });
+        }
+      }
+    } catch (cacheErr) {
+      logger.warn('Failed to read daily insights cache:', cacheErr);
+    }
+
+    if (cachedData) {
+      return res.json({
+        success: true,
+        data: cachedData.data,
+        userId,
+        timestamp: cachedData.timestamp,
+        cached: true
+      });
+    }
+
+    // Cache miss, hit the API
+    const [biorhythmResult, nakshatraResult, panchangResult, horaResult] = await Promise.all([
+      astrologyService.getBiorhythm(userId, birthData),
+      astrologyService.getDailyNakshatraPrediction(userId, birthData),
+      astrologyService.getAdvancedPanchang(userId, birthData),
+      astrologyService.getHoraMuhurta(userId, birthData)
+    ]);
+
+    const finalData = {
+      biorhythm: biorhythmResult.success ? biorhythmResult.data : null,
+      nakshatraPrediction: nakshatraResult.success ? nakshatraResult.data : null,
+      panchang: panchangResult.success ? panchangResult.data : null,
+      horaMuhurta: horaResult.success ? horaResult.data : null
+    };
+
+    const responseTimestamp = new Date().toISOString();
+
+    // Store in cache
+    try {
+      if (adminDb) {
+        await adminDb.collection('daily_insights_cache').doc(cacheDocId).set({
+          userId,
+          date: dateStr,
+          data: finalData,
+          timestamp: responseTimestamp
+        });
+        logger.info('Stored daily insights to cache', { userId, dateStr });
+      }
+    } catch (cacheErr) {
+      logger.warn('Failed to write to daily insights cache:', cacheErr);
+    }
+
+    res.json({
+      success: true,
+      data: finalData,
+      userId,
+      timestamp: responseTimestamp,
+      cached: false
+    });
+
+  } catch (error) {
+    logger.error('Error fetching daily insights:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to fetch daily insights'
     });
   }
 });

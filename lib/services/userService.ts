@@ -1,6 +1,21 @@
 import { getFirebaseFirestore } from '@/lib/firebase-client';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
+export interface EnergyProfile {
+    rank: string; // e.g., 'Seeker', 'Initiate', 'Mystic', 'Ascended'
+    totalKarmaPoints: number;
+    currentStreak: number;
+    
+    // Cross-Agent Parameters
+    dominantElement: string;
+    chakraAlignment: number;
+    
+    // Agent-Specific Summaries
+    latestAstrologyInsight?: string;
+    latestTarotTheme?: string;
+    careerConfidenceScore?: number;
+}
+
 export interface UserProfile {
     uid: string;
     phone: string;
@@ -38,6 +53,20 @@ export interface UserProfile {
     // Social
     following_gurus?: string[];
     favorite_gurus?: string[];
+
+    // Unified Gamification & Progress
+    energyProfile?: EnergyProfile;
+}
+
+/**
+ * Calculate user rank based on karma points
+ */
+export function calculateRank(karmaPoints: number): string {
+    if (karmaPoints >= 5000) return 'Guru';
+    if (karmaPoints >= 2001) return 'Ascended';
+    if (karmaPoints >= 701) return 'Mystic';
+    if (karmaPoints >= 201) return 'Initiate';
+    return 'Seeker';
 }
 
 /**
@@ -112,6 +141,13 @@ export class UserService {
                 totalSessions: 0,
                 totalSpent: 0,
                 lifetimeValue: 0,
+                energyProfile: {
+                    rank: 'Seeker',
+                    totalKarmaPoints: 0,
+                    currentStreak: 0,
+                    dominantElement: 'Unknown',
+                    chakraAlignment: 50, // Start neutral
+                }
             };
 
             // Only add optional fields if they exist
@@ -246,6 +282,45 @@ export class UserService {
             });
         } catch (error) {
             console.error('[UserService] Error updating coins:', error);
+        }
+    }
+    /**
+     * Award Karma Points and Auto-Update Rank
+     */
+    async awardKarmaPoints(uid: string, points: number, activityType?: string): Promise<{ newRank: string; newTotal: number }> {
+        try {
+            const db = getFirebaseFirestore();
+            const userRef = doc(db, 'users', uid);
+            const userSnap = await getDoc(userRef);
+
+            if (!userSnap.exists()) {
+                throw new Error('User not found');
+            }
+
+            const data = userSnap.data();
+            const currentProfile = data.energyProfile || {
+                rank: 'Seeker',
+                totalKarmaPoints: 0,
+                currentStreak: 0,
+                dominantElement: 'Unknown',
+                chakraAlignment: 50,
+            };
+
+            const newTotal = currentProfile.totalKarmaPoints + points;
+            const newRank = calculateRank(newTotal);
+
+            // Optional: You could log activityType to a separate activity_logs collection here
+
+            await updateDoc(userRef, {
+                'energyProfile.totalKarmaPoints': newTotal,
+                'energyProfile.rank': newRank,
+            });
+
+            console.log(`[UserService] Awarded ${points} Karma Points to ${uid} (Activity: ${activityType}). New Total: ${newTotal}, Rank: ${newRank}`);
+            return { newRank, newTotal };
+        } catch (error) {
+            console.error('[UserService] Error awarding Karma Points:', error);
+            throw error;
         }
     }
 }

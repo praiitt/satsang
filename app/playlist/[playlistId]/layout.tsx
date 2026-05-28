@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { MusicPlayerProvider } from '@/contexts/music-player-context';
-import { FloatingPlayer } from '@/components/rraasi-music/floating-player';
+import { FloatingPlayer } from '@/components/spiritual-studio/floating-player';
 
 export const metadata: Metadata = {
     title: 'RRAASI Playlist',

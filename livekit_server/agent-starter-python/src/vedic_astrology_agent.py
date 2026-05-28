@@ -22,6 +22,7 @@ from livekit.agents import (
 )
 from livekit.plugins import noise_cancellation, silero
 from firebase_db import FirebaseDB
+from pinecone_retriever import PineconeKundliRetriever
 
 # Configure logging early
 logging.basicConfig(
@@ -30,7 +31,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
 )
 
-from livekit.plugins import google
+from livekit.plugins import openai
 import logging
 
 logger = logging.getLogger("vedic_astrology_agent")
@@ -62,8 +63,8 @@ else:
 class VedicAstrologyAgent(Agent):
     def __init__(self, user_id: str = "default_user", publish_data_fn=None) -> None:
         self.user_id = user_id
-        # self.kundli_retriever = None # Removed
         self.user_chart_summary = None
+        self._publish_data_fn = publish_data_fn
         
         # try:
         #     self.kundli_retriever = KundliRetriever()
@@ -98,18 +99,128 @@ CORE EXPERTISE:
 3. VEDIC REMEDIES:
    - Gemstones, Mantras, Yantras, Fasting
 
-PROACTIVE ENGAGEMENT:
-- Ask clarifying questions if chart data is missing
-- Provide context and explain concepts
-- Be compassionate and wise
-- Use search_jyotish_teaching for educational videos
+CHART DATA WORKFLOW - FOLLOW THIS STRICTLY:
+- The user's astrological chart index is in your system context.
+- BEFORE answering ANY question about career, relationships, health, timing, personality, Dasha, etc., you MUST first call the 'query_user_charts' tool with a relevant search query.
+- The tool will return the exact chart data most relevant to their question.
+- Base ALL your answers ONLY on the data returned by the tool. Do NOT invent astrological data.
+- NEVER ask the user for their Date of Birth, Time of Birth, or Place of Birth — their charts are already stored.
 
 RESPONSE STYLE:
-- Default to Hindi if user prefers, else English
-- Conversational, warm, wise
-- Use simple language
+- KEEP YOUR SPOKEN RESPONSES CONVERSATIONAL (Max 3-5 sentences).
+- If your analysis or reading is longer than 5 sentences, you MUST use the 'share_detailed_document' tool to deliver the full text silently!
+- When you use the tool, speak a brief 2-3 sentence summary telling them the core takeaway and that they can read the full report on their screen.
+- DO NOT output long paragraphs in your conversational reply. USE THE TOOL for deep readings.
+
+UPSELLING REPORTS:
+- You have access to the 'generate_report' tool.
+- When a user asks deep questions about specific areas (e.g. detailed life predictions, marriage matching, Lal Kitab remedies, Sadhe Sati), you MUST suggest that they generate a Premium Report.
+- Use the 'generate_report' tool to provide them with the exact report recommendation.
 """
         return base_instructions
+
+    @function_tool
+    async def query_user_charts(
+        self,
+        search_query: str,
+    ) -> str:
+        """Query the user's stored astrological charts for information relevant to a specific topic.
+        CRITICAL: Call this tool BEFORE answering ANY question about the user's astrology (career, health,
+        relationships, timing, Dasha, personality, remedies, etc.). 
+        Pass a specific search query matching what the user is asking about.
+        Examples: 'career and 10th house', 'current Dasha period', 'marriage and 7th house', 
+        'health and 6th house', 'personality traits Ascendant'.
+        """
+        try:
+            retriever = PineconeKundliRetriever()
+            result = await retriever.query_charts_for_topic(self.user_id, search_query, top_k=8)
+            logger.info(f"🔍 Dynamic chart query: '{search_query}' -> {len(result)} chars returned")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to query charts: {e}")
+            return "Error fetching chart data."
+
+    @function_tool
+    async def generate_report(
+        self,
+        report_type: str,
+        is_pdf: bool = False
+    ) -> str:
+        """Recommend a specific astrological report to the user and guide them to generate it in the UI.
+        Call this when the user asks for deep analysis that is better suited for a full premium report.
+        Available report_type values:
+        - 'nakshatra': Nakshatra deep dive
+        - 'ascendant': Ascendant (Lagna) detailed analysis
+        - 'lalkitab': Lal Kitab remedies and predictions
+        - 'numerology': Numerology insights
+        - 'pitra-dosha': Ancestral karma analysis
+        - 'sadhesati': Saturn's 7.5 year transit analysis
+        - 'match-making': Compatibility checking with a partner
+        - 'mini-horoscope' (PDF): 9-page basic horoscope
+        - 'basic-horoscope' (PDF): 25-page detailed horoscope
+        - 'professional-horoscope' (PDF): 68-page comprehensive horoscope
+        
+        Args:
+            report_type: One of the available report types listed above
+            is_pdf: Set to True if recommending a PDF report
+        """
+        try:
+            doc_content = f"""# 📚 Premium Report Recommended
+            
+Based on your question, I highly recommend generating a **{report_type.replace('-', ' ').title()}** {'PDF ' if is_pdf else ''}Report.
+
+This is a deep, comprehensive analysis that provides much more detail than we can cover in our conversation.
+
+### How to get it:
+1. End this call or minimize the chat
+2. Click the **"📚 My Reports & PDFs"** button on your dashboard
+3. Select the **{report_type.replace('-', ' ').title()}** report and click Generate.
+
+*Note: Generating premium reports requires a small coin balance.*
+"""
+            
+            # Use the existing share_detailed_document functionality to show this recommendation
+            return await self.share_detailed_document(doc_content)
+        except Exception as e:
+            logger.error(f"Failed to generate report recommendation: {e}")
+            return "Please check the My Reports section on your dashboard for detailed PDF and text reports."
+
+    @function_tool
+    async def share_detailed_document(
+        self,
+        document_content: str,
+    ) -> str:
+        """Share a long, detailed astrological reading document with the user's screen.
+        CRITICAL RULE: Call this tool WHENEVER your analysis is long (more than 3 sentences).
+        
+        DOCUMENT FORMAT RULES (the UI renders markdown, so format perfectly):
+        - Use a # Heading at the top (e.g., '# Your Horo Chart Analysis')
+        - For house/sign lists use proper markdown: '1. **Leo (Simha)** — description here'
+        - Each numbered item must be on its OWN line with a blank line between items
+        - Use **bold** for planet/sign names, _italic_ for Sanskrit terms
+        - Use --- separators between sections
+        - Keep descriptions concise but complete per item
+        """
+        try:
+            if callable(self._publish_data_fn):
+                import json
+                import time
+                import uuid
+                
+                # Format exactly as LiveKit components-react Chat expects
+                chat_payload = {
+                    "id": str(uuid.uuid4()),
+                    "message": document_content,
+                    "timestamp": int(time.time() * 1000)
+                }
+                
+                data_bytes = json.dumps(chat_payload).encode("utf-8")
+                await self._publish_data_fn(data_bytes, topic="lk-chat-topic")
+                logger.info("✅ Shared detailed document to chat UI (topic='lk-chat-topic')")
+            return "Document successfully sent to user's screen. Now speak a very short 1-sentence summary (crux)."
+        except Exception as e:
+            logger.error(f"Failed to share document: {e}")
+            return "Failed to share document."
 
     @function_tool
     async def calculate_kundli(
@@ -119,9 +230,9 @@ RESPONSE STYLE:
         birth_time: str,
         birth_place: str,
     ) -> str:
-        """Calculate the Kundli (birth chart) using the user's birth details.
-        
-        Use this when the user provides their birth details or asks about their chart.
+        """Calculate user's Kundli (Birth Chart) given their birth details.
+        CRITICAL RULE: DO NOT CALL THIS TOOL if you already have the user's chart data in your system prompt.
+        Only call this tool if the user's chart is completely missing and you have no data about them.
         The LLM (Gemini) will perform the calculations natively.
         
         Args:
@@ -469,9 +580,9 @@ async def entrypoint(ctx: JobContext):
         
         session = AgentSession(
             stt=stt,
-            llm=google.LLM(
-                model="gemini-2.5-flash",
-                api_key=os.getenv("GOOGLE_API_KEY")
+            llm=openai.LLM(
+                model="gpt-4o",
+                api_key=os.getenv("OPENAI_API_KEY")
             ),
             tts=inference.TTS(
                 model="cartesia/sonic-3",
@@ -525,23 +636,24 @@ async def entrypoint(ctx: JobContext):
     ctx.add_shutdown_callback(log_usage)
 
     # Publisher function for data channel
-    async def _publish_data_bytes(data_bytes: bytes):
+    async def _publish_data_bytes(data_bytes: bytes, topic: str = ""):
         try:
             lp = ctx.room.local_participant
             if not lp:
-                logger.error("❌ Cannot publish: local_participant is None!")
                 return
-            
-            publish_topic = "bhajan.track"
-            
-            logger.info(f"📤 Publishing {len(data_bytes)} bytes to data channel")
-            await lp.publish_data(data_bytes, reliable=True, topic=publish_topic)
-            logger.info(f"✅ Published data with topic '{publish_topic}'")
+            import inspect
+            sig = inspect.signature(lp.publish_data)
+            if 'topic' in sig.parameters:
+                await lp.publish_data(data_bytes, reliable=True, topic=topic)
+            else:
+                await lp.publish_data(data_bytes, reliable=True)
+            logger.info(f"✅ Published data with topic '{topic}'")
         except Exception as e:
             logger.error(f"❌ Failed to publish data: {e}", exc_info=True)
-
-    # Extract User ID from metadata
+    # Extract User ID, Language, and Intention from participant metadata
     user_id = "default_user"
+    user_language = "en"  # Default to English
+    user_intention = None
     try:
         await asyncio.sleep(1.5)  # Give time for participants to connect
         for participant in ctx.room.remote_participants.values():
@@ -551,14 +663,86 @@ async def entrypoint(ctx: JobContext):
                     if 'userId' in metadata:
                         user_id = metadata['userId']
                         logger.info(f"👤 User ID extracted: {user_id}")
-                        break
+                    if 'language' in metadata:
+                        user_language = metadata['language']
+                        logger.info(f"🌍 Language extracted from metadata: {user_language}")
+                    if 'intention' in metadata and metadata['intention']:
+                        user_intention = metadata['intention']
+                        logger.info(f"🎯 Intention extracted from metadata: {user_intention}")
+                    break
                 except Exception as e:
-                    logger.warning(f"Could not parse metadata for userId: {e}")
+                    logger.warning(f"Could not parse metadata: {e}")
     except Exception as e:
-        logger.warning(f"Error extracting userId: {e}")
+        logger.warning(f"Error extracting metadata: {e}")
+
+    try:
+        if ctx.room.name.startswith("VedicJyotishGuidance_"):
+            parts = ctx.room.name.split("_")
+            if len(parts) >= 2:
+                user_id = parts[1]
+                logger.info(f"👤 User ID extracted from room name: {user_id}")
+    except Exception as e:
+        logger.warning(f"Error extracting userId from room name: {e}")
+
+    logger.info(f"🎤 Session language: {user_language}")
 
     # Create Vedic Astrology agent instance with user ID
     vedic_agent = VedicAstrologyAgent(user_id=user_id, publish_data_fn=_publish_data_bytes)
+    
+    custom_instructions = vedic_agent.instructions
+
+    # -----------------------------------------------------
+    # 🌟 CORE ASTROLOGY INJECTION FROM PINECONE RAG 🌟
+    # -----------------------------------------------------
+    chart_context = None
+    try:
+        logger.info(f"🔍 Fetching Pinecone comprehensive chart data for user: {user_id}")
+        pinecone_retriever = PineconeKundliRetriever()
+        chart_context = await pinecone_retriever.get_user_chart_context(user_id)
+        
+        if chart_context:
+            lang_instruction = (
+                "\n\nLANGUAGE INSTRUCTION (CRITICAL - MUST FOLLOW):\n"
+                f"The user's selected language is: '{user_language}'.\n"
+                "- If 'hi': Respond EXCLUSIVELY in Hindi (Devanagari script). Do NOT switch to English.\n"
+                "- If 'en': Respond EXCLUSIVELY in English. Do NOT switch to Hindi.\n"
+                "This is set by the user's app preference. Honour it throughout the entire session.\n"
+            )
+            custom_instructions += (
+                lang_instruction +
+                "\n---\n"
+                "USER'S CHART INDEX (ALREADY STORED IN DATABASE):\n"
+                f"{chart_context}\n"
+                "---\n"
+                "MANDATORY RULES:\n"
+                "1. You ALREADY have the user's charts in the database (index shown above).\n"
+                "2. NEVER ask the user for their Date of Birth, Time of Birth, or Place of Birth.\n"
+                "3. NEVER use or call the 'calculate_kundli' tool.\n"
+                "4. ALWAYS call 'query_user_charts' FIRST before answering any astrological question.\n"
+                "5. Only speak information grounded in data returned by 'query_user_charts'."
+            )
+            logger.info("✅ Successfully injected Pinecone chart data into AI context!")
+        else:
+            # Even without chart data, inject language instruction
+            lang_instruction = (
+                "\n\nLANGUAGE INSTRUCTION (CRITICAL - MUST FOLLOW):\n"
+                f"The user's selected language is: '{user_language}'.\n"
+                "- If 'hi': Respond EXCLUSIVELY in Hindi (Devanagari script). Do NOT switch to English.\n"
+                "- If 'en': Respond EXCLUSIVELY in English. Do NOT switch to Hindi.\n"
+            )
+            custom_instructions += lang_instruction
+    except Exception as e:
+        logger.error(f"❌ Failed to fetch Pinecone context: {e}")
+
+    # Inject intention if present
+    if user_intention:
+        custom_instructions += (
+            "\n\n---\n"
+            "USER'S CURRENT INTENTION / CONTEXT:\n"
+            f"{user_intention}\n"
+            "---\n"
+            "MANDATORY RULE: Address this specific intention naturally during the conversation.\n"
+        )
 
     # Load previous conversation context for continuity
     try:
@@ -567,7 +751,7 @@ async def entrypoint(ctx: JobContext):
         if prev_msgs:
             logger.info(f"📜 Loaded {len(prev_msgs)} messages from last session for context")
             # Append a system note so the agent knows this is continuation context
-            vedic_agent.instructions += (
+            custom_instructions += (
                 "\n\n---\n"
                 "PREVIOUS SESSION CONTEXT (for conversation continuity):\n"
                 "The user has spoken with you before. Here is the summary of the last conversation "
@@ -583,13 +767,15 @@ async def entrypoint(ctx: JobContext):
     except Exception as e:
         logger.warning(f"Could not load previous transcript: {e}")
 
+    # Inject the modified instructions back into the agent
+    vedic_agent._instructions = custom_instructions
+
     await session.start(
         agent=vedic_agent,
         room=ctx.room,
     )
     
-    # Handle chat messages from the frontend
-    from livekit import rtc
+    # Chat messages are handled by the ChatManager we created earlier
     
     async def _on_data_received(data, participant=None, kind=None, topic=None):
         try:
@@ -626,16 +812,35 @@ async def entrypoint(ctx: JobContext):
     await ctx.connect()
 
     # Send personalized welcome message based on chart data availability
-    if user_language == 'hi':
-        welcome_msg = (
-            "प्रणाम। मैं वैदिक ज्योतिषी का AI स्वरूप हूँ। मेरी मूल शिक्षाएं ग्रहों की स्थिति, ब्रह्मांडीय समय चक्र "
-            "और आपके कर्मों के ब्लूप्रिंट को समझने पर केंद्रित हैं। आज मैं आपके नक्षत्रों को कैसे स्पष्ट कर सकता हूँ?"
-        )
-    else:
-        welcome_msg = (
-            "Namaste. I am the AI manifestation of the Vedic Astrologer. My core teachings focus on understanding "
-            "planetary alignments, cosmic timing, and navigating your karmic blueprint. How may I bring clarity to your stars today?"
-        )
+    welcome_msg = ""
+    if chart_context:
+        try:
+            import openai as openai_client
+            client = openai_client.AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+            prompt = (
+                f"You are a Vedic Astrologer AI. Welcome the user in {'Hindi' if user_language == 'hi' else 'English'}. "
+                "Mention one interesting fact from this chart data to excite them (keep it brief, 1-2 sentences): "
+                f"{chart_context[:800]}"
+            )
+            response = await client.chat.completions.create(
+                model='gpt-4o',
+                messages=[{"role": "user", "content": prompt}]
+            )
+            welcome_msg = response.choices[0].message.content
+        except Exception as e:
+            logger.warning(f"Failed to generate dynamic welcome message: {e}")
+            
+    if not welcome_msg:
+        if user_language == 'hi':
+            welcome_msg = (
+                "प्रणाम। मैं वैदिक ज्योतिषी का AI स्वरूप हूँ। मेरी मूल शिक्षाएं ग्रहों की स्थिति, ब्रह्मांडीय समय चक्र "
+                "और आपके कर्मों के ब्लूप्रिंट को समझने पर केंद्रित हैं। आज मैं आपके नक्षत्रों को कैसे स्पष्ट कर सकता हूँ?"
+            )
+        else:
+            welcome_msg = (
+                "Namaste. I am the AI manifestation of the Vedic Astrologer. My core teachings focus on understanding "
+                "planetary alignments, cosmic timing, and navigating your karmic blueprint. How may I bring clarity to your stars today?"
+            )
     
     await session.say(welcome_msg)
 

@@ -8,13 +8,13 @@ import path from 'path';
 
 // Single Firebase configuration for rraasi project
 const firebaseConfig = {
-  apiKey: "AIzaSyDe671PgpCIqewl4iLXcWEUs1oWL3jlzp0",
-  authDomain: "rraasi.firebaseapp.com",
-  projectId: "rraasi",
-  storageBucket: "rraasi.firebasestorage.app",
-  messagingSenderId: "764676936249",
-  appId: "1:764676936249:web:d15f9256c5a549cd0873e8",
-  measurementId: "G-EF413EH77B"
+  apiKey: "AIzaSyBkxVOuhaVrU3Xz5M1_v0iWKKRQUwWd3TU",
+  authDomain: "rraasi-8a619.firebaseapp.com",
+  projectId: "rraasi-8a619",
+  storageBucket: "rraasi-8a619.firebasestorage.app",
+  messagingSenderId: "469389287554",
+  appId: "1:469389287554:web:4482647b3c865a9d2b949b",
+  measurementId: "G-KNZ2VKQ9BH"
 };
 
 const projectId = firebaseConfig.projectId;

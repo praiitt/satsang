@@ -64,7 +64,7 @@ export function ChatInput({
     }
   };
 
-  const isDisabled = isSending || message.trim().length === 0;
+  const isDisabled = isSending || message.trim().length === 0 || !isAgentAvailable;
 
   useEffect(() => {
     if (!chatOpen) return;
@@ -88,8 +88,8 @@ export function ChatInput({
           ref={inputRef}
           type="text"
           value={message}
-          disabled={!chatOpen}
-          placeholder="Type your message here... / अपना संदेश लिखें..."
+          disabled={!chatOpen || !isAgentAvailable}
+          placeholder={!isAgentAvailable ? "Connecting to agent... / एजेंट से कनेक्ट हो रहा है..." : "Type your message here... / अपना संदेश लिखें..."}
           onChange={(e) => setMessage(e.target.value)}
           className="h-10 flex-1 bg-transparent text-white placeholder:text-slate-400 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 px-2"
         />

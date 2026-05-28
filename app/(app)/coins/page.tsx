@@ -6,7 +6,7 @@ import { coinClient } from '@/lib/services/coinClient';
 import { Button } from '@/components/livekit/button';
 import { Coins, History, Sparkles, TrendingUp, Package, RefreshCw, Loader2 } from 'lucide-react';
 import { UpgradeModal } from '@/components/ui/upgrade-modal';
-import BuyCoinsModal from '@/components/rraasi-music/buy-coins-modal';
+import BuyCoinsModal from '@/components/spiritual-studio/buy-coins-modal';
 
 export default function CoinsPage() {
     const { balance, loading, refresh } = useCoinBalance();

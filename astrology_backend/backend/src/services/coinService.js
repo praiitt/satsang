@@ -88,7 +88,20 @@ class CoinService {
         category: 'livekit', 
         freeTierAvailable: false, 
         subscriptionUnlimited: true 
-      }
+      },
+      text_report_house: { cost: 5, name: 'House Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      text_report_nakshatra: { cost: 10, name: 'Nakshatra Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      text_report_ascendant: { cost: 10, name: 'Ascendant Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      text_report_pitra_dosha: { cost: 15, name: 'Pitra Dosha Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      text_report_lalkitab: { cost: 20, name: 'Lal Kitab Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      text_report_partner: { cost: 20, name: 'Partner Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      text_report_sadhesati: { cost: 25, name: 'Sadhesati Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      text_report_match_making: { cost: 30, name: 'Match Making Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      text_report_numerology: { cost: 15, name: 'Numerology Report', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      pdf_mini_horoscope: { cost: 25, name: 'Mini Horoscope PDF', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      pdf_basic_horoscope: { cost: 50, name: 'Basic Horoscope PDF', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      pdf_professional_horoscope: { cost: 100, name: 'Professional Horoscope PDF', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true },
+      pdf_match_making: { cost: 75, name: 'Match Making PDF', category: 'reports', freeTierAvailable: false, subscriptionUnlimited: true }
     };
     
     logger.info('Coin Service initialized with feature costs', { 
