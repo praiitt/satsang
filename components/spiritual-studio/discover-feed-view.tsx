@@ -2059,6 +2059,7 @@ export const DiscoverFeedView = ({
           setIsArtStudioOpen(false);
           setShowBuyCoins(true);
         }}
+        initialPrompt={spiritualState?.currentImbalance ? `Create spiritual art for: ${spiritualState.currentImbalance}` : ''}
       />
       {/* Reels Studio Modal */}
       <SpiritualReelsStudio
@@ -2068,6 +2069,7 @@ export const DiscoverFeedView = ({
           setIsReelsStudioOpen(false);
           setShowBuyCoins(true);
         }}
+        initialPrompt={spiritualState?.currentImbalance ? `Create a healing reel for: ${spiritualState.currentImbalance}` : ''}
       />
       {/* Manifest from Reading Modal */}
       <ReadingToMusicModal

@@ -11,6 +11,7 @@ interface SpiritualReelsStudioProps {
   isOpen: boolean;
   onClose: () => void;
   onShowBuyCoins?: () => void;
+  initialPrompt?: string;
 }
 
 const INTENTIONS = [
@@ -22,11 +23,11 @@ const INTENTIONS = [
   { id: 'love', label: 'Unconditional Love', emoji: '❤️' },
 ];
 
-export function SpiritualReelsStudio({ isOpen, onClose, onShowBuyCoins }: SpiritualReelsStudioProps) {
+export function SpiritualReelsStudio({ isOpen, onClose, onShowBuyCoins, initialPrompt = '' }: SpiritualReelsStudioProps) {
   const { language } = useLanguage();
   const isHi = language === 'hi';
   const [selectedIntention, setSelectedIntention] = useState<string>('');
-  const [customIntention, setCustomIntention] = useState('');
+  const [customIntention, setCustomIntention] = useState(initialPrompt);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentReelId, setCurrentReelId] = useState<string | null>(null);
@@ -34,6 +35,13 @@ export function SpiritualReelsStudio({ isOpen, onClose, onShowBuyCoins }: Spirit
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isWizardOpen, setIsWizardOpen] = useState(false);
+
+  // Update custom intention if initialPrompt changes
+  useEffect(() => {
+    if (initialPrompt && isOpen) {
+      setCustomIntention(initialPrompt);
+    }
+  }, [initialPrompt, isOpen]);
 
   // Poll Firestore for reel updates
   useEffect(() => {
