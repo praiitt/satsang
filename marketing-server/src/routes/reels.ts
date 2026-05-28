@@ -100,19 +100,15 @@ async function generateAffirmationReel(reelId: string, userId: string, intention
         
         console.log(`[Reels] Using image prompt: ${imagePrompt}`);
         
-        // Generate Image using DALL-E 3
-        const genImageRes = await openai.images.generate({
-            model: "dall-e-3",
-            prompt: imagePrompt,
-            n: 1,
-            size: "1024x1792"
-        });
+        // Generate Image using Pollinations AI (Free, Keyless, High Quality)
+        const encodedPrompt = encodeURIComponent(imagePrompt + ", highly detailed, masterpiece, beautiful, serene, spiritual, 8k resolution, vertical wallpaper");
+        const imageUrlFromAPI = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1792&nologo=true&enhance=true`;
         
-        const imageUrlFromOpenAI = genImageRes.data[0].url;
-        if (!imageUrlFromOpenAI) throw new Error("Failed to generate image URL from OpenAI");
+        console.log(`[Reels] Fetching image from Pollinations: ${imageUrlFromAPI}`);
         
         // Fetch the image buffer from the URL
-        const imageRes = await fetch(imageUrlFromOpenAI);
+        const imageRes = await fetch(imageUrlFromAPI);
+        if (!imageRes.ok) throw new Error(`Failed to download image from Pollinations: ${imageRes.statusText}`);
         const imageBuffer = Buffer.from(await imageRes.arrayBuffer());
         
         // Use a bucket that actually exists
