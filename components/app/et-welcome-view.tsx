@@ -72,8 +72,8 @@ export const ETWelcomeView = ({
           </h2>
           <div className="overflow-hidden rounded-2xl shadow-2xl">
             <HeroVideoPlayer
-              src="https://storage.googleapis.com/satsangpublicurls/ETAgent_Intro.mp4"
-              poster="https://storage.googleapis.com/satsangpublicurls/ETAgent_Intro.mp4#t=0.1"
+              src="https://storage.googleapis.com/rraasi-public-assets/ETAgent_Intro.mp4"
+              poster="https://storage.googleapis.com/rraasi-public-assets/ETAgent_Intro.mp4#t=0.1"
               autoPlay
               loop
               className="w-full"
