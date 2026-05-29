@@ -20,7 +20,7 @@ from livekit.agents import (
     function_tool,
     RunContext,
 )
-from livekit.plugins import noise_cancellation, silero
+from livekit.plugins import silero
 from pinecone_kundli_retriever import KundliRetriever
 
 # Configure logging early
@@ -542,7 +542,7 @@ For example:
         agent=vedic_agent,
         room=ctx.room,
         room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
+
         ),
     )
 
