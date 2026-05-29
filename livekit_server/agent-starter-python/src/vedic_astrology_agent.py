@@ -20,7 +20,7 @@ from livekit.agents import (
     function_tool,
     RunContext,
 )
-from livekit.plugins import noise_cancellation, silero
+from livekit.plugins import silero
 from firebase_db import FirebaseDB
 from pinecone_retriever import PineconeKundliRetriever
 
