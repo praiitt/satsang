@@ -32,7 +32,6 @@ def main():
         ("livekit.agents", "LiveKit Agents"),
         ("livekit.plugins.silero", "Silero Plugin"),
         ("livekit.plugins.turn_detector", "Turn Detector Plugin"),
-        ("livekit.plugins.noise_cancellation", "Noise Cancellation Plugin"),
     ]
     
     results = []
